@@ -1,0 +1,178 @@
+package fssnapshot
+
+import (
+	"fmt"
+	"github.com/function61/gokit/cryptorandombytes"
+	"log"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"strings"
+)
+
+// I wrote an overview of this process @ https://github.com/restic/restic/issues/340#issuecomment-442446540
+// thanks for pointers: https://github.com/restic/restic/issues/340#issuecomment-307636386
+
+func WindowsSnapshotter() Snapshotter {
+	return &windowsSnapshotter{}
+}
+
+type windowsSnapshotter struct{}
+
+func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
+	completedSuccesfully := false
+
+	driveLetter := driveLetterFromPath(path)
+
+	// Microsoft being the usual dick that M$FT is, they disable creating snapshots from
+	// vssadmin on non-server OSs, therefore we must bypass the restriction by using wmic
+	// instead. https://superuser.com/a/1125605/284803
+	createSnapshotOutput, err := exec.Command(
+		"wmic",
+		"shadowcopy",
+		"call",
+		"create",
+		fmt.Sprintf(`Volume="%s:\"`, driveLetter)).CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"error creating snapshot: %s, output: %s",
+			err.Error(),
+			createSnapshotOutput)
+	}
+
+	snapshotId := findSnapshotIdFromCreateOutput(string(createSnapshotOutput))
+	if snapshotId == "" {
+		return nil, fmt.Errorf("unable to find snapshot ID from create output")
+	}
+
+	defer func() {
+		if completedSuccesfully {
+			return
+		}
+
+		log.Printf("cleaning snapshot: %s", snapshotId)
+
+		if err := deleteSnapshot(snapshotId); err != nil {
+			log.Printf("error cleaning up snapshot: %s", err.Error())
+		}
+	}()
+
+	getSnapshotDetailsOutput, err := exec.Command(
+		"vssadmin",
+		"list",
+		"shadows",
+		"/Shadow="+snapshotId).CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"unable list snapshot details: %s, output: %s",
+			err.Error(),
+			getSnapshotDetailsOutput)
+	}
+
+	snapshotDeviceId := findSnapshotDeviceFromDetailsOutput(string(getSnapshotDetailsOutput))
+	if snapshotDeviceId == "" {
+		return nil, fmt.Errorf("unable to find snapshot ID from create output")
+	}
+
+	snapshotRootPath := driveLetter + ":/snapshots/" + cryptorandombytes.Hex(4)
+
+	if err := os.MkdirAll(filepath.Dir(snapshotRootPath), 0700); err != nil {
+		return nil, fmt.Errorf("failed to make parent dir for snapshot mount: %s", err.Error())
+	}
+
+	// Windows makes a distinction between file and directory symlinks. os.Symlink()
+	// doesn't seem to support directory type links on Windows. additionally, "mklink" is
+	// a cmd-builtin, so we must invoke cmd to run mklink. Windows + CLI = LOLOLOL.
+	// https://twitter.com/joonas_fi/status/1067810155872563200
+	mklinkCmd := exec.Command(
+		"cmd",
+		"/c",
+		"mklink",
+		"/D",
+		windowsPath(snapshotRootPath),
+		windowsPath(snapshotDeviceId+"/"))
+	mklinkOutput, err := mklinkCmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"failed to make directory symlink: %s, output: %s",
+			err.Error(),
+			mklinkOutput)
+	}
+
+	completedSuccesfully = true // cancel cleanups
+
+	return &Snapshot{
+		ID:                   snapshotId,
+		OriginPath:           path,
+		OriginInSnapshotPath: computeOriginInSnapshotPath(snapshotRootPath, path),
+		SnapshotRootPath:     snapshotRootPath,
+	}, nil
+}
+
+// '/' => '\'
+// FIXME: maybe Go has more idiomatic way for this?
+func windowsPath(in string) string {
+	return strings.Replace(in, "/", `\`, -1)
+}
+
+func (w *windowsSnapshotter) Release(snap Snapshot) error {
+	if err := deleteSnapshot(snap.ID); err != nil {
+		return err
+	}
+
+	if err := os.Remove(snap.SnapshotRootPath); err != nil {
+		return fmt.Errorf("unable to remove Snapshot SnapshotRootPath: %s", err.Error())
+	}
+
+	return nil
+}
+
+func deleteSnapshot(shadowId string) error {
+	removeSnapshotCmd := exec.Command(
+		"vssadmin",
+		"delete",
+		"shadows",
+		"/Quiet",
+		"/Shadow="+shadowId)
+
+	removeSnapshotOutput, err := removeSnapshotCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf(
+			"unable to remove Snapshot: %s, output: %s",
+			err.Error(),
+			removeSnapshotOutput)
+	}
+
+	return nil
+}
+
+func driveLetterFromPath(path string) string {
+	return path[0:1]
+}
+
+var findSnapshotDeviceFromDetailsOutputRe = regexp.MustCompile("Shadow Copy Volume: (.+)")
+
+func findSnapshotDeviceFromDetailsOutput(output string) string {
+	match := findSnapshotDeviceFromDetailsOutputRe.FindStringSubmatch(output)
+	if match == nil {
+		return ""
+	}
+
+	return match[1]
+}
+
+var findSnapshotIdFromCreateOutputRe = regexp.MustCompile(`ShadowID = "([^ "]+)"`)
+
+func findSnapshotIdFromCreateOutput(output string) string {
+	match := findSnapshotIdFromCreateOutputRe.FindStringSubmatch(output)
+	if match == nil {
+		return ""
+	}
+
+	return match[1]
+}
+
+func computeOriginInSnapshotPath(snapshotRootPath, path string) string {
+	return filepath.Join(snapshotRootPath, path[3:])
+}
