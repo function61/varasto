@@ -30,6 +30,11 @@ Ideas / goals
   data in collections (modeled as directories). Version control-like semantics for
   collection history, but "commits" are scheduled instead of explicit. This is meant to
   back up all your data and backups are useless unless they are automated.
+- By not operating on (lower) block device level we don't need the complexity of RAID or
+  specialized filesystems like ZFS etc. We can use commodity hardware and any operating
+  system to reach the desired goals of integrity and availability. If your hard drive ever
+  crashes, would you like to try the recovery with striped RAID / parity bits on a
+  specialized filesystem, or just a regular NTFS or EXT4?
 
 
 Inspired by & alternative software
