@@ -22,7 +22,8 @@ Ideas / goals
 - Related to previous point, we should investigate doing as much as possible in the client
   or the browser, so perhaps the decryption keys don't even have to be known by the server.
 - Configurable replication policies per collection. Your family photo albums could be
-  spread on 2 local disks and 1 AWS S3 bucket, while 
+  spread on 2 local disks and 1 AWS S3 bucket, while a movie you ripped from a Blu-ray could
+  be only on one disk because in the event of a disk crash, it could be easily recreated.
 - Accesses your files by using platform-specific snapshotting
   (LVM on Linux, shadow copies on Windows)
 - Kind of like Git or Mercurial but for all of your data, and meant to store all of your
