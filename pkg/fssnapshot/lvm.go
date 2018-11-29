@@ -3,7 +3,7 @@
 
 package fssnapshot
 
-// snapshots on Linux's using LVM
+// snapshots on Linux using LVM
 
 import (
 	"bufio"
