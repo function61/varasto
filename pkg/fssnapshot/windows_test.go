@@ -54,9 +54,9 @@ func TestDriveLetterFromPath(t *testing.T) {
 	assert.EqualString(t, driveLetterFromPath("D:/games"), "D")
 }
 
-func TestComputeOriginInSnapshotPath(t *testing.T) {
+func TestOriginPathInSnapshotForWindows(t *testing.T) {
 	assert.EqualString(
 		t,
-		computeOriginInSnapshotPath("D:/snapshots/mysnapshot", "D:/data/my-cool-origin"),
+		originPathInSnapshot("D:/data/my-cool-origin", "D:/", "D:/snapshots/mysnapshot"),
 		"D:/snapshots/mysnapshot/data/my-cool-origin")
 }

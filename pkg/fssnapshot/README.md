@@ -1,14 +1,18 @@
-Beginnings of a cross-platform filesystem snapshotting library.
+Small and crude cross-platform library for taking snapshots of a directory tree.
 
-Currently only supports Windows. LVM support for Linux might come later.
+Currently supports Windows (via shadow copies) and Linux (via LVM).
+Mac support might be possible, but I don't have any plans to do it. PRs are welcome :)
+
 
 Example code
 ------------
 
 ```
-func example() error {
+// snapshotDemo("D:/data") // for Windows
+// snapshotDemo("/home/macgyver") // for Linux
+func snapshotDemo(path string) error {
 	snapshotter := fssnapshot.PlatformSpecificSnapshotter()
-	snap, err := snapshotter.Snapshot("D:/data")
+	snap, err := snapshotter.Snapshot(path)
 	if err != nil {
 		return err
 	}

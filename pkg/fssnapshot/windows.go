@@ -2,7 +2,6 @@ package fssnapshot
 
 import (
 	"fmt"
-	"github.com/function61/gokit/cryptorandombytes"
 	"log"
 	"os"
 	"os/exec"
@@ -75,9 +74,9 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		return nil, fmt.Errorf("unable to find device ID from list output")
 	}
 
-	snapshotRootPath := driveLetter + ":/snapshots/" + cryptorandombytes.Hex(4)
+	snapshotRootMountPath := driveLetter + ":/snapshots/" + randomSnapId()
 
-	if err := os.MkdirAll(filepath.Dir(snapshotRootPath), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(snapshotRootMountPath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to make parent dir for snapshot mount: %s", err.Error())
 	}
 
@@ -90,7 +89,7 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		"/c",
 		"mklink",
 		"/D",
-		windowsPath(snapshotRootPath),
+		windowsPath(snapshotRootMountPath),
 		windowsPath(snapshotDeviceId+"/"))
 	mklinkOutput, err := mklinkCmd.CombinedOutput()
 	if err != nil {
@@ -103,17 +102,11 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 	completedSuccesfully = true // cancel cleanups
 
 	return &Snapshot{
-		ID:                   snapshotId,
-		OriginPath:           path,
-		OriginInSnapshotPath: computeOriginInSnapshotPath(snapshotRootPath, path),
-		SnapshotRootPath:     snapshotRootPath,
+		ID:                    snapshotId,
+		OriginPath:            path,
+		OriginInSnapshotPath:  originPathInSnapshot(path, driveLetter+":/", snapshotRootMountPath),
+		SnapshotRootMountPath: snapshotRootMountPath,
 	}, nil
-}
-
-// '/' => '\'
-// FIXME: maybe Go has more idiomatic way for this?
-func windowsPath(in string) string {
-	return strings.Replace(in, "/", `\`, -1)
 }
 
 func (w *windowsSnapshotter) Release(snap Snapshot) error {
@@ -121,8 +114,8 @@ func (w *windowsSnapshotter) Release(snap Snapshot) error {
 		return err
 	}
 
-	if err := os.Remove(snap.SnapshotRootPath); err != nil {
-		return fmt.Errorf("unable to remove Snapshot SnapshotRootPath: %s", err.Error())
+	if err := os.Remove(snap.SnapshotRootMountPath); err != nil {
+		return fmt.Errorf("unable to remove Snapshot SnapshotRootMountPath: %s", err.Error())
 	}
 
 	return nil
@@ -145,6 +138,12 @@ func deleteSnapshot(shadowId string) error {
 	}
 
 	return nil
+}
+
+// '/' => '\'
+// FIXME: maybe Go has more idiomatic way for this?
+func windowsPath(in string) string {
+	return strings.Replace(in, "/", `\`, -1)
 }
 
 func driveLetterFromPath(path string) string {
@@ -171,8 +170,4 @@ func findSnapshotIdFromCreateOutput(output string) string {
 	}
 
 	return match[1]
-}
-
-func computeOriginInSnapshotPath(snapshotRootPath, path string) string {
-	return filepath.Join(snapshotRootPath, path[3:])
 }

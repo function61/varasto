@@ -3,5 +3,5 @@
 package fssnapshot
 
 func PlatformSpecificSnapshotter() Snapshotter {
-	return LvmSnapshotter()
+	return LvmSnapshotter("1GB")
 }
