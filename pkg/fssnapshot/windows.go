@@ -65,14 +65,14 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		"/Shadow="+snapshotId).CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf(
-			"unable list snapshot details: %s, output: %s",
+			"unable to list snapshot details: %s, output: %s",
 			err.Error(),
 			getSnapshotDetailsOutput)
 	}
 
 	snapshotDeviceId := findSnapshotDeviceFromDetailsOutput(string(getSnapshotDetailsOutput))
 	if snapshotDeviceId == "" {
-		return nil, fmt.Errorf("unable to find snapshot ID from create output")
+		return nil, fmt.Errorf("unable to find device ID from list output")
 	}
 
 	snapshotRootPath := driveLetter + ":/snapshots/" + cryptorandombytes.Hex(4)
