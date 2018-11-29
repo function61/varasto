@@ -7,8 +7,7 @@ Example code
 
 ```
 func example() error {
-	// TODO: use Go compilation magic for the platform to be bound at compile time
-	snapshotter := fssnapshot.WindowsSnapshotter()
+	snapshotter := fssnapshot.PlatformSpecificSnapshotter()
 	snap, err := snapshotter.Snapshot("D:/data")
 	if err != nil {
 		return err
