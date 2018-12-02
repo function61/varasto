@@ -1,0 +1,21 @@
+{
+	"for_description_of_this_file_see": "https://github.com/function61/turbobob",
+	"version_major": 1,
+	"project_name": "bup",
+	"builders": [
+		{
+			"name": "default",
+			"dockerfile_path": "build-default.Dockerfile",
+			"mount_source": "",
+			"mount_destination": "/go/src/github.com/function61/bup",
+			"dev_command": [
+				"bash"
+			],
+			"dev_ports": ["8066:8066"],
+			"dev_pro_tips": [],
+			"pass_envs": [],
+			"contextless_build": false
+		}
+	],
+	"docker_images": []
+}
