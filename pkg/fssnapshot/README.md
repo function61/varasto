@@ -1,5 +1,7 @@
 Small and crude cross-platform library for taking snapshots of a directory tree.
 
+NOTE: You probably need to run the your binary as admin privileges to be able use snapshots.
+
 Currently supports Windows (via shadow copies) and Linux (via LVM).
 Mac support might be possible, but I don't have any plans to do it. PRs are welcome :)
 
