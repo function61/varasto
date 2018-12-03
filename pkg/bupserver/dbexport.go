@@ -13,23 +13,23 @@ import (
 
 func exportDb(tx storm.Node, out io.Writer) error {
 	type exporter struct {
-		name string
-		fn   func(enc *json.Encoder, tx storm.Node, out io.Writer) error
+		name   string
+		target interface{}
 	}
 
 	exporters := []exporter{
-		{"Node", exportNodes},
-		{"ReplicationPolicy", exportReplicationPolicies},
-		{"Volume", exportVolumes},
-		{"Collection", exportCollections},
-		{"Blob", exportBlobs},
+		{"Node", &buptypes.Node{}},
+		{"ReplicationPolicy", &buptypes.ReplicationPolicy{}},
+		{"Volume", &buptypes.Volume{}},
+		{"Collection", &buptypes.Collection{}},
+		{"Blob", &buptypes.Blob{}},
 	}
 
 	enc := json.NewEncoder(out)
 	for _, exporter := range exporters {
 		out.Write([]byte("\n# " + exporter.name + "\n"))
 
-		if err := exporter.fn(enc, tx, out); err != nil {
+		if err := exportTable(tx, exporter.target, enc, out); err != nil {
 			return err
 		}
 	}
@@ -37,67 +37,8 @@ func exportDb(tx storm.Node, out io.Writer) error {
 	return nil
 }
 
-func exportNodes(enc *json.Encoder, tx storm.Node, out io.Writer) error {
-	var nodes []*buptypes.Node
-	if err := tx.All(&nodes); err != nil {
-		return err
-	}
-	for _, item := range nodes {
-		if err := enc.Encode(&item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func exportReplicationPolicies(enc *json.Encoder, tx storm.Node, out io.Writer) error {
-	var replPolicies []*buptypes.ReplicationPolicy
-	if err := tx.All(&replPolicies); err != nil {
-		return err
-	}
-	for _, item := range replPolicies {
-		if err := enc.Encode(&item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func exportVolumes(enc *json.Encoder, tx storm.Node, out io.Writer) error {
-	var volumes []*buptypes.Volume
-	if err := tx.All(&volumes); err != nil {
-		return err
-	}
-	for _, item := range volumes {
-		if err := enc.Encode(&item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func exportCollections(enc *json.Encoder, tx storm.Node, out io.Writer) error {
-	var collections []*buptypes.Collection
-	if err := tx.All(&collections); err != nil {
-		return err
-	}
-	for _, item := range collections {
-		if err := enc.Encode(&item); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func exportBlobs(enc *json.Encoder, tx storm.Node, out io.Writer) error {
-	var blobs []*buptypes.Blob
-	if err := tx.All(&blobs); err != nil {
-		return err
-	}
-	for _, item := range blobs {
-		if err := enc.Encode(&item); err != nil {
-			return err
-		}
-	}
-	return nil
+func exportTable(tx storm.Node, target interface{}, enc *json.Encoder, out io.Writer) error {
+	return tx.Select().Each(target, func(record interface{}) error {
+		return enc.Encode(record)
+	})
 }
