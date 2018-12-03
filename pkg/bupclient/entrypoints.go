@@ -50,7 +50,11 @@ func logEntrypoint() *cobra.Command {
 					"changeset:   %s\ndate:        %s\nsummary:     %s\n\n",
 					item.ID,
 					item.Created.Format(time.RFC822Z),
-					"(none)")
+					fmt.Sprintf(
+						"(no description) %d create(s) %d update(s) %d delete(s)",
+						len(item.FilesCreated),
+						len(item.FilesUpdated),
+						len(item.FilesDeleted)))
 			}
 		},
 	}
