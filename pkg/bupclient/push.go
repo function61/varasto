@@ -1,7 +1,6 @@
 package bupclient
 
 import (
-	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -21,7 +20,10 @@ import (
 	"time"
 )
 
-const megabyte = 1024 * 1024
+const (
+	megabyte  = 1024 * 1024
+	chunkSize = 4 * megabyte
+)
 
 func computeChangeset(wd *workdirLocation) (*buptypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAt(wd.manifest.Collection, wd.manifest.Collection.Head)
@@ -54,30 +56,29 @@ func computeChangeset(wd *workdirLocation) (*buptypes.CollectionChangeset, error
 			// ok if key missing
 			delete(filesMissing, relativePath)
 
-			// https://unix.stackexchange.com/questions/2802/what-is-the-difference-between-modify-and-change-in-stat-command-context
-			allTimes := times.Get(fileInfo)
-
-			maybeCreationTime := fileInfo.ModTime()
-			if allTimes.HasBirthTime() {
-				maybeCreationTime = allTimes.BirthTime()
-			}
-
-			fil := buptypes.File{
-				Path:     relativePath,
-				Created:  maybeCreationTime,
-				Modified: fileInfo.ModTime(),
-				Size:     fileInfo.Size(),
-				Sha256:   "",         // will be computed later
-				BlobRefs: []string{}, // will be computed later
-			}
-
 			if before, existedBefore := filesAtParent[relativePath]; existedBefore {
-				// TODO: this is really weak comparison
-				if before.Size != fil.Size {
-					updated = append(updated, fil)
+				definitelyChanged := before.Size != fileInfo.Size()
+				maybeChanged := !before.Modified.Equal(fileInfo.ModTime())
+
+				if definitelyChanged || maybeChanged {
+					fil, err := analyzeFileForChanges(wd, relativePath, fileInfo)
+					if err != nil {
+						return err
+					}
+
+					// TODO: allow commit to change metadata like modification time or
+					// execute bit?
+					if before.Sha256 != fil.Sha256 {
+						updated = append(updated, *fil)
+					}
 				}
 			} else {
-				created = append(created, fil)
+				fil, err := analyzeFileForChanges(wd, relativePath, fileInfo)
+				if err != nil {
+					return err
+				}
+
+				created = append(created, *fil)
 			}
 		}
 
@@ -126,27 +127,42 @@ func blobExists(wd *workdirLocation, blobRef buptypes.BlobRef) (bool, error) {
 	return true, nil
 }
 
-func uploadChunks(wd *workdirLocation, bfile buptypes.File) (string, []string, error) {
+func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os.FileInfo) (*buptypes.File, error) {
+	// https://unix.stackexchange.com/questions/2802/what-is-the-difference-between-modify-and-change-in-stat-command-context
+	allTimes := times.Get(fileInfo)
+
+	maybeCreationTime := fileInfo.ModTime()
+	if allTimes.HasBirthTime() {
+		maybeCreationTime = allTimes.BirthTime()
+	}
+
+	bfile := &buptypes.File{
+		Path:     relativePath,
+		Created:  maybeCreationTime,
+		Modified: fileInfo.ModTime(),
+		Size:     fileInfo.Size(),
+		Sha256:   "",         // will be computed later in this method
+		BlobRefs: []string{}, // will be computed later in this method
+	}
+
 	file, err := os.Open(wd.Join(bfile.Path))
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
 	defer file.Close()
 
 	pos := int64(0)
-	chunkSize := int64(4 * megabyte)
 
-	fullFileSha256 := sha256.New()
-	chunkHashes := []string{}
+	fullContentHash := sha256.New()
 
 	for {
 		if _, err := file.Seek(pos, io.SeekStart); err != nil {
-			return "", nil, err
+			return nil, err
 		}
 
 		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, chunkSize))
 		if errRead != nil {
-			return "", nil, errRead
+			return nil, errRead
 		}
 
 		pos += chunkSize
@@ -156,29 +172,58 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) (string, []string, e
 			break
 		}
 
-		if _, err := fullFileSha256.Write(chunk); err != nil {
-			return "", nil, err
+		if _, err := fullContentHash.Write(chunk); err != nil {
+			return nil, err
 		}
 
 		fileSha256Bytes := sha256.Sum256(chunk)
 
 		blobRef, err := buptypes.BlobRefFromHex(hex.EncodeToString(fileSha256Bytes[:]))
 		if err != nil {
-			return "", nil, err
+			return nil, err
 		}
 
-		chunkHashes = append(chunkHashes, blobRef.AsHex())
+		bfile.BlobRefs = append(bfile.BlobRefs, blobRef.AsHex())
+
+		if int64(len(chunk)) < chunkSize {
+			break
+		}
+	}
+
+	bfile.Sha256 = fmt.Sprintf("%x", fullContentHash.Sum(nil))
+
+	return bfile, nil
+}
+
+func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
+	file, err := os.Open(wd.Join(bfile.Path))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	for blobIdx, brHex := range bfile.BlobRefs {
+		blobRef, err := buptypes.BlobRefFromHex(brHex)
+		if err != nil {
+			return err
+		}
 
 		// just check if the chunk exists already
 		blobAlreadyExists, err := blobExists(wd, *blobRef)
 		if err != nil {
-			return "", nil, err
+			return err
 		}
 
 		if blobAlreadyExists {
 			log.Printf("Deduplicated chunk %s", blobRef.AsHex())
 			continue
 		}
+
+		if _, err := file.Seek(int64(blobIdx*chunkSize), io.SeekStart); err != nil {
+			return err
+		}
+
+		chunk := io.LimitReader(file, chunkSize)
 
 		ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 		defer cancel()
@@ -188,16 +233,12 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) (string, []string, e
 			http.MethodPost,
 			wd.clientConfig.ApiPath("/blobs/"+blobRef.AsHex()),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken),
-			ezhttp.SendBody(bytes.NewReader(chunk), "application/octet-stream")); err != nil {
-			return "", nil, err
-		}
-
-		if int64(len(chunk)) < chunkSize {
-			break
+			ezhttp.SendBody(buputils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
+			return err
 		}
 	}
 
-	return fmt.Sprintf("%x", fullFileSha256.Sum(nil)), chunkHashes, nil
+	return nil
 }
 
 func uploadChangeset(wd *workdirLocation, changeset buptypes.CollectionChangeset) (*buptypes.Collection, error) {
@@ -227,27 +268,16 @@ func push(wd *workdirLocation) error {
 		return nil
 	}
 
-	// FIXME: correct this code duplication
-	for i, created := range ch.FilesCreated {
-		fileHash, chunkHashes, err := uploadChunks(wd, created)
-		if err != nil {
+	for _, created := range ch.FilesCreated {
+		if err := uploadChunks(wd, created); err != nil {
 			return err
 		}
-
-		created.Sha256 = fileHash
-		created.BlobRefs = chunkHashes
-		ch.FilesCreated[i] = created
 	}
 
-	for i, updated := range ch.FilesUpdated {
-		fileHash, chunkHashes, err := uploadChunks(wd, updated)
-		if err != nil {
+	for _, updated := range ch.FilesUpdated {
+		if err := uploadChunks(wd, updated); err != nil {
 			return err
 		}
-
-		updated.Sha256 = fileHash
-		updated.BlobRefs = chunkHashes
-		ch.FilesUpdated[i] = updated
 	}
 
 	updatedCollection, err := uploadChangeset(wd, *ch)
