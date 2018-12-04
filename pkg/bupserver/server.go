@@ -6,6 +6,7 @@ import (
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/bup/pkg/blobdriver"
 	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"github.com/gorilla/mux"
@@ -83,6 +84,11 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 		srv.ListenAndServe()
 	}(workers.Stopper())
+
+	logl.Info.Printf(
+		"node %s (ver. %s) started",
+		serverConfig.SelfNode.ID,
+		dynversion.Version)
 
 	<-stop.Signal
 

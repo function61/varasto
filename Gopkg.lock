@@ -27,11 +27,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:eef31fe92c0eb39830e69e5e95b200216c88f23593a944dffcddf099249ca829"
+  digest = "1:d7bf311c0cea795ea86fff27d8a5ec8211db5284f6bb92b042063ca18b6ee3ba"
   name = "github.com/function61/gokit"
   packages = [
     "assert",
     "cryptorandombytes",
+    "dynversion",
     "ezhttp",
     "fileexists",
     "hashverifyreader",
@@ -41,7 +42,7 @@
     "stopper",
   ]
   pruneopts = "UT"
-  revision = "736c4f70d27630ab5c14d1607cb8fde1324e85f8"
+  revision = "4b662134a5648303996afe77b64b4bde42b95460"
 
 [[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
@@ -174,6 +175,7 @@
     "github.com/djherbis/times",
     "github.com/function61/gokit/assert",
     "github.com/function61/gokit/cryptorandombytes",
+    "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/ezhttp",
     "github.com/function61/gokit/fileexists",
     "github.com/function61/gokit/hashverifyreader",

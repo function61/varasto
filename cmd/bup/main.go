@@ -4,17 +4,16 @@ import (
 	"fmt"
 	"github.com/function61/bup/pkg/bupclient"
 	"github.com/function61/bup/pkg/bupserver"
+	"github.com/function61/gokit/dynversion"
 	"github.com/spf13/cobra"
 	"os"
 )
-
-var version = "dev" // replaced dynamically at build time
 
 func main() {
 	rootCmd := &cobra.Command{
 		Use:     os.Args[0],
 		Short:   "Your friendly distributed NAS",
-		Version: version,
+		Version: dynversion.Version,
 	}
 
 	for _, entrypoint := range bupclient.Entrypoints() {
