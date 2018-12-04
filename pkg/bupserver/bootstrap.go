@@ -44,14 +44,14 @@ func bootstrap(db *storm.DB) error {
 
 	volume1 := buptypes.Volume{
 		ID:         buputils.NewVolumeId(),
-		Label:      "dev-volume",
+		Label:      "dev vol. 1",
 		Driver:     buptypes.VolumeDriverKindLocalFs,
 		DriverOpts: "/go/src/github.com/function61/bup/__volume/1/",
 	}
 
 	volume2 := buptypes.Volume{
 		ID:         buputils.NewVolumeId(),
-		Label:      "dev-volume",
+		Label:      "dev vol. 2",
 		Driver:     buptypes.VolumeDriverKindLocalFs,
 		DriverOpts: "/go/src/github.com/function61/bup/__volume/2/",
 	}
