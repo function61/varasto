@@ -57,7 +57,11 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 	router := mux.NewRouter()
 
-	if err := defineApi(router, *serverConfig, volumeDrivers, db, logex.Prefix("restapi", logger)); err != nil {
+	if err := defineRestApi(router, *serverConfig, volumeDrivers, db, logex.Prefix("restapi", logger)); err != nil {
+		return err
+	}
+
+	if err := defineUi(router, db); err != nil {
 		return err
 	}
 

@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-func defineApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriverMap, db *storm.DB, logger *log.Logger) error {
+func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriverMap, db *storm.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	getCollections := func(w http.ResponseWriter, r *http.Request) {
@@ -312,9 +312,6 @@ func defineApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriver
 
 		panicIfError(exportDb(tx, w))
 	}).Methods(http.MethodGet)
-
-	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
-	// myRouter.Handle('/ui/{rest}', http.StripPrefix("/ui/", http.FileServer(http.Dir("ui/"))))
 
 	return nil
 }
