@@ -14,7 +14,7 @@
 			"dev_ports": ["8066:8066"],
 			"dev_pro_tips": [],
 			"pass_envs": [],
-			"contextless_build": false
+			"contextless_build": true
 		}
 	],
 	"docker_images": []
