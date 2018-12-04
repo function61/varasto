@@ -3,20 +3,23 @@ package blobdriver
 import (
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 )
 
-func NewLocalFs(path string) *localFs {
+func NewLocalFs(path string, logger *log.Logger) *localFs {
 	return &localFs{
 		path: path,
+		log:  logex.Levels(logex.NonNil(logger)),
 	}
 }
 
 type localFs struct {
 	path string
+	log  *logex.Leveled
 }
 
 func (l *localFs) Store(ref buptypes.BlobRef, content io.Reader) (int64, error) {
@@ -50,7 +53,7 @@ func (l *localFs) Store(ref buptypes.BlobRef, content io.Reader) (int64, error) 
 
 		if !success {
 			if err := os.Remove(tempName); err != nil {
-				log.Printf("localfs: error removing temp file %s: %s", tempName, err.Error())
+				l.log.Error.Printf("temp file %s cleanup: %s", tempName, err.Error())
 			}
 		}
 	}()

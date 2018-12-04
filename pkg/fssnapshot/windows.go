@@ -2,6 +2,7 @@ package fssnapshot
 
 import (
 	"fmt"
+	"github.com/function61/gokit/logex"
 	"log"
 	"os"
 	"os/exec"
@@ -13,11 +14,15 @@ import (
 // I wrote an overview of this process @ https://github.com/restic/restic/issues/340#issuecomment-442446540
 // thanks for pointers: https://github.com/restic/restic/issues/340#issuecomment-307636386
 
-func WindowsSnapshotter() Snapshotter {
-	return &windowsSnapshotter{}
+func WindowsSnapshotter(logger *log.Logger) Snapshotter {
+	return &windowsSnapshotter{
+		log: logex.Levels(logex.NonNil(logger)),
+	}
 }
 
-type windowsSnapshotter struct{}
+type windowsSnapshotter struct {
+	log *logex.Leveled
+}
 
 func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 	completedSuccesfully := false
@@ -50,10 +55,10 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			return
 		}
 
-		log.Printf("cleaning snapshot: %s", snapshotId)
+		w.log.Info.Printf("cleaning snapshot %s", snapshotId)
 
 		if err := deleteSnapshot(snapshotId); err != nil {
-			log.Printf("error cleaning up snapshot: %s", err.Error())
+			w.log.Error.Printf("cleaning up snapshot: %v", err)
 		}
 	}()
 

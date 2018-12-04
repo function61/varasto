@@ -5,10 +5,11 @@ import (
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
 	"github.com/function61/gokit/cryptorandombytes"
+	"github.com/function61/gokit/logex"
 	"log"
 )
 
-func readConfigFromDatabaseOrBootstrapIfNeeded(db *storm.DB) (*ServerConfig, error) {
+func readConfigFromDatabaseOrBootstrapIfNeeded(db *storm.DB, logger *log.Logger) (*ServerConfig, error) {
 	// using this as a flag to check if boostrapping has been done before
 	serverConfig, err := readConfigFromDatabase(db)
 	if err == nil {
@@ -23,18 +24,18 @@ func readConfigFromDatabaseOrBootstrapIfNeeded(db *storm.DB) (*ServerConfig, err
 	}
 
 	// was not found error => run bootstrap
-	if err := bootstrap(db); err != nil {
+	if err := bootstrap(db, logex.Levels(logger)); err != nil {
 		return nil, err
 	}
 
 	return readConfigFromDatabase(db)
 }
 
-func bootstrap(db *storm.DB) error {
+func bootstrap(db *storm.DB, logl *logex.Leveled) error {
 	nodeId := buputils.NewNodeId()
 	authToken := cryptorandombytes.Base64Url(32)
 
-	log.Printf("generated nodeId: %s", nodeId)
+	logl.Info.Printf("generated nodeId: %s", nodeId)
 
 	tx, err := db.Begin(true)
 	if err != nil {

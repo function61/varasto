@@ -2,6 +2,10 @@
 
 package fssnapshot
 
-func PlatformSpecificSnapshotter() Snapshotter {
-	return LvmSnapshotter("1GB")
+import (
+	"log"
+)
+
+func PlatformSpecificSnapshotter(logger *log.Logger) Snapshotter {
+	return LvmSnapshotter("1GB", logger)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/function61/bup/pkg/blobdriver"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
+	"github.com/function61/gokit/logex"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -14,7 +15,9 @@ import (
 	"os"
 )
 
-func defineApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriverMap, db *storm.DB) error {
+func defineApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriverMap, db *storm.DB, logger *log.Logger) error {
+	logl := logex.Levels(logger)
+
 	getCollections := func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
 			return
@@ -85,8 +88,7 @@ func defineApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriver
 		}
 		panicIfError(err)
 
-		// log.Printf("Wrote blob %s for upload %s", blobRef.AsHex(), uploadId)
-		log.Printf("Wrote blob %s", blobRef.AsHex())
+		logl.Info.Printf("Wrote blob %s", blobRef.AsHex())
 
 		fc := buptypes.Blob{
 			Ref:        *blobRef,
@@ -179,7 +181,7 @@ func defineApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriver
 		panicIfError(tx.Save(&coll))
 		panicIfError(tx.Commit())
 
-		log.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
+		logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
 
 		outJson(w, coll)
 	}

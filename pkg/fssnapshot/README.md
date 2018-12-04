@@ -13,7 +13,7 @@ Example code
 // snapshotDemo("D:/data") // for Windows
 // snapshotDemo("/home/macgyver") // for Linux
 func snapshotDemo(path string) error {
-	snapshotter := fssnapshot.PlatformSpecificSnapshotter()
+	snapshotter := fssnapshot.PlatformSpecificSnapshotter(nil)
 	snap, err := snapshotter.Snapshot(path)
 	if err != nil {
 		return err

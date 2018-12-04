@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/function61/gokit/logex"
 	"github.com/prometheus/procfs"
 	"log"
 	"os"
@@ -20,12 +21,13 @@ import (
 	"syscall"
 )
 
-func LvmSnapshotter(snapshotSize string) Snapshotter {
-	return &lvmSnapshotter{snapshotSize}
+func LvmSnapshotter(snapshotSize string, logger *log.Logger) Snapshotter {
+	return &lvmSnapshotter{snapshotSize, logex.Levels(logex.NonNil(logger))}
 }
 
 type lvmSnapshotter struct {
 	snapshotSize string
+	log          *logex.Leveled
 }
 
 func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
@@ -83,10 +85,10 @@ func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			return
 		}
 
-		log.Printf("cleanup: delete snapshot")
+		l.log.Info.Printf("cleaning up snapshot %s", snapshotId)
 
 		if err := deleteLvmSnapshot(snapshotDevicePath); err != nil {
-			log.Printf("error cleaning up: %s", err.Error())
+			l.log.Error.Printf("deleteLvmSnapshot: %v", err)
 		}
 	}()
 
@@ -104,10 +106,10 @@ func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			return
 		}
 
-		log.Printf("cleanup: deleting mount path")
+		l.log.Info.Printf("cleanup: deleting mount path")
 
 		if err := deleteLvmSnapshotMountPath(snapshotMountPath); err != nil {
-			log.Printf("error cleaning up: %s", err.Error())
+			l.log.Error.Printf("deleteLvmSnapshotMountPath: %v", err)
 		}
 	}()
 

@@ -6,6 +6,7 @@ import (
 	"github.com/asdine/storm"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"log"
 	"time"
@@ -17,9 +18,11 @@ type replicationJob struct {
 	ToVolumeId   string
 }
 
-func StartReplicationController(db *storm.DB, volumeDrivers VolumeDriverMap, stop *stopper.Stopper) {
+func StartReplicationController(db *storm.DB, volumeDrivers VolumeDriverMap, logger *log.Logger, stop *stopper.Stopper) {
+	logl := logex.Levels(logger)
+
 	defer stop.Done()
-	defer log.Println("ReplicationController stopped")
+	defer logl.Info.Println("stopped")
 
 	fiveSeconds := time.NewTicker(5 * time.Second)
 
@@ -28,28 +31,28 @@ func StartReplicationController(db *storm.DB, volumeDrivers VolumeDriverMap, sto
 		case <-stop.Signal:
 			return
 		case <-fiveSeconds.C:
-			if err := discoverAndRunReplicationJobs(db, volumeDrivers); err != nil {
-				log.Printf("discoverAndRunReplicationJobs: %s", err.Error())
+			if err := discoverAndRunReplicationJobs(db, logl, volumeDrivers); err != nil {
+				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 			}
 		}
 	}
 }
 
-func discoverAndRunReplicationJobs(db *storm.DB, volumeDrivers VolumeDriverMap) error {
-	jobs, err := discoverReplicationJobs(db)
+func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, volumeDrivers VolumeDriverMap) error {
+	jobs, err := discoverReplicationJobs(db, logl)
 	if err != nil {
 		return err
 	}
 
 	for _, job := range jobs {
-		log.Printf(
+		logl.Info.Printf(
 			"replicating %s from %s to %s",
 			job.Ref.AsHex(),
 			job.FromVolumeId,
 			job.ToVolumeId)
 
 		if err := replicateJob(job, db, volumeDrivers); err != nil {
-			log.Printf("error replicating blob %s", job.Ref.AsHex())
+			logl.Error.Printf("replicating blob %s", job.Ref.AsHex())
 		}
 	}
 
@@ -110,7 +113,7 @@ func replicateJob(job *replicationJob, db *storm.DB, volumeDrivers VolumeDriverM
 	return tx.Commit()
 }
 
-func discoverReplicationJobs(db *storm.DB) ([]*replicationJob, error) {
+func discoverReplicationJobs(db *storm.DB, logl *logex.Leveled) ([]*replicationJob, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
@@ -128,7 +131,9 @@ func discoverReplicationJobs(db *storm.DB) ([]*replicationJob, error) {
 	}
 
 	if len(blobsNeedingReplication) == batchLimit {
-		log.Printf("discoverReplicationJobs: replication operating @ batchLimit")
+		logl.Info.Printf(
+			"operating @ batchLimit (%d)",
+			batchLimit)
 	}
 
 	needsReplication := []*replicationJob{}

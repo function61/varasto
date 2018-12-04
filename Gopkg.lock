@@ -27,7 +27,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:90c9e01bb1c751e19c49ed9843765fd7c76310ef4ea732652065ea54decf2c68"
+  digest = "1:eef31fe92c0eb39830e69e5e95b200216c88f23593a944dffcddf099249ca829"
   name = "github.com/function61/gokit"
   packages = [
     "assert",
@@ -36,11 +36,12 @@
     "fileexists",
     "hashverifyreader",
     "jsonfile",
+    "logex",
     "ossignal",
     "stopper",
   ]
   pruneopts = "UT"
-  revision = "faf6890ef5cc9cfd19d35a82b63f16d28c62df26"
+  revision = "736c4f70d27630ab5c14d1607cb8fde1324e85f8"
 
 [[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
@@ -177,6 +178,7 @@
     "github.com/function61/gokit/fileexists",
     "github.com/function61/gokit/hashverifyreader",
     "github.com/function61/gokit/jsonfile",
+    "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/stopper",
     "github.com/gorilla/mux",

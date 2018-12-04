@@ -2,6 +2,10 @@
 
 package fssnapshot
 
-func PlatformSpecificSnapshotter() Snapshotter {
-	return WindowsSnapshotter()
+import (
+	"log"
+)
+
+func PlatformSpecificSnapshotter(logger *log.Logger) Snapshotter {
+	return WindowsSnapshotter(logger)
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/bup/pkg/blobdriver"
 	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"github.com/gorilla/mux"
 	"log"
@@ -14,8 +15,10 @@ import (
 
 type VolumeDriverMap map[string]blobdriver.Driver
 
-func runServer(stop *stopper.Stopper) error {
+func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	defer stop.Done()
+
+	logl := logex.Levels(logger)
 
 	db, err := storm.Open("/tmp/bup.db", storm.Codec(msgpack.Codec))
 	if err != nil {
@@ -23,12 +26,14 @@ func runServer(stop *stopper.Stopper) error {
 	}
 	defer db.Close()
 
-	serverConfig, err := readConfigFromDatabaseOrBootstrapIfNeeded(db)
+	serverConfig, err := readConfigFromDatabaseOrBootstrapIfNeeded(
+		db,
+		logex.Prefix("bootstrap", logger))
 	if err != nil {
 		return err
 	}
 
-	log.Printf(
+	logl.Info.Printf(
 		"client's auth token %s, server URL http://%s",
 		serverConfig.ClientsAuthToken,
 		serverConfig.SelfNode.Addr)
@@ -42,7 +47,9 @@ func runServer(stop *stopper.Stopper) error {
 
 		switch volume.Driver {
 		case buptypes.VolumeDriverKindLocalFs:
-			volumeDrivers[volume.ID] = blobdriver.NewLocalFs(volume.DriverOpts)
+			volumeDrivers[volume.ID] = blobdriver.NewLocalFs(
+				volume.DriverOpts,
+				logex.Prefix("blobdriver/localfs", logger))
 		default:
 			panic(fmt.Errorf("unsupported volume driver: %s", volume.Driver))
 		}
@@ -50,7 +57,7 @@ func runServer(stop *stopper.Stopper) error {
 
 	router := mux.NewRouter()
 
-	if err := defineApi(router, *serverConfig, volumeDrivers, db); err != nil {
+	if err := defineApi(router, *serverConfig, volumeDrivers, db, logex.Prefix("restapi", logger)); err != nil {
 		return err
 	}
 
@@ -61,7 +68,11 @@ func runServer(stop *stopper.Stopper) error {
 
 	workers := stopper.NewManager()
 
-	go StartReplicationController(db, volumeDrivers, workers.Stopper())
+	go StartReplicationController(
+		db,
+		volumeDrivers,
+		logex.Prefix("replicationcontroller", logger),
+		workers.Stopper())
 
 	go func(stop *stopper.Stopper) {
 		defer stop.Done()
@@ -72,7 +83,7 @@ func runServer(stop *stopper.Stopper) error {
 	<-stop.Signal
 
 	if err := srv.Shutdown(nil); err != nil {
-		log.Fatalf("Shutdown: %v", err)
+		logl.Error.Fatalf("Shutdown: %v", err)
 	}
 
 	workers.StopAllWorkersAndWait()
