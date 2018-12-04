@@ -88,7 +88,7 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 		}
 		panicIfError(err)
 
-		logl.Info.Printf("Wrote blob %s", blobRef.AsHex())
+		logl.Debug.Printf("wrote blob %s", blobRef.AsHex())
 
 		fc := buptypes.Blob{
 			Ref:        *blobRef,

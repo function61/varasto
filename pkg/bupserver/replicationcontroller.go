@@ -45,7 +45,7 @@ func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, volumeDriv
 	}
 
 	for _, job := range jobs {
-		logl.Info.Printf(
+		logl.Debug.Printf(
 			"replicating %s from %s to %s",
 			job.Ref.AsHex(),
 			job.FromVolumeId,
