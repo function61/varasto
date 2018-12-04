@@ -113,7 +113,7 @@ func blobExists(wd *workdirLocation, blobRef buptypes.BlobRef) (bool, error) {
 	resp, err := ezhttp.Send(
 		ctx,
 		http.MethodHead,
-		wd.clientConfig.ApiPath("/blobs/"+blobRef.AsHex()),
+		wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
 		ezhttp.AuthBearer(wd.clientConfig.AuthToken))
 
 	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {
@@ -231,7 +231,7 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
 		if _, err := ezhttp.Send(
 			ctx,
 			http.MethodPost,
-			wd.clientConfig.ApiPath("/blobs/"+blobRef.AsHex()),
+			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken),
 			ezhttp.SendBody(buputils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
 			return err
@@ -249,7 +249,7 @@ func uploadChangeset(wd *workdirLocation, changeset buptypes.CollectionChangeset
 	_, err := ezhttp.Send(
 		ctx,
 		http.MethodPost,
-		wd.clientConfig.ApiPath("/collections/"+wd.manifest.Collection.ID+"/changesets"),
+		wd.clientConfig.ApiPath("/api/collections/"+wd.manifest.Collection.ID+"/changesets"),
 		ezhttp.AuthBearer(wd.clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false))

@@ -288,20 +288,20 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 		}
 	}
 
-	router.HandleFunc("/blobs/{blobRef}", getBlob).Methods(http.MethodGet)
-	router.HandleFunc("/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
-	router.HandleFunc("/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
+	router.HandleFunc("/api/blobs/{blobRef}", getBlob).Methods(http.MethodGet)
+	router.HandleFunc("/api/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
+	router.HandleFunc("/api/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
 
-	router.HandleFunc("/collections", getCollections).Methods(http.MethodGet)
-	router.HandleFunc("/collections", newCollection).Methods(http.MethodPost)
-	router.HandleFunc("/collections/{collectionId}", getCollection).Methods(http.MethodGet)
-	router.HandleFunc("/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
+	router.HandleFunc("/api/collections", getCollections).Methods(http.MethodGet)
+	router.HandleFunc("/api/collections", newCollection).Methods(http.MethodPost)
+	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)
+	router.HandleFunc("/api/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
 
-	router.HandleFunc("/nodes", getNodes).Methods(http.MethodGet)
+	router.HandleFunc("/api/nodes", getNodes).Methods(http.MethodGet)
 
-	router.HandleFunc("/volumes", getVolumes).Methods(http.MethodGet)
+	router.HandleFunc("/api/volumes", getVolumes).Methods(http.MethodGet)
 
-	router.HandleFunc("/db/export", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/api/db/export", func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
 			return
 		}

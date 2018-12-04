@@ -118,7 +118,7 @@ func cloneOneFile(wd *workdirLocation, file buptypes.File) error {
 		chunkDataRes, err := ezhttp.Send(
 			ctx,
 			http.MethodGet,
-			wd.clientConfig.ApiPath("/blobs/"+blobRef.AsHex()),
+			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken))
 		if err != nil {
 			return err
@@ -149,7 +149,7 @@ func fetchCollectionMetadata(clientConfig ClientConfig, id string) (*buptypes.Co
 	_, err := ezhttp.Send(
 		ctx,
 		http.MethodGet,
-		clientConfig.ApiPath("/collections/"+id),
+		clientConfig.ApiPath("/api/collections/"+id),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.RespondsJson(collection, false))
 

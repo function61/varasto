@@ -23,7 +23,7 @@ func mk(parentPath string, collectionName string) error {
 	_, err = ezhttp.Send(
 		ctx,
 		http.MethodPost,
-		clientConfig.ApiPath("/collections"),
+		clientConfig.ApiPath("/api/collections"),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&buptypes.CreateCollectionRequest{
 			Name: collectionName,
