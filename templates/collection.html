@@ -1,25 +1,53 @@
 {{template "header.html"}}
 
-<div class="col-md-6">	
-	<h1>Collection</h1>
-
-	<p>changeset {{.ChangesetId}} replicationpolicy {{.Collection.ReplicationPolicy}}</p>
-
-	<ul>
-	{{range .FileList}}
-		<li>{{.Path}}</li>
-	{{end}}
-	</ul>
+<div class="col-md-8">	
+	<div class="panel panel-default">
+		<div class="panel-heading">{{.Collection.Name}}</div>
+		<div class="panel-body">
+			<ul>
+			{{range .FileList}}
+				<li>{{.Path}}</li>
+			{{end}}
+			</ul>
+		</div>
+	</div>
 </div>
 
-<div class="col-md-6">
-	<h1>Changesets (head {{.Collection.Head}})</h1>
+<div class="col-md-4">
+	<div class="panel panel-default">
+		<div class="panel-heading">Details</div>
+		<div class="panel-body">
+			<table class="table table-striped table-hover">
+			<tr>
+				<td>Changeset</td>
+				<td>{{.ChangesetId}} (head {{.Collection.Head}})</td>
+			</tr>
+			<tr>
+				<td>File count</td>
+				<td>{{len .FileList}}</td>
+			</tr>
+			<tr>
+				<td>Total size</td>
+				<td>{{.TotalSize}}</td>
+			</tr>
+			<tr>
+				<td>Replication policy</td>
+				<td><a href="/replicationpolicies">{{.Collection.ReplicationPolicy}}</a></td>
+			</tr>
+			</table>
+		</div>
+	</div>
 
-	<ul>
-	{{range .Collection.Changesets}}
-		<li><a href="/collections/{{$.Collection.ID}}/rev/{{.ID}}">{{.Created}}</a></li>
-	{{end}}
-	</ul>
+	<div class="panel panel-default">
+		<div class="panel-heading">Changesets</div>
+		<div class="panel-body">
+			<ul>
+			{{range .Collection.Changesets}}
+				<li><a href="/collections/{{$.Collection.ID}}/rev/{{.ID}}">{{.Created}}</a></li>
+			{{end}}
+			</ul>
+		</div>
+	</div>
 </div>
 
 {{template "footer.html"}}

@@ -84,13 +84,23 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		type TemplateData struct {
 			ChangesetId string
 			Collection  buptypes.Collection
+			TotalSize   int64
 			FileList    []buptypes.File
+		}
+
+		files := state.FileList()
+
+		totalSize := int64(0)
+
+		for _, file := range files {
+			totalSize += file.Size
 		}
 
 		templates.Lookup("collection.html").Execute(w, &TemplateData{
 			ChangesetId: state.ChangesetId,
 			Collection:  coll,
-			FileList:    state.FileList(),
+			TotalSize:   totalSize,
+			FileList:    files,
 		})
 	}
 
