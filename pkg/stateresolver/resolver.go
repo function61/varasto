@@ -3,6 +3,7 @@ package stateresolver
 import (
 	"errors"
 	"github.com/function61/bup/pkg/buptypes"
+	"sort"
 )
 
 type fileMap map[string]buptypes.File
@@ -19,6 +20,18 @@ func (s *StateAt) Files() fileMap {
 	for key, value := range s.files {
 		files[key] = value
 	}
+
+	return files
+}
+
+func (s *StateAt) FileList() []buptypes.File {
+	files := []buptypes.File{}
+
+	for _, file := range s.files {
+		files = append(files, file)
+	}
+
+	sort.Sort(byPath(files))
 
 	return files
 }
@@ -79,4 +92,19 @@ func findChangesetById(c buptypes.Collection, id string) *buptypes.CollectionCha
 	}
 
 	return nil
+}
+
+// TODO: put in types package?
+type byPath []buptypes.File
+
+func (s byPath) Len() int {
+	return len(s)
+}
+
+func (s byPath) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s byPath) Less(i, j int) bool {
+	return s[i].Path < s[j].Path
 }
