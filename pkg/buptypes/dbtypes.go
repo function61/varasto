@@ -24,7 +24,7 @@ type ReplicationPolicy struct {
 
 type Volume struct {
 	ID            int `storm:"id"`
-	Identifier    string
+	UUID          string
 	Label         string
 	Quota         int64
 	BlobSizeTotal int64

@@ -7,7 +7,7 @@ import (
 )
 
 func TestPath(t *testing.T) {
-	driver := NewLocalFs("/tmp/", nil)
+	driver := NewLocalFs("APvMjudT4IQ", "/tmp/", nil)
 
 	blobRef, _ := buptypes.BlobRefFromHex("d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
 

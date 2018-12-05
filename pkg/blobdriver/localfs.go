@@ -1,6 +1,7 @@
 package blobdriver
 
 import (
+	"fmt"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/logex"
@@ -10,14 +11,16 @@ import (
 	"path/filepath"
 )
 
-func NewLocalFs(path string, logger *log.Logger) *localFs {
+func NewLocalFs(uuid string, path string, logger *log.Logger) *localFs {
 	return &localFs{
+		uuid: uuid,
 		path: path,
 		log:  logex.Levels(logex.NonNil(logger)),
 	}
 }
 
 type localFs struct {
+	uuid string
 	path string
 	log  *logex.Leveled
 }
@@ -80,8 +83,27 @@ func (l *localFs) Fetch(ref buptypes.BlobRef) (io.ReadCloser, error) {
 	return os.Open(l.getPath(ref))
 }
 
+func (l *localFs) Mountable() error {
+	// to ensure that we mounted correct volume, there must be a <uuid>.iogrid file in the root
+	flagFilename := l.uuid + ".iogrid"
+
+	exists, err := fileexists.Exists(filepath.Join(l.path, flagFilename))
+	if err != nil {
+		return err // error checking file existence
+	}
+
+	if !exists {
+		return fmt.Errorf("flag file not found: %s", flagFilename)
+	}
+
+	return nil
+}
+
 func (l *localFs) getPath(ref buptypes.BlobRef) string {
 	hexHash := ref.AsHex()
 
-	return l.path + hexHash[0:2] + "/" + hexHash[2:] + ".chunk"
+	return filepath.Join(
+		l.path,
+		hexHash[0:2],
+		hexHash[2:]+".chunk")
 }

@@ -10,4 +10,6 @@ type Driver interface {
 
 	// if chunk is not found, error must report os.IsNotExist(err) == true
 	Fetch(ref buptypes.BlobRef) (io.ReadCloser, error)
+
+	Mountable() error
 }

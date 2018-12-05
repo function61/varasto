@@ -134,28 +134,34 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 		authTokens[client.AuthToken] = true
 	}
 
+	volumeDrivers := VolumeDriverByVolumeId{}
+
+	for _, mountedVolume := range myMounts {
+		volume := buptypes.Volume{}
+		if err := db.One("ID", mountedVolume.Volume, &volume); err != nil {
+			return nil, err
+		}
+
+		volumeDrivers[mountedVolume.Volume] = getDriver(volume, mountedVolume, logger)
+	}
+
 	return &ServerConfig{
 		SelfNode:              selfNode,
 		SelfNodeFirstVolumeId: myMounts[0].Volume,
 		ClusterWideMounts:     clusterWideMountsMapped,
-		VolumeDrivers:         computeVolumeDriverMap(myMounts, logger),
+		VolumeDrivers:         volumeDrivers,
 		ClientsAuthTokens:     authTokens,
 	}, nil
 }
 
-func computeVolumeDriverMap(mountedVolumes []buptypes.VolumeMount, logger *log.Logger) VolumeDriverByVolumeId {
-	volumeDrivers := VolumeDriverByVolumeId{}
-
-	for _, mountedVolume := range mountedVolumes {
-		switch mountedVolume.Driver {
-		case buptypes.VolumeDriverKindLocalFs:
-			volumeDrivers[mountedVolume.Volume] = blobdriver.NewLocalFs(
-				mountedVolume.DriverOpts,
-				logex.Prefix("blobdriver/localfs", logger))
-		default:
-			panic(fmt.Errorf("unsupported volume driver: %s", mountedVolume.Driver))
-		}
+func getDriver(volume buptypes.Volume, mount buptypes.VolumeMount, logger *log.Logger) blobdriver.Driver {
+	switch mount.Driver {
+	case buptypes.VolumeDriverKindLocalFs:
+		return blobdriver.NewLocalFs(
+			volume.UUID,
+			mount.DriverOpts,
+			logex.Prefix("blobdriver/localfs", logger))
+	default:
+		panic(fmt.Errorf("unsupported volume driver: %s", mount.Driver))
 	}
-
-	return volumeDrivers
 }
