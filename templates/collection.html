@@ -1,8 +1,16 @@
 {{template "header.html"}}
 
 <div class="col-md-8">	
+	<ol class="breadcrumb">
+	{{range .ParentDirectories}}
+		<li><a href="/browse/{{.ID}}">{{.Name}}</a></li>
+	{{end}}
+		<li><a href="/browse/{{.Directory.ID}}">{{.Directory.Name}}</a></li>
+		<li class="active">{{.Collection.Name}}</li>
+	</ol>
+
 	<div class="panel panel-default">
-		<div class="panel-heading">{{.Collection.Name}}</div>
+		<div class="panel-heading">Files</div>
 		<div class="panel-body">
 			<table class="table table-striped table-hover">
 			{{range .FileList}}

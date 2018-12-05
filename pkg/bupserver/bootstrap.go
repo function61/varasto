@@ -19,17 +19,17 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 	defer tx.Rollback()
 
 	volume1 := buptypes.Volume{
-		ID:         1,
-		Identifier: "8gxL",
-		Label:      "dev vol. 1",
-		Quota:      int64(1024 * 1024 * 30),
+		ID:    1,
+		UUID:  "8gxL",
+		Label: "dev vol. 1",
+		Quota: int64(1024 * 1024 * 30),
 	}
 
 	volume2 := buptypes.Volume{
-		ID:         2,
-		Identifier: "irG8",
-		Label:      "dev vol. 2",
-		Quota:      int64(1024 * 1024 * 30),
+		ID:    2,
+		UUID:  "irG8",
+		Label: "dev vol. 2",
+		Quota: int64(1024 * 1024 * 30),
 	}
 
 	newNode := buptypes.Node{
@@ -49,6 +49,16 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 		},
 		&volume1,
 		&volume2,
+		&buptypes.Directory{
+			ID:     "root",
+			Parent: "", // root doesn't have parent
+			Name:   "root",
+		},
+		&buptypes.Directory{
+			ID:     buputils.NewDirectoryId(),
+			Parent: "root",
+			Name:   "subdir",
+		},
 		&buptypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",

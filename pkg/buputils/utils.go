@@ -14,6 +14,7 @@ func BlobHashVerifier(reader io.Reader, br buptypes.BlobRef) io.Reader {
 
 // there's gonna be lots of these
 var NewCollectionId = longId
+var NewDirectoryId = longId
 
 // there's going to be comparatively few of these
 // (changeset IDs are unique within a collection)

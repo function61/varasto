@@ -37,7 +37,8 @@ func (b *BlobRef) AsSha256Sum() []byte {
 }
 
 type CreateCollectionRequest struct {
-	Name string `json:"name"`
+	Name              string `json:"name"`
+	ParentDirectoryId string `json:"parent_directory_id"`
 }
 
 type VolumeDriverKind string

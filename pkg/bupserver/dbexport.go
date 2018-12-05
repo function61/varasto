@@ -9,7 +9,9 @@ import (
 
 // I have confidence on the robustness of the blobdriver interface, but not yet on the
 // robustness of the metadata database. that's why we have this export endpoint - to get
-// backups. more confidence will come when this whole system is hooked up to Event Horizon
+// backups. more confidence will come when this whole system is hooked up to Event Horizon.
+// Run this with:
+// 	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" http://localhost:8066/api/db/export
 
 func exportDb(tx storm.Node, out io.Writer) error {
 	type exporter struct {
@@ -19,8 +21,11 @@ func exportDb(tx storm.Node, out io.Writer) error {
 
 	exporters := []exporter{
 		{"Node", &buptypes.Node{}},
+		{"Client", &buptypes.Client{}},
 		{"ReplicationPolicy", &buptypes.ReplicationPolicy{}},
 		{"Volume", &buptypes.Volume{}},
+		{"VolumeMount", &buptypes.VolumeMount{}},
+		{"Directory", &buptypes.Directory{}},
 		{"Collection", &buptypes.Collection{}},
 		{"Blob", &buptypes.Blob{}},
 	}

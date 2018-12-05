@@ -67,6 +67,7 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 
 		collection := buptypes.Collection{
 			ID:                buputils.NewCollectionId(),
+			Directory:         req.ParentDirectoryId,
 			Name:              req.Name,
 			ReplicationPolicy: "default",
 			Head:              buptypes.NoParentId,

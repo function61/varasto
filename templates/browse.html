@@ -1,0 +1,28 @@
+{{template "header.html"}}
+
+<div class="col-md-6">	
+	<ol class="breadcrumb">
+	{{range .ParentDirectories}}
+		<li><a href="/browse/{{.ID}}">{{.Name}}</a></li>
+	{{end}}
+		<li class="active">{{.Directory.Name}}</li>
+	</ol>
+
+	<table class="table table-striped table-hover">
+	{{range .SubDirectories}}
+	<tr>
+		<td><img src="/directory.png" /></td>
+		<td><a href="/browse/{{.ID}}">{{.Name}}</a></td>
+	</tr>
+	{{end}}
+	{{range .Collections}}
+	<tr>
+		<td><img src="/collection.png" /></td>
+		<td><a href="/collections/{{.ID}}">{{.Name}}</a></td>
+	</tr>
+	{{end}}
+	</table>
+	
+</div>
+
+{{template "footer.html"}}

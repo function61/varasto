@@ -39,8 +39,15 @@ type VolumeMount struct {
 	DriverOpts string
 }
 
+type Directory struct {
+	ID     string `storm:"id"`
+	Parent string `storm:"index"`
+	Name   string
+}
+
 type Collection struct {
 	ID                string `storm:"id"`
+	Directory         string
 	Name              string
 	ReplicationPolicy string
 	Head              string

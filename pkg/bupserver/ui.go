@@ -19,19 +19,50 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		http.Redirect(w, r, "/collections", http.StatusFound)
 	})
 
-	router.HandleFunc("/collections", func(w http.ResponseWriter, r *http.Request) {
-		colls := []buptypes.Collection{}
-		panicIfError(db.All(&colls))
+	router.HandleFunc("/browse/{directoryId}", func(w http.ResponseWriter, r *http.Request) {
+		tx, err := db.Begin(false)
+		panicIfError(err)
+		defer tx.Rollback()
 
-		templates.Lookup("collections.html").Execute(w, colls)
+		dir := buptypes.Directory{}
+		panicIfError(tx.One("ID", mux.Vars(r)["directoryId"], &dir))
+
+		parentDirs, err := getParentDirs(dir, tx)
+		panicIfError(err)
+
+		subDirs := []buptypes.Directory{}
+		if err := tx.Find("Parent", dir.ID, &subDirs); err != nil && err != storm.ErrNotFound {
+			panic(err)
+		}
+
+		colls := []buptypes.Collection{}
+		if err := tx.Find("Directory", dir.ID, &colls); err != nil && err != storm.ErrNotFound {
+			panic(err)
+		}
+
+		templates.Lookup("browse.html").Execute(w, struct {
+			Directory         buptypes.Directory
+			ParentDirectories []buptypes.Directory
+			SubDirectories    []buptypes.Directory
+			Collections       []buptypes.Collection
+		}{
+			Directory:         dir,
+			ParentDirectories: parentDirs,
+			SubDirectories:    subDirs,
+			Collections:       colls,
+		})
 	})
 
 	router.HandleFunc("/volumes-and-mounts", func(w http.ResponseWriter, r *http.Request) {
+		tx, err := db.Begin(false)
+		panicIfError(err)
+		defer tx.Rollback()
+
 		volumes := []buptypes.Volume{}
-		panicIfError(db.All(&volumes))
+		panicIfError(tx.All(&volumes))
 
 		volumeMounts := []buptypes.VolumeMount{}
-		panicIfError(db.All(&volumeMounts))
+		panicIfError(tx.All(&volumeMounts))
 
 		type WrappedVolume struct {
 			Volume       buptypes.Volume
@@ -77,8 +108,12 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 	})
 
 	serveCollectionAt := func(collectionId string, changesetId string, w http.ResponseWriter, r *http.Request) {
+		tx, err := db.Begin(false)
+		panicIfError(err)
+		defer tx.Rollback()
+
 		coll := buptypes.Collection{}
-		if err := db.One("ID", collectionId, &coll); err != nil {
+		if err := tx.One("ID", collectionId, &coll); err != nil {
 			if err != storm.ErrNotFound {
 				panicIfError(err)
 			}
@@ -94,12 +129,11 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		state, err := stateresolver.ComputeStateAt(coll, changesetId)
 		panicIfError(err)
 
-		type TemplateData struct {
-			ChangesetId string
-			Collection  buptypes.Collection
-			TotalSize   int64
-			FileList    []buptypes.File
-		}
+		dir := buptypes.Directory{}
+		panicIfError(tx.One("ID", coll.Directory, &dir))
+
+		parentDirs, err := getParentDirs(dir, tx)
+		panicIfError(err)
 
 		files := state.FileList()
 
@@ -109,11 +143,20 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 			totalSize += file.Size
 		}
 
-		templates.Lookup("collection.html").Execute(w, &TemplateData{
-			ChangesetId: state.ChangesetId,
-			Collection:  coll,
-			TotalSize:   totalSize,
-			FileList:    files,
+		templates.Lookup("collection.html").Execute(w, struct {
+			ChangesetId       string
+			Collection        buptypes.Collection
+			Directory         buptypes.Directory
+			ParentDirectories []buptypes.Directory
+			TotalSize         int64
+			FileList          []buptypes.File
+		}{
+			ChangesetId:       state.ChangesetId,
+			Collection:        coll,
+			Directory:         dir,
+			ParentDirectories: parentDirs,
+			TotalSize:         totalSize,
+			FileList:          files,
 		})
 	}
 
@@ -128,4 +171,20 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
 
 	return nil
+}
+
+func getParentDirs(of buptypes.Directory, tx storm.Node) ([]buptypes.Directory, error) {
+	parentDirs := []buptypes.Directory{}
+
+	current := of
+	for current.Parent != "" {
+		if err := tx.One("ID", current.Parent, &current); err != nil {
+			return nil, err
+		}
+
+		// reverse order
+		parentDirs = append([]buptypes.Directory{current}, parentDirs...)
+	}
+
+	return parentDirs, nil
 }

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-func mk(parentPath string, collectionName string) error {
+func mk(parentPath string, parentDirectoryId string, collectionName string) error {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
@@ -26,7 +26,8 @@ func mk(parentPath string, collectionName string) error {
 		clientConfig.ApiPath("/api/collections"),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&buptypes.CreateCollectionRequest{
-			Name: collectionName,
+			Name:              collectionName,
+			ParentDirectoryId: parentDirectoryId,
 		}),
 		ezhttp.RespondsJson(&collection, false))
 
