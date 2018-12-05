@@ -74,7 +74,8 @@ func replicateJob(job *replicationJob, db *storm.DB, volumeDrivers VolumeDriverM
 		return err
 	}
 
-	if _, err := to.Store(job.Ref, buputils.BlobHashVerifier(stream, job.Ref)); err != nil {
+	blobSizeBytes, err := to.Store(job.Ref, buputils.BlobHashVerifier(stream, job.Ref))
+	if err != nil {
 		return err
 	}
 
@@ -104,7 +105,9 @@ func replicateJob(job *replicationJob, db *storm.DB, volumeDrivers VolumeDriverM
 	})
 	blobRecord.IsPendingReplication = len(blobRecord.VolumesPendingReplication) > 0
 
-	// TODO: update volume's blob count and total bytes
+	if err := volumeManagerIncreaseBlobCount(tx, job.ToVolumeId, blobSizeBytes); err != nil {
+		return err
+	}
 
 	if err := tx.Save(blobRecord); err != nil {
 		return err

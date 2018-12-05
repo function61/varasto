@@ -100,13 +100,8 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 		panicIfError(errTxBegin)
 		defer tx.Rollback()
 
-		var volume buptypes.Volume
-		panicIfError(tx.One("ID", volumeId, &volume))
+		panicIfError(volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes))
 
-		volume.BlobCount++
-		volume.BlobSizeTotal += blobSizeBytes
-
-		panicIfError(tx.Save(&volume))
 		panicIfError(tx.Save(&fc))
 		panicIfError(tx.Commit())
 	}
