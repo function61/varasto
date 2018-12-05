@@ -63,8 +63,7 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		templates.Lookup("nodes.html").Execute(w, nodes)
 	})
 
-	router.HandleFunc("/collections/{collectionId}", func(w http.ResponseWriter, r *http.Request) {
-		collectionId := mux.Vars(r)["collectionId"]
+	serveCollectionAt := func(collectionId string, changesetId string, w http.ResponseWriter, r *http.Request) {
 		coll := buptypes.Collection{}
 		if err := db.One("ID", collectionId, &coll); err != nil {
 			if err != storm.ErrNotFound {
@@ -75,7 +74,11 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 			return
 		}
 
-		state, err := stateresolver.ComputeStateAt(coll, coll.Head)
+		if changesetId == "" {
+			changesetId = coll.Head
+		}
+
+		state, err := stateresolver.ComputeStateAt(coll, changesetId)
 		panicIfError(err)
 
 		type TemplateData struct {
@@ -89,6 +92,14 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 			Collection:  coll,
 			FileList:    state.FileList(),
 		})
+	}
+
+	router.HandleFunc("/collections/{collectionId}/rev/{changesetId}", func(w http.ResponseWriter, r *http.Request) {
+		serveCollectionAt(mux.Vars(r)["collectionId"], mux.Vars(r)["changesetId"], w, r)
+	})
+
+	router.HandleFunc("/collections/{collectionId}", func(w http.ResponseWriter, r *http.Request) {
+		serveCollectionAt(mux.Vars(r)["collectionId"], "", w, r) // head revision
 	})
 
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("./public/")))
