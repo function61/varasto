@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestMain(t *testing.T) {
+func TestComputeStateAt(t *testing.T) {
 	// new empty collection
 	coll := buptypes.Collection{
 		Head:       buptypes.NoParentId,
