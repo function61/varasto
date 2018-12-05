@@ -11,16 +11,18 @@
 			<th>Label</th>
 			<th>Blob total size</th>
 			<th>Blob count</th>
+			<th>Quota used</th>
 		</tr>
 	</thead>
 	<tbody>
-	{{range .Volumes}}
+	{{range .WrappedVolumes}}
 	<tr>
-		<td>{{.ID}}</td>
-		<td>{{.Identifier}}</td>
-		<td>{{.Label}}</td>
-		<td>{{.BlobSizeTotal}}</td>
-		<td>{{.BlobCount}}</td>
+		<td>{{.Volume.ID}}</td>
+		<td>{{.Volume.Identifier}}</td>
+		<td>{{.Volume.Label}}</td>
+		<td>{{.Volume.BlobSizeTotal}}</td>
+		<td>{{.Volume.BlobCount}}</td>
+		<td><div class="progress"> <div class="progress-bar progress-bar-info progress-bar-striped" style="width: {{.QuotaUsedPct}}%" /> </div></td>
 	</tr>
 	{{end}}
 	</tbody>

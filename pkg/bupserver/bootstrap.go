@@ -22,12 +22,14 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 		ID:         1,
 		Identifier: "8gxL",
 		Label:      "dev vol. 1",
+		Quota:      int64(1024 * 1024 * 30),
 	}
 
 	volume2 := buptypes.Volume{
 		ID:         2,
 		Identifier: "irG8",
 		Label:      "dev vol. 2",
+		Quota:      int64(1024 * 1024 * 30),
 	}
 
 	newNode := buptypes.Node{

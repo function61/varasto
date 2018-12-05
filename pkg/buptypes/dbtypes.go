@@ -26,6 +26,7 @@ type Volume struct {
 	ID            int `storm:"id"`
 	Identifier    string
 	Label         string
+	Quota         int64
 	BlobSizeTotal int64
 	BlobCount     int64
 }

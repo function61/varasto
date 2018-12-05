@@ -33,13 +33,25 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		volumeMounts := []buptypes.VolumeMount{}
 		panicIfError(db.All(&volumeMounts))
 
-		type TemplateData struct {
-			Volumes []buptypes.Volume
-			Mounts  []buptypes.VolumeMount
+		type WrappedVolume struct {
+			Volume       buptypes.Volume
+			QuotaUsedPct int
 		}
-		templates.Lookup("volumes-and-mounts.html").Execute(w, TemplateData{
-			Volumes: volumes,
-			Mounts:  volumeMounts,
+
+		wrappedVolumes := []WrappedVolume{}
+		for _, vol := range volumes {
+			wrappedVolumes = append(wrappedVolumes, WrappedVolume{
+				Volume:       vol,
+				QuotaUsedPct: int((vol.BlobSizeTotal * 100) / vol.Quota),
+			})
+		}
+
+		templates.Lookup("volumes-and-mounts.html").Execute(w, struct {
+			WrappedVolumes []WrappedVolume
+			Mounts         []buptypes.VolumeMount
+		}{
+			WrappedVolumes: wrappedVolumes,
+			Mounts:         volumeMounts,
 		})
 	})
 
