@@ -3,6 +3,7 @@ package bupserver
 import (
 	"encoding/json"
 	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/bup/pkg/sliceutil"
 	"net/http"
 	"regexp"
 )
@@ -50,34 +51,10 @@ func missingFromLeftHandSide(lhs []int, rhs []int) []int {
 	missing := []int{}
 
 	for _, item := range rhs {
-		if !contains(lhs, item) {
+		if !sliceutil.ContainsInt(lhs, item) {
 			missing = append(missing, item)
 		}
 	}
 
 	return missing
-}
-
-type filterFn func(item int) bool
-
-func filter(items []int, cb filterFn) []int {
-	altered := []int{}
-
-	for _, item := range items {
-		if cb(item) {
-			altered = append(altered, item)
-		}
-	}
-
-	return altered
-}
-
-func contains(items []int, find int) bool {
-	for _, item := range items {
-		if item == find {
-			return true
-		}
-	}
-
-	return false
 }

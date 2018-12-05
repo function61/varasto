@@ -6,6 +6,7 @@ import (
 	"github.com/asdine/storm"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
+	"github.com/function61/bup/pkg/sliceutil"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"log"
@@ -90,7 +91,7 @@ func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig)
 		return err
 	}
 
-	if contains(blobRecord.Volumes, job.ToVolumeId) {
+	if sliceutil.ContainsInt(blobRecord.Volumes, job.ToVolumeId) {
 		return fmt.Errorf(
 			"race condition: someone already replicated %s to %d",
 			job.Ref.AsHex(),
@@ -99,8 +100,8 @@ func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig)
 
 	blobRecord.Volumes = append(blobRecord.Volumes, job.ToVolumeId)
 
-	// remove succesfully replicated blob from pending list
-	blobRecord.VolumesPendingReplication = filter(blobRecord.VolumesPendingReplication, func(volId int) bool {
+	// remove succesfully replicated volumes from pending list
+	blobRecord.VolumesPendingReplication = sliceutil.FilterInt(blobRecord.VolumesPendingReplication, func(volId int) bool {
 		return volId != job.ToVolumeId
 	})
 	blobRecord.IsPendingReplication = len(blobRecord.VolumesPendingReplication) > 0
