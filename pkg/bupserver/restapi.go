@@ -29,6 +29,17 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 		outJson(w, collections)
 	}
 
+	getClients := func(w http.ResponseWriter, r *http.Request) {
+		if !authenticate(conf, w, r) {
+			return
+		}
+
+		var clients []buptypes.Client
+		panicIfError(db.All(&clients))
+
+		outJson(w, clients)
+	}
+
 	getCollection := func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
 			return
@@ -286,6 +297,8 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 	router.HandleFunc("/api/blobs/{blobRef}", getBlob).Methods(http.MethodGet)
 	router.HandleFunc("/api/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
 	router.HandleFunc("/api/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
+
+	router.HandleFunc("/api/clients", getClients).Methods(http.MethodGet)
 
 	router.HandleFunc("/api/collections", getCollections).Methods(http.MethodGet)
 	router.HandleFunc("/api/collections", newCollection).Methods(http.MethodPost)

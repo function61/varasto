@@ -20,47 +20,38 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 	})
 
 	router.HandleFunc("/collections", func(w http.ResponseWriter, r *http.Request) {
-		tx, err := db.Begin(false)
-		panicIfError(err)
-		defer tx.Rollback()
-
 		colls := []buptypes.Collection{}
-		panicIfError(tx.All(&colls))
+		panicIfError(db.All(&colls))
 
 		templates.Lookup("collections.html").Execute(w, colls)
 	})
 
 	router.HandleFunc("/volumes", func(w http.ResponseWriter, r *http.Request) {
-		tx, err := db.Begin(false)
-		panicIfError(err)
-		defer tx.Rollback()
-
 		volumes := []buptypes.Volume{}
-		panicIfError(tx.All(&volumes))
+		panicIfError(db.All(&volumes))
 
 		templates.Lookup("volumes.html").Execute(w, volumes)
 	})
 
 	router.HandleFunc("/replicationpolicies", func(w http.ResponseWriter, r *http.Request) {
-		tx, err := db.Begin(false)
-		panicIfError(err)
-		defer tx.Rollback()
-
 		replicationPolicies := []buptypes.ReplicationPolicy{}
-		panicIfError(tx.All(&replicationPolicies))
+		panicIfError(db.All(&replicationPolicies))
 
 		templates.Lookup("replicationpolicies.html").Execute(w, replicationPolicies)
 	})
 
 	router.HandleFunc("/nodes", func(w http.ResponseWriter, r *http.Request) {
-		tx, err := db.Begin(false)
-		panicIfError(err)
-		defer tx.Rollback()
-
 		nodes := []buptypes.Node{}
-		panicIfError(tx.All(&nodes))
+		panicIfError(db.All(&nodes))
 
 		templates.Lookup("nodes.html").Execute(w, nodes)
+	})
+
+	router.HandleFunc("/clients", func(w http.ResponseWriter, r *http.Request) {
+		clients := []buptypes.Client{}
+		panicIfError(db.All(&clients))
+
+		templates.Lookup("clients.html").Execute(w, clients)
 	})
 
 	serveCollectionAt := func(collectionId string, changesetId string, w http.ResponseWriter, r *http.Request) {

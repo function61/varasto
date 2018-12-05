@@ -1,10 +1,10 @@
 package bupserver
 
 import (
-	"crypto/subtle"
 	"encoding/json"
 	"github.com/function61/bup/pkg/buptypes"
 	"net/http"
+	"regexp"
 )
 
 func panicIfError(err error) {
@@ -13,15 +13,19 @@ func panicIfError(err error) {
 	}
 }
 
-func authenticate(serverConfig ServerConfig, w http.ResponseWriter, r *http.Request) bool {
-	auth := "Bearer " + serverConfig.ClientsAuthToken
+var bearerRe = regexp.MustCompile("^Bearer (.+)")
 
-	if subtle.ConstantTimeCompare([]byte(r.Header.Get("Authorization")), []byte(auth)) != 1 {
-		http.Error(w, "missing or incorrect Authorization header", http.StatusForbidden)
-		return false
+func authenticate(serverConfig ServerConfig, w http.ResponseWriter, r *http.Request) bool {
+	match := bearerRe.FindStringSubmatch(r.Header.Get("Authorization"))
+
+	if match != nil {
+		if _, tokenAllowed := serverConfig.ClientsAuthTokens[match[1]]; tokenAllowed {
+			return true
+		}
 	}
 
-	return true
+	http.Error(w, "missing or incorrect Authorization header", http.StatusForbidden)
+	return false
 }
 
 func outJson(w http.ResponseWriter, out interface{}) {

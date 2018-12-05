@@ -11,6 +11,12 @@ type Node struct {
 	AccessToVolumes []string
 }
 
+type Client struct {
+	ID        string `storm:"id"`
+	AuthToken string
+	Name      string
+}
+
 type ReplicationPolicy struct {
 	ID             string `storm:"id"`
 	Name           string

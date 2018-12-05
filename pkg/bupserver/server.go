@@ -34,11 +34,6 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		return err
 	}
 
-	logl.Info.Printf(
-		"client's auth token %s, server URL http://%s",
-		serverConfig.ClientsAuthToken,
-		serverConfig.SelfNode.Addr)
-
 	volumeDrivers := VolumeDriverMap{}
 
 	for _, volumeId := range serverConfig.SelfNode.AccessToVolumes {

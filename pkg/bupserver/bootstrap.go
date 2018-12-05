@@ -33,7 +33,6 @@ func readConfigFromDatabaseOrBootstrapIfNeeded(db *storm.DB, logger *log.Logger)
 
 func bootstrap(db *storm.DB, logl *logex.Leveled) error {
 	nodeId := buputils.NewNodeId()
-	authToken := cryptorandombytes.Base64Url(32)
 
 	logl.Info.Printf("generated nodeId: %s", nodeId)
 
@@ -70,7 +69,17 @@ func bootstrap(db *storm.DB, logl *logex.Leveled) error {
 		AccessToVolumes: []string{volume1.ID, volume2.ID},
 	}
 
+	client := buptypes.Client{
+		ID:        buputils.NewClientId(),
+		Name:      "Vagrant VM",
+		AuthToken: cryptorandombytes.Base64Url(32),
+	}
+
 	if err := tx.Save(&newNode); err != nil {
+		return err
+	}
+
+	if err := tx.Save(&client); err != nil {
 		return err
 	}
 
@@ -87,10 +96,6 @@ func bootstrap(db *storm.DB, logl *logex.Leveled) error {
 	}
 
 	if err := tx.Set("settings", "nodeId", &nodeId); err != nil {
-		return err
-	}
-
-	if err := tx.Set("settings", "authToken", &authToken); err != nil {
 		return err
 	}
 

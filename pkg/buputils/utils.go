@@ -20,6 +20,7 @@ var NewCollectionId = longId
 var NewCollectionChangesetId = shortId
 var NewVolumeId = shortId
 var NewNodeId = shortId
+var NewClientId = shortId
 
 func shortId() string {
 	return cryptorandombytes.Base64Url(3)
