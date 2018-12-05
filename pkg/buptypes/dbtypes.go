@@ -5,10 +5,9 @@ import (
 )
 
 type Node struct {
-	ID              string `storm:"id"`
-	Addr            string
-	Name            string
-	AccessToVolumes []string
+	ID   string `storm:"id"`
+	Addr string
+	Name string
 }
 
 type Client struct {
@@ -20,16 +19,23 @@ type Client struct {
 type ReplicationPolicy struct {
 	ID             string `storm:"id"`
 	Name           string
-	DesiredVolumes []string
+	DesiredVolumes []int
 }
 
 type Volume struct {
-	ID            string `storm:"id"`
+	ID            int `storm:"id"`
+	Identifier    string
 	Label         string
-	Driver        VolumeDriverKind
-	DriverOpts    string
 	BlobSizeTotal int64
 	BlobCount     int64
+}
+
+type VolumeMount struct {
+	ID         string `storm:"id"`
+	Volume     int
+	Node       string
+	Driver     VolumeDriverKind
+	DriverOpts string
 }
 
 type Collection struct {
@@ -60,8 +66,8 @@ type File struct {
 
 type Blob struct {
 	Ref                       BlobRef `storm:"id"`
-	Volumes                   []string
-	VolumesPendingReplication []string
+	Volumes                   []int
+	VolumesPendingReplication []int
 	IsPendingReplication      bool `storm:"index"`
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
 }

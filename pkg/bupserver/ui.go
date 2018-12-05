@@ -26,11 +26,21 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		templates.Lookup("collections.html").Execute(w, colls)
 	})
 
-	router.HandleFunc("/volumes", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/volumes-and-mounts", func(w http.ResponseWriter, r *http.Request) {
 		volumes := []buptypes.Volume{}
 		panicIfError(db.All(&volumes))
 
-		templates.Lookup("volumes.html").Execute(w, volumes)
+		volumeMounts := []buptypes.VolumeMount{}
+		panicIfError(db.All(&volumeMounts))
+
+		type TemplateData struct {
+			Volumes []buptypes.Volume
+			Mounts  []buptypes.VolumeMount
+		}
+		templates.Lookup("volumes-and-mounts.html").Execute(w, TemplateData{
+			Volumes: volumes,
+			Mounts:  volumeMounts,
+		})
 	})
 
 	router.HandleFunc("/replicationpolicies", func(w http.ResponseWriter, r *http.Request) {

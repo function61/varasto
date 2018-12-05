@@ -9,32 +9,8 @@ import (
 	"log"
 )
 
-func readConfigFromDatabaseOrBootstrapIfNeeded(db *storm.DB, logger *log.Logger) (*ServerConfig, error) {
-	// using this as a flag to check if boostrapping has been done before
-	serverConfig, err := readConfigFromDatabase(db)
-	if err == nil {
-		return serverConfig, nil
-	}
-
-	// we have error => possibly need bootstrap
-
-	// totally unexpected error?
-	if err != storm.ErrNotFound {
-		return nil, err
-	}
-
-	// was not found error => run bootstrap
-	if err := bootstrap(db, logex.Levels(logger)); err != nil {
-		return nil, err
-	}
-
-	return readConfigFromDatabase(db)
-}
-
-func bootstrap(db *storm.DB, logl *logex.Leveled) error {
-	nodeId := buputils.NewNodeId()
-
-	logl.Info.Printf("generated nodeId: %s", nodeId)
+func bootstrap(db *storm.DB, logger *log.Logger) error {
+	logl := logex.Levels(logger)
 
 	tx, err := db.Begin(true)
 	if err != nil {
@@ -43,59 +19,62 @@ func bootstrap(db *storm.DB, logl *logex.Leveled) error {
 	defer tx.Rollback()
 
 	volume1 := buptypes.Volume{
-		ID:         buputils.NewVolumeId(),
+		ID:         1,
+		Identifier: "8gxL",
 		Label:      "dev vol. 1",
-		Driver:     buptypes.VolumeDriverKindLocalFs,
-		DriverOpts: "/go/src/github.com/function61/bup/__volume/1/",
 	}
 
 	volume2 := buptypes.Volume{
-		ID:         buputils.NewVolumeId(),
+		ID:         2,
+		Identifier: "irG8",
 		Label:      "dev vol. 2",
-		Driver:     buptypes.VolumeDriverKindLocalFs,
-		DriverOpts: "/go/src/github.com/function61/bup/__volume/2/",
-	}
-
-	replPolicy := buptypes.ReplicationPolicy{
-		ID:             "default",
-		Name:           "Default replication policy",
-		DesiredVolumes: []string{volume1.ID, volume2.ID},
 	}
 
 	newNode := buptypes.Node{
-		ID:              nodeId,
-		Addr:            "localhost:8066",
-		Name:            "dev",
-		AccessToVolumes: []string{volume1.ID, volume2.ID},
+		ID:   buputils.NewNodeId(),
+		Addr: "localhost:8066",
+		Name: "dev",
 	}
 
-	client := buptypes.Client{
-		ID:        buputils.NewClientId(),
-		Name:      "Vagrant VM",
-		AuthToken: cryptorandombytes.Base64Url(32),
+	logl.Info.Printf("generated nodeId: %s", newNode.ID)
+
+	recordsToSave := []interface{}{
+		&newNode,
+		&buptypes.Client{
+			ID:        buputils.NewClientId(),
+			Name:      "Vagrant VM",
+			AuthToken: cryptorandombytes.Base64Url(32),
+		},
+		&volume1,
+		&volume2,
+		&buptypes.ReplicationPolicy{
+			ID:             "default",
+			Name:           "Default replication policy",
+			DesiredVolumes: []int{volume1.ID, volume2.ID},
+		},
+		&buptypes.VolumeMount{
+			ID:         buputils.NewVolumeMountId(),
+			Volume:     volume1.ID,
+			Node:       newNode.ID,
+			Driver:     buptypes.VolumeDriverKindLocalFs,
+			DriverOpts: "/go/src/github.com/function61/bup/__volume/1/",
+		},
+		&buptypes.VolumeMount{
+			ID:         buputils.NewVolumeMountId(),
+			Volume:     volume2.ID,
+			Node:       newNode.ID,
+			Driver:     buptypes.VolumeDriverKindLocalFs,
+			DriverOpts: "/go/src/github.com/function61/bup/__volume/2/",
+		},
 	}
 
-	if err := tx.Save(&newNode); err != nil {
-		return err
+	for _, recordToSave := range recordsToSave {
+		if err := tx.Save(recordToSave); err != nil {
+			return err
+		}
 	}
 
-	if err := tx.Save(&client); err != nil {
-		return err
-	}
-
-	if err := tx.Save(&volume1); err != nil {
-		return err
-	}
-
-	if err := tx.Save(&volume2); err != nil {
-		return err
-	}
-
-	if err := tx.Save(&replPolicy); err != nil {
-		return err
-	}
-
-	if err := tx.Set("settings", "nodeId", &nodeId); err != nil {
+	if err := tx.Set("settings", "nodeId", &newNode.ID); err != nil {
 		return err
 	}
 

@@ -18,7 +18,7 @@ var NewCollectionId = longId
 // there's going to be comparatively few of these
 // (changeset IDs are unique within a collection)
 var NewCollectionChangesetId = shortId
-var NewVolumeId = shortId
+var NewVolumeMountId = shortId
 var NewNodeId = shortId
 var NewClientId = shortId
 

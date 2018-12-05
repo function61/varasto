@@ -15,7 +15,7 @@ import (
 	"os"
 )
 
-func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDriverMap, db *storm.DB, logger *log.Logger) error {
+func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	getCollections := func(w http.ResponseWriter, r *http.Request) {
@@ -89,8 +89,9 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 			return
 		}
 
-		volumeId := conf.SelfNode.AccessToVolumes[0]
-		volumeDriver := volumeDrivers[volumeId]
+		volumeId := conf.SelfNodeFirstVolumeId // FIXME
+
+		volumeDriver := conf.VolumeDrivers[volumeId]
 
 		blobSizeBytes, err := volumeDriver.Store(*blobRef, buputils.BlobHashVerifier(r.Body, *blobRef))
 		if err != nil {
@@ -103,7 +104,7 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 
 		fc := buptypes.Blob{
 			Ref:        *blobRef,
-			Volumes:    []string{volumeId},
+			Volumes:    []int{volumeId},
 			Referenced: false,
 		}
 
@@ -262,7 +263,7 @@ func defineRestApi(router *mux.Router, conf ServerConfig, volumeDrivers VolumeDr
 		// try to find the first local volume that has this blob
 		var foundDriver blobdriver.Driver
 		for _, volumeId := range blobMetadata.Volumes {
-			if driver, found := volumeDrivers[volumeId]; found {
+			if driver, found := conf.VolumeDrivers[volumeId]; found {
 				foundDriver = driver
 				break
 			}

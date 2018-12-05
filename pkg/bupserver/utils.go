@@ -15,7 +15,7 @@ func panicIfError(err error) {
 
 var bearerRe = regexp.MustCompile("^Bearer (.+)")
 
-func authenticate(serverConfig ServerConfig, w http.ResponseWriter, r *http.Request) bool {
+func authenticate(serverConfig *ServerConfig, w http.ResponseWriter, r *http.Request) bool {
 	match := bearerRe.FindStringSubmatch(r.Header.Get("Authorization"))
 
 	if match != nil {
@@ -46,8 +46,8 @@ func collectionHasChangesetId(id string, coll *buptypes.Collection) bool {
 	return false
 }
 
-func missingFromLeftHandSide(lhs []string, rhs []string) []string {
-	missing := []string{}
+func missingFromLeftHandSide(lhs []int, rhs []int) []int {
+	missing := []int{}
 
 	for _, item := range rhs {
 		if !contains(lhs, item) {
@@ -58,10 +58,10 @@ func missingFromLeftHandSide(lhs []string, rhs []string) []string {
 	return missing
 }
 
-type filterFn func(item string) bool
+type filterFn func(item int) bool
 
-func filter(items []string, cb filterFn) []string {
-	altered := []string{}
+func filter(items []int, cb filterFn) []int {
+	altered := []int{}
 
 	for _, item := range items {
 		if cb(item) {
@@ -72,7 +72,7 @@ func filter(items []string, cb filterFn) []string {
 	return altered
 }
 
-func contains(items []string, find string) bool {
+func contains(items []int, find int) bool {
 	for _, item := range items {
 		if item == find {
 			return true

@@ -14,8 +14,6 @@ import (
 	"net/http"
 )
 
-type VolumeDriverMap map[string]blobdriver.Driver
-
 func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	defer stop.Done()
 
@@ -27,33 +25,27 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	}
 	defer db.Close()
 
-	serverConfig, err := readConfigFromDatabaseOrBootstrapIfNeeded(
-		db,
-		logex.Prefix("bootstrap", logger))
-	if err != nil {
-		return err
-	}
+	serverConfig, err := readConfigFromDatabase(db, logger)
+	if err != nil { // maybe need bootstrap?
+		// totally unexpected error?
+		if err != storm.ErrNotFound {
+			return err
+		}
 
-	volumeDrivers := VolumeDriverMap{}
+		// was not found error => run bootstrap
+		if err := bootstrap(db, logex.Prefix("bootstrap", logger)); err != nil {
+			return err
+		}
 
-	for _, volumeId := range serverConfig.SelfNode.AccessToVolumes {
-		// FIXME: use tx here
-		var volume buptypes.Volume
-		panicIfError(db.One("ID", volumeId, &volume))
-
-		switch volume.Driver {
-		case buptypes.VolumeDriverKindLocalFs:
-			volumeDrivers[volume.ID] = blobdriver.NewLocalFs(
-				volume.DriverOpts,
-				logex.Prefix("blobdriver/localfs", logger))
-		default:
-			panic(fmt.Errorf("unsupported volume driver: %s", volume.Driver))
+		serverConfig, err = readConfigFromDatabase(db, logger)
+		if err != nil {
+			return err
 		}
 	}
 
 	router := mux.NewRouter()
 
-	if err := defineRestApi(router, *serverConfig, volumeDrivers, db, logex.Prefix("restapi", logger)); err != nil {
+	if err := defineRestApi(router, serverConfig, db, logex.Prefix("restapi", logger)); err != nil {
 		return err
 	}
 
@@ -70,7 +62,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 	go StartReplicationController(
 		db,
-		volumeDrivers,
+		serverConfig,
 		logex.Prefix("replicationcontroller", logger),
 		workers.Stopper())
 
@@ -94,4 +86,76 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	workers.StopAllWorkersAndWait()
 
 	return nil
+}
+
+type VolumeDriverByVolumeId map[int]blobdriver.Driver
+
+type ServerConfig struct {
+	SelfNode              buptypes.Node
+	SelfNodeFirstVolumeId int
+	ClusterWideMounts     map[int]buptypes.VolumeMount
+	VolumeDrivers         VolumeDriverByVolumeId
+	ClientsAuthTokens     map[string]bool
+}
+
+func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, error) {
+	var nodeId string
+	if err := db.Get("settings", "nodeId", &nodeId); err != nil {
+		return nil, err
+	}
+
+	var selfNode buptypes.Node
+	if err := db.One("ID", nodeId, &selfNode); err != nil {
+		return nil, err
+	}
+
+	myMounts := []buptypes.VolumeMount{}
+	if err := db.Find("Node", selfNode.ID, &myMounts); err != nil {
+		return nil, err
+	}
+
+	clusterWideMounts := []buptypes.VolumeMount{}
+	if err := db.All(&clusterWideMounts); err != nil {
+		return nil, err
+	}
+
+	clusterWideMountsMapped := map[int]buptypes.VolumeMount{}
+	for _, mv := range clusterWideMounts {
+		clusterWideMountsMapped[mv.Volume] = mv
+	}
+
+	clients := []buptypes.Client{}
+	if err := db.All(&clients); err != nil {
+		return nil, err
+	}
+
+	authTokens := map[string]bool{}
+	for _, client := range clients {
+		authTokens[client.AuthToken] = true
+	}
+
+	return &ServerConfig{
+		SelfNode:              selfNode,
+		SelfNodeFirstVolumeId: myMounts[0].Volume,
+		ClusterWideMounts:     clusterWideMountsMapped,
+		VolumeDrivers:         computeVolumeDriverMap(myMounts, logger),
+		ClientsAuthTokens:     authTokens,
+	}, nil
+}
+
+func computeVolumeDriverMap(mountedVolumes []buptypes.VolumeMount, logger *log.Logger) VolumeDriverByVolumeId {
+	volumeDrivers := VolumeDriverByVolumeId{}
+
+	for _, mountedVolume := range mountedVolumes {
+		switch mountedVolume.Driver {
+		case buptypes.VolumeDriverKindLocalFs:
+			volumeDrivers[mountedVolume.Volume] = blobdriver.NewLocalFs(
+				mountedVolume.DriverOpts,
+				logex.Prefix("blobdriver/localfs", logger))
+		default:
+			panic(fmt.Errorf("unsupported volume driver: %s", mountedVolume.Driver))
+		}
+	}
+
+	return volumeDrivers
 }

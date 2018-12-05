@@ -14,11 +14,11 @@ import (
 
 type replicationJob struct {
 	Ref          buptypes.BlobRef
-	FromVolumeId string
-	ToVolumeId   string
+	FromVolumeId int
+	ToVolumeId   int
 }
 
-func StartReplicationController(db *storm.DB, volumeDrivers VolumeDriverMap, logger *log.Logger, stop *stopper.Stopper) {
+func StartReplicationController(db *storm.DB, serverConfig *ServerConfig, logger *log.Logger, stop *stopper.Stopper) {
 	logl := logex.Levels(logger)
 
 	defer stop.Done()
@@ -31,14 +31,14 @@ func StartReplicationController(db *storm.DB, volumeDrivers VolumeDriverMap, log
 		case <-stop.Signal:
 			return
 		case <-fiveSeconds.C:
-			if err := discoverAndRunReplicationJobs(db, logl, volumeDrivers); err != nil {
+			if err := discoverAndRunReplicationJobs(db, logl, serverConfig); err != nil {
 				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 			}
 		}
 	}
 }
 
-func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, volumeDrivers VolumeDriverMap) error {
+func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, serverConfig *ServerConfig) error {
 	jobs, err := discoverReplicationJobs(db, logl)
 	if err != nil {
 		return err
@@ -46,12 +46,12 @@ func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, volumeDriv
 
 	for _, job := range jobs {
 		logl.Debug.Printf(
-			"replicating %s from %s to %s",
+			"replicating %s from %d to %d",
 			job.Ref.AsHex(),
 			job.FromVolumeId,
 			job.ToVolumeId)
 
-		if err := replicateJob(job, db, volumeDrivers); err != nil {
+		if err := replicateJob(job, db, serverConfig); err != nil {
 			logl.Error.Printf("replicating blob %s", job.Ref.AsHex())
 		}
 	}
@@ -59,12 +59,12 @@ func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, volumeDriv
 	return nil
 }
 
-func replicateJob(job *replicationJob, db *storm.DB, volumeDrivers VolumeDriverMap) error {
-	from, ok := volumeDrivers[job.FromVolumeId]
+func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig) error {
+	from, ok := serverConfig.VolumeDrivers[job.FromVolumeId]
 	if !ok {
 		return errors.New("from volume not found from volume drivers")
 	}
-	to, ok := volumeDrivers[job.ToVolumeId]
+	to, ok := serverConfig.VolumeDrivers[job.ToVolumeId]
 	if !ok {
 		return errors.New("to volume not found from volume drivers")
 	}
@@ -92,7 +92,7 @@ func replicateJob(job *replicationJob, db *storm.DB, volumeDrivers VolumeDriverM
 
 	if contains(blobRecord.Volumes, job.ToVolumeId) {
 		return fmt.Errorf(
-			"race condition: someone already replicated %s to %s",
+			"race condition: someone already replicated %s to %d",
 			job.Ref.AsHex(),
 			job.ToVolumeId)
 	}
@@ -100,7 +100,7 @@ func replicateJob(job *replicationJob, db *storm.DB, volumeDrivers VolumeDriverM
 	blobRecord.Volumes = append(blobRecord.Volumes, job.ToVolumeId)
 
 	// remove succesfully replicated blob from pending list
-	blobRecord.VolumesPendingReplication = filter(blobRecord.VolumesPendingReplication, func(volId string) bool {
+	blobRecord.VolumesPendingReplication = filter(blobRecord.VolumesPendingReplication, func(volId int) bool {
 		return volId != job.ToVolumeId
 	})
 	blobRecord.IsPendingReplication = len(blobRecord.VolumesPendingReplication) > 0
