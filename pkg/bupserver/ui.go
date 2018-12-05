@@ -3,20 +3,24 @@ package bupserver
 import (
 	"github.com/asdine/storm"
 	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/bup/pkg/sliceutil"
 	"github.com/function61/bup/pkg/stateresolver"
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
+	"path/filepath"
 )
 
 func defineUi(router *mux.Router, db *storm.DB) error {
-	templates, err := template.New("templatecollection").ParseGlob("templates/*.html")
+	templates, err := template.New("templatecollection").Funcs(template.FuncMap{
+		"basename": func(in string) string { return filepath.Base(in) },
+	}).ParseGlob("templates/*.html")
 	if err != nil {
 		return err
 	}
 
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/collections", http.StatusFound)
+		http.Redirect(w, r, "/browse/root", http.StatusFound)
 	})
 
 	router.HandleFunc("/browse/{directoryId}", func(w http.ResponseWriter, r *http.Request) {
@@ -108,6 +112,11 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 	})
 
 	serveCollectionAt := func(collectionId string, changesetId string, w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Query().Get("path")
+		if path == "" {
+			path = "."
+		}
+
 		tx, err := db.Begin(false)
 		panicIfError(err)
 		defer tx.Rollback()
@@ -126,16 +135,20 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 			changesetId = coll.Head
 		}
 
-		state, err := stateresolver.ComputeStateAt(coll, changesetId)
-		panicIfError(err)
-
 		dir := buptypes.Directory{}
 		panicIfError(tx.One("ID", coll.Directory, &dir))
 
 		parentDirs, err := getParentDirs(dir, tx)
 		panicIfError(err)
 
+		state, err := stateresolver.ComputeStateAt(coll, changesetId)
+		panicIfError(err)
+
 		files := state.FileList()
+
+		peekResult := stateresolver.DirPeek(files, path)
+		// reverse these for UI's sake
+		peekResult.ParentDirs = sliceutil.ReverseStringSlice(peekResult.ParentDirs)
 
 		totalSize := int64(0)
 
@@ -144,19 +157,21 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		}
 
 		templates.Lookup("collection.html").Execute(w, struct {
-			ChangesetId       string
-			Collection        buptypes.Collection
-			Directory         buptypes.Directory
-			ParentDirectories []buptypes.Directory
-			TotalSize         int64
-			FileList          []buptypes.File
+			ChangesetId               string
+			Collection                buptypes.Collection
+			Directory                 buptypes.Directory
+			ParentDirectories         []buptypes.Directory
+			TotalSize                 int64
+			FileList                  []buptypes.File
+			SelectedDirectoryContents stateresolver.DirPeekResult
 		}{
-			ChangesetId:       state.ChangesetId,
-			Collection:        coll,
-			Directory:         dir,
-			ParentDirectories: parentDirs,
-			TotalSize:         totalSize,
-			FileList:          files,
+			ChangesetId:               state.ChangesetId,
+			Collection:                coll,
+			Directory:                 dir,
+			ParentDirectories:         parentDirs,
+			TotalSize:                 totalSize,
+			FileList:                  files,
+			SelectedDirectoryContents: *peekResult,
 		})
 	}
 

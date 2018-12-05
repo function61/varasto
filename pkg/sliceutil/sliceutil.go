@@ -33,3 +33,14 @@ func FilterInt(items []int, fn func(item int) bool) []int {
 
 	return altered
 }
+
+func ReverseStringSlice(input []string) []string {
+	maxIdx := len(input) - 1
+	ret := make([]string, maxIdx+1)
+
+	for i := maxIdx; i >= 0; i-- {
+		ret[maxIdx-i] = input[i]
+	}
+
+	return ret
+}

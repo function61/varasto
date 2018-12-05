@@ -6,17 +6,29 @@
 		<li><a href="/browse/{{.ID}}">{{.Name}}</a></li>
 	{{end}}
 		<li><a href="/browse/{{.Directory.ID}}">{{.Directory.Name}}</a></li>
-		<li class="active">{{.Collection.Name}}</li>
+		<li><a href="?">{{.Collection.Name}}</a> <img src="/collection.png" /></li>
+	{{range .SelectedDirectoryContents.ParentDirs}}
+		<li><a href="?path={{urlquery .}}">{{basename .}}</a></li>
+	{{end}}
+		<li class="active">{{basename .SelectedDirectoryContents.Path}}</li>
 	</ol>
 
 	<div class="panel panel-default">
 		<div class="panel-heading">Files</div>
 		<div class="panel-body">
 			<table class="table table-striped table-hover">
-			{{range .FileList}}
+			{{range .SelectedDirectoryContents.SubDirs}}
+			<tr>
+				<td><img src="/directory.png" /></td>
+				<td><a href="?path={{urlquery .}}">{{basename .}}</a></td>
+				<td></td>
+				<td></td>
+			</tr>
+			{{end}}
+			{{range .SelectedDirectoryContents.Files}}
 			<tr>
 				<td><img src="/file.png" /></td>
-				<td><a href="#">{{.Path}}</a></td>
+				<td><a href="#">{{basename .Path}}</a></td>
 				<td>{{.Created}}</td>
 				<td>{{.Modified}}</td>
 			</tr>
