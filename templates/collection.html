@@ -28,7 +28,9 @@
 			{{range .SelectedDirectoryContents.Files}}
 			<tr>
 				<td><img src="/file.png" /></td>
-				<td><a href="#">{{basename .Path}}</a></td>
+				<td><a href="/collections/{{$.Collection.ID}}/rev/{{$.ChangesetId}}/dl?file={{urlquery .Path}}" target="_blank">
+					{{basename .Path}}
+				</a></td>
 				<td>{{.Created}}</td>
 				<td>{{.Modified}}</td>
 			</tr>

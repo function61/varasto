@@ -86,8 +86,8 @@ func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig)
 	}
 	defer tx.Rollback()
 
-	blobRecord := &buptypes.Blob{}
-	if err := tx.One("Ref", job.Ref, blobRecord); err != nil {
+	blobRecord, err := QueryWithTx(tx).Blob(job.Ref)
+	if err != nil {
 		return err
 	}
 

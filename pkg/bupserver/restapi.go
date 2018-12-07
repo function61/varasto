@@ -133,18 +133,18 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 		panicIfError(errTxBegin)
 		defer tx.Rollback()
 
-		var coll buptypes.Collection
-		panicIfError(tx.One("ID", collectionId, &coll))
+		coll, err := QueryWithTx(tx).Collection(collectionId)
+		panicIfError(err)
 
 		var replPolicy buptypes.ReplicationPolicy
 		panicIfError(tx.One("ID", coll.ReplicationPolicy, &replPolicy))
 
-		if collectionHasChangesetId(changeset.ID, &coll) {
+		if collectionHasChangesetId(changeset.ID, coll) {
 			http.Error(w, "changeset ID already in collection", http.StatusBadRequest)
 			return
 		}
 
-		if changeset.Parent != buptypes.NoParentId && !collectionHasChangesetId(changeset.Parent, &coll) {
+		if changeset.Parent != buptypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
 			http.Error(w, "parent changeset not found", http.StatusBadRequest)
 			return
 		}
@@ -164,8 +164,8 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 					panic(err)
 				}
 
-				var blob buptypes.Blob
-				if err := tx.One("Ref", ref, &blob); err != nil {
+				blob, err := QueryWithTx(tx).Blob(*ref)
+				if err != nil {
 					http.Error(w, fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
 					return
 				}
@@ -178,7 +178,7 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 					replPolicy.DesiredVolumes)
 				blob.IsPendingReplication = len(blob.VolumesPendingReplication) > 0
 
-				panicIfError(tx.Save(&blob))
+				panicIfError(tx.Save(blob))
 			}
 		}
 
@@ -186,7 +186,7 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 		coll.Head = changeset.ID
 		coll.Changesets = append(coll.Changesets, changeset)
 
-		panicIfError(tx.Save(&coll))
+		panicIfError(tx.Save(coll))
 		panicIfError(tx.Commit())
 
 		logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
@@ -222,15 +222,15 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 			return nil, nil
 		}
 
-		blobMetadata := &buptypes.Blob{}
-		if err := db.One("Ref", blobRef, blobMetadata); err != nil {
-			if err == storm.ErrNotFound {
+		blobMetadata, err := QueryWithTx(db).Blob(*blobRef)
+		if err != nil {
+			if err == ErrDbRecordNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return nil, nil
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return nil, nil
 			}
-
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return nil, nil
 		}
 
 		return blobRef, blobMetadata

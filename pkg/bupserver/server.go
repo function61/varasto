@@ -49,7 +49,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		return err
 	}
 
-	if err := defineUi(router, db); err != nil {
+	if err := defineUi(router, serverConfig, db); err != nil {
 		return err
 	}
 
@@ -94,7 +94,7 @@ type ServerConfig struct {
 	SelfNode              buptypes.Node
 	SelfNodeFirstVolumeId int
 	ClusterWideMounts     map[int]buptypes.VolumeMount
-	VolumeDrivers         VolumeDriverByVolumeId
+	VolumeDrivers         VolumeDriverByVolumeId // only for mounts on self node
 	ClientsAuthTokens     map[string]bool
 }
 

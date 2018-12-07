@@ -7,11 +7,12 @@ import (
 	"github.com/function61/bup/pkg/stateresolver"
 	"github.com/gorilla/mux"
 	"html/template"
+	"io"
 	"net/http"
 	"path/filepath"
 )
 
-func defineUi(router *mux.Router, db *storm.DB) error {
+func defineUi(router *mux.Router, conf *ServerConfig, db *storm.DB) error {
 	templates, err := template.New("templatecollection").Funcs(template.FuncMap{
 		"basename": func(in string) string { return filepath.Base(in) },
 	}).ParseGlob("templates/*.html")
@@ -121,14 +122,15 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		panicIfError(err)
 		defer tx.Rollback()
 
-		coll := buptypes.Collection{}
-		if err := tx.One("ID", collectionId, &coll); err != nil {
-			if err != storm.ErrNotFound {
-				panicIfError(err)
+		coll, err := QueryWithTx(tx).Collection(collectionId)
+		if err != nil {
+			if err == ErrDbRecordNotFound {
+				http.Error(w, "not found", http.StatusNotFound)
+				return
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
 			}
-
-			http.Error(w, "not found", http.StatusNotFound)
-			return
 		}
 
 		if changesetId == "" {
@@ -141,7 +143,7 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 		parentDirs, err := getParentDirs(dir, tx)
 		panicIfError(err)
 
-		state, err := stateresolver.ComputeStateAt(coll, changesetId)
+		state, err := stateresolver.ComputeStateAt(*coll, changesetId)
 		panicIfError(err)
 
 		files := state.FileList()
@@ -166,7 +168,7 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 			SelectedDirectoryContents stateresolver.DirPeekResult
 		}{
 			ChangesetId:               state.ChangesetId,
-			Collection:                coll,
+			Collection:                *coll,
 			Directory:                 dir,
 			ParentDirectories:         parentDirs,
 			TotalSize:                 totalSize,
@@ -174,6 +176,93 @@ func defineUi(router *mux.Router, db *storm.DB) error {
 			SelectedDirectoryContents: *peekResult,
 		})
 	}
+
+	router.HandleFunc("/collections/{collectionId}/rev/{changesetId}/dl", func(w http.ResponseWriter, r *http.Request) {
+		fileKey := r.URL.Query().Get("file")
+
+		tx, err := db.Begin(false)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
+
+		coll, err := QueryWithTx(tx).Collection(mux.Vars(r)["collectionId"])
+		if err != nil {
+			if err == ErrDbRecordNotFound {
+				http.Error(w, "collection not found", http.StatusNotFound)
+				return
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+
+		state, err := stateresolver.ComputeStateAt(*coll, mux.Vars(r)["changesetId"])
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		files := state.Files()
+		file, found := files[fileKey]
+		if !found {
+			http.Error(w, "file not found", http.StatusNotFound)
+			return
+		}
+
+		type RefAndVolumeId struct {
+			Ref      buptypes.BlobRef
+			VolumeId int
+		}
+
+		refAndVolumeIds := []RefAndVolumeId{}
+		for _, refSerialized := range file.BlobRefs {
+			ref, err := buptypes.BlobRefFromHex(refSerialized)
+			if err != nil { // should not happen
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			blob, err := QueryWithTx(tx).Blob(*ref)
+			if err != nil {
+				if err == ErrDbRecordNotFound {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				} else {
+					http.Error(w, "blob pointed to by file metadata not found", http.StatusInternalServerError)
+					return
+				}
+			}
+
+			volumeId, found := volumeManagerBestVolumeIdForBlob(blob.Volumes, conf)
+			if !found {
+				http.Error(w, buptypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			refAndVolumeIds = append(refAndVolumeIds, RefAndVolumeId{
+				Ref:      *ref,
+				VolumeId: volumeId,
+			})
+		}
+
+		db.Rollback() // eagerly b/c the below operation is slow
+
+		w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
+
+		for _, refAndVolumeId := range refAndVolumeIds {
+			chunkStream, err := conf.VolumeDrivers[refAndVolumeId.VolumeId].Fetch(
+				refAndVolumeId.Ref)
+			panicIfError(err)
+
+			if _, err := io.Copy(w, chunkStream); err != nil {
+				panic(err)
+			}
+
+			chunkStream.Close()
+		}
+	})
 
 	router.HandleFunc("/collections/{collectionId}/rev/{changesetId}", func(w http.ResponseWriter, r *http.Request) {
 		serveCollectionAt(mux.Vars(r)["collectionId"], mux.Vars(r)["changesetId"], w, r)

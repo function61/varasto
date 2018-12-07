@@ -16,3 +16,13 @@ func volumeManagerIncreaseBlobCount(tx storm.Node, volumeId int, blobSizeBytes i
 
 	return tx.Save(&volume)
 }
+
+func volumeManagerBestVolumeIdForBlob(candidateVolumes []int, conf *ServerConfig) (int, bool) {
+	for _, candidateVolume := range candidateVolumes {
+		if _, mountedOnSelfNode := conf.VolumeDrivers[candidateVolume]; mountedOnSelfNode {
+			return candidateVolume, true
+		}
+	}
+
+	return 0, false
+}

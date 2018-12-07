@@ -85,6 +85,14 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
+
+[[projects]]
   branch = "master"
   digest = "1:9ea97158ea06d60b1f324aa384f6a4cbd596a81b3cae994e17108b195f398d01"
   name = "github.com/prometheus/procfs"
@@ -185,6 +193,7 @@
     "github.com/function61/gokit/stopper",
     "github.com/gorilla/mux",
     "github.com/mitchellh/go-homedir",
+    "github.com/pkg/errors",
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
   ]

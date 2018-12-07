@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/sliceutil"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"regexp"
 )
 
@@ -57,4 +59,16 @@ func missingFromLeftHandSide(lhs []int, rhs []int) []int {
 	}
 
 	return missing
+}
+
+func contentTypeForFilename(path string) string {
+	ext := filepath.Ext(path)
+
+	// works with uppercase extensions as well
+	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	return contentType
 }
