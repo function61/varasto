@@ -104,8 +104,8 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 		return nil, err
 	}
 
-	var selfNode buptypes.Node
-	if err := db.One("ID", nodeId, &selfNode); err != nil {
+	selfNode, err := QueryWithTx(db).Node(nodeId)
+	if err != nil {
 		return nil, err
 	}
 
@@ -137,16 +137,16 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 	volumeDrivers := VolumeDriverByVolumeId{}
 
 	for _, mountedVolume := range myMounts {
-		volume := buptypes.Volume{}
-		if err := db.One("ID", mountedVolume.Volume, &volume); err != nil {
+		volume, err := QueryWithTx(db).Volume(mountedVolume.Volume)
+		if err != nil {
 			return nil, err
 		}
 
-		volumeDrivers[mountedVolume.Volume] = getDriver(volume, mountedVolume, logger)
+		volumeDrivers[mountedVolume.Volume] = getDriver(*volume, mountedVolume, logger)
 	}
 
 	return &ServerConfig{
-		SelfNode:              selfNode,
+		SelfNode:              *selfNode,
 		SelfNodeFirstVolumeId: myMounts[0].Volume,
 		ClusterWideMounts:     clusterWideMountsMapped,
 		VolumeDrivers:         volumeDrivers,

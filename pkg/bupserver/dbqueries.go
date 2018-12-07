@@ -18,21 +18,57 @@ func QueryWithTx(tx storm.Node) *dbQueries {
 }
 
 func (d *dbQueries) Blob(ref buptypes.BlobRef) (*buptypes.Blob, error) {
-	blob := &buptypes.Blob{}
-	if err := d.tx.One("Ref", ref, blob); err != nil {
+	record := &buptypes.Blob{}
+	if err := d.tx.One("Ref", ref, record); err != nil {
 		return nil, translateDbError(err)
 	}
 
-	return blob, nil
+	return record, nil
 }
 
 func (d *dbQueries) Collection(id string) (*buptypes.Collection, error) {
-	coll := &buptypes.Collection{}
-	if err := d.tx.One("ID", id, coll); err != nil {
+	record := &buptypes.Collection{}
+	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}
 
-	return coll, nil
+	return record, nil
+}
+
+func (d *dbQueries) Directory(id string) (*buptypes.Directory, error) {
+	record := &buptypes.Directory{}
+	if err := d.tx.One("ID", id, record); err != nil {
+		return nil, translateDbError(err)
+	}
+
+	return record, nil
+}
+
+func (d *dbQueries) Volume(id int) (*buptypes.Volume, error) {
+	record := &buptypes.Volume{}
+	if err := d.tx.One("ID", id, record); err != nil {
+		return nil, translateDbError(err)
+	}
+
+	return record, nil
+}
+
+func (d *dbQueries) Node(id string) (*buptypes.Node, error) {
+	record := &buptypes.Node{}
+	if err := d.tx.One("ID", id, record); err != nil {
+		return nil, translateDbError(err)
+	}
+
+	return record, nil
+}
+
+func (d *dbQueries) ReplicationPolicy(id string) (*buptypes.ReplicationPolicy, error) {
+	record := &buptypes.ReplicationPolicy{}
+	if err := d.tx.One("ID", id, record); err != nil {
+		return nil, translateDbError(err)
+	}
+
+	return record, nil
 }
 
 func translateDbError(err error) error {

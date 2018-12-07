@@ -29,10 +29,10 @@ func defineUi(router *mux.Router, conf *ServerConfig, db *storm.DB) error {
 		panicIfError(err)
 		defer tx.Rollback()
 
-		dir := buptypes.Directory{}
-		panicIfError(tx.One("ID", mux.Vars(r)["directoryId"], &dir))
+		dir, err := QueryWithTx(tx).Directory(mux.Vars(r)["directoryId"])
+		panicIfError(err)
 
-		parentDirs, err := getParentDirs(dir, tx)
+		parentDirs, err := getParentDirs(*dir, tx)
 		panicIfError(err)
 
 		subDirs := []buptypes.Directory{}
@@ -51,7 +51,7 @@ func defineUi(router *mux.Router, conf *ServerConfig, db *storm.DB) error {
 			SubDirectories    []buptypes.Directory
 			Collections       []buptypes.Collection
 		}{
-			Directory:         dir,
+			Directory:         *dir,
 			ParentDirectories: parentDirs,
 			SubDirectories:    subDirs,
 			Collections:       colls,
@@ -137,10 +137,10 @@ func defineUi(router *mux.Router, conf *ServerConfig, db *storm.DB) error {
 			changesetId = coll.Head
 		}
 
-		dir := buptypes.Directory{}
-		panicIfError(tx.One("ID", coll.Directory, &dir))
+		dir, err := QueryWithTx(tx).Directory(coll.Directory)
+		panicIfError(err)
 
-		parentDirs, err := getParentDirs(dir, tx)
+		parentDirs, err := getParentDirs(*dir, tx)
 		panicIfError(err)
 
 		state, err := stateresolver.ComputeStateAt(*coll, changesetId)
@@ -169,7 +169,7 @@ func defineUi(router *mux.Router, conf *ServerConfig, db *storm.DB) error {
 		}{
 			ChangesetId:               state.ChangesetId,
 			Collection:                *coll,
-			Directory:                 dir,
+			Directory:                 *dir,
 			ParentDirectories:         parentDirs,
 			TotalSize:                 totalSize,
 			FileList:                  files,
@@ -280,14 +280,17 @@ func defineUi(router *mux.Router, conf *ServerConfig, db *storm.DB) error {
 func getParentDirs(of buptypes.Directory, tx storm.Node) ([]buptypes.Directory, error) {
 	parentDirs := []buptypes.Directory{}
 
-	current := of
+	current := &of
+	var err error
+
 	for current.Parent != "" {
-		if err := tx.One("ID", current.Parent, &current); err != nil {
+		current, err = QueryWithTx(tx).Directory(current.Parent)
+		if err != nil {
 			return nil, err
 		}
 
 		// reverse order
-		parentDirs = append([]buptypes.Directory{current}, parentDirs...)
+		parentDirs = append([]buptypes.Directory{*current}, parentDirs...)
 	}
 
 	return parentDirs, nil

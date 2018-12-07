@@ -45,13 +45,17 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 			return
 		}
 
-		collection := &buptypes.Collection{}
-		if err := db.One("ID", mux.Vars(r)["collectionId"], collection); err != nil {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		coll, err := QueryWithTx(db).Collection(mux.Vars(r)["collectionId"])
+		if err != nil {
+			if err == ErrDbRecordNotFound {
+				http.Error(w, err.Error(), http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
 			return
 		}
 
-		outJson(w, collection)
+		outJson(w, coll)
 	}
 
 	newCollection := func(w http.ResponseWriter, r *http.Request) {
@@ -136,8 +140,8 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger 
 		coll, err := QueryWithTx(tx).Collection(collectionId)
 		panicIfError(err)
 
-		var replPolicy buptypes.ReplicationPolicy
-		panicIfError(tx.One("ID", coll.ReplicationPolicy, &replPolicy))
+		replPolicy, err := QueryWithTx(tx).ReplicationPolicy(coll.ReplicationPolicy)
+		panicIfError(err)
 
 		if collectionHasChangesetId(changeset.ID, coll) {
 			http.Error(w, "changeset ID already in collection", http.StatusBadRequest)

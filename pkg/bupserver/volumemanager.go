@@ -2,12 +2,11 @@ package bupserver
 
 import (
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/buptypes"
 )
 
 func volumeManagerIncreaseBlobCount(tx storm.Node, volumeId int, blobSizeBytes int64) error {
-	var volume buptypes.Volume
-	if err := tx.One("ID", volumeId, &volume); err != nil {
+	volume, err := QueryWithTx(tx).Volume(volumeId)
+	if err != nil {
 		return err
 	}
 
