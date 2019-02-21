@@ -13,7 +13,7 @@ func volumeManagerIncreaseBlobCount(tx storm.Node, volumeId int, blobSizeBytes i
 	volume.BlobCount++
 	volume.BlobSizeTotal += blobSizeBytes
 
-	return tx.Save(&volume)
+	return tx.Save(volume)
 }
 
 func volumeManagerBestVolumeIdForBlob(candidateVolumes []int, conf *ServerConfig) (int, bool) {
