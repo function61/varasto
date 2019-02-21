@@ -1,3 +1,6 @@
+[![Build Status](https://img.shields.io/travis/function61/bup.svg?style=for-the-badge)](https://travis-ci.org/function61/bup)
+[![Download](https://img.shields.io/bintray/v/function61/dl/bup.svg?style=for-the-badge&label=Download)](https://bintray.com/function61/dl/bup/_latestVersion#files)
+
 Software defined distributed storage array with custom replication policies and strong
 emphasis on integrity and encryption.
 

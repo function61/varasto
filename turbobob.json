@@ -15,6 +15,21 @@
 			},
 			"dev_ports": ["8066:8066"],
 			"contextless_build": true
+		},
+		{
+			"name": "publisher",
+			"uses": "docker://fn61/buildkit-publisher:20190206_1058_d35b3939",
+			"mount_destination": "/workspace",
+			"commands": {
+				"publish": ["publish.sh", "rel/*"],
+				"dev": ["bash"]
+			},
+			"env": {
+				"BINTRAY_PROJECT": "function61/dl/bup"
+			},
+			"pass_envs": [
+				"BINTRAY_CREDS"
+			]
 		}
 	],
 	"os_arches": {
