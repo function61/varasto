@@ -5,7 +5,6 @@ import (
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/ezhttp"
 	"log"
-	"net/http"
 	"path/filepath"
 )
 
@@ -20,9 +19,8 @@ func mk(parentPath string, parentDirectoryId string, collectionName string) erro
 
 	collection := buptypes.Collection{}
 
-	_, err = ezhttp.Send(
+	_, err = ezhttp.Post(
 		ctx,
-		http.MethodPost,
 		clientConfig.ApiPath("/api/collections"),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&buptypes.CreateCollectionRequest{

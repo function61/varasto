@@ -27,7 +27,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d7bf311c0cea795ea86fff27d8a5ec8211db5284f6bb92b042063ca18b6ee3ba"
+  digest = "1:099b515121b94355258ba20c78f0a27bc814567b3b2b84f4d80a545fec48250a"
   name = "github.com/function61/gokit"
   packages = [
     "assert",
@@ -42,7 +42,7 @@
     "stopper",
   ]
   pruneopts = "UT"
-  revision = "4b662134a5648303996afe77b64b4bde42b95460"
+  revision = "bb2ee0025ab51857d08f8387ff7f6da822c5e40a"
 
 [[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"

@@ -110,9 +110,8 @@ func blobExists(wd *workdirLocation, blobRef buptypes.BlobRef) (bool, error) {
 	defer cancel()
 
 	// do a HEAD request to see if the blob exists
-	resp, err := ezhttp.Send(
+	resp, err := ezhttp.Head(
 		ctx,
-		http.MethodHead,
 		wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
 		ezhttp.AuthBearer(wd.clientConfig.AuthToken))
 
@@ -228,9 +227,8 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
 		ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 		defer cancel()
 
-		if _, err := ezhttp.Send(
+		if _, err := ezhttp.Post(
 			ctx,
-			http.MethodPost,
 			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken),
 			ezhttp.SendBody(buputils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
@@ -246,9 +244,8 @@ func uploadChangeset(wd *workdirLocation, changeset buptypes.CollectionChangeset
 	defer cancel()
 
 	updatedCollection := &buptypes.Collection{}
-	_, err := ezhttp.Send(
+	_, err := ezhttp.Post(
 		ctx,
-		http.MethodPost,
 		wd.clientConfig.ApiPath("/api/collections/"+wd.manifest.Collection.ID+"/changesets"),
 		ezhttp.AuthBearer(wd.clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),

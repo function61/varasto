@@ -10,7 +10,6 @@ import (
 	"github.com/function61/gokit/fileexists"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -115,9 +114,8 @@ func cloneOneFile(wd *workdirLocation, file buptypes.File) error {
 		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
 		defer cancel()
 
-		chunkDataRes, err := ezhttp.Send(
+		chunkDataRes, err := ezhttp.Get(
 			ctx,
-			http.MethodGet,
 			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken))
 		if err != nil {
@@ -146,9 +144,8 @@ func fetchCollectionMetadata(clientConfig ClientConfig, id string) (*buptypes.Co
 	defer cancel()
 
 	collection := &buptypes.Collection{}
-	_, err := ezhttp.Send(
+	_, err := ezhttp.Get(
 		ctx,
-		http.MethodGet,
 		clientConfig.ApiPath("/api/collections/"+id),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.RespondsJson(collection, false))
