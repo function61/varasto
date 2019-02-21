@@ -31,7 +31,9 @@ func (s *StateAt) FileList() []buptypes.File {
 		files = append(files, file)
 	}
 
-	sort.Sort(byPath(files))
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Path < files[j].Path
+	})
 
 	return files
 }
@@ -92,19 +94,4 @@ func findChangesetById(c buptypes.Collection, id string) *buptypes.CollectionCha
 	}
 
 	return nil
-}
-
-// TODO: put in types package?
-type byPath []buptypes.File
-
-func (s byPath) Len() int {
-	return len(s)
-}
-
-func (s byPath) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s byPath) Less(i, j int) bool {
-	return s[i].Path < s[j].Path
 }
