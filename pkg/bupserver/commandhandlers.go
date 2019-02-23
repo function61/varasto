@@ -1,6 +1,7 @@
 package bupserver
 
 import (
+	"fmt"
 	"github.com/asdine/storm"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
@@ -30,6 +31,43 @@ func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) erro
 		Parent: cmd.Parent,
 		Name:   cmd.Name,
 	}); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	dir, err := QueryWithTx(tx).Directory(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	collections := []buptypes.Collection{}
+	if err := tx.Find("Directory", dir.ID, &collections); err != nil && err != storm.ErrNotFound {
+		return err
+	}
+
+	subDirs := []buptypes.Directory{}
+	if err := tx.Find("Parent", dir.ID, &subDirs); err != nil && err != storm.ErrNotFound {
+		return err
+	}
+
+	if len(collections) > 0 {
+		return fmt.Errorf("Cannot delete directory because it has %d collection(s)", len(collections))
+	}
+
+	if len(subDirs) > 0 {
+		return fmt.Errorf("Cannot delete directory because it has %d directory(s)", len(subDirs))
+	}
+
+	if err := tx.DeleteStruct(dir); err != nil {
 		return err
 	}
 
@@ -131,7 +169,8 @@ func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 	defer tx.Rollback()
 
 	if err := tx.DeleteStruct(&buptypes.Client{
-		ID: cmd.Id}); err != nil {
+		ID: cmd.Id,
+	}); err != nil {
 		return err
 	}
 

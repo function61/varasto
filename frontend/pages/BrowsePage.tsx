@@ -8,6 +8,7 @@ import {
 	CollectionMove,
 	CollectionRename,
 	DirectoryCreate,
+	DirectoryDelete,
 	DirectoryRename,
 } from 'generated/bupserver_commands';
 import { getDirectory } from 'generated/bupserver_endpoints';
@@ -78,6 +79,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				<td>
 					<Dropdown>
 						<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
+						<CommandLink command={DirectoryDelete(dir.Id)} />
 					</Dropdown>
 				</td>
 			</tr>
