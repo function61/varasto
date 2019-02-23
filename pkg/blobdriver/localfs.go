@@ -87,7 +87,7 @@ func (l *localFs) Fetch(ref buptypes.BlobRef) (io.ReadCloser, error) {
 
 func (l *localFs) Mountable() error {
 	// to ensure that we mounted correct volume, there must be a <uuid>.iogrid file in the root
-	flagFilename := l.uuid + ".iogrid"
+	flagFilename := "varasto-" + l.uuid + ".json"
 
 	exists, err := fileexists.Exists(filepath.Join(l.path, flagFilename))
 	if err != nil {
