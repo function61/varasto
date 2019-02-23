@@ -22,6 +22,17 @@
 		]
 	},
 	{
+		"command": "collection.Rename",
+		"chain": "public",
+		"ctor": ["Collection", "Name"],
+		"crudNature": "update",
+		"title": "Rename",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "Name" }
+		]
+	},
+	{
 		"command": "client.Create",
 		"chain": "public",
 		"ctor": [],
