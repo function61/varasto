@@ -229,7 +229,7 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
 
 		if _, err := ezhttp.Post(
 			ctx,
-			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
+			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()+"?collection="+wd.manifest.Collection.ID),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken),
 			ezhttp.SendBody(buputils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
 			return err
