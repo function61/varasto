@@ -1,6 +1,8 @@
+import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { ClientCreate, ClientRemove } from 'generated/bupserver_commands';
 import { getClients } from 'generated/bupserver_endpoints';
 import { Client } from 'generated/bupserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -43,6 +45,9 @@ export default class ClientsPage extends React.Component<{}, ClientsPageState> {
 				<td>
 					<SecretReveal secret={obj.AuthToken} />
 				</td>
+				<td>
+					<CommandIcon command={ClientRemove(obj.Id)} />
+				</td>
 			</tr>
 		);
 
@@ -53,9 +58,17 @@ export default class ClientsPage extends React.Component<{}, ClientsPageState> {
 						<th>Id</th>
 						<th>Name</th>
 						<th>AuthToken</th>
+						<th />
 					</tr>
 				</thead>
 				<tbody>{clients.map(toRow)}</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>
+							<CommandButton command={ClientCreate()} />
+						</td>
+					</tr>
+				</tfoot>
 			</table>
 		);
 	}

@@ -20,5 +20,25 @@
 			{ "key": "Collection", "hideIfDefaultValue": true },
 			{ "key": "Directory" }
 		]
+	},
+	{
+		"command": "client.Create",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "+ Client",
+		"fields": [
+			{ "key": "Name" }
+		]
+	},
+	{
+		"command": "client.Remove",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Remove",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true }
+		]
 	}
 ]

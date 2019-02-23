@@ -7,6 +7,7 @@ import (
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
+	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
 	"github.com/gorilla/mux"
 	"net/http"
@@ -56,6 +57,39 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 	coll.Directory = cmd.Directory
 
 	if err := tx.Save(coll); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.Save(&buptypes.Client{
+		ID:        buputils.NewClientId(),
+		Name:      cmd.Name,
+		AuthToken: cryptorandombytes.Base64Url(32),
+	}); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := tx.DeleteStruct(&buptypes.Client{
+		ID: cmd.Id}); err != nil {
 		return err
 	}
 
