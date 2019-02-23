@@ -102,8 +102,10 @@ func (l *localFs) Mountable() error {
 func (l *localFs) getPath(ref buptypes.BlobRef) string {
 	hexHash := ref.AsHex()
 
+	// this should yield 4 096 directories as maximum (see test file for clarification)
 	return filepath.Join(
 		l.path,
 		hexHash[0:2],
-		hexHash[2:]+".chunk")
+		hexHash[2:3],
+		hexHash[3:]+".chunk")
 }

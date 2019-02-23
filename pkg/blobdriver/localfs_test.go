@@ -13,5 +13,5 @@ func TestPath(t *testing.T) {
 
 	assert.EqualString(t,
 		driver.getPath(*blobRef),
-		"/tmp/d7/a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592.chunk")
+		"/tmp/d7/a/8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592.chunk")
 }
