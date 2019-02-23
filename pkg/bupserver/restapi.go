@@ -41,17 +41,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 		outJson(w, collections)
 	}
 
-	getClients := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		var clients []buptypes.Client
-		panicIfError(db.All(&clients))
-
-		outJson(w, clients)
-	}
-
 	getCollection := func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
 			return
@@ -210,26 +199,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 		outJson(w, coll)
 	}
 
-	getNodes := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		var nodes []buptypes.Node
-		panicIfError(db.All(&nodes))
-		outJson(w, nodes)
-	}
-
-	getVolumes := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		var volumes []buptypes.Volume
-		panicIfError(db.All(&volumes))
-		outJson(w, volumes)
-	}
-
 	// shared by getBlob(), getBlobHead()
 	getBlobCommon := func(blobRefSerialized string, w http.ResponseWriter) (*buptypes.BlobRef, *buptypes.Blob) {
 		blobRef, err := buptypes.BlobRefFromHex(blobRefSerialized)
@@ -316,16 +285,10 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 	router.HandleFunc("/api/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
 	router.HandleFunc("/api/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
 
-	router.HandleFunc("/api/clients", getClients).Methods(http.MethodGet)
-
 	router.HandleFunc("/api/collections", getCollections).Methods(http.MethodGet)
 	router.HandleFunc("/api/collections", newCollection).Methods(http.MethodPost)
 	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)
 	router.HandleFunc("/api/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
-
-	router.HandleFunc("/api/nodes", getNodes).Methods(http.MethodGet)
-
-	router.HandleFunc("/api/volumes", getVolumes).Methods(http.MethodGet)
 
 	router.HandleFunc("/api/db/export", func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
