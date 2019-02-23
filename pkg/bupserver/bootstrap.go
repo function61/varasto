@@ -4,7 +4,6 @@ import (
 	"github.com/asdine/storm"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
-	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/logex"
 	"log"
 )
@@ -18,20 +17,6 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 	}
 	defer tx.Rollback()
 
-	volume1 := buptypes.Volume{
-		ID:    1,
-		UUID:  buputils.NewVolumeUuid(),
-		Label: "dev vol. 1",
-		Quota: int64(1024 * 1024 * 30),
-	}
-
-	volume2 := buptypes.Volume{
-		ID:    2,
-		UUID:  buputils.NewVolumeUuid(),
-		Label: "dev vol. 2",
-		Quota: int64(1024 * 1024 * 30),
-	}
-
 	newNode := buptypes.Node{
 		ID:   buputils.NewNodeId(),
 		Addr: "localhost:8066",
@@ -42,41 +27,15 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 
 	recordsToSave := []interface{}{
 		&newNode,
-		&buptypes.Client{
-			ID:        buputils.NewClientId(),
-			Name:      "Vagrant VM",
-			AuthToken: cryptorandombytes.Base64Url(32),
-		},
-		&volume1,
-		&volume2,
 		&buptypes.Directory{
 			ID:     "root",
 			Parent: "", // root doesn't have parent
 			Name:   "root",
 		},
-		&buptypes.Directory{
-			ID:     buputils.NewDirectoryId(),
-			Parent: "root",
-			Name:   "subdir",
-		},
 		&buptypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
-			DesiredVolumes: []int{volume1.ID, volume2.ID},
-		},
-		&buptypes.VolumeMount{
-			ID:         buputils.NewVolumeMountId(),
-			Volume:     volume1.ID,
-			Node:       newNode.ID,
-			Driver:     buptypes.VolumeDriverKindLocalFs,
-			DriverOpts: "/go/src/github.com/function61/bup/__volume/1/",
-		},
-		&buptypes.VolumeMount{
-			ID:         buputils.NewVolumeMountId(),
-			Volume:     volume2.ID,
-			Node:       newNode.ID,
-			Driver:     buptypes.VolumeDriverKindLocalFs,
-			DriverOpts: "/go/src/github.com/function61/bup/__volume/2/",
+			DesiredVolumes: []int{1, 2}, // FIXME: this assumes 1 and 2 will be created soon..
 		},
 	}
 
