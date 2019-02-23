@@ -11,6 +11,17 @@
 		]
 	},
 	{
+		"command": "directory.Rename",
+		"chain": "public",
+		"ctor": ["Id", "Name"],
+		"crudNature": "update",
+		"title": "Rename",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Name" }
+		]
+	},
+	{
 		"command": "collection.Move",
 		"chain": "public",
 		"ctor": ["Collection"],

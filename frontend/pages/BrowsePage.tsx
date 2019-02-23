@@ -4,7 +4,12 @@ import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { CollectionMove, CollectionRename, DirectoryCreate } from 'generated/bupserver_commands';
+import {
+	CollectionMove,
+	CollectionRename,
+	DirectoryCreate,
+	DirectoryRename,
+} from 'generated/bupserver_commands';
 import { getDirectory } from 'generated/bupserver_endpoints';
 import {
 	CollectionSubset,
@@ -70,7 +75,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				<td>
 					<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
 				</td>
-				<td />
+				<td>
+					<Dropdown>
+						<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
+					</Dropdown>
+				</td>
 			</tr>
 		);
 
