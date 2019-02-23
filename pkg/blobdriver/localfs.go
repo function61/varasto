@@ -66,7 +66,9 @@ func (l *localFs) Store(ref buptypes.BlobRef, content io.Reader) (int64, error) 
 		return bytesWritten, err
 	}
 
-	tempFileContent.Close()
+	if err := tempFileContent.Close(); err != nil { // double close is intentional
+		return bytesWritten, err
+	}
 
 	// rename can replace target file (there's a race condition with the file exists check),
 	// but that is ok because both contents are hash-checked
