@@ -122,7 +122,7 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 	}
 
 	myMounts := []buptypes.VolumeMount{}
-	if err := db.Find("Node", selfNode.ID, &myMounts); err != nil {
+	if err := db.Find("Node", selfNode.ID, &myMounts); err != nil && err != storm.ErrNotFound {
 		return nil, err
 	}
 
