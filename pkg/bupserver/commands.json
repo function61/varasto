@@ -1,0 +1,24 @@
+[
+	{
+		"command": "directory.Create",
+		"chain": "public",
+		"ctor": ["Parent"],
+		"crudNature": "create",
+		"title": "+ Directory",
+		"fields": [
+			{ "key": "Parent", "hideIfDefaultValue": true },
+			{ "key": "Name" }
+		]
+	},
+	{
+		"command": "collection.Move",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "update",
+		"title": "Move",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "Directory" }
+		]
+	}
+]

@@ -18,6 +18,14 @@
   version = "v2.1.2"
 
 [[projects]]
+  digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
+  name = "github.com/dgrijalva/jwt-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "06ea1031745cb8b3dab3f6a236daf2b0aa468b7e"
+  version = "v3.2.0"
+
+[[projects]]
   digest = "1:c2380638e0d78725aa246d93f8f9ee87befeb1146f5110fd65f0784709b22370"
   name = "github.com/djherbis/times"
   packages = ["."]
@@ -27,15 +35,33 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:099b515121b94355258ba20c78f0a27bc814567b3b2b84f4d80a545fec48250a"
+  digest = "1:1e1936c9ad0cc8608811bd5cd7d4fe1ccb194ec04fe30fea32f477a0298ee67a"
+  name = "github.com/function61/eventkit"
+  packages = [
+    "codegen",
+    "codegen/codegentemplates",
+    "command",
+    "event",
+    "eventlog",
+    "httpcommand",
+  ]
+  pruneopts = "UT"
+  revision = "a423d448e64ceeae5e7088d315711cff619cab83"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ffdaf445d90c2cc28583e96ad15694af2acd5039ee2c5ef4ac12ff383553bd4c"
   name = "github.com/function61/gokit"
   packages = [
     "assert",
     "cryptorandombytes",
+    "csrf",
     "dynversion",
+    "dynversion/precompilationversion",
     "ezhttp",
     "fileexists",
     "hashverifyreader",
+    "httpauth",
     "jsonfile",
     "logex",
     "ossignal",
@@ -43,6 +69,17 @@
   ]
   pruneopts = "UT"
   revision = "bb2ee0025ab51857d08f8387ff7f6da822c5e40a"
+
+[[projects]]
+  branch = "master"
+  digest = "1:2b236421589a3cee6b654c131693861f9d9c4840e6a19b6000c1b48431462e37"
+  name = "github.com/function61/pi-security-module"
+  packages = [
+    "pkg/f61ui",
+    "pkg/httpserver/muxregistrator",
+  ]
+  pruneopts = "UT"
+  revision = "5dc20d261fd1286e039f435cc8b631227a038505"
 
 [[projects]]
   digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
@@ -181,16 +218,26 @@
     "github.com/asdine/storm",
     "github.com/asdine/storm/codec/msgpack",
     "github.com/djherbis/times",
+    "github.com/function61/eventkit/codegen",
+    "github.com/function61/eventkit/codegen/codegentemplates",
+    "github.com/function61/eventkit/command",
+    "github.com/function61/eventkit/event",
+    "github.com/function61/eventkit/eventlog",
+    "github.com/function61/eventkit/httpcommand",
     "github.com/function61/gokit/assert",
     "github.com/function61/gokit/cryptorandombytes",
     "github.com/function61/gokit/dynversion",
+    "github.com/function61/gokit/dynversion/precompilationversion",
     "github.com/function61/gokit/ezhttp",
     "github.com/function61/gokit/fileexists",
     "github.com/function61/gokit/hashverifyreader",
+    "github.com/function61/gokit/httpauth",
     "github.com/function61/gokit/jsonfile",
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/stopper",
+    "github.com/function61/pi-security-module/pkg/f61ui",
+    "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
     "github.com/gorilla/mux",
     "github.com/mitchellh/go-homedir",
     "github.com/pkg/errors",

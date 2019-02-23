@@ -7,7 +7,9 @@ import (
 	"github.com/function61/bup/pkg/blobdriver"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
+	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -15,7 +17,17 @@ import (
 	"os"
 )
 
-func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger *log.Logger) error {
+func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, mwares httpauth.MiddlewareChainMap, logger *log.Logger) error {
+	var han HttpHandlers = &handlers{db}
+
+	// v2 endpoints
+	RegisterRoutes(han, mwares, muxregistrator.New(router))
+
+	// legacy (TODO: move these to v2)
+	return defineLegacyRestApi(router, conf, db, logger)
+}
+
+func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	getCollections := func(w http.ResponseWriter, r *http.Request) {

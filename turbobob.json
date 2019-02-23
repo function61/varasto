@@ -2,6 +2,14 @@
 	"for_description_of_this_file_see": "https://github.com/function61/turbobob",
 	"version_major": 1,
 	"project_name": "bup",
+	"subrepos": [
+		{
+			"source": "https://github.com/function61/f61ui.git",
+			"kind": "git",
+			"destination": "frontend/f61ui",
+			"revision": "ca4931c"
+		}
+	],
 	"builders": [
 		{
 			"name": "default",
@@ -15,6 +23,15 @@
 			},
 			"dev_ports": ["8066:8066"],
 			"contextless_build": true
+		},
+		{
+			"name": "frontend",
+			"uses": "docker://fn61/buildkit-js:20190214_1355_a8cc2e91",
+			"mount_destination": "/workspace",
+			"commands": {
+				"build": ["bin/build-frontend.sh"],
+				"dev": ["bash"]
+			}
 		},
 		{
 			"name": "publisher",

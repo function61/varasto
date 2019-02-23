@@ -1,0 +1,126 @@
+{
+	"endpoints": [
+		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/{path}", "produces": {"_": "CollectionOutput"}, "name": "getCollectiotAtRev" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/directories/{id}", "produces": {"_": "DirectoryOutput"}, "name": "getDirectory" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/clients", "produces": {"_": "list", "of": {"_": "Client"}}, "name": "getClients" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
+	],
+	"stringConsts": [
+		{ "key": "RootFolderId", "value": "root" }
+	],
+	"types": [
+		{
+			"name": "File",
+			"type": {"_": "object", "fields": {
+				"Path": {"_": "string"},
+				"Sha256": {"_": "string"},
+				"Created": {"_": "datetime"},
+				"Modified": {"_": "datetime"},
+				"Size": {"_": "integer"},
+				"BlobRefs": {"_": "list", "of": {"_": "string"}}
+			}}
+		},
+		{
+			"name": "Directory",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Parent": {"_": "string"},
+				"Name": {"_": "string"}
+			}}
+		},
+		{
+			"name": "DirectoryOutput",
+			"type": {"_": "object", "fields": {
+				"Directory": {"_": "Directory"},
+				"Parents": {"_": "list", "of": {"_": "Directory"}},
+				"Directories": {"_": "list", "of": {"_": "Directory"}},
+				"Collections": {"_": "list", "of": {"_": "CollectionSubset"}}
+			}}
+		},
+		{
+			"name": "ChangesetSubset",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Parent": {"_": "string"},
+				"Created": {"_": "datetime"}
+			}}
+		},
+		{
+			"name": "CollectionSubset",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Directory": {"_": "string"},
+				"Name": {"_": "string"},
+				"ReplicationPolicy": {"_": "string"},
+				"Changesets": {"_": "list", "of": {"_": "ChangesetSubset"}}
+			}}
+		},
+		{
+			"name": "CollectionOutput",
+			"type": {"_": "object", "fields": {
+				"TotalSize": {"_": "integer"},
+				"Collection": {"_": "CollectionSubset"},
+				"FileCount": {"_": "integer"},
+				"ChangesetId": {"_": "string"},
+				"SelectedPathContents": {"_": "SelectedPathContents"}
+			}}
+		},
+		{
+			"name": "SelectedPathContents",
+			"type": {"_": "object", "fields": {
+				"Path": {"_": "string"},
+				"Files": {"_": "list", "of": {"_": "File"}},
+				"ParentDirs": {"_": "list", "of": {"_": "string"}},
+				"SubDirs": {"_": "list", "of": {"_": "string"}}
+			}}
+		},
+		{
+			"name": "Node",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Addr": {"_": "string"},
+				"Name": {"_": "string"}
+			}}
+		},
+		{
+			"name": "Volume",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "integer"},
+				"Uuid": {"_": "string"},
+				"Label": {"_": "string"},
+				"Quota": {"_": "integer"},
+				"BlobSizeTotal": {"_": "integer"},
+				"BlobCount": {"_": "integer"}
+			}}
+		},
+		{
+			"name": "VolumeMount",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Volume": {"_": "integer"},
+				"Node": {"_": "string"},
+				"Driver": {"_": "string"},
+				"DriverOpts": {"_": "string"}
+			}}
+		},
+		{
+			"name": "Client",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Name": {"_": "string"},
+				"AuthToken": {"_": "string"}
+			}}
+		},
+		{
+			"name": "ReplicationPolicy",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Name": {"_": "string"},
+				"DesiredVolumes": {"_": "list", "of": {"_": "integer"}}
+			}}
+		}
+	]
+}

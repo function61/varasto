@@ -1,0 +1,11 @@
+{
+	// contains per-project overrides on top of the buildkit's own strict config
+	"extends": [
+		"/etc/tslint.json"
+	],
+	"linterOptions": {
+		"exclude": [
+			"f61ui/typescript-safe-router/**/*"
+		]
+	}
+}

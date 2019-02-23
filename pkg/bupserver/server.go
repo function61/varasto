@@ -43,11 +43,20 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		}
 	}
 
+	mwares := createDummyMiddlewares()
+
 	router := mux.NewRouter()
 
-	if err := defineRestApi(router, serverConfig, db, logex.Prefix("restapi", logger)); err != nil {
+	if err := defineRestApi(router, serverConfig, db, mwares, logex.Prefix("restapi", logger)); err != nil {
 		return err
 	}
+
+	eventLog, err := createNonPersistingEventLog()
+	if err != nil {
+		return err
+	}
+
+	registerCommandEndpoints(router, eventLog, &cHandlers{db}, mwares)
 
 	if err := defineUi(router, serverConfig, db); err != nil {
 		return err
