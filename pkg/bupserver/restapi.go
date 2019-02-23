@@ -89,15 +89,33 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
+		// we need a hint from the client of what the collection is, so we can resolve a
+		// volume onto which the blob should be stored
+		collectionId := r.URL.Query().Get("collection")
+
 		blobRef, err := buptypes.BlobRefFromHex(mux.Vars(r)["blobRef"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		volumeId := conf.SelfNodeFirstVolumeId // FIXME
+		tx, errTxBegin := db.Begin(true)
+		panicIfError(errTxBegin)
+		defer tx.Rollback()
 
-		volumeDriver := conf.VolumeDrivers[volumeId]
+		coll, err := QueryWithTx(tx).Collection(collectionId)
+		panicIfError(err)
+
+		policy, err := QueryWithTx(tx).ReplicationPolicy(coll.ReplicationPolicy)
+		panicIfError(err)
+
+		volumeId := policy.DesiredVolumes[0]
+
+		volumeDriver, driverFound := conf.VolumeDrivers[volumeId]
+		if !driverFound {
+			http.Error(w, "volume driver not found", http.StatusInternalServerError)
+			return
+		}
 
 		blobSizeBytes, err := volumeDriver.Store(*blobRef, buputils.BlobHashVerifier(r.Body, *blobRef))
 		if err != nil {
@@ -113,10 +131,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			Volumes:    []int{volumeId},
 			Referenced: false,
 		}
-
-		tx, errTxBegin := db.Begin(true)
-		panicIfError(errTxBegin)
-		defer tx.Rollback()
 
 		panicIfError(volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes))
 

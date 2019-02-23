@@ -104,11 +104,10 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 type VolumeDriverByVolumeId map[int]blobdriver.Driver
 
 type ServerConfig struct {
-	SelfNode              buptypes.Node
-	SelfNodeFirstVolumeId int
-	ClusterWideMounts     map[int]buptypes.VolumeMount
-	VolumeDrivers         VolumeDriverByVolumeId // only for mounts on self node
-	ClientsAuthTokens     map[string]bool
+	SelfNode          buptypes.Node
+	ClusterWideMounts map[int]buptypes.VolumeMount
+	VolumeDrivers     VolumeDriverByVolumeId // only for mounts on self node
+	ClientsAuthTokens map[string]bool
 }
 
 func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, error) {
@@ -159,11 +158,10 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 	}
 
 	return &ServerConfig{
-		SelfNode:              *selfNode,
-		SelfNodeFirstVolumeId: myMounts[0].Volume,
-		ClusterWideMounts:     clusterWideMountsMapped,
-		VolumeDrivers:         volumeDrivers,
-		ClientsAuthTokens:     authTokens,
+		SelfNode:          *selfNode,
+		ClusterWideMounts: clusterWideMountsMapped,
+		VolumeDrivers:     volumeDrivers,
+		ClientsAuthTokens: authTokens,
 	}, nil
 }
 
