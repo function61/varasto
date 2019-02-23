@@ -1,5 +1,6 @@
 {
 	"endpoints": [
+		{ "chain": "authenticated", "method": "GET", "path": "/api_v2/database/export", "name": "databaseExport" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dir/{path}", "produces": {"_": "CollectionOutput"}, "name": "getCollectiotAtRev" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dl", "name": "downloadFile", "description": "Downloads a file from specific revision" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/directories/{id}", "produces": {"_": "DirectoryOutput"}, "name": "getDirectory" },

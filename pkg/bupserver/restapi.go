@@ -290,17 +290,5 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)
 	router.HandleFunc("/api/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
 
-	router.HandleFunc("/api/db/export", func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		tx, err := db.Begin(false)
-		panicIfError(err)
-		defer tx.Rollback()
-
-		panicIfError(exportDb(tx, w))
-	}).Methods(http.MethodGet)
-
 	return nil
 }

@@ -343,6 +343,14 @@ func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWrit
 	return &ret
 }
 
+func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	panicIfError(exportDb(tx, w))
+}
+
 // func createNonPersistingEventLog(listeners domain.EventListener) (eventlog.Log, error) {
 func createNonPersistingEventLog() (eventlog.Log, error) {
 	return eventlog.NewSimpleLogFile(
@@ -359,9 +367,16 @@ func createNonPersistingEventLog() (eventlog.Log, error) {
 		logex.Discard)
 }
 
-func createDummyMiddlewares() httpauth.MiddlewareChainMap {
+func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {
 	return httpauth.MiddlewareChainMap{
 		"public": func(w http.ResponseWriter, r *http.Request) *httpauth.RequestContext {
+			return &httpauth.RequestContext{}
+		},
+		"authenticated": func(w http.ResponseWriter, r *http.Request) *httpauth.RequestContext {
+			if !authenticate(conf, w, r) {
+				return nil
+			}
+
 			return &httpauth.RequestContext{}
 		},
 	}

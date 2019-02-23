@@ -43,7 +43,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		}
 	}
 
-	mwares := createDummyMiddlewares()
+	mwares := createDummyMiddlewares(serverConfig)
 
 	router := mux.NewRouter()
 
