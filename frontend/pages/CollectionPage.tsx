@@ -6,7 +6,7 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { getCollectiotAtRev, getDirectory } from 'generated/bupserver_endpoints';
+import { downloadFileUrl, getCollectiotAtRev, getDirectory } from 'generated/bupserver_endpoints';
 import {
 	ChangesetSubset,
 	CollectionOutput,
@@ -67,7 +67,11 @@ export default class CollectionPage extends React.Component<
 
 	private renderData(collOutput: CollectionOutput) {
 		const fileToRow = (file: File) => {
-			const dl = downloadUrl(collOutput.Collection.Id, collOutput.ChangesetId, file.Path);
+			const dl = downloadUrlFIXME(
+				collOutput.Collection.Id,
+				collOutput.ChangesetId,
+				file.Path,
+			);
 
 			return (
 				<tr>
@@ -252,8 +256,9 @@ export default class CollectionPage extends React.Component<
 	}
 }
 
-function downloadUrl(collectionId: string, changesetId: string, path: string): string {
-	return `/collections/${collectionId}/rev/${changesetId}/dl?file=` + encodeURIComponent(path);
+function downloadUrlFIXME(collectionId: string, changesetId: string, path: string): string {
+	// FIXME: this is a hack
+	return downloadFileUrl(collectionId, changesetId) + '?file=' + encodeURIComponent(path);
 }
 
 // 'subdir/subsubdir/foo.txt' => 'foo.txt'

@@ -18,7 +18,7 @@ import (
 )
 
 func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, mwares httpauth.MiddlewareChainMap, logger *log.Logger) error {
-	var han HttpHandlers = &handlers{db}
+	var han HttpHandlers = &handlers{db, conf}
 
 	// v2 endpoints
 	RegisterRoutes(han, mwares, muxregistrator.New(router))

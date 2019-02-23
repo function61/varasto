@@ -11,12 +11,14 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/gorilla/mux"
+	"io"
 	"io/ioutil"
 	"net/http"
 )
 
 type handlers struct {
-	db *storm.DB
+	db   *storm.DB
+	conf *ServerConfig
 }
 
 func convertDir(dir buptypes.Directory) Directory {
@@ -157,6 +159,97 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		FileCount:   len(allFilesInRevision),
 		ChangesetId: changesetId,
 		Collection:  convertDbCollection(*coll, changesetsConverted),
+	}
+}
+
+// TODO: URL parameter comes via a hack in frontend
+func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	collectionId := mux.Vars(r)["id"]
+	changesetId := mux.Vars(r)["rev"]
+
+	fileKey := r.URL.Query().Get("file")
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	coll, err := QueryWithTx(tx).Collection(collectionId)
+	if err != nil {
+		if err == ErrDbRecordNotFound {
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	files := state.Files()
+	file, found := files[fileKey]
+	if !found {
+		http.Error(w, "file not found", http.StatusNotFound)
+		return
+	}
+
+	type RefAndVolumeId struct {
+		Ref      buptypes.BlobRef
+		VolumeId int
+	}
+
+	refAndVolumeIds := []RefAndVolumeId{}
+	for _, refSerialized := range file.BlobRefs {
+		ref, err := buptypes.BlobRefFromHex(refSerialized)
+		if err != nil { // should not happen
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		blob, err := QueryWithTx(tx).Blob(*ref)
+		if err != nil {
+			if err == ErrDbRecordNotFound {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				http.Error(w, "blob pointed to by file metadata not found", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		volumeId, found := volumeManagerBestVolumeIdForBlob(blob.Volumes, h.conf)
+		if !found {
+			http.Error(w, buptypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		refAndVolumeIds = append(refAndVolumeIds, RefAndVolumeId{
+			Ref:      *ref,
+			VolumeId: volumeId,
+		})
+	}
+
+	h.db.Rollback() // eagerly b/c the below operation is slow
+
+	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
+
+	for _, refAndVolumeId := range refAndVolumeIds {
+		chunkStream, err := h.conf.VolumeDrivers[refAndVolumeId.VolumeId].Fetch(
+			refAndVolumeId.Ref)
+		panicIfError(err)
+
+		if _, err := io.Copy(w, chunkStream); err != nil {
+			panic(err)
+		}
+
+		chunkStream.Close()
 	}
 }
 
