@@ -1,8 +1,8 @@
 import { AssetImg } from 'component/assetimg';
-import { bytesToHumanReadable } from 'component/bytesformatter';
-import { Info } from 'component/info';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
+import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { Info } from 'f61ui/component/info';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';

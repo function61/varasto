@@ -1,7 +1,7 @@
-import { bytesToHumanReadable } from 'component/bytesformatter';
-import { ProgressBar } from 'component/progressbar';
 import { Panel } from 'f61ui/component/bootstrap';
+import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { Loading } from 'f61ui/component/loading';
+import { ProgressBar } from 'f61ui/component/progressbar';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { getVolumeMounts, getVolumes } from 'generated/bupserver_endpoints';
 import { Volume, VolumeMount } from 'generated/bupserver_types';
