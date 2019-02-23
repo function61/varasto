@@ -19,6 +19,28 @@ type cHandlers struct {
 	db *storm.DB
 }
 
+func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	allVolumes := []buptypes.Volume{}
+	panicIfError(c.db.All(&allVolumes))
+
+	if err := tx.Save(&buptypes.Volume{
+		ID:    len(allVolumes) + 1,
+		UUID:  buputils.NewVolumeUuid(),
+		Label: cmd.Name,
+		Quota: int64(1024 * 1024 * cmd.Quota),
+	}); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)
 	if err != nil {

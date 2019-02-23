@@ -20,14 +20,14 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 
 	volume1 := buptypes.Volume{
 		ID:    1,
-		UUID:  "8gxL",
+		UUID:  buputils.NewVolumeUuid(),
 		Label: "dev vol. 1",
 		Quota: int64(1024 * 1024 * 30),
 	}
 
 	volume2 := buptypes.Volume{
 		ID:    2,
-		UUID:  "irG8",
+		UUID:  buputils.NewVolumeUuid(),
 		Label: "dev vol. 2",
 		Quota: int64(1024 * 1024 * 30),
 	}

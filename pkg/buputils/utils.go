@@ -20,6 +20,7 @@ var NewDirectoryId = longId
 // (changeset IDs are unique within a collection)
 var NewCollectionChangesetId = shortId
 var NewVolumeMountId = shortId
+var NewVolumeUuid = longId
 var NewNodeId = shortId
 var NewClientId = shortId
 

@@ -1,8 +1,10 @@
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { VolumeCreate } from 'generated/bupserver_commands';
 import { getVolumeMounts, getVolumes } from 'generated/bupserver_endpoints';
 import { Volume, VolumeMount } from 'generated/bupserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -46,8 +48,10 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<td>{obj.Id}</td>
 				<td>{obj.Uuid}</td>
 				<td>{obj.Label}</td>
-				<td>{bytesToHumanReadable(obj.BlobSizeTotal)}</td>
 				<td>{obj.BlobCount}</td>
+				<td>
+					{bytesToHumanReadable(obj.BlobSizeTotal)} / {bytesToHumanReadable(obj.Quota)}
+				</td>
 				<td>
 					<ProgressBar progress={(obj.BlobSizeTotal / obj.Quota) * 100} />
 				</td>
@@ -61,12 +65,19 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 						<th>Id</th>
 						<th>Uuid</th>
 						<th>Label</th>
-						<th>Blob total size</th>
 						<th>Blob count</th>
-						<th>Quota used</th>
+						<th>Usage</th>
+						<th style={{ width: '220px' }} />
 					</tr>
 				</thead>
 				<tbody>{volumes.map(toRow)}</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>
+							<CommandButton command={VolumeCreate()} />
+						</td>
+					</tr>
+				</tfoot>
 			</table>
 		);
 	}

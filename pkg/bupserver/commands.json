@@ -1,5 +1,16 @@
 [
 	{
+		"command": "volume.Create",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "Create volume",
+		"fields": [
+			{ "key": "Name" },
+			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes" }
+		]
+	},
+	{
 		"command": "directory.Create",
 		"chain": "public",
 		"ctor": ["Parent"],
