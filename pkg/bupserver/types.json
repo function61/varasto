@@ -11,7 +11,8 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
-		{ "key": "RootFolderId", "value": "root" }
+		{ "key": "RootFolderId", "value": "root" },
+		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"types": [
 		{

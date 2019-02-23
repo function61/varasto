@@ -108,7 +108,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		return nil
 	}
 
-	if changesetId == "head" {
+	if changesetId == HeadRevisionId {
 		changesetId = coll.Head
 	}
 

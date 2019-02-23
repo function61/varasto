@@ -6,7 +6,12 @@ import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { CollectionMove, CollectionRename, DirectoryCreate } from 'generated/bupserver_commands';
 import { getDirectory } from 'generated/bupserver_endpoints';
-import { CollectionSubset, Directory, DirectoryOutput } from 'generated/bupserver_types';
+import {
+	CollectionSubset,
+	Directory,
+	DirectoryOutput,
+	HeadRevisionId,
+} from 'generated/bupserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';
@@ -42,7 +47,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					<a
 						href={collectionRoute.buildUrl({
 							id: coll.Id,
-							rev: 'head',
+							rev: HeadRevisionId,
 							path: rootPathFIXME,
 						})}>
 						{coll.Name}
