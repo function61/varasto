@@ -1,10 +1,13 @@
 package bupclient
 
 import (
+	"fmt"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
 	gohomedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
+	"io"
+	"os"
 	"path/filepath"
 )
 
@@ -82,6 +85,42 @@ func configInitEntrypoint() *cobra.Command {
 			}
 
 			if err := writeConfig(conf); err != nil {
+				panic(err)
+			}
+		},
+	}
+}
+
+func configPrintEntrypoint() *cobra.Command {
+	return &cobra.Command{
+		Use:   "config-print",
+		Short: "Prints path to config file & its contents",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			confPath, err := configFilePath()
+			if err != nil {
+				panic(err)
+			}
+
+			fmt.Printf("path: %s\n", confPath)
+
+			exists, err := fileexists.Exists(confPath)
+			if err != nil {
+				panic(err)
+			}
+
+			if !exists {
+				fmt.Println(".. does not exist. run config-init to fix that")
+				return
+			}
+
+			file, err := os.Open(confPath)
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
+
+			if _, err := io.Copy(os.Stdout, file); err != nil {
 				panic(err)
 			}
 		},
