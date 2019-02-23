@@ -11,6 +11,27 @@
 		]
 	},
 	{
+		"command": "volume.Mount2",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Mount volume",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "DriverOpts", "help": "Example: /mnt/hdd1/varasto-UalPLodNjrA/" }
+		]
+	},
+	{
+		"command": "volume.Unmount",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Unmount",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "directory.Create",
 		"chain": "public",
 		"ctor": ["Parent"],

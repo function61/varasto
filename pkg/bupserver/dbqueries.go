@@ -53,6 +53,15 @@ func (d *dbQueries) Volume(id int) (*buptypes.Volume, error) {
 	return record, nil
 }
 
+func (d *dbQueries) VolumeMount(id string) (*buptypes.VolumeMount, error) {
+	record := &buptypes.VolumeMount{}
+	if err := d.tx.One("ID", id, record); err != nil {
+		return nil, translateDbError(err)
+	}
+
+	return record, nil
+}
+
 func (d *dbQueries) Node(id string) (*buptypes.Node, error) {
 	record := &buptypes.Node{}
 	if err := d.tx.One("ID", id, record); err != nil {

@@ -56,7 +56,11 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		return err
 	}
 
-	registerCommandEndpoints(router, eventLog, &cHandlers{db}, mwares)
+	registerCommandEndpoints(
+		router,
+		eventLog,
+		&cHandlers{db, serverConfig},
+		mwares)
 
 	if err := defineUi(router); err != nil {
 		return err

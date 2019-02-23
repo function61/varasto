@@ -3,6 +3,7 @@ package bupserver
 import (
 	"fmt"
 	"github.com/asdine/storm"
+	"github.com/function61/bup/pkg/blobdriver"
 	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/bup/pkg/buputils"
 	"github.com/function61/eventkit/command"
@@ -16,7 +17,8 @@ import (
 
 // we are currently using the command pattern very wrong!
 type cHandlers struct {
-	db *storm.DB
+	db   *storm.DB
+	conf *ServerConfig
 }
 
 func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
@@ -35,6 +37,60 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 		Label: cmd.Name,
 		Quota: int64(1024 * 1024 * cmd.Quota),
 	}); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+// FIXME: name ends in 2 because conflicts with types.VolumeMount
+func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	vol, err := QueryWithTx(tx).Volume(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	// TODO: grab driver instance by this spec?
+	mountSpec := &buptypes.VolumeMount{
+		ID:         buputils.NewVolumeMountId(),
+		Volume:     vol.ID,
+		Node:       c.conf.SelfNode.ID,
+		Driver:     buptypes.VolumeDriverKindLocalFs,
+		DriverOpts: cmd.DriverOpts,
+	}
+
+	// try mounting the volume
+	mount := blobdriver.NewLocalFs(vol.UUID, mountSpec.DriverOpts, nil)
+	if err := mount.Mountable(); err != nil {
+		return err
+	}
+
+	if err := tx.Save(mountSpec); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (c *cHandlers) VolumeUnmount(cmd *VolumeUnmount, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	mount, err := QueryWithTx(tx).VolumeMount(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	if err := tx.DeleteStruct(mount); err != nil {
 		return err
 	}
 

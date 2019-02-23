@@ -35,7 +35,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1e1936c9ad0cc8608811bd5cd7d4fe1ccb194ec04fe30fea32f477a0298ee67a"
+  digest = "1:67e73b8c9b0f9c0e6a98c53692109b7ee7636aec8709e579d23dd0372f3d26a5"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -46,7 +46,7 @@
     "httpcommand",
   ]
   pruneopts = "UT"
-  revision = "a423d448e64ceeae5e7088d315711cff619cab83"
+  revision = "9e1138910a2565a97682cdfe0c09d4a104801e59"
 
 [[projects]]
   branch = "master"

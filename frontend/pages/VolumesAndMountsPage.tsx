@@ -1,10 +1,11 @@
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandButton } from 'f61ui/component/CommandButton';
+import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { VolumeCreate } from 'generated/bupserver_commands';
+import { VolumeCreate, VolumeMount2, VolumeUnmount } from 'generated/bupserver_commands';
 import { getVolumeMounts, getVolumes } from 'generated/bupserver_endpoints';
 import { Volume, VolumeMount } from 'generated/bupserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -55,6 +56,11 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<td>
 					<ProgressBar progress={(obj.BlobSizeTotal / obj.Quota) * 100} />
 				</td>
+				<td>
+					<Dropdown>
+						<CommandLink command={VolumeMount2(obj.Id)} />
+					</Dropdown>
+				</td>
 			</tr>
 		);
 
@@ -68,6 +74,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 						<th>Blob count</th>
 						<th>Usage</th>
 						<th style={{ width: '220px' }} />
+						<th />
 					</tr>
 				</thead>
 				<tbody>{volumes.map(toRow)}</tbody>
@@ -96,6 +103,9 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<td>{obj.Node}</td>
 				<td>{obj.Driver}</td>
 				<td>{obj.DriverOpts}</td>
+				<td>
+					<CommandIcon command={VolumeUnmount(obj.Id)} />
+				</td>
 			</tr>
 		);
 
@@ -108,6 +118,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 						<th>Node</th>
 						<th>Driver</th>
 						<th>DriverOpts</th>
+						<th />
 					</tr>
 				</thead>
 				<tbody>{mounts.map(toRow)}</tbody>
