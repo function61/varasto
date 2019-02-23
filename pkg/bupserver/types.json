@@ -12,6 +12,7 @@
 	],
 	"stringConsts": [
 		{ "key": "RootFolderId", "value": "root" },
+		{ "key": "RootPathDotBase64FIXME", "value": "Lg==" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"types": [

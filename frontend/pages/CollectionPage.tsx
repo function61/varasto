@@ -13,6 +13,7 @@ import {
 	Directory,
 	DirectoryOutput,
 	File,
+	RootPathDotBase64FIXME,
 } from 'generated/bupserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
@@ -28,8 +29,6 @@ interface CollectionPageState {
 	collectionOutput?: CollectionOutput;
 	directoryOutput?: DirectoryOutput;
 }
-
-const rootPathFIXME = 'Lg==';
 
 export default class CollectionPage extends React.Component<
 	CollectionPageProps,
@@ -228,7 +227,7 @@ export default class CollectionPage extends React.Component<
 				url: collectionRoute.buildUrl({
 					id: this.props.id,
 					rev: this.props.rev,
-					path: rootPathFIXME,
+					path: RootPathDotBase64FIXME,
 				}),
 			});
 		}

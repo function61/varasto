@@ -17,6 +17,7 @@ import {
 	Directory,
 	DirectoryOutput,
 	HeadRevisionId,
+	RootPathDotBase64FIXME,
 } from 'generated/bupserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
@@ -29,8 +30,6 @@ interface BrowsePageProps {
 interface BrowsePageState {
 	output?: DirectoryOutput;
 }
-
-const rootPathFIXME = 'Lg==';
 
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
 	state: BrowsePageState = {};
@@ -54,7 +53,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						href={collectionRoute.buildUrl({
 							id: coll.Id,
 							rev: HeadRevisionId,
-							path: rootPathFIXME,
+							path: RootPathDotBase64FIXME,
 						})}>
 						{coll.Name}
 					</a>
