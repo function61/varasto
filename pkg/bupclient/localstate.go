@@ -1,9 +1,9 @@
 package bupclient
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/gokit/jsonfile"
 	"os"
 	"path/filepath"
 )
@@ -29,15 +29,7 @@ func (w *workdirLocation) Join(comp string) string {
 }
 
 func (w *workdirLocation) SaveToDisk() error {
-	file, err := os.Create(w.Join(localStatefile))
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	jsonEncoder := json.NewEncoder(file)
-	jsonEncoder.SetIndent("", "  ")
-	return jsonEncoder.Encode(w.manifest)
+	return jsonfile.Write(w.Join(localStatefile), w.manifest)
 }
 
 func NewWorkdirLocation(path string) (*workdirLocation, error) {
@@ -61,15 +53,10 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 	}
 	defer statefile.Close()
 
-	manifest := &BupManifest{}
-
-	dec := json.NewDecoder(statefile)
-	dec.DisallowUnknownFields()
-	if err := dec.Decode(manifest); err != nil {
+	loc.manifest = &BupManifest{}
+	if err := jsonfile.Unmarshal(statefile, loc.manifest, true); err != nil {
 		return nil, err
 	}
-
-	loc.manifest = manifest
 
 	return loc, nil
 }
