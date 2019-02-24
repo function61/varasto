@@ -1,4 +1,6 @@
 import { AssetImg } from 'component/assetimg';
+import { ClipboardButton } from 'component/clipboardbutton';
+import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
@@ -104,19 +106,40 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				{!output ? (
 					<Loading />
 				) : (
-					<table className="table table-striped table-hover">
-						<tbody>
-							{output.Directories.map(directoryToRow)}
-							{output.Collections.map(collectionToRow)}
-						</tbody>
-						<tfoot>
-							<tr>
-								<td colSpan={99}>
-									<CommandButton command={DirectoryCreate(output.Directory.Id)} />
-								</td>
-							</tr>
-						</tfoot>
-					</table>
+					<div className="row">
+						<div className="col-md-9">
+							<table className="table table-striped table-hover">
+								<tbody>
+									{output.Directories.map(directoryToRow)}
+									{output.Collections.map(collectionToRow)}
+								</tbody>
+								<tfoot>
+									<tr>
+										<td colSpan={99}>
+											<CommandButton
+												command={DirectoryCreate(output.Directory.Id)}
+											/>
+										</td>
+									</tr>
+								</tfoot>
+							</table>
+						</div>
+						<div className="col-md-3">
+							<Panel heading={`Directory: ${output.Directory.Name}`}>
+								<table className="table table-striped table-hover">
+									<tbody>
+										<tr>
+											<th>Id</th>
+											<td>
+												{output.Directory.Id}
+												<ClipboardButton text={output.Directory.Id} />
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</Panel>
+						</div>
+					</div>
 				)}
 			</AppDefaultLayout>
 		);
