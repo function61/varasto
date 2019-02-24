@@ -1,9 +1,9 @@
-package bupclient
+package varastoclient
 
 import (
 	"errors"
-	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"os"
 	"path/filepath"
 )
@@ -13,8 +13,8 @@ const (
 )
 
 type BupManifest struct {
-	ChangesetId string              `json:"changeset_id"`
-	Collection  buptypes.Collection `json:"collection"` // snapshot at time of server fetch
+	ChangesetId string                  `json:"changeset_id"`
+	Collection  varastotypes.Collection `json:"collection"` // snapshot at time of server fetch
 }
 
 // TODO: rename to some kind of context
@@ -46,7 +46,7 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 	statefile, err := os.Open(loc.Join(localStatefile))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("current dir not a bup workdir")
+			return nil, errors.New("current dir not a Varasto workdir")
 		}
 
 		return nil, err // some other error

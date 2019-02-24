@@ -1,24 +1,23 @@
 package stateresolver
 
 import (
-	_ "fmt"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/sliceutil"
+	"github.com/function61/varasto/pkg/sliceutil"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"path/filepath"
 	"strings"
 )
 
 type DirPeekResult struct {
 	Path       string
-	Files      []buptypes.File
+	Files      []varastotypes.File
 	ParentDirs []string // doesn't include root
 	SubDirs    []string
 }
 
-func DirPeek(files []buptypes.File, dirToPeek string) *DirPeekResult {
+func DirPeek(files []varastotypes.File, dirToPeek string) *DirPeekResult {
 	res := &DirPeekResult{
 		Path:       dirToPeek,
-		Files:      []buptypes.File{},
+		Files:      []varastotypes.File{},
 		ParentDirs: parents(dirToPeek),
 		SubDirs:    []string{},
 	}

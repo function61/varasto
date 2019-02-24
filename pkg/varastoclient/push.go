@@ -1,4 +1,4 @@
-package bupclient
+package varastoclient
 
 import (
 	"context"
@@ -6,10 +6,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/djherbis/times"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/buputils"
-	"github.com/function61/bup/pkg/stateresolver"
 	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"io"
 	"io/ioutil"
 	"log"
@@ -25,7 +25,7 @@ const (
 	chunkSize = 4 * megabyte
 )
 
-func computeChangeset(wd *workdirLocation) (*buptypes.CollectionChangeset, error) {
+func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAt(wd.manifest.Collection, wd.manifest.Collection.Head)
 	if err != nil {
 		return nil, err
@@ -35,8 +35,8 @@ func computeChangeset(wd *workdirLocation) (*buptypes.CollectionChangeset, error
 	filesMissing := parentState.Files()
 	filesAtParent := parentState.Files() // this will not be mutated
 
-	created := []buptypes.File{}
-	updated := []buptypes.File{}
+	created := []varastotypes.File{}
+	updated := []varastotypes.File{}
 
 	errWalk := filepath.Walk(wd.path, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
@@ -94,8 +94,8 @@ func computeChangeset(wd *workdirLocation) (*buptypes.CollectionChangeset, error
 	}
 	sort.Strings(deleted)
 
-	return &buptypes.CollectionChangeset{
-		ID:           buputils.NewCollectionChangesetId(),
+	return &varastotypes.CollectionChangeset{
+		ID:           varastoutils.NewCollectionChangesetId(),
 		Parent:       wd.manifest.ChangesetId,
 		Created:      time.Now(),
 		FilesCreated: created,
@@ -105,7 +105,7 @@ func computeChangeset(wd *workdirLocation) (*buptypes.CollectionChangeset, error
 }
 
 // returns ErrChunkMetadataNotFound if blob is not found
-func blobExists(wd *workdirLocation, blobRef buptypes.BlobRef) (bool, error) {
+func blobExists(wd *workdirLocation, blobRef varastotypes.BlobRef) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
@@ -126,7 +126,7 @@ func blobExists(wd *workdirLocation, blobRef buptypes.BlobRef) (bool, error) {
 	return true, nil
 }
 
-func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os.FileInfo) (*buptypes.File, error) {
+func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os.FileInfo) (*varastotypes.File, error) {
 	// https://unix.stackexchange.com/questions/2802/what-is-the-difference-between-modify-and-change-in-stat-command-context
 	allTimes := times.Get(fileInfo)
 
@@ -135,7 +135,7 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 		maybeCreationTime = allTimes.BirthTime()
 	}
 
-	bfile := &buptypes.File{
+	bfile := &varastotypes.File{
 		Path:     relativePath,
 		Created:  maybeCreationTime,
 		Modified: fileInfo.ModTime(),
@@ -177,7 +177,7 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 
 		fileSha256Bytes := sha256.Sum256(chunk)
 
-		blobRef, err := buptypes.BlobRefFromHex(hex.EncodeToString(fileSha256Bytes[:]))
+		blobRef, err := varastotypes.BlobRefFromHex(hex.EncodeToString(fileSha256Bytes[:]))
 		if err != nil {
 			return nil, err
 		}
@@ -194,7 +194,7 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 	return bfile, nil
 }
 
-func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
+func uploadChunks(wd *workdirLocation, bfile varastotypes.File) error {
 	file, err := os.Open(wd.Join(bfile.Path))
 	if err != nil {
 		return err
@@ -202,7 +202,7 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
 	defer file.Close()
 
 	for blobIdx, brHex := range bfile.BlobRefs {
-		blobRef, err := buptypes.BlobRefFromHex(brHex)
+		blobRef, err := varastotypes.BlobRefFromHex(brHex)
 		if err != nil {
 			return err
 		}
@@ -231,7 +231,7 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
 			ctx,
 			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()+"?collection="+wd.manifest.Collection.ID),
 			ezhttp.AuthBearer(wd.clientConfig.AuthToken),
-			ezhttp.SendBody(buputils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
+			ezhttp.SendBody(varastoutils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
 			return err
 		}
 	}
@@ -239,11 +239,11 @@ func uploadChunks(wd *workdirLocation, bfile buptypes.File) error {
 	return nil
 }
 
-func uploadChangeset(wd *workdirLocation, changeset buptypes.CollectionChangeset) (*buptypes.Collection, error) {
+func uploadChangeset(wd *workdirLocation, changeset varastotypes.CollectionChangeset) (*varastotypes.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
-	updatedCollection := &buptypes.Collection{}
+	updatedCollection := &varastotypes.Collection{}
 	_, err := ezhttp.Post(
 		ctx,
 		wd.clientConfig.ApiPath("/api/collections/"+wd.manifest.Collection.ID+"/changesets"),

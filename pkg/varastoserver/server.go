@@ -1,14 +1,14 @@
-package bupserver
+package varastoserver
 
 import (
 	"fmt"
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/codec/msgpack"
-	"github.com/function61/bup/pkg/blobdriver"
-	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -104,8 +104,8 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 type VolumeDriverByVolumeId map[int]blobdriver.Driver
 
 type ServerConfig struct {
-	SelfNode          buptypes.Node
-	ClusterWideMounts map[int]buptypes.VolumeMount
+	SelfNode          varastotypes.Node
+	ClusterWideMounts map[int]varastotypes.VolumeMount
 	VolumeDrivers     VolumeDriverByVolumeId // only for mounts on self node
 	ClientsAuthTokens map[string]bool
 }
@@ -121,22 +121,22 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 		return nil, err
 	}
 
-	myMounts := []buptypes.VolumeMount{}
+	myMounts := []varastotypes.VolumeMount{}
 	if err := db.Find("Node", selfNode.ID, &myMounts); err != nil && err != storm.ErrNotFound {
 		return nil, err
 	}
 
-	clusterWideMounts := []buptypes.VolumeMount{}
+	clusterWideMounts := []varastotypes.VolumeMount{}
 	if err := db.All(&clusterWideMounts); err != nil {
 		return nil, err
 	}
 
-	clusterWideMountsMapped := map[int]buptypes.VolumeMount{}
+	clusterWideMountsMapped := map[int]varastotypes.VolumeMount{}
 	for _, mv := range clusterWideMounts {
 		clusterWideMountsMapped[mv.Volume] = mv
 	}
 
-	clients := []buptypes.Client{}
+	clients := []varastotypes.Client{}
 	if err := db.All(&clients); err != nil {
 		return nil, err
 	}
@@ -165,9 +165,9 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 	}, nil
 }
 
-func getDriver(volume buptypes.Volume, mount buptypes.VolumeMount, logger *log.Logger) blobdriver.Driver {
+func getDriver(volume varastotypes.Volume, mount varastotypes.VolumeMount, logger *log.Logger) blobdriver.Driver {
 	switch mount.Driver {
-	case buptypes.VolumeDriverKindLocalFs:
+	case varastotypes.VolumeDriverKindLocalFs:
 		return blobdriver.NewLocalFs(
 			volume.UUID,
 			mount.DriverOpts,

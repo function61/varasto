@@ -1,15 +1,15 @@
-package bupserver
+package varastoserver
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/blobdriver"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/buputils"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
+	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
 	"io"
 	"log"
@@ -35,7 +35,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
-		var collections []buptypes.Collection
+		var collections []varastotypes.Collection
 		panicIfError(db.All(&collections))
 
 		outJson(w, collections)
@@ -64,19 +64,19 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
-		req := &buptypes.CreateCollectionRequest{}
+		req := &varastotypes.CreateCollectionRequest{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		collection := buptypes.Collection{
-			ID:                buputils.NewCollectionId(),
+		collection := varastotypes.Collection{
+			ID:                varastoutils.NewCollectionId(),
 			Directory:         req.ParentDirectoryId,
 			Name:              req.Name,
 			ReplicationPolicy: "default",
-			Head:              buptypes.NoParentId,
-			Changesets:        []buptypes.CollectionChangeset{},
+			Head:              varastotypes.NoParentId,
+			Changesets:        []varastotypes.CollectionChangeset{},
 		}
 
 		panicIfError(db.Save(&collection))
@@ -93,7 +93,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 		// volume onto which the blob should be stored
 		collectionId := r.URL.Query().Get("collection")
 
-		blobRef, err := buptypes.BlobRefFromHex(mux.Vars(r)["blobRef"])
+		blobRef, err := varastotypes.BlobRefFromHex(mux.Vars(r)["blobRef"])
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -117,7 +117,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
-		blobSizeBytes, err := volumeDriver.Store(*blobRef, buputils.BlobHashVerifier(r.Body, *blobRef))
+		blobSizeBytes, err := volumeDriver.Store(*blobRef, varastoutils.BlobHashVerifier(r.Body, *blobRef))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -126,7 +126,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 
 		logl.Debug.Printf("wrote blob %s", blobRef.AsHex())
 
-		fc := buptypes.Blob{
+		fc := varastotypes.Blob{
 			Ref:        *blobRef,
 			Volumes:    []int{volumeId},
 			Referenced: false,
@@ -145,7 +145,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 
 		collectionId := mux.Vars(r)["collectionId"]
 
-		var changeset buptypes.CollectionChangeset
+		var changeset varastotypes.CollectionChangeset
 		panicIfError(json.NewDecoder(r.Body).Decode(&changeset))
 
 		tx, errTxBegin := db.Begin(true)
@@ -163,7 +163,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
-		if changeset.Parent != buptypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
+		if changeset.Parent != varastotypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
 			http.Error(w, "parent changeset not found", http.StatusBadRequest)
 			return
 		}
@@ -178,7 +178,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 
 		for _, file := range createdAndUpdated {
 			for _, refHex := range file.BlobRefs {
-				ref, err := buptypes.BlobRefFromHex(refHex)
+				ref, err := varastotypes.BlobRefFromHex(refHex)
 				if err != nil {
 					panic(err)
 				}
@@ -214,8 +214,8 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 	}
 
 	// shared by getBlob(), getBlobHead()
-	getBlobCommon := func(blobRefSerialized string, w http.ResponseWriter) (*buptypes.BlobRef, *buptypes.Blob) {
-		blobRef, err := buptypes.BlobRefFromHex(blobRefSerialized)
+	getBlobCommon := func(blobRefSerialized string, w http.ResponseWriter) (*varastotypes.BlobRef, *varastotypes.Blob) {
+		blobRef, err := varastotypes.BlobRefFromHex(blobRefSerialized)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return nil, nil
@@ -271,7 +271,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 
 		// TODO: issue HTTP redirect to correct node?
 		if foundDriver == nil {
-			http.Error(w, buptypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+			http.Error(w, varastotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -288,7 +288,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 		}
 		defer file.Close()
 
-		if _, err := io.Copy(w, buputils.BlobHashVerifier(file, *blobRef)); err != nil {
+		if _, err := io.Copy(w, varastoutils.BlobHashVerifier(file, *blobRef)); err != nil {
 			// FIXME: shouldn't try to write headers if even one write went to ResponseWriter
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

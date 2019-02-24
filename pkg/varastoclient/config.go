@@ -1,4 +1,4 @@
-package bupclient
+package varastoclient
 
 import (
 	"fmt"

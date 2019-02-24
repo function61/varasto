@@ -1,20 +1,20 @@
-package bupserver
+package varastoserver
 
 import (
 	"errors"
 	"fmt"
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/buputils"
-	"github.com/function61/bup/pkg/sliceutil"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/sliceutil"
+	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"log"
 	"time"
 )
 
 type replicationJob struct {
-	Ref          buptypes.BlobRef
+	Ref          varastotypes.BlobRef
 	FromVolumeId int
 	ToVolumeId   int
 }
@@ -75,7 +75,7 @@ func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig)
 		return err
 	}
 
-	blobSizeBytes, err := to.Store(job.Ref, buputils.BlobHashVerifier(stream, job.Ref))
+	blobSizeBytes, err := to.Store(job.Ref, varastoutils.BlobHashVerifier(stream, job.Ref))
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func discoverReplicationJobs(db *storm.DB, logl *logex.Leveled) ([]*replicationJ
 	defer tx.Rollback()
 
 	batchLimit := 100
-	var blobsNeedingReplication []*buptypes.Blob
+	var blobsNeedingReplication []*varastotypes.Blob
 	if err := tx.Find("IsPendingReplication", true, &blobsNeedingReplication, storm.Limit(batchLimit)); err != nil {
 		if err == storm.ErrNotFound {
 			return nil, nil // not an error at all

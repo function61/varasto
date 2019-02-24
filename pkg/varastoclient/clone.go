@@ -1,13 +1,13 @@
-package bupclient
+package varastoclient
 
 import (
 	"context"
 	"errors"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/buputils"
-	"github.com/function61/bup/pkg/stateresolver"
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/fileexists"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"io"
 	"log"
 	"os"
@@ -34,7 +34,7 @@ func clone(collectionId string, revisionId string, parentDir string, dirName str
 }
 
 // used both by collection create and collection download
-func cloneCollection(path string, revisionId string, collection *buptypes.Collection) error {
+func cloneCollection(path string, revisionId string, collection *varastotypes.Collection) error {
 	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
 	// manage to write the statefile to disk, use normal procedure to init wd
 	halfBakedWd := &workdirLocation{
@@ -88,7 +88,7 @@ func cloneCollection(path string, revisionId string, collection *buptypes.Collec
 	return nil
 }
 
-func cloneOneFile(wd *workdirLocation, file buptypes.File) error {
+func cloneOneFile(wd *workdirLocation, file varastotypes.File) error {
 	log.Printf("Downloading %s", file.Path)
 
 	filename := wd.Join(file.Path)
@@ -106,7 +106,7 @@ func cloneOneFile(wd *workdirLocation, file buptypes.File) error {
 	defer fileHandle.Close()
 
 	for _, chunkDigest := range file.BlobRefs {
-		blobRef, err := buptypes.BlobRefFromHex(chunkDigest)
+		blobRef, err := varastotypes.BlobRefFromHex(chunkDigest)
 		if err != nil {
 			return err
 		}
@@ -123,7 +123,7 @@ func cloneOneFile(wd *workdirLocation, file buptypes.File) error {
 		}
 		defer chunkDataRes.Body.Close()
 
-		verifiedBody := buputils.BlobHashVerifier(chunkDataRes.Body, *blobRef)
+		verifiedBody := varastoutils.BlobHashVerifier(chunkDataRes.Body, *blobRef)
 
 		if _, err := io.Copy(fileHandle, verifiedBody); err != nil {
 			return err
@@ -139,11 +139,11 @@ func cloneOneFile(wd *workdirLocation, file buptypes.File) error {
 	return os.Rename(filenameTemp, filename)
 }
 
-func fetchCollectionMetadata(clientConfig ClientConfig, id string) (*buptypes.Collection, error) {
+func fetchCollectionMetadata(clientConfig ClientConfig, id string) (*varastotypes.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
-	collection := &buptypes.Collection{}
+	collection := &varastotypes.Collection{}
 	_, err := ezhttp.Get(
 		ctx,
 		clientConfig.ApiPath("/api/collections/"+id),

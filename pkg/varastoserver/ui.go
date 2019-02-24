@@ -1,4 +1,4 @@
-package bupserver
+package varastoserver
 
 import (
 	"github.com/function61/pi-security-module/pkg/f61ui"

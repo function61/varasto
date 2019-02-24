@@ -1,14 +1,14 @@
-package buputils
+package varastoutils
 
 import (
 	"crypto/sha256"
-	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/hashverifyreader"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"io"
 )
 
-func BlobHashVerifier(reader io.Reader, br buptypes.BlobRef) io.Reader {
+func BlobHashVerifier(reader io.Reader, br varastotypes.BlobRef) io.Reader {
 	return hashverifyreader.New(reader, sha256.New(), br.AsSha256Sum())
 }
 

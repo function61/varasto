@@ -1,15 +1,15 @@
-package bupserver
+package varastoserver
 
 import (
 	"bytes"
 	"encoding/base64"
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/stateresolver"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
@@ -21,7 +21,7 @@ type handlers struct {
 	conf *ServerConfig
 }
 
-func convertDir(dir buptypes.Directory) Directory {
+func convertDir(dir varastotypes.Directory) Directory {
 	return Directory{
 		Id:     dir.ID,
 		Parent: dir.Parent,
@@ -29,7 +29,7 @@ func convertDir(dir buptypes.Directory) Directory {
 	}
 }
 
-func convertDbCollection(coll buptypes.Collection, changesets []ChangesetSubset) CollectionSubset {
+func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSubset) CollectionSubset {
 	return CollectionSubset{
 		Id:                coll.ID,
 		Directory:         coll.Directory,
@@ -58,7 +58,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
 	}
 
-	dbColls := []buptypes.Collection{}
+	dbColls := []varastotypes.Collection{}
 	if err := tx.Find("Directory", dir.ID, &dbColls); err != nil && err != storm.ErrNotFound {
 		panic(err)
 	}
@@ -68,7 +68,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		colls = append(colls, convertDbCollection(dbColl, nil)) // FIXME: nil ok?
 	}
 
-	dbSubDirs := []buptypes.Directory{}
+	dbSubDirs := []varastotypes.Directory{}
 	if err := tx.Find("Parent", dir.ID, &dbSubDirs); err != nil && err != storm.ErrNotFound {
 		panic(err)
 	}
@@ -201,13 +201,13 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 
 	type RefAndVolumeId struct {
-		Ref      buptypes.BlobRef
+		Ref      varastotypes.BlobRef
 		VolumeId int
 	}
 
 	refAndVolumeIds := []RefAndVolumeId{}
 	for _, refSerialized := range file.BlobRefs {
-		ref, err := buptypes.BlobRefFromHex(refSerialized)
+		ref, err := varastotypes.BlobRefFromHex(refSerialized)
 		if err != nil { // should not happen
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -226,7 +226,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 
 		volumeId, found := volumeManagerBestVolumeIdForBlob(blob.Volumes, h.conf)
 		if !found {
-			http.Error(w, buptypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+			http.Error(w, varastotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -256,7 +256,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Volume {
 	ret := []Volume{}
 
-	dbObjects := []buptypes.Volume{}
+	dbObjects := []varastotypes.Volume{}
 	panicIfError(h.db.All(&dbObjects))
 
 	for _, dbObject := range dbObjects {
@@ -276,7 +276,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]VolumeMount {
 	ret := []VolumeMount{}
 
-	dbObjects := []buptypes.VolumeMount{}
+	dbObjects := []varastotypes.VolumeMount{}
 	panicIfError(h.db.All(&dbObjects))
 
 	for _, dbObject := range dbObjects {
@@ -295,7 +295,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]ReplicationPolicy {
 	ret := []ReplicationPolicy{}
 
-	dbObjects := []buptypes.ReplicationPolicy{}
+	dbObjects := []varastotypes.ReplicationPolicy{}
 	panicIfError(h.db.All(&dbObjects))
 
 	for _, dbObject := range dbObjects {
@@ -312,7 +312,7 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Node {
 	ret := []Node{}
 
-	dbObjects := []buptypes.Node{}
+	dbObjects := []varastotypes.Node{}
 	panicIfError(h.db.All(&dbObjects))
 
 	for _, dbObject := range dbObjects {
@@ -329,7 +329,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Client {
 	ret := []Client{}
 
-	dbObjects := []buptypes.Client{}
+	dbObjects := []varastotypes.Client{}
 	panicIfError(h.db.All(&dbObjects))
 
 	for _, dbObject := range dbObjects {
@@ -382,8 +382,8 @@ func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {
 	}
 }
 
-func getParentDirs(of buptypes.Directory, tx storm.Node) ([]buptypes.Directory, error) {
-	parentDirs := []buptypes.Directory{}
+func getParentDirs(of varastotypes.Directory, tx storm.Node) ([]varastotypes.Directory, error) {
+	parentDirs := []varastotypes.Directory{}
 
 	current := &of
 	var err error
@@ -395,7 +395,7 @@ func getParentDirs(of buptypes.Directory, tx storm.Node) ([]buptypes.Directory, 
 		}
 
 		// reverse order
-		parentDirs = append([]buptypes.Directory{*current}, parentDirs...)
+		parentDirs = append([]varastotypes.Directory{*current}, parentDirs...)
 	}
 
 	return parentDirs, nil

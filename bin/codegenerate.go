@@ -22,11 +22,11 @@ func mainInternal() error {
 	}
 
 	modules := []*codegen.Module{
-		codegen.NewModule("bupserver", "pkg/bupserver/types.json", "", "pkg/bupserver/commands.json"),
+		codegen.NewModule("varastoserver", "pkg/varastoserver/types.json", "", "pkg/varastoserver/commands.json"),
 	}
 
 	opts := codegen.Opts{
-		BackendModulePrefix:  "github.com/function61/bup/pkg/",
+		BackendModulePrefix:  "github.com/function61/varasto/pkg/",
 		FrontendModulePrefix: "generated/",
 		// AutogenerateModuleDocs: true,
 	}

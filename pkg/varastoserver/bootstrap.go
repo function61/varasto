@@ -1,10 +1,10 @@
-package bupserver
+package varastoserver
 
 import (
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/buputils"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"log"
 )
 
@@ -17,8 +17,8 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 	}
 	defer tx.Rollback()
 
-	newNode := buptypes.Node{
-		ID:   buputils.NewNodeId(),
+	newNode := varastotypes.Node{
+		ID:   varastoutils.NewNodeId(),
 		Addr: "localhost:8066",
 		Name: "dev",
 	}
@@ -27,12 +27,12 @@ func bootstrap(db *storm.DB, logger *log.Logger) error {
 
 	recordsToSave := []interface{}{
 		&newNode,
-		&buptypes.Directory{
+		&varastotypes.Directory{
 			ID:     "root",
 			Parent: "", // root doesn't have parent
 			Name:   "root",
 		},
-		&buptypes.ReplicationPolicy{
+		&varastotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
 			DesiredVolumes: []int{1, 2}, // FIXME: this assumes 1 and 2 will be created soon..

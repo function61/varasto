@@ -1,9 +1,9 @@
-package bupserver
+package varastoserver
 
 import (
 	"encoding/json"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/sliceutil"
+	"github.com/function61/varasto/pkg/sliceutil"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -39,7 +39,7 @@ func outJson(w http.ResponseWriter, out interface{}) {
 	encoder.Encode(out)
 }
 
-func collectionHasChangesetId(id string, coll *buptypes.Collection) bool {
+func collectionHasChangesetId(id string, coll *varastotypes.Collection) bool {
 	for _, changeset := range coll.Changesets {
 		if changeset.ID == id {
 			return true

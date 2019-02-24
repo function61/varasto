@@ -2,11 +2,11 @@ package stateresolver
 
 import (
 	"errors"
-	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"sort"
 )
 
-type fileMap map[string]buptypes.File
+type fileMap map[string]varastotypes.File
 
 type StateAt struct {
 	ChangesetId string
@@ -24,8 +24,8 @@ func (s *StateAt) Files() fileMap {
 	return files
 }
 
-func (s *StateAt) FileList() []buptypes.File {
-	files := []buptypes.File{}
+func (s *StateAt) FileList() []varastotypes.File {
+	files := []varastotypes.File{}
 
 	for _, file := range s.files {
 		files = append(files, file)
@@ -38,14 +38,14 @@ func (s *StateAt) FileList() []buptypes.File {
 	return files
 }
 
-func ComputeStateAt(c buptypes.Collection, changesetId string) (*StateAt, error) {
+func ComputeStateAt(c varastotypes.Collection, changesetId string) (*StateAt, error) {
 	state := &StateAt{
 		ChangesetId: changesetId,
 		files:       fileMap{},
 	}
 
 	// initial state is always empty
-	if changesetId == buptypes.NoParentId {
+	if changesetId == varastotypes.NoParentId {
 		return state, nil
 	}
 
@@ -54,11 +54,11 @@ func ComputeStateAt(c buptypes.Collection, changesetId string) (*StateAt, error)
 		return nil, errors.New("changeset not found")
 	}
 
-	parents := []*buptypes.CollectionChangeset{ch}
+	parents := []*varastotypes.CollectionChangeset{ch}
 
 	curr := ch
 
-	for curr.Parent != buptypes.NoParentId {
+	for curr.Parent != varastotypes.NoParentId {
 		parent := findChangesetById(c, curr.Parent)
 		if parent == nil {
 			return nil, errors.New("parent not found")
@@ -86,7 +86,7 @@ func ComputeStateAt(c buptypes.Collection, changesetId string) (*StateAt, error)
 	return state, nil
 }
 
-func findChangesetById(c buptypes.Collection, id string) *buptypes.CollectionChangeset {
+func findChangesetById(c varastotypes.Collection, id string) *varastotypes.CollectionChangeset {
 	for _, changeset := range c.Changesets {
 		if changeset.ID == id {
 			return &changeset

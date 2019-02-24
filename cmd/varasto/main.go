@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/function61/bup/pkg/bupclient"
-	"github.com/function61/bup/pkg/bupserver"
 	"github.com/function61/gokit/dynversion"
+	"github.com/function61/varasto/pkg/varastoclient"
+	"github.com/function61/varasto/pkg/varastoserver"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -16,11 +16,11 @@ func main() {
 		Version: dynversion.Version,
 	}
 
-	for _, entrypoint := range bupclient.Entrypoints() {
+	for _, entrypoint := range varastoclient.Entrypoints() {
 		rootCmd.AddCommand(entrypoint)
 	}
 
-	rootCmd.AddCommand(bupserver.Entrypoint())
+	rootCmd.AddCommand(varastoserver.Entrypoint())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

@@ -1,9 +1,9 @@
-package bupserver
+package varastoserver
 
 import (
 	"encoding/json"
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"io"
 )
 
@@ -20,14 +20,14 @@ func exportDb(tx storm.Node, out io.Writer) error {
 	}
 
 	exporters := []exporter{
-		{"Node", &buptypes.Node{}},
-		{"Client", &buptypes.Client{}},
-		{"ReplicationPolicy", &buptypes.ReplicationPolicy{}},
-		{"Volume", &buptypes.Volume{}},
-		{"VolumeMount", &buptypes.VolumeMount{}},
-		{"Directory", &buptypes.Directory{}},
-		{"Collection", &buptypes.Collection{}},
-		{"Blob", &buptypes.Blob{}},
+		{"Node", &varastotypes.Node{}},
+		{"Client", &varastotypes.Client{}},
+		{"ReplicationPolicy", &varastotypes.ReplicationPolicy{}},
+		{"Volume", &varastotypes.Volume{}},
+		{"VolumeMount", &varastotypes.VolumeMount{}},
+		{"Directory", &varastotypes.Directory{}},
+		{"Collection", &varastotypes.Collection{}},
+		{"Blob", &varastotypes.Blob{}},
 	}
 
 	enc := json.NewEncoder(out)

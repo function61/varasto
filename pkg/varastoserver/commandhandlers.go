@@ -1,16 +1,16 @@
-package bupserver
+package varastoserver
 
 import (
 	"fmt"
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/blobdriver"
-	"github.com/function61/bup/pkg/buptypes"
-	"github.com/function61/bup/pkg/buputils"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
 	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
+	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
 	"net/http"
 )
@@ -28,12 +28,12 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 	}
 	defer tx.Rollback()
 
-	allVolumes := []buptypes.Volume{}
+	allVolumes := []varastotypes.Volume{}
 	panicIfError(c.db.All(&allVolumes))
 
-	if err := tx.Save(&buptypes.Volume{
+	if err := tx.Save(&varastotypes.Volume{
 		ID:    len(allVolumes) + 1,
-		UUID:  buputils.NewVolumeUuid(),
+		UUID:  varastoutils.NewVolumeUuid(),
 		Label: cmd.Name,
 		Quota: int64(1024 * 1024 * cmd.Quota),
 	}); err != nil {
@@ -57,11 +57,11 @@ func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 	}
 
 	// TODO: grab driver instance by this spec?
-	mountSpec := &buptypes.VolumeMount{
-		ID:         buputils.NewVolumeMountId(),
+	mountSpec := &varastotypes.VolumeMount{
+		ID:         varastoutils.NewVolumeMountId(),
 		Volume:     vol.ID,
 		Node:       c.conf.SelfNode.ID,
-		Driver:     buptypes.VolumeDriverKindLocalFs,
+		Driver:     varastotypes.VolumeDriverKindLocalFs,
 		DriverOpts: cmd.DriverOpts,
 	}
 
@@ -104,8 +104,8 @@ func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) erro
 	}
 	defer tx.Rollback()
 
-	if err := tx.Save(&buptypes.Directory{
-		ID:     buputils.NewDirectoryId(),
+	if err := tx.Save(&varastotypes.Directory{
+		ID:     varastoutils.NewDirectoryId(),
 		Parent: cmd.Parent,
 		Name:   cmd.Name,
 	}); err != nil {
@@ -127,12 +127,12 @@ func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) erro
 		return err
 	}
 
-	collections := []buptypes.Collection{}
+	collections := []varastotypes.Collection{}
 	if err := tx.Find("Directory", dir.ID, &collections); err != nil && err != storm.ErrNotFound {
 		return err
 	}
 
-	subDirs := []buptypes.Directory{}
+	subDirs := []varastotypes.Directory{}
 	if err := tx.Find("Parent", dir.ID, &subDirs); err != nil && err != storm.ErrNotFound {
 		return err
 	}
@@ -228,8 +228,8 @@ func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
 	}
 	defer tx.Rollback()
 
-	if err := tx.Save(&buptypes.Client{
-		ID:        buputils.NewClientId(),
+	if err := tx.Save(&varastotypes.Client{
+		ID:        varastoutils.NewClientId(),
 		Name:      cmd.Name,
 		AuthToken: cryptorandombytes.Base64Url(32),
 	}); err != nil {
@@ -246,7 +246,7 @@ func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 	}
 	defer tx.Rollback()
 
-	if err := tx.DeleteStruct(&buptypes.Client{
+	if err := tx.DeleteStruct(&varastotypes.Client{
 		ID: cmd.Id,
 	}); err != nil {
 		return err

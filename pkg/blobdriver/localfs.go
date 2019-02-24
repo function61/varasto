@@ -2,9 +2,9 @@ package blobdriver
 
 import (
 	"fmt"
-	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"io"
 	"log"
 	"os"
@@ -25,7 +25,7 @@ type localFs struct {
 	log  *logex.Leveled
 }
 
-func (l *localFs) Store(ref buptypes.BlobRef, content io.Reader) (int64, error) {
+func (l *localFs) Store(ref varastotypes.BlobRef, content io.Reader) (int64, error) {
 	finalName := l.getPath(ref)
 	tempName := finalName + ".temp"
 
@@ -40,7 +40,7 @@ func (l *localFs) Store(ref buptypes.BlobRef, content io.Reader) (int64, error) 
 	}
 
 	if chunkExists {
-		return 0, buptypes.ErrChunkAlreadyExists
+		return 0, varastotypes.ErrChunkAlreadyExists
 	}
 
 	tempFileContent, err := os.Create(tempName)
@@ -81,7 +81,7 @@ func (l *localFs) Store(ref buptypes.BlobRef, content io.Reader) (int64, error) 
 	return bytesWritten, nil
 }
 
-func (l *localFs) Fetch(ref buptypes.BlobRef) (io.ReadCloser, error) {
+func (l *localFs) Fetch(ref varastotypes.BlobRef) (io.ReadCloser, error) {
 	return os.Open(l.getPath(ref))
 }
 
@@ -101,7 +101,7 @@ func (l *localFs) Mountable() error {
 	return nil
 }
 
-func (l *localFs) getPath(ref buptypes.BlobRef) string {
+func (l *localFs) getPath(ref varastotypes.BlobRef) string {
 	hexHash := ref.AsHex()
 
 	// this should yield 4 096 directories as maximum (see test file for clarification)

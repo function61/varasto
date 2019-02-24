@@ -1,7 +1,7 @@
 {
 	"for_description_of_this_file_see": "https://github.com/function61/turbobob",
 	"version_major": 1,
-	"project_name": "bup",
+	"project_name": "varasto",
 	"subrepos": [
 		{
 			"source": "https://github.com/function61/f61ui.git",
@@ -15,8 +15,8 @@
 			"name": "default",
 			"uses": "docker://fn61/buildkit-golang:20190215_1406_9218bf67",
 			"mount_source": "",
-			"mount_destination": "/go/src/github.com/function61/bup",
-			"workdir": "/go/src/github.com/function61/bup",
+			"mount_destination": "/go/src/github.com/function61/varasto",
+			"workdir": "/go/src/github.com/function61/varasto",
 			"commands": {
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
@@ -42,7 +42,7 @@
 				"dev": ["bash"]
 			},
 			"env": {
-				"BINTRAY_PROJECT": "function61/dl/bup"
+				"BINTRAY_PROJECT": "function61/dl/varasto"
 			},
 			"pass_envs": [
 				"BINTRAY_CREDS"

@@ -1,4 +1,4 @@
-package bupserver
+package varastoserver
 
 import (
 	"github.com/asdine/storm"

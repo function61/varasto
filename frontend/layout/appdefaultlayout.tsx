@@ -55,8 +55,8 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 
 		return (
 			<DefaultLayout
-				appName="I/O grid"
-				appHomepage="https://github.com/function61/bup"
+				appName="Varasto"
+				appHomepage="https://github.com/function61/varasto"
 				navLinks={navLinks}
 				logoUrl={browseRoute.buildUrl({ dir: RootFolderId })}
 				breadcrumbs={this.props.breadcrumbs.concat({ title: this.props.title })}

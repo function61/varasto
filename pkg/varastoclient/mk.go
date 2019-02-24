@@ -1,9 +1,9 @@
-package bupclient
+package varastoclient
 
 import (
 	"context"
-	"github.com/function61/bup/pkg/buptypes"
 	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"log"
 	"path/filepath"
 )
@@ -17,13 +17,13 @@ func mk(parentPath string, parentDirectoryId string, collectionName string) erro
 		return err
 	}
 
-	collection := buptypes.Collection{}
+	collection := varastotypes.Collection{}
 
 	_, err = ezhttp.Post(
 		ctx,
 		clientConfig.ApiPath("/api/collections"),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
-		ezhttp.SendJson(&buptypes.CreateCollectionRequest{
+		ezhttp.SendJson(&varastotypes.CreateCollectionRequest{
 			Name:              collectionName,
 			ParentDirectoryId: parentDirectoryId,
 		}),

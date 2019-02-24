@@ -1,4 +1,4 @@
-package buptypes
+package varastotypes
 
 import (
 	"errors"

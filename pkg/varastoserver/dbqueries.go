@@ -1,8 +1,8 @@
-package bupserver
+package varastoserver
 
 import (
 	"github.com/asdine/storm"
-	"github.com/function61/bup/pkg/buptypes"
+	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/pkg/errors"
 )
 
@@ -17,8 +17,8 @@ func QueryWithTx(tx storm.Node) *dbQueries {
 	return &dbQueries{tx}
 }
 
-func (d *dbQueries) Blob(ref buptypes.BlobRef) (*buptypes.Blob, error) {
-	record := &buptypes.Blob{}
+func (d *dbQueries) Blob(ref varastotypes.BlobRef) (*varastotypes.Blob, error) {
+	record := &varastotypes.Blob{}
 	if err := d.tx.One("Ref", ref, record); err != nil {
 		return nil, translateDbError(err)
 	}
@@ -26,8 +26,8 @@ func (d *dbQueries) Blob(ref buptypes.BlobRef) (*buptypes.Blob, error) {
 	return record, nil
 }
 
-func (d *dbQueries) Collection(id string) (*buptypes.Collection, error) {
-	record := &buptypes.Collection{}
+func (d *dbQueries) Collection(id string) (*varastotypes.Collection, error) {
+	record := &varastotypes.Collection{}
 	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}
@@ -35,8 +35,8 @@ func (d *dbQueries) Collection(id string) (*buptypes.Collection, error) {
 	return record, nil
 }
 
-func (d *dbQueries) Directory(id string) (*buptypes.Directory, error) {
-	record := &buptypes.Directory{}
+func (d *dbQueries) Directory(id string) (*varastotypes.Directory, error) {
+	record := &varastotypes.Directory{}
 	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}
@@ -44,8 +44,8 @@ func (d *dbQueries) Directory(id string) (*buptypes.Directory, error) {
 	return record, nil
 }
 
-func (d *dbQueries) Volume(id int) (*buptypes.Volume, error) {
-	record := &buptypes.Volume{}
+func (d *dbQueries) Volume(id int) (*varastotypes.Volume, error) {
+	record := &varastotypes.Volume{}
 	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}
@@ -53,8 +53,8 @@ func (d *dbQueries) Volume(id int) (*buptypes.Volume, error) {
 	return record, nil
 }
 
-func (d *dbQueries) VolumeMount(id string) (*buptypes.VolumeMount, error) {
-	record := &buptypes.VolumeMount{}
+func (d *dbQueries) VolumeMount(id string) (*varastotypes.VolumeMount, error) {
+	record := &varastotypes.VolumeMount{}
 	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}
@@ -62,8 +62,8 @@ func (d *dbQueries) VolumeMount(id string) (*buptypes.VolumeMount, error) {
 	return record, nil
 }
 
-func (d *dbQueries) Node(id string) (*buptypes.Node, error) {
-	record := &buptypes.Node{}
+func (d *dbQueries) Node(id string) (*varastotypes.Node, error) {
+	record := &varastotypes.Node{}
 	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}
@@ -71,8 +71,8 @@ func (d *dbQueries) Node(id string) (*buptypes.Node, error) {
 	return record, nil
 }
 
-func (d *dbQueries) ReplicationPolicy(id string) (*buptypes.ReplicationPolicy, error) {
-	record := &buptypes.ReplicationPolicy{}
+func (d *dbQueries) ReplicationPolicy(id string) (*varastotypes.ReplicationPolicy, error) {
+	record := &varastotypes.ReplicationPolicy{}
 	if err := d.tx.One("ID", id, record); err != nil {
 		return nil, translateDbError(err)
 	}

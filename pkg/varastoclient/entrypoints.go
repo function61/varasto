@@ -1,8 +1,8 @@
-package bupclient
+package varastoclient
 
 import (
 	"fmt"
-	"github.com/function61/bup/pkg/fssnapshot"
+	"github.com/function61/varasto/pkg/fssnapshot"
 	"github.com/spf13/cobra"
 	"os"
 	"time"

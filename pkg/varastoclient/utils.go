@@ -1,4 +1,4 @@
-package bupclient
+package varastoclient
 
 func panicIfError(err error) {
 	if err != nil {
