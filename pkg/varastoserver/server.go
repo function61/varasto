@@ -5,6 +5,7 @@ import (
 	"github.com/asdine/storm"
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/gokit/dynversion"
+	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/blobdriver"
@@ -14,12 +15,22 @@ import (
 	"net/http"
 )
 
+type ServerConfigFile struct {
+	DbLocation     string `json:"db_location"`
+	AllowBootstrap bool   `json:"allow_bootstrap"`
+}
+
 func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	defer stop.Done()
 
 	logl := logex.Levels(logger)
 
-	db, err := storm.Open("/tmp/bup.db", storm.Codec(msgpack.Codec))
+	scf := &ServerConfigFile{}
+	if err := jsonfile.Read("config.json", &scf, true); err != nil {
+		return err
+	}
+
+	db, err := storm.Open(scf.DbLocation, storm.Codec(msgpack.Codec))
 	if err != nil {
 		return err
 	}
@@ -32,6 +43,10 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 			return err
 		}
 
+		if !scf.AllowBootstrap {
+			logl.Error.Fatalln("bootstrap needed but AllowBootstrap false")
+		}
+
 		// was not found error => run bootstrap
 		if err := bootstrap(db, logex.Prefix("bootstrap", logger)); err != nil {
 			return err
@@ -40,6 +55,10 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		serverConfig, err = readConfigFromDatabase(db, logger)
 		if err != nil {
 			return err
+		}
+	} else {
+		if scf.AllowBootstrap {
+			logl.Error.Fatalln("AllowBootstrap true after bootstrap already done => dangerous")
 		}
 	}
 
