@@ -14,6 +14,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"sort"
 )
 
 type handlers struct {
@@ -67,6 +68,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	for _, dbColl := range dbColls {
 		colls = append(colls, convertDbCollection(dbColl, nil)) // FIXME: nil ok?
 	}
+	sort.Slice(colls, func(i, j int) bool { return colls[i].Name < colls[j].Name })
 
 	dbSubDirs := []varastotypes.Directory{}
 	if err := tx.Find("Parent", dir.ID, &dbSubDirs); err != nil && err != storm.ErrNotFound {
@@ -77,6 +79,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	for _, dbSubDir := range dbSubDirs {
 		subDirs = append(subDirs, convertDir(dbSubDir))
 	}
+	sort.Slice(subDirs, func(i, j int) bool { return subDirs[i].Name < subDirs[j].Name })
 
 	return &DirectoryOutput{
 		Directory:   convertDir(*dir),
