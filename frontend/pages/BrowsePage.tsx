@@ -10,15 +10,15 @@ import {
 	DirectoryCreate,
 	DirectoryDelete,
 	DirectoryRename,
-} from 'generated/bupserver_commands';
-import { getDirectory } from 'generated/bupserver_endpoints';
+} from 'generated/varastoserver_commands';
+import { getDirectory } from 'generated/varastoserver_endpoints';
 import {
 	CollectionSubset,
 	Directory,
 	DirectoryOutput,
 	HeadRevisionId,
 	RootPathDotBase64FIXME,
-} from 'generated/bupserver_types';
+} from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';

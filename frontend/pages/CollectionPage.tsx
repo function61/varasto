@@ -6,7 +6,11 @@ import { Info } from 'f61ui/component/info';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { downloadFileUrl, getCollectiotAtRev, getDirectory } from 'generated/bupserver_endpoints';
+import {
+	downloadFileUrl,
+	getCollectiotAtRev,
+	getDirectory,
+} from 'generated/varastoserver_endpoints';
 import {
 	ChangesetSubset,
 	CollectionOutput,
@@ -14,7 +18,7 @@ import {
 	DirectoryOutput,
 	File,
 	RootPathDotBase64FIXME,
-} from 'generated/bupserver_types';
+} from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute, replicationPoliciesRoute } from 'routes';

@@ -1,7 +1,7 @@
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { getNodes } from 'generated/bupserver_endpoints';
-import { Node } from 'generated/bupserver_types';
+import { getNodes } from 'generated/varastoserver_endpoints';
+import { Node } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

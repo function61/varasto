@@ -5,9 +5,9 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { VolumeCreate, VolumeMount2, VolumeUnmount } from 'generated/bupserver_commands';
-import { getVolumeMounts, getVolumes } from 'generated/bupserver_endpoints';
-import { Volume, VolumeMount } from 'generated/bupserver_types';
+import { VolumeCreate, VolumeMount2, VolumeUnmount } from 'generated/varastoserver_commands';
+import { getVolumeMounts, getVolumes } from 'generated/varastoserver_endpoints';
+import { Volume, VolumeMount } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

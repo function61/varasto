@@ -2,9 +2,9 @@ import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { ClientCreate, ClientRemove } from 'generated/bupserver_commands';
-import { getClients } from 'generated/bupserver_endpoints';
-import { Client } from 'generated/bupserver_types';
+import { ClientCreate, ClientRemove } from 'generated/varastoserver_commands';
+import { getClients } from 'generated/varastoserver_endpoints';
+import { Client } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 
