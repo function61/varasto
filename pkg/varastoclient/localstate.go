@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	localStatefile = ".bup"
+	localStatefile = ".varasto"
 )
 
 type BupManifest struct {

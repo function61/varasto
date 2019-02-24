@@ -44,7 +44,7 @@ func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, e
 		}
 
 		if !fileInfo.IsDir() { // don't handle directories
-			if fileInfo.Name() == localStatefile { // skip .bup files
+			if fileInfo.Name() == localStatefile { // skip .varasto files
 				return nil
 			}
 
