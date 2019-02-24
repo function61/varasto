@@ -55,4 +55,3 @@ func adoptEntrypoint() *cobra.Command {
 		},
 	}
 }
-
