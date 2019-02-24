@@ -6,6 +6,8 @@ export const clientsRoute = makeRoute('clients', {});
 
 export const nodesRoute = makeRoute('nodes', {});
 
+export const serverInfoRoute = makeRoute('serverInfo', {});
+
 export const volumesAndMountsRoute = makeRoute('volumesmounts', {});
 
 export const replicationPoliciesRoute = makeRoute('replicationpolicies', {});

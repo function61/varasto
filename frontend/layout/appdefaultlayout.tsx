@@ -11,6 +11,7 @@ import {
 	clientsRoute,
 	nodesRoute,
 	replicationPoliciesRoute,
+	serverInfoRoute,
 	volumesAndMountsRoute,
 } from 'routes';
 
@@ -50,6 +51,11 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 				title: 'Replication policies',
 				url: replicationPoliciesRoute.buildUrl({}),
 				active: replicationPoliciesRoute.matchUrl(hash) !== null,
+			},
+			{
+				title: 'Server info',
+				url: serverInfoRoute.buildUrl({}),
+				active: serverInfoRoute.matchUrl(hash) !== null,
 			},
 		];
 

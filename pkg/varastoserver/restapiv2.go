@@ -6,6 +6,7 @@ import (
 	"github.com/asdine/storm"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
+	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stateresolver"
@@ -14,6 +15,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 	"sort"
 )
 
@@ -352,6 +354,19 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	defer tx.Rollback()
 
 	panicIfError(exportDb(tx, w))
+}
+
+func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *ServerInfo {
+	ms := &runtime.MemStats{}
+	runtime.ReadMemStats(ms)
+	return &ServerInfo{
+		AppVersion: dynversion.Version,
+		HeapBytes:  int(ms.HeapAlloc),
+		GoVersion:  runtime.Version(),
+		Goroutines: runtime.NumGoroutine(),
+		ServerOs:   runtime.GOOS,
+		ServerArch: runtime.GOARCH,
+	}
 }
 
 // func createNonPersistingEventLog(listeners domain.EventListener) (eventlog.Log, error) {

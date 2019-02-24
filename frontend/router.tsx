@@ -4,6 +4,7 @@ import ClientsPage from 'pages/ClientsPage';
 import CollectionPage from 'pages/CollectionPage';
 import NodesPage from 'pages/NodesPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
+import ServerInfoPage from 'pages/ServerInfoPage';
 import VolumesAndMountsPage from 'pages/VolumesAndMountsPage';
 import * as React from 'react';
 import {
@@ -12,6 +13,7 @@ import {
 	collectionRoute,
 	nodesRoute,
 	replicationPoliciesRoute,
+	serverInfoRoute,
 	volumesAndMountsRoute,
 } from 'routes';
 
@@ -20,6 +22,7 @@ export const router = makeRouter(browseRoute, (opts) => (
 ))
 	.registerRoute(clientsRoute, () => <ClientsPage />)
 	.registerRoute(nodesRoute, () => <NodesPage />)
+	.registerRoute(serverInfoRoute, () => <ServerInfoPage />)
 	.registerRoute(volumesAndMountsRoute, () => <VolumesAndMountsPage />)
 	.registerRoute(collectionRoute, (opts) => (
 		<CollectionPage
