@@ -10,7 +10,7 @@ import (
 )
 
 func Entrypoint() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
@@ -29,4 +29,17 @@ func Entrypoint() *cobra.Command {
 			panicIfError(runServer(rootLogger, workers.Stopper()))
 		},
 	}
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "dbimport",
+		Short: "Imports database",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := importDb(os.Stdin, args[0]); err != nil {
+				panic(err)
+			}
+		},
+	})
+
+	return cmd
 }

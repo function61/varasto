@@ -25,12 +25,12 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 	logl := logex.Levels(logger)
 
-	scf := &ServerConfigFile{}
-	if err := jsonfile.Read("config.json", &scf, true); err != nil {
+	scf, err := readServerConfigFile()
+	if err != nil {
 		return err
 	}
 
-	db, err := storm.Open(scf.DbLocation, storm.Codec(msgpack.Codec))
+	db, err := stormOpen(scf)
 	if err != nil {
 		return err
 	}
@@ -194,4 +194,17 @@ func getDriver(volume varastotypes.Volume, mount varastotypes.VolumeMount, logge
 	default:
 		panic(fmt.Errorf("unsupported volume driver: %s", mount.Driver))
 	}
+}
+
+func readServerConfigFile() (*ServerConfigFile, error) {
+	scf := &ServerConfigFile{}
+	if err := jsonfile.Read("config.json", &scf, true); err != nil {
+		return nil, err
+	}
+
+	return scf, nil
+}
+
+func stormOpen(scf *ServerConfigFile) (*storm.DB, error) {
+	return storm.Open(scf.DbLocation, storm.Codec(msgpack.Codec))
 }
