@@ -33,25 +33,11 @@ func clone(collectionId string, revisionId string, parentDir string, dirName str
 	return cloneCollection(filepath.Join(parentDir, dirName), revisionId, collection)
 }
 
-// used both by collection create and collection download
-func cloneCollection(path string, revisionId string, collection *varastotypes.Collection) error {
+func cloneCollectionExistingDir(path string, revisionId string, collection *varastotypes.Collection) error {
 	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
 	// manage to write the statefile to disk, use normal procedure to init wd
 	halfBakedWd := &workdirLocation{
 		path: path,
-	}
-
-	dirAlreadyExists, err := fileexists.Exists(halfBakedWd.Join("/"))
-	if err != nil {
-		return err
-	}
-
-	if dirAlreadyExists {
-		return errors.New("dir-to-clone-to already exists!")
-	}
-
-	if err := os.Mkdir(halfBakedWd.Join("/"), 0700); err != nil {
-		return err
 	}
 
 	if revisionId == "" {
@@ -86,6 +72,30 @@ func cloneCollection(path string, revisionId string, collection *varastotypes.Co
 	}
 
 	return nil
+}
+
+// used both by collection create and collection download
+func cloneCollection(path string, revisionId string, collection *varastotypes.Collection) error {
+	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
+	// manage to write the statefile to disk, use normal procedure to init wd
+	halfBakedWd := &workdirLocation{
+		path: path,
+	}
+
+	dirAlreadyExists, err := fileexists.Exists(halfBakedWd.Join("/"))
+	if err != nil {
+		return err
+	}
+
+	if dirAlreadyExists {
+		return errors.New("dir-to-clone-to already exists!")
+	}
+
+	if err := os.Mkdir(halfBakedWd.Join("/"), 0700); err != nil {
+		return err
+	}
+
+	return cloneCollectionExistingDir(path, revisionId, collection)
 }
 
 func cloneOneFile(wd *workdirLocation, file varastotypes.File) error {

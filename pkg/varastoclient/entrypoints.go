@@ -135,6 +135,7 @@ func mkEntrypoint() *cobra.Command {
 func Entrypoints() []*cobra.Command {
 	return []*cobra.Command{
 		mkEntrypoint(),
+		adoptEntrypoint(),
 		stEntrypoint(),
 		cloneEntrypoint(),
 		logEntrypoint(),
