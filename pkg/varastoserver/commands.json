@@ -54,6 +54,17 @@
 		]
 	},
 	{
+		"command": "directory.Move",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "update",
+		"title": "Move",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Directory" }
+		]
+	},
+	{
 		"command": "directory.Delete",
 		"chain": "public",
 		"ctor": ["Id"],

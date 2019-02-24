@@ -173,6 +173,32 @@ func (c *cHandlers) DirectoryRename(cmd *DirectoryRename, ctx *command.Ctx) erro
 	return tx.Commit()
 }
 
+func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	dir, err := QueryWithTx(tx).Directory(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	// verify that new parent exists
+	if _, err := QueryWithTx(tx).Directory(cmd.Directory); err != nil {
+		return err
+	}
+
+	dir.Parent = cmd.Directory
+
+	if err := tx.Save(dir); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)
 	if err != nil {

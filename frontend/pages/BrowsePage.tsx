@@ -11,6 +11,7 @@ import {
 	CollectionRename,
 	DirectoryCreate,
 	DirectoryDelete,
+	DirectoryMove,
 	DirectoryRename,
 } from 'generated/varastoserver_commands';
 import { getDirectory } from 'generated/varastoserver_endpoints';
@@ -80,6 +81,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				<td>
 					<Dropdown>
 						<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
+						<CommandLink command={DirectoryMove(dir.Id)} />
 						<CommandLink command={DirectoryDelete(dir.Id)} />
 					</Dropdown>
 				</td>
