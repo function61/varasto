@@ -1,4 +1,5 @@
 import { AssetImg } from 'component/assetimg';
+import { ClipboardButton } from 'component/clipboardbutton';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -174,6 +175,14 @@ export default class CollectionPage extends React.Component<
 										<a href={replicationPoliciesRoute.buildUrl({})}>
 											{collOutput.Collection.ReplicationPolicy}
 										</a>
+									</td>
+								</tr>
+								<tr>
+									<th>Clone command</th>
+									<td>
+										<ClipboardButton
+											text={`varasto clone ${collOutput.Collection.Id}`}
+										/>
 									</td>
 								</tr>
 							</tbody>
