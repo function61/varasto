@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	configFilename = "bup-config.json"
+	configFilename = "varastoclient-config.json"
 )
 
 type ClientConfig struct {
