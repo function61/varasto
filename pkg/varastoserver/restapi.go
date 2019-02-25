@@ -70,6 +70,15 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
+		if _, err := QueryWithTx(db).Directory(req.ParentDirectoryId); err != nil {
+			if err == ErrDbRecordNotFound {
+				http.Error(w, "parent directory not found", http.StatusNotFound)
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+			}
+			return
+		}
+
 		collection := varastotypes.Collection{
 			ID:                varastoutils.NewCollectionId(),
 			Directory:         req.ParentDirectoryId,
