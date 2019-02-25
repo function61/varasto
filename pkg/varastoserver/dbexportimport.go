@@ -89,6 +89,10 @@ func importDb(content io.Reader, nodeId string) error {
 func importDbInternal(content io.Reader, tx storm.Node) error {
 	scanner := bufio.NewScanner(content)
 
+	// by default craps out on lines > 64k. set max line to 4 MB
+	buf := make([]byte, 0, 4*1024*1024)
+	scanner.Buffer(buf[:], cap(buf))
+
 	allocators := map[string]func() interface{}{
 		"Node":              func() interface{} { return &varastotypes.Node{} },
 		"Client":            func() interface{} { return &varastotypes.Client{} },
