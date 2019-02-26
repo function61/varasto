@@ -1,3 +1,4 @@
+import { thousandSeparate } from 'component/numberformatter';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
@@ -49,7 +50,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<td>{obj.Id}</td>
 				<td>{obj.Uuid}</td>
 				<td>{obj.Label}</td>
-				<td>{obj.BlobCount}</td>
+				<td>{thousandSeparate(obj.BlobCount)}</td>
 				<td>
 					{bytesToHumanReadable(obj.BlobSizeTotal)} / {bytesToHumanReadable(obj.Quota)}
 				</td>

@@ -1,5 +1,6 @@
 import { AssetImg } from 'component/assetimg';
 import { ClipboardButton } from 'component/clipboardbutton';
+import { thousandSeparate } from 'component/numberformatter';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -161,7 +162,7 @@ export default class CollectionPage extends React.Component<
 								</tr>
 								<tr>
 									<th>File count</th>
-									<td>{collOutput.FileCount}</td>
+									<td>{thousandSeparate(collOutput.FileCount)}</td>
 								</tr>
 								<tr>
 									<th>
