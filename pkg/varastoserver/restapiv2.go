@@ -3,6 +3,7 @@ package varastoserver
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"github.com/asdine/storm"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
@@ -244,6 +245,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	h.db.Rollback() // eagerly b/c the below operation is slow
 
 	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
 
 	for _, refAndVolumeId := range refAndVolumeIds {
 		chunkStream, err := h.conf.VolumeDrivers[refAndVolumeId.VolumeId].Fetch(
