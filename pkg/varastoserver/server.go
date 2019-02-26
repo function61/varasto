@@ -16,8 +16,9 @@ import (
 )
 
 type ServerConfigFile struct {
-	DbLocation     string `json:"db_location"`
-	AllowBootstrap bool   `json:"allow_bootstrap"`
+	DbLocation                   string `json:"db_location"`
+	AllowBootstrap               bool   `json:"allow_bootstrap"`
+	DisableReplicationController bool   `json:"disable_replication_controller"`
 }
 
 func runServer(logger *log.Logger, stop *stopper.Stopper) error {
@@ -92,11 +93,15 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 	workers := stopper.NewManager()
 
-	go StartReplicationController(
-		db,
-		serverConfig,
-		logex.Prefix("replicationcontroller", logger),
-		workers.Stopper())
+	// one might disable this during times of massive data ingestion to lessen the read
+	// pressure from the initial disk the blobs land on
+	if !scf.DisableReplicationController {
+		go StartReplicationController(
+			db,
+			serverConfig,
+			logex.Prefix("replicationcontroller", logger),
+			workers.Stopper())
+	}
 
 	go func(stop *stopper.Stopper) {
 		defer stop.Done()
