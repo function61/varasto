@@ -88,6 +88,12 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			Changesets:        []varastotypes.CollectionChangeset{},
 		}
 
+		// highly unlikely
+		if _, err := QueryWithTx(db).Collection(collection.ID); err != ErrDbRecordNotFound {
+			http.Error(w, "accidentally generated duplicate collection ID", http.StatusInternalServerError)
+			return
+		}
+
 		panicIfError(db.Save(&collection))
 
 		outJson(w, collection)
