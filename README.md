@@ -25,10 +25,12 @@ Ideas / goals
   This way your end devices can remain almost-stateless. Store only the things you are
   working on currently!
 - You don't need to clone collections if all you want to do is view files (such as look at
-  photo albums, listen to music or watch movies). Varasto server supports streaming too.
+  photo albums, listen to music or watch movies) - Varasto server supports streaming too.
 - Works on Linux and Windows (mostly due to Go's awesomeness)
 - Integrity is the most important thing. Hashes are verified on writing to disk and on
   reading from disk.
+- Unified view of all of your data - never again have to remember which disk a particular
+  thing was stored on! Got 200 terabytes of data spread across tens of disks? No problem!
 - Decoupling metadata from file content. You can move/rename files and folders and modify
   their metadata "offline", i.e. without touching the disk the actual file content is hosted on.
 - Configurable encryption. Each collection could have a separate encryption key, which itself
