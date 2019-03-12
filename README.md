@@ -4,10 +4,28 @@
 Software defined distributed storage array with custom replication policies and strong
 emphasis on integrity and encryption.
 
+See [screenshots](docs/screenshots.md) to get a better picture.
+
+Status: currently *under heavy development*. Works so robustly (blobs currently cannot be
+deleted so if metadata DB is properly backed up, you can't lose data) that I'm already
+moving *all my files in*, but I wouldn't yet recommend this for anybody else.
+
 
 Ideas / goals
 -------------
 
+- "RAID is not backup", so you would need backup on top of RAID anyway. But what if we
+  designed for backup first and used the redundant backup storage as the primary source of truth?
+- Varasto works like GitHub, with your different directories being like GitHub repos,
+  (we call them collections) but with Varasto making automatic commits (= backup interval)
+  against them. If you accidentally delete a file, you will find it from a previous
+  collection revision. You can "clone" collections you want to work on, to your computer,
+  and when you stop working on them you can tell Varasto to delete the local copy and
+  Varasto client will ensure that the Varasto server has the latest state before removing.
+  This way your end devices can remain almost-stateless. Store only the things you are
+  working on currently!
+- You don't need to clone collections if all you want to do is view files (such as look at
+  photo albums, listen to music or watch movies). Varasto server supports streaming too.
 - Works on Linux and Windows (mostly due to Go's awesomeness)
 - Integrity is the most important thing. Hashes are verified on writing to disk and on
   reading from disk.
