@@ -52,6 +52,7 @@ type Collection struct {
 	ReplicationPolicy string
 	Head              string
 	Changesets        []CollectionChangeset
+	Description       string // added to bottom to not need data migration
 }
 
 type CollectionChangeset struct {

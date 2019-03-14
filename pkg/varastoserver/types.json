@@ -59,6 +59,7 @@
 				"Id": {"_": "string"},
 				"Directory": {"_": "string"},
 				"Name": {"_": "string"},
+				"Description": {"_": "string"},
 				"ReplicationPolicy": {"_": "string"},
 				"Changesets": {"_": "list", "of": {"_": "ChangesetSubset"}}
 			}}

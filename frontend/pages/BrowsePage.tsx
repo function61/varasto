@@ -7,6 +7,7 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
+	CollectionChangeDescription,
 	CollectionMove,
 	CollectionRename,
 	DirectoryCreate,
@@ -60,10 +61,18 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						})}>
 						{coll.Name}
 					</a>
+					{coll.Description ? (
+						<span className="label label-default margin-left">{coll.Description}</span>
+					) : (
+						''
+					)}
 				</td>
 				<td>
 					<Dropdown>
 						<CommandLink command={CollectionRename(coll.Id, coll.Name)} />
+						<CommandLink
+							command={CollectionChangeDescription(coll.Id, coll.Description)}
+						/>
 						<CommandLink command={CollectionMove(coll.Id)} />
 					</Dropdown>
 				</td>

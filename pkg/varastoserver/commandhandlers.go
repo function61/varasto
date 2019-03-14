@@ -226,6 +226,27 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 	return tx.Commit()
 }
 
+func (c *cHandlers) CollectionChangeDescription(cmd *CollectionChangeDescription, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	coll, err := QueryWithTx(tx).Collection(cmd.Collection)
+	if err != nil {
+		return err
+	}
+
+	coll.Description = cmd.Description
+
+	if err := tx.Save(coll); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)
 	if err != nil {

@@ -39,6 +39,7 @@ func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSub
 		Id:                coll.ID,
 		Directory:         coll.Directory,
 		Name:              coll.Name,
+		Description:       coll.Description,
 		ReplicationPolicy: coll.ReplicationPolicy,
 		Changesets:        changesets,
 	}

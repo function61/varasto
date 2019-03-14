@@ -97,6 +97,17 @@
 		]
 	},
 	{
+		"command": "collection.ChangeDescription",
+		"chain": "public",
+		"ctor": ["Collection", "Description"],
+		"crudNature": "update",
+		"title": "Change description",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "Description", "optional": true }
+		]
+	},
+	{
 		"command": "client.Create",
 		"chain": "public",
 		"ctor": [],
