@@ -107,6 +107,7 @@
 			"name": "VolumeMount",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
+				"Online": {"_": "boolean"},
 				"Volume": {"_": "integer"},
 				"Node": {"_": "string"},
 				"Driver": {"_": "string"},

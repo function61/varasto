@@ -290,8 +290,11 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	panicIfError(h.db.All(&dbObjects))
 
 	for _, dbObject := range dbObjects {
+		_, online := h.conf.VolumeDrivers[dbObject.Volume]
+
 		ret = append(ret, VolumeMount{
 			Id:         dbObject.ID,
+			Online:     online,
 			Volume:     dbObject.Volume,
 			Node:       dbObject.Node,
 			Driver:     string(dbObject.Driver), // FIXME: string enum to frontend

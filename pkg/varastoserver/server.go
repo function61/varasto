@@ -183,10 +183,10 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 		// for safety. if on Windows we're using external USB disks, their drive letters
 		// could get mixed up and we could mount the wrong volume and that would not be great.
 		if err := driver.Mountable(); err != nil {
-			return nil, fmt.Errorf("Volume %s not mountable: %v", volume.UUID, err)
+			logex.Levels(logger).Error.Printf("Volume %s not mountable: %v", volume.UUID, err)
+		} else {
+			volumeDrivers[mountedVolume.Volume] = driver
 		}
-
-		volumeDrivers[mountedVolume.Volume] = driver
 	}
 
 	return &ServerConfig{

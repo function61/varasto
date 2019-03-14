@@ -97,18 +97,30 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			return <Loading />;
 		}
 
-		const toRow = (obj: VolumeMount) => (
-			<tr key={obj.Id}>
-				<td>{obj.Id}</td>
-				<td>{obj.Volume}</td>
-				<td>{obj.Node}</td>
-				<td>{obj.Driver}</td>
-				<td>{obj.DriverOpts}</td>
-				<td>
-					<CommandIcon command={VolumeUnmount(obj.Id)} />
-				</td>
-			</tr>
-		);
+		const toRow = (obj: VolumeMount) => {
+			const onlineBadge = obj.Online ? (
+				<span className="label label-success">Online</span>
+			) : (
+				<span className="label label-danger">Offline</span>
+			);
+
+			return (
+				<tr key={obj.Id}>
+					<td>
+						<span className="margin-right">{obj.Id}</span>
+						&nbsp;
+						{onlineBadge}
+					</td>
+					<td>{obj.Volume}</td>
+					<td>{obj.Node}</td>
+					<td>{obj.Driver}</td>
+					<td>{obj.DriverOpts}</td>
+					<td>
+						<CommandIcon command={VolumeUnmount(obj.Id)} />
+					</td>
+				</tr>
+			);
+		};
 
 		return (
 			<table className="table table-striped table-hover">
