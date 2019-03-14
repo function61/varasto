@@ -69,24 +69,67 @@ func importDb(content io.Reader, nodeId string) error {
 	}
 	defer db.Close()
 
-	tx, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+	var openTx storm.Node
 
-	if err := importDbInternal(content, tx); err != nil {
-		return err
-	}
+	commitOpenTx := func() error {
+		if openTx == nil {
+			return nil
+		}
 
-	if err := tx.Set("settings", "nodeId", nodeId); err != nil {
-		return err
+		return openTx.Commit()
 	}
 
-	return tx.Commit()
+	txUseCount := 0
+
+	// automatically commits every N calls
+	withTx := func(fn func(tx storm.Node) error) error {
+		txUseCount++
+
+		if (txUseCount % 1000) == 0 {
+			if err := commitOpenTx(); err != nil {
+				return err
+			}
+
+			openTx = nil
+
+			fmt.Printf(".")
+		}
+
+		if openTx == nil {
+			var errTxOpen error
+			openTx, errTxOpen = db.Begin(true)
+			if errTxOpen != nil {
+				return errTxOpen
+			}
+		}
+
+		return fn(openTx)
+	}
+
+	defer func() {
+		if openTx == nil {
+			return
+		}
+
+		if err := openTx.Rollback(); err != nil {
+			panic(fmt.Errorf("rollback failed: %v", err))
+		}
+	}()
+
+	if err := importDbInternal(content, withTx); err != nil {
+		return err
+	}
+
+	if err := withTx(func(tx storm.Node) error {
+		return tx.Set("settings", "nodeId", nodeId)
+	}); err != nil {
+		return err
+	}
+
+	return commitOpenTx()
 }
 
-func importDbInternal(content io.Reader, tx storm.Node) error {
+func importDbInternal(content io.Reader, withTx func(fn func(tx storm.Node) error) error) error {
 	scanner := bufio.NewScanner(content)
 
 	// by default craps out on lines > 64k. set max line to many megabytes
@@ -127,7 +170,9 @@ func importDbInternal(content io.Reader, tx storm.Node) error {
 				return err
 			}
 
-			if err := tx.Save(record); err != nil {
+			if err := withTx(func(tx storm.Node) error {
+				return tx.Save(record)
+			}); err != nil {
 				return err
 			}
 		}
