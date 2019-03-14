@@ -123,6 +123,7 @@
 			"name": "ServerInfo",
 			"type": {"_": "object", "fields": {
 				"AppVersion": {"_": "string"},
+				"AppUptime": {"_": "string"},
 				"GoVersion": {"_": "string"},
 				"Goroutines": {"_": "integer"},
 				"HeapBytes": {"_": "integer"},

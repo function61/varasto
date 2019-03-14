@@ -43,6 +43,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 		const items: Item[] = [
 			{ h: 'Varasto version', t: serverInfo.AppVersion },
+			{ h: 'Varasto uptime', t: serverInfo.AppUptime },
 			{ h: 'Go version', t: serverInfo.GoVersion },
 			{ h: 'Server OS / arch', t: `${serverInfo.ServerOs} / ${serverInfo.ServerArch}` },
 			{ h: 'Goroutines', t: serverInfo.Goroutines.toString() },

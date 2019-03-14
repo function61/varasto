@@ -10,6 +10,7 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/appuptime"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
@@ -363,6 +364,7 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 	runtime.ReadMemStats(ms)
 	return &ServerInfo{
 		AppVersion: dynversion.Version,
+		AppUptime:  appuptime.Elapsed().String(),
 		HeapBytes:  int(ms.HeapAlloc),
 		GoVersion:  runtime.Version(),
 		Goroutines: runtime.NumGoroutine(),
