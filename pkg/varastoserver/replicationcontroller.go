@@ -28,6 +28,13 @@ func StartReplicationController(db *storm.DB, serverConfig *ServerConfig, logger
 	fiveSeconds := time.NewTicker(5 * time.Second)
 
 	for {
+		// give priority to stop signal
+		select {
+		case <-stop.Signal:
+			return
+		default:
+		}
+
 		select {
 		case <-stop.Signal:
 			return
