@@ -26,7 +26,7 @@
 		},
 		{
 			"name": "frontend",
-			"uses": "docker://fn61/buildkit-js:20190214_1355_a8cc2e91",
+			"uses": "docker://fn61/buildkit-js:20190221_1132_88bd4487",
 			"mount_destination": "/workspace",
 			"commands": {
 				"build": ["bin/build-frontend.sh"],
