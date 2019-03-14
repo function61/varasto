@@ -31,7 +31,7 @@ func Entrypoint() *cobra.Command {
 	}
 
 	cmd.AddCommand(&cobra.Command{
-		Use:   "dbimport",
+		Use:   "dbimport [nodeId]",
 		Short: "Imports database",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
