@@ -36,6 +36,13 @@ interface BrowsePageState {
 	output?: DirectoryOutput;
 }
 
+// for decorate-sort-undecorate
+interface DirOrCollection {
+	name: string; // only used for sorting
+	dir?: Directory;
+	coll?: CollectionSubset;
+}
+
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
 	state: BrowsePageState = {};
 
@@ -126,6 +133,15 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			);
 		};
 
+		const docToRow = (doc: DirOrCollection) => {
+			if (doc.dir) {
+				return directoryToRow(doc.dir);
+			} else if (doc.coll) {
+				return collectionToRow(doc.coll);
+			}
+			throw new Error('should not happen');
+		};
+
 		const output = this.state.output;
 
 		let title = 'Loading';
@@ -150,8 +166,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<div className="col-md-9">
 							<table className="table table-striped table-hover">
 								<tbody>
-									{output.Directories.map(directoryToRow)}
-									{output.Collections.map(collectionToRow)}
+									{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}
 								</tbody>
 								<tfoot>
 									<tr>
@@ -199,4 +214,15 @@ function getMaxSensitivityFromLocalStorage(): number {
 	}
 
 	return 0;
+}
+
+function mergeDirectoriesAndCollectionsSorted(output: DirectoryOutput): DirOrCollection[] {
+	let docs: DirOrCollection[] = [];
+
+	docs = docs.concat(output.Directories.map((dir) => ({ name: dir.Name, dir })));
+	docs = docs.concat(output.Collections.map((coll) => ({ name: coll.Name, coll })));
+
+	docs.sort((a, b) => (a.name < b.name ? -1 : 1));
+
+	return docs;
 }
