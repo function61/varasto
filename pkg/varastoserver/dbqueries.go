@@ -35,6 +35,15 @@ func (d *dbQueries) Collection(id string) (*varastotypes.Collection, error) {
 	return record, nil
 }
 
+func (d *dbQueries) CollectionsByDirectory(dirId string) ([]varastotypes.Collection, error) {
+	collections := []varastotypes.Collection{}
+	if err := d.tx.Find("Directory", dirId, &collections); err != nil && err != storm.ErrNotFound {
+		return nil, translateDbError(err)
+	}
+
+	return collections, nil
+}
+
 func (d *dbQueries) Directory(id string) (*varastotypes.Directory, error) {
 	record := &varastotypes.Directory{}
 	if err := d.tx.One("ID", id, record); err != nil {
@@ -42,6 +51,15 @@ func (d *dbQueries) Directory(id string) (*varastotypes.Directory, error) {
 	}
 
 	return record, nil
+}
+
+func (d *dbQueries) SubDirectories(of string) ([]varastotypes.Directory, error) {
+	subDirs := []varastotypes.Directory{}
+	if err := d.tx.Find("Parent", of, &subDirs); err != nil && err != storm.ErrNotFound {
+		return nil, err
+	}
+
+	return subDirs, nil
 }
 
 func (d *dbQueries) Volume(id int) (*varastotypes.Volume, error) {

@@ -65,10 +65,8 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
 	}
 
-	dbColls := []varastotypes.Collection{}
-	if err := tx.Find("Directory", dir.ID, &dbColls); err != nil && err != storm.ErrNotFound {
-		panic(err)
-	}
+	dbColls, err := QueryWithTx(tx).CollectionsByDirectory(dir.ID)
+	panicIfError(err)
 
 	colls := []CollectionSubset{}
 	for _, dbColl := range dbColls {
@@ -76,10 +74,8 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 	sort.Slice(colls, func(i, j int) bool { return colls[i].Name < colls[j].Name })
 
-	dbSubDirs := []varastotypes.Directory{}
-	if err := tx.Find("Parent", dir.ID, &dbSubDirs); err != nil && err != storm.ErrNotFound {
-		panic(err)
-	}
+	dbSubDirs, err := QueryWithTx(tx).SubDirectories(dir.ID)
+	panicIfError(err)
 
 	subDirs := []Directory{}
 	for _, dbSubDir := range dbSubDirs {

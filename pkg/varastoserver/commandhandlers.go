@@ -127,13 +127,13 @@ func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) erro
 		return err
 	}
 
-	collections := []varastotypes.Collection{}
-	if err := tx.Find("Directory", dir.ID, &collections); err != nil && err != storm.ErrNotFound {
+	collections, err := QueryWithTx(tx).CollectionsByDirectory(dir.ID)
+	if err != nil {
 		return err
 	}
 
-	subDirs := []varastotypes.Directory{}
-	if err := tx.Find("Parent", dir.ID, &subDirs); err != nil && err != storm.ErrNotFound {
+	subDirs, err := QueryWithTx(tx).SubDirectories(dir.ID)
+	if err != nil {
 		return err
 	}
 
