@@ -10,6 +10,7 @@ import {
 	CollectionChangeDescription,
 	CollectionMove,
 	CollectionRename,
+	DirectoryChangeSensitivity,
 	DirectoryCreate,
 	DirectoryDelete,
 	DirectoryMove,
@@ -47,6 +48,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 
 	render() {
+		const showMaxSensitivity = getMaxSensitivityFromLocalStorage();
+
 		const collectionToRow = (coll: CollectionSubset) => (
 			<tr>
 				<td>
@@ -79,23 +82,49 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			</tr>
 		);
 
-		const directoryToRow = (dir: Directory) => (
-			<tr>
-				<td>
-					<AssetImg src="/directory.png" />
-				</td>
-				<td>
-					<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
-				</td>
-				<td>
-					<Dropdown>
-						<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
-						<CommandLink command={DirectoryMove(dir.Id)} />
-						<CommandLink command={DirectoryDelete(dir.Id)} />
-					</Dropdown>
-				</td>
-			</tr>
-		);
+		const directoryToRow = (dir: Directory) => {
+			const sensitivityBadge = (
+				<span className="badge margin-left">
+					<span className="glyphicon glyphicon-lock" />
+					&nbsp;Level: {dir.Sensitivity}
+				</span>
+			);
+
+			const content =
+				dir.Sensitivity <= showMaxSensitivity ? (
+					<div>
+						<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
+						{dir.Sensitivity > 0 ? sensitivityBadge : ''}
+					</div>
+				) : (
+					<div>
+						<span
+							style={{ color: 'transparent', textShadow: '0 0 7px rgba(0,0,0,0.5)' }}>
+							{dir.Name}
+						</span>
+						{sensitivityBadge}
+					</div>
+				);
+
+			return (
+				<tr>
+					<td>
+						<AssetImg src="/directory.png" />
+					</td>
+					<td>{content}</td>
+					<td>
+						<Dropdown>
+							<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
+							<CommandLink
+								command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)}
+							/>
+							<CommandLink command={DirectoryMove(dir.Id)} />
+							<CommandLink command={DirectoryDelete(dir.Id)} />
+						</Dropdown>
+					</td>
+				</tr>
+			);
+		};
 
 		const output = this.state.output;
 
@@ -161,4 +190,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 		this.setState({ output });
 	}
+}
+
+function getMaxSensitivityFromLocalStorage(): number {
+	const stored = localStorage.getItem('max_sensitivity');
+	if (stored !== null) {
+		return +stored;
+	}
+
+	return 0;
 }

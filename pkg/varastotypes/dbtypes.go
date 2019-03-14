@@ -40,9 +40,10 @@ type VolumeMount struct {
 }
 
 type Directory struct {
-	ID     string `storm:"id"`
-	Parent string `storm:"index"`
-	Name   string
+	ID          string `storm:"id"`
+	Parent      string `storm:"index"`
+	Name        string
+	Sensitivity int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 }
 
 type Collection struct {

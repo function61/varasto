@@ -28,9 +28,10 @@ type handlers struct {
 
 func convertDir(dir varastotypes.Directory) Directory {
 	return Directory{
-		Id:     dir.ID,
-		Parent: dir.Parent,
-		Name:   dir.Name,
+		Id:          dir.ID,
+		Parent:      dir.Parent,
+		Name:        dir.Name,
+		Sensitivity: dir.Sensitivity,
 	}
 }
 

@@ -33,7 +33,8 @@
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
 				"Parent": {"_": "string"},
-				"Name": {"_": "string"}
+				"Name": {"_": "string"},
+				"Sensitivity": {"_": "integer"}
 			}}
 		},
 		{

@@ -65,6 +65,17 @@
 		]
 	},
 	{
+		"command": "directory.ChangeSensitivity",
+		"chain": "public",
+		"ctor": ["Id","Sensitivity"],
+		"crudNature": "update",
+		"title": "Change sensitivity",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Sensitivity", "type": "integer" }
+		]
+	},
+	{
 		"command": "directory.Delete",
 		"chain": "public",
 		"ctor": ["Id"],
