@@ -65,4 +65,4 @@ Inspired by & alternative software
 - [bup](https://github.com/bup/bup)
 - [Perkeep](https://perkeep.org/doc/overview)
 - [upspin](https://upspin.io/doc/arch.md)
-
+- [Bazil](https://bazil.org/)
