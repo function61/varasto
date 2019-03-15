@@ -80,7 +80,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 			return
 		}
 
-		collection := varastotypes.Collection{
+		collection := &varastotypes.Collection{
 			ID:                varastoutils.NewCollectionId(),
 			Directory:         req.ParentDirectoryId,
 			Name:              req.Name,
