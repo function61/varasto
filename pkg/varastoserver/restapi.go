@@ -30,17 +30,6 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, mwares 
 func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
-	getCollections := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		var collections []varastotypes.Collection
-		panicIfError(db.All(&collections))
-
-		outJson(w, collections)
-	}
-
 	getCollection := func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
 			return
@@ -314,7 +303,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 	router.HandleFunc("/api/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
 	router.HandleFunc("/api/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
 
-	router.HandleFunc("/api/collections", getCollections).Methods(http.MethodGet)
 	router.HandleFunc("/api/collections", newCollection).Methods(http.MethodPost)
 	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)
 	router.HandleFunc("/api/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
