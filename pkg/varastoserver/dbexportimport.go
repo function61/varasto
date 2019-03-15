@@ -73,7 +73,7 @@ func importDb(content io.Reader, nodeId string) error {
 	withTx := func(fn func(tx *bolt.Tx) error) error {
 		txUseCount++
 
-		if (txUseCount % 1000) == 0 {
+		if (txUseCount % 2000) == 0 {
 			if err := commitOpenTx(); err != nil {
 				return err
 			}
