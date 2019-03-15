@@ -11,6 +11,17 @@
 		]
 	},
 	{
+		"command": "volume.ChangeQuota",
+		"chain": "public",
+		"ctor": ["Id", "Quota"],
+		"crudNature": "update",
+		"title": "Change quota",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes" }
+		]
+	},
+	{
 		"command": "volume.Mount2",
 		"chain": "public",
 		"ctor": ["Id"],

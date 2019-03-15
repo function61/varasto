@@ -6,7 +6,12 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { VolumeCreate, VolumeMount2, VolumeUnmount } from 'generated/varastoserver_commands';
+import {
+	VolumeChangeQuota,
+	VolumeCreate,
+	VolumeMount2,
+	VolumeUnmount,
+} from 'generated/varastoserver_commands';
 import { getVolumeMounts, getVolumes } from 'generated/varastoserver_endpoints';
 import { Volume, VolumeMount } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -60,6 +65,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<td>
 					<Dropdown>
 						<CommandLink command={VolumeMount2(obj.Id)} />
+						<CommandLink command={VolumeChangeQuota(obj.Id, obj.Quota)} />
 					</Dropdown>
 				</td>
 			</tr>

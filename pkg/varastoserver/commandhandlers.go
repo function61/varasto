@@ -45,6 +45,27 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 	return tx.Commit()
 }
 
+func (c *cHandlers) VolumeChangeQuota(cmd *VolumeChangeQuota, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	vol, err := QueryWithTx(tx).Volume(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	vol.Quota = int64(cmd.Quota) // FIXME
+
+	if err := VolumeRepository.Update(vol, tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // FIXME: name ends in 2 because conflicts with types.VolumeMount
 func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)
