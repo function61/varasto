@@ -1,16 +1,17 @@
 package varastoserver
 
 import (
+	"errors"
 	"fmt"
-	"github.com/asdine/storm"
-	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
+	"go.etcd.io/bbolt"
 	"log"
 	"net/http"
 )
@@ -31,7 +32,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		return err
 	}
 
-	db, err := stormOpen(scf)
+	db, err := boltOpen(scf)
 	if err != nil {
 		return err
 	}
@@ -40,7 +41,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	serverConfig, err := readConfigFromDatabase(db, logger)
 	if err != nil { // maybe need bootstrap?
 		// totally unexpected error?
-		if err != storm.ErrNotFound {
+		if err != blorm.ErrNotFound {
 			return err
 		}
 
@@ -134,25 +135,39 @@ type ServerConfig struct {
 	ClientsAuthTokens map[string]bool
 }
 
-func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, error) {
-	var nodeId string
-	if err := db.Get("settings", "nodeId", &nodeId); err != nil {
+// returns ErrNotFound if bootstrap needed
+func readConfigFromDatabase(db *bolt.DB, logger *log.Logger) (*ServerConfig, error) {
+	tx, err := db.Begin(false)
+	if err != nil {
 		return nil, err
 	}
+	defer tx.Rollback()
 
-	selfNode, err := QueryWithTx(db).Node(nodeId)
+	configBucket := tx.Bucket(configBucketKey)
+	if configBucket == nil {
+		return nil, blorm.ErrNotFound
+	}
+
+	nodeId := string(configBucket.Get(configBucketNodeKey))
+	if nodeId == "" {
+		return nil, errors.New("config bucket node ID not found")
+	}
+
+	selfNode, err := QueryWithTx(tx).Node(nodeId)
 	if err != nil {
 		return nil, err
 	}
 
-	myMounts := []varastotypes.VolumeMount{}
-	if err := db.Find("Node", selfNode.ID, &myMounts); err != nil && err != storm.ErrNotFound {
+	clusterWideMounts := []varastotypes.VolumeMount{}
+	if err := VolumeMountRepository.Each(volumeMountAppender(&clusterWideMounts), tx); err != nil {
 		return nil, err
 	}
 
-	clusterWideMounts := []varastotypes.VolumeMount{}
-	if err := db.All(&clusterWideMounts); err != nil {
-		return nil, err
+	myMounts := []varastotypes.VolumeMount{}
+	for _, mount := range clusterWideMounts {
+		if mount.Node == selfNode.ID {
+			myMounts = append(myMounts, mount)
+		}
 	}
 
 	clusterWideMountsMapped := map[int]varastotypes.VolumeMount{}
@@ -161,7 +176,7 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 	}
 
 	clients := []varastotypes.Client{}
-	if err := db.All(&clients); err != nil {
+	if err := ClientRepository.Each(clientAppender(&clients), tx); err != nil {
 		return nil, err
 	}
 
@@ -173,7 +188,7 @@ func readConfigFromDatabase(db *storm.DB, logger *log.Logger) (*ServerConfig, er
 	volumeDrivers := VolumeDriverByVolumeId{}
 
 	for _, mountedVolume := range myMounts {
-		volume, err := QueryWithTx(db).Volume(mountedVolume.Volume)
+		volume, err := QueryWithTx(tx).Volume(mountedVolume.Volume)
 		if err != nil {
 			return nil, err
 		}
@@ -218,6 +233,6 @@ func readServerConfigFile() (*ServerConfigFile, error) {
 	return scf, nil
 }
 
-func stormOpen(scf *ServerConfigFile) (*storm.DB, error) {
-	return storm.Open(scf.DbLocation, storm.Codec(msgpack.Codec))
+func boltOpen(scf *ServerConfigFile) (*bolt.DB, error) {
+	return bolt.Open(scf.DbLocation, 0700, nil)
 }

@@ -1,10 +1,10 @@
 package varastoserver
 
 import (
-	"github.com/asdine/storm"
+	"go.etcd.io/bbolt"
 )
 
-func volumeManagerIncreaseBlobCount(tx storm.Node, volumeId int, blobSizeBytes int64) error {
+func volumeManagerIncreaseBlobCount(tx *bolt.Tx, volumeId int, blobSizeBytes int64) error {
 	volume, err := QueryWithTx(tx).Volume(volumeId)
 	if err != nil {
 		return err
@@ -13,7 +13,7 @@ func volumeManagerIncreaseBlobCount(tx storm.Node, volumeId int, blobSizeBytes i
 	volume.BlobCount++
 	volume.BlobSizeTotal += blobSizeBytes
 
-	return tx.Save(volume)
+	return VolumeRepository.Update(volume, tx)
 }
 
 func volumeManagerBestVolumeIdForBlob(candidateVolumes []int, conf *ServerConfig) (int, bool) {

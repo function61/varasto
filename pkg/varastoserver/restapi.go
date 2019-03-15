@@ -3,21 +3,22 @@ package varastoserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/asdine/storm"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
+	"go.etcd.io/bbolt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 )
 
-func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, mwares httpauth.MiddlewareChainMap, logger *log.Logger) error {
+func defineRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, mwares httpauth.MiddlewareChainMap, logger *log.Logger) error {
 	var han HttpHandlers = &handlers{db, conf}
 
 	// v2 endpoints
@@ -27,7 +28,7 @@ func defineRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, mwares 
 	return defineLegacyRestApi(router, conf, db, logger)
 }
 
-func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, logger *log.Logger) error {
+func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	getCollection := func(w http.ResponseWriter, r *http.Request) {
@@ -35,9 +36,13 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
-		coll, err := QueryWithTx(db).Collection(mux.Vars(r)["collectionId"])
+		tx, err := db.Begin(false)
+		panicIfError(err)
+		defer tx.Rollback()
+
+		coll, err := QueryWithTx(tx).Collection(mux.Vars(r)["collectionId"])
 		if err != nil {
-			if err == ErrDbRecordNotFound {
+			if err == blorm.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -53,14 +58,21 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return
 		}
 
+		tx, err := db.Begin(true)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		defer tx.Rollback()
+
 		req := &varastotypes.CreateCollectionRequest{}
 		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if _, err := QueryWithTx(db).Directory(req.ParentDirectoryId); err != nil {
-			if err == ErrDbRecordNotFound {
+		if _, err := QueryWithTx(tx).Directory(req.ParentDirectoryId); err != nil {
+			if err == blorm.ErrNotFound {
 				http.Error(w, "parent directory not found", http.StatusNotFound)
 			} else {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -78,12 +90,13 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 		}
 
 		// highly unlikely
-		if _, err := QueryWithTx(db).Collection(collection.ID); err != ErrDbRecordNotFound {
+		if _, err := QueryWithTx(tx).Collection(collection.ID); err != blorm.ErrNotFound {
 			http.Error(w, "accidentally generated duplicate collection ID", http.StatusInternalServerError)
 			return
 		}
 
-		panicIfError(db.Save(&collection))
+		panicIfError(CollectionRepository.Update(collection, tx))
+		panicIfError(tx.Commit())
 
 		outJson(w, collection)
 	}
@@ -130,15 +143,14 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 
 		logl.Debug.Printf("wrote blob %s", blobRef.AsHex())
 
-		fc := varastotypes.Blob{
+		panicIfError(volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes))
+
+		panicIfError(BlobRepository.Update(&varastotypes.Blob{
 			Ref:        *blobRef,
 			Volumes:    []int{volumeId},
 			Referenced: false,
-		}
+		}, tx))
 
-		panicIfError(volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes))
-
-		panicIfError(tx.Save(&fc))
 		panicIfError(tx.Commit())
 	}
 
@@ -201,7 +213,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 					replPolicy.DesiredVolumes)
 				blob.IsPendingReplication = len(blob.VolumesPendingReplication) > 0
 
-				panicIfError(tx.Save(blob))
+				panicIfError(BlobRepository.Update(blob, tx))
 			}
 		}
 
@@ -209,7 +221,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 		coll.Head = changeset.ID
 		coll.Changesets = append(coll.Changesets, changeset)
 
-		panicIfError(tx.Save(coll))
+		panicIfError(CollectionRepository.Update(coll, tx))
 		panicIfError(tx.Commit())
 
 		logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
@@ -225,9 +237,13 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *storm.DB, l
 			return nil, nil
 		}
 
-		blobMetadata, err := QueryWithTx(db).Blob(*blobRef)
+		tx, err := db.Begin(false)
+		panicIfError(err)
+		defer tx.Rollback()
+
+		blobMetadata, err := QueryWithTx(tx).Blob(*blobRef)
 		if err != nil {
-			if err == ErrDbRecordNotFound {
+			if err == blorm.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
 				return nil, nil
 			} else {

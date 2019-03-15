@@ -2,7 +2,6 @@ package varastoserver
 
 import (
 	"fmt"
-	"github.com/asdine/storm"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
@@ -12,12 +11,13 @@ import (
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
+	"go.etcd.io/bbolt"
 	"net/http"
 )
 
 // we are currently using the command pattern very wrong!
 type cHandlers struct {
-	db   *storm.DB
+	db   *bolt.DB
 	conf *ServerConfig
 }
 
@@ -29,14 +29,16 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 	defer tx.Rollback()
 
 	allVolumes := []varastotypes.Volume{}
-	panicIfError(c.db.All(&allVolumes))
+	if err := VolumeRepository.Each(volumeAppender(&allVolumes), tx); err != nil {
+		return err
+	}
 
-	if err := tx.Save(&varastotypes.Volume{
+	if err := VolumeRepository.Update(&varastotypes.Volume{
 		ID:    len(allVolumes) + 1,
 		UUID:  varastoutils.NewVolumeUuid(),
 		Label: cmd.Name,
 		Quota: int64(1024 * 1024 * cmd.Quota),
-	}); err != nil {
+	}, tx); err != nil {
 		return err
 	}
 
@@ -71,7 +73,7 @@ func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 		return err
 	}
 
-	if err := tx.Save(mountSpec); err != nil {
+	if err := VolumeMountRepository.Update(mountSpec, tx); err != nil {
 		return err
 	}
 
@@ -90,7 +92,7 @@ func (c *cHandlers) VolumeUnmount(cmd *VolumeUnmount, ctx *command.Ctx) error {
 		return err
 	}
 
-	if err := tx.DeleteStruct(mount); err != nil {
+	if err := VolumeMountRepository.Delete(mount, tx); err != nil {
 		return err
 	}
 
@@ -104,11 +106,11 @@ func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) erro
 	}
 	defer tx.Rollback()
 
-	if err := tx.Save(&varastotypes.Directory{
+	if err := DirectoryRepository.Update(&varastotypes.Directory{
 		ID:     varastoutils.NewDirectoryId(),
 		Parent: cmd.Parent,
 		Name:   cmd.Name,
-	}); err != nil {
+	}, tx); err != nil {
 		return err
 	}
 
@@ -145,7 +147,7 @@ func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) erro
 		return fmt.Errorf("Cannot delete directory because it has %d directory(s)", len(subDirs))
 	}
 
-	if err := tx.DeleteStruct(dir); err != nil {
+	if err := DirectoryRepository.Delete(dir, tx); err != nil {
 		return err
 	}
 
@@ -166,7 +168,7 @@ func (c *cHandlers) DirectoryRename(cmd *DirectoryRename, ctx *command.Ctx) erro
 
 	dir.Name = cmd.Name
 
-	if err := tx.Save(dir); err != nil {
+	if err := DirectoryRepository.Update(dir, tx); err != nil {
 		return err
 	}
 
@@ -187,7 +189,7 @@ func (c *cHandlers) DirectoryChangeSensitivity(cmd *DirectoryChangeSensitivity, 
 
 	dir.Sensitivity = cmd.Sensitivity
 
-	if err := tx.Save(dir); err != nil {
+	if err := DirectoryRepository.Update(dir, tx); err != nil {
 		return err
 	}
 
@@ -213,7 +215,7 @@ func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
 
 	dir.Parent = cmd.Directory
 
-	if err := tx.Save(dir); err != nil {
+	if err := DirectoryRepository.Update(dir, tx); err != nil {
 		return err
 	}
 
@@ -240,7 +242,7 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 
 	coll.Directory = cmd.Directory
 
-	if err := tx.Save(coll); err != nil {
+	if err := CollectionRepository.Update(coll, tx); err != nil {
 		return err
 	}
 
@@ -261,7 +263,7 @@ func (c *cHandlers) CollectionChangeDescription(cmd *CollectionChangeDescription
 
 	coll.Description = cmd.Description
 
-	if err := tx.Save(coll); err != nil {
+	if err := CollectionRepository.Update(coll, tx); err != nil {
 		return err
 	}
 
@@ -282,7 +284,7 @@ func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) er
 
 	coll.Name = cmd.Name
 
-	if err := tx.Save(coll); err != nil {
+	if err := CollectionRepository.Update(coll, tx); err != nil {
 		return err
 	}
 
@@ -296,11 +298,11 @@ func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
 	}
 	defer tx.Rollback()
 
-	if err := tx.Save(&varastotypes.Client{
+	if err := ClientRepository.Update(&varastotypes.Client{
 		ID:        varastoutils.NewClientId(),
 		Name:      cmd.Name,
 		AuthToken: cryptorandombytes.Base64Url(32),
-	}); err != nil {
+	}, tx); err != nil {
 		return err
 	}
 
@@ -314,9 +316,9 @@ func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 	}
 	defer tx.Rollback()
 
-	if err := tx.DeleteStruct(&varastotypes.Client{
+	if err := ClientRepository.Delete(&varastotypes.Client{
 		ID: cmd.Id,
-	}); err != nil {
+	}, tx); err != nil {
 		return err
 	}
 

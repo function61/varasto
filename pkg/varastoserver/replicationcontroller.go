@@ -3,12 +3,12 @@ package varastoserver
 import (
 	"errors"
 	"fmt"
-	"github.com/asdine/storm"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/sliceutil"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
+	"go.etcd.io/bbolt"
 	"log"
 	"time"
 )
@@ -19,7 +19,7 @@ type replicationJob struct {
 	ToVolumeId   int
 }
 
-func StartReplicationController(db *storm.DB, serverConfig *ServerConfig, logger *log.Logger, stop *stopper.Stopper) {
+func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger *log.Logger, stop *stopper.Stopper) {
 	logl := logex.Levels(logger)
 
 	defer stop.Done()
@@ -46,7 +46,7 @@ func StartReplicationController(db *storm.DB, serverConfig *ServerConfig, logger
 	}
 }
 
-func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, serverConfig *ServerConfig) error {
+func discoverAndRunReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfig *ServerConfig) error {
 	jobs, err := discoverReplicationJobs(db, logl)
 	if err != nil {
 		return err
@@ -67,7 +67,7 @@ func discoverAndRunReplicationJobs(db *storm.DB, logl *logex.Leveled, serverConf
 	return nil
 }
 
-func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig) error {
+func replicateJob(job *replicationJob, db *bolt.DB, serverConfig *ServerConfig) error {
 	from, ok := serverConfig.VolumeDrivers[job.FromVolumeId]
 	if !ok {
 		return errors.New("from volume not found from volume drivers")
@@ -117,54 +117,57 @@ func replicateJob(job *replicationJob, db *storm.DB, serverConfig *ServerConfig)
 		return err
 	}
 
-	if err := tx.Save(blobRecord); err != nil {
+	if err := BlobRepository.Update(blobRecord, tx); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func discoverReplicationJobs(db *storm.DB, logl *logex.Leveled) ([]*replicationJob, error) {
+func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled) ([]*replicationJob, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	batchLimit := 100
-	var blobsNeedingReplication []*varastotypes.Blob
-	if err := tx.Find("IsPendingReplication", true, &blobsNeedingReplication, storm.Limit(batchLimit)); err != nil {
-		if err == storm.ErrNotFound {
-			return nil, nil // not an error at all
-		}
-
-		return nil, err
-	}
-
-	if len(blobsNeedingReplication) == batchLimit {
-		logl.Info.Printf(
-			"operating @ batchLimit (%d)",
-			batchLimit)
-	}
-
-	needsReplication := []*replicationJob{}
-
-	for _, blob := range blobsNeedingReplication {
-		for _, toVolumeId := range blob.VolumesPendingReplication {
-			if len(blob.Volumes) == 0 { // should not happen
-				panic("blob does not exist at any volume")
+	return []*replicationJob{}, nil
+	/*
+		batchLimit := 100
+		var blobsNeedingReplication []*varastotypes.Blob
+		if err := tx.Find("IsPendingReplication", true, &blobsNeedingReplication, storm.Limit(batchLimit)); err != nil {
+			if err == storm.ErrNotFound {
+				return nil, nil // not an error at all
 			}
 
-			// FIXME: find first thisnode-mounted volume
-			firstVolume := blob.Volumes[0]
-
-			needsReplication = append(needsReplication, &replicationJob{
-				Ref:          blob.Ref,
-				FromVolumeId: firstVolume,
-				ToVolumeId:   toVolumeId,
-			})
+			return nil, err
 		}
-	}
 
-	return needsReplication, nil
+		if len(blobsNeedingReplication) == batchLimit {
+			logl.Info.Printf(
+				"operating @ batchLimit (%d)",
+				batchLimit)
+		}
+
+		jobs := []*replicationJob{}
+
+		for _, blob := range blobsNeedingReplication {
+			for _, toVolumeId := range blob.VolumesPendingReplication {
+				if len(blob.Volumes) == 0 { // should not happen
+					panic("blob does not exist at any volume")
+				}
+
+				// FIXME: find first thisnode-mounted volume
+				firstVolume := blob.Volumes[0]
+
+				jobs = append(jobs, &replicationJob{
+					Ref:          blob.Ref,
+					FromVolumeId: firstVolume,
+					ToVolumeId:   toVolumeId,
+				})
+			}
+		}
+
+		return jobs, nil
+	*/
 }

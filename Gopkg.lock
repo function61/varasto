@@ -2,16 +2,11 @@
 
 
 [[projects]]
-  digest = "1:318b43c2cd6abd5b02b1c0823ce51399e737551f1343e3dd0040c249582ef142"
+  digest = "1:6f07cfe7608f55ba2b6b6698da627c38ff44457ea555abe69d1531323730bbdc"
   name = "github.com/asdine/storm"
   packages = [
-    ".",
     "codec",
-    "codec/json",
     "codec/msgpack",
-    "index",
-    "internal",
-    "q",
   ]
   pruneopts = "UT"
   revision = "5a6fe65e3993f63951c8e3f64c812536c9e23595"
@@ -122,14 +117,6 @@
   version = "v1.0.0"
 
 [[projects]]
-  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
-  name = "github.com/pkg/errors"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
-  version = "v0.8.0"
-
-[[projects]]
   branch = "master"
   digest = "1:9ea97158ea06d60b1f324aa384f6a4cbd596a81b3cae994e17108b195f398d01"
   name = "github.com/prometheus/procfs"
@@ -215,7 +202,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/asdine/storm",
+    "github.com/asdine/storm/codec",
     "github.com/asdine/storm/codec/msgpack",
     "github.com/djherbis/times",
     "github.com/function61/eventkit/codegen",
@@ -240,9 +227,9 @@
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
     "github.com/gorilla/mux",
     "github.com/mitchellh/go-homedir",
-    "github.com/pkg/errors",
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
+    "go.etcd.io/bbolt",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

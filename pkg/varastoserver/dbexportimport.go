@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/asdine/storm"
+	"github.com/asdine/storm/codec"
+	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/gokit/fileexists"
-	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/blorm"
+	"go.etcd.io/bbolt"
 	"io"
 	"strings"
 )
@@ -17,39 +19,25 @@ import (
 // Run this with:
 // 	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" http://localhost:8066/api/db/export
 
-func exportDb(tx storm.Node, out io.Writer) error {
-	type exporter struct {
-		name   string
-		target interface{}
-	}
+func exportDb(tx *bolt.Tx, output io.Writer) error {
+	jsonEncoderOutput := json.NewEncoder(output)
 
-	exporters := []exporter{
-		{"Node", &varastotypes.Node{}},
-		{"Client", &varastotypes.Client{}},
-		{"ReplicationPolicy", &varastotypes.ReplicationPolicy{}},
-		{"Volume", &varastotypes.Volume{}},
-		{"VolumeMount", &varastotypes.VolumeMount{}},
-		{"Directory", &varastotypes.Directory{}},
-		{"Collection", &varastotypes.Collection{}},
-		{"Blob", &varastotypes.Blob{}},
-	}
+	for heading, repo := range repoByRecordType {
+		// print heading
+		if _, err := output.Write([]byte("\n# " + heading + "\n")); err != nil {
+			return err
+		}
 
-	enc := json.NewEncoder(out)
-	for _, exporter := range exporters {
-		out.Write([]byte("\n# " + exporter.name + "\n"))
-
-		if err := exportTable(tx, exporter.target, enc, out); err != nil {
+		if err := repo.Each(func(record interface{}) {
+			if err := jsonEncoderOutput.Encode(record); err != nil {
+				panic(err)
+			}
+		}, tx); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func exportTable(tx storm.Node, target interface{}, enc *json.Encoder, out io.Writer) error {
-	return tx.Select().Each(target, func(record interface{}) error {
-		return enc.Encode(record)
-	})
 }
 
 func importDb(content io.Reader, nodeId string) error {
@@ -63,13 +51,13 @@ func importDb(content io.Reader, nodeId string) error {
 		return fmt.Errorf("bailing out for safety because database already exists in %s", scf.DbLocation)
 	}
 
-	db, err := stormOpen(scf)
+	db, err := boltOpen(scf)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	var openTx storm.Node
+	var openTx *bolt.Tx
 
 	commitOpenTx := func() error {
 		if openTx == nil {
@@ -82,7 +70,7 @@ func importDb(content io.Reader, nodeId string) error {
 	txUseCount := 0
 
 	// automatically commits every N calls
-	withTx := func(fn func(tx storm.Node) error) error {
+	withTx := func(fn func(tx *bolt.Tx) error) error {
 		txUseCount++
 
 		if (txUseCount % 1000) == 0 {
@@ -111,17 +99,15 @@ func importDb(content io.Reader, nodeId string) error {
 			return
 		}
 
-		if err := openTx.Rollback(); err != nil {
-			panic(fmt.Errorf("rollback failed: %v", err))
-		}
+		openTx.Rollback()
 	}()
 
 	if err := importDbInternal(content, withTx); err != nil {
 		return err
 	}
 
-	if err := withTx(func(tx storm.Node) error {
-		return tx.Set("settings", "nodeId", nodeId)
+	if err := withTx(func(tx *bolt.Tx) error {
+		return bootstrapSetNodeId(nodeId, tx)
 	}); err != nil {
 		return err
 	}
@@ -129,25 +115,28 @@ func importDb(content io.Reader, nodeId string) error {
 	return commitOpenTx()
 }
 
-func importDbInternal(content io.Reader, withTx func(fn func(tx storm.Node) error) error) error {
+var msgpackCodec codec.MarshalUnmarshaler = msgpack.Codec
+
+// key is heading in export file under which all JSON records are dumped
+var repoByRecordType = map[string]blorm.Repository{
+	"Node":              NodeRepository,
+	"Client":            ClientRepository,
+	"ReplicationPolicy": ReplicationPolicyRepository,
+	"Volume":            VolumeRepository,
+	"VolumeMount":       VolumeMountRepository,
+	"Directory":         DirectoryRepository,
+	"Collection":        CollectionRepository,
+	"Blob":              BlobRepository,
+}
+
+func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error) error) error {
 	scanner := bufio.NewScanner(content)
 
 	// by default craps out on lines > 64k. set max line to many megabytes
 	buf := make([]byte, 0, 8*1024*1024)
 	scanner.Buffer(buf, cap(buf))
 
-	allocators := map[string]func() interface{}{
-		"Node":              func() interface{} { return &varastotypes.Node{} },
-		"Client":            func() interface{} { return &varastotypes.Client{} },
-		"ReplicationPolicy": func() interface{} { return &varastotypes.ReplicationPolicy{} },
-		"Volume":            func() interface{} { return &varastotypes.Volume{} },
-		"VolumeMount":       func() interface{} { return &varastotypes.VolumeMount{} },
-		"Directory":         func() interface{} { return &varastotypes.Directory{} },
-		"Collection":        func() interface{} { return &varastotypes.Collection{} },
-		"Blob":              func() interface{} { return &varastotypes.Blob{} },
-	}
-
-	typeOfNextLine := ""
+	var repo blorm.Repository
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -157,21 +146,23 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx storm.Node) erro
 		}
 
 		if strings.HasPrefix(line, "# ") {
-			typeOfNextLine = line[2:]
-		} else {
-			allocator, found := allocators[typeOfNextLine]
-			if !found {
-				return fmt.Errorf("allocator not found for: %s", typeOfNextLine)
-			}
+			recordType := line[2:]
 
+			var found bool
+			repo, found = repoByRecordType[recordType]
+			if !found {
+				return fmt.Errorf("unsupported record type: %s", recordType)
+			}
+		} else {
 			// init empty record
-			record := allocator()
+			record := repo.Alloc()
+
 			if err := json.Unmarshal([]byte(line), record); err != nil {
 				return err
 			}
 
-			if err := withTx(func(tx storm.Node) error {
-				return tx.Save(record)
+			if err := withTx(func(tx *bolt.Tx) error {
+				return repo.Update(record, tx)
 			}); err != nil {
 				return err
 			}

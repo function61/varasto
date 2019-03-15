@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
-	"github.com/asdine/storm"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/appuptime"
+	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
+	"go.etcd.io/bbolt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -22,7 +23,7 @@ import (
 )
 
 type handlers struct {
-	db   *storm.DB
+	db   *bolt.DB
 	conf *ServerConfig
 }
 
@@ -105,7 +106,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 
 	coll, err := QueryWithTx(tx).Collection(collectionId)
 	if err != nil {
-		if err == ErrDbRecordNotFound {
+		if err == blorm.ErrNotFound {
 			http.Error(w, "not found", http.StatusNotFound)
 		} else {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -183,7 +184,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 
 	coll, err := QueryWithTx(tx).Collection(collectionId)
 	if err != nil {
-		if err == ErrDbRecordNotFound {
+		if err == blorm.ErrNotFound {
 			http.Error(w, "collection not found", http.StatusNotFound)
 			return
 		} else {
@@ -220,7 +221,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 
 		blob, err := QueryWithTx(tx).Blob(*ref)
 		if err != nil {
-			if err == ErrDbRecordNotFound {
+			if err == blorm.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			} else {
@@ -241,7 +242,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		})
 	}
 
-	h.db.Rollback() // eagerly b/c the below operation is slow
+	tx.Rollback() // eagerly b/c the below operation is slow
 
 	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
@@ -262,8 +263,12 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Volume {
 	ret := []Volume{}
 
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
 	dbObjects := []varastotypes.Volume{}
-	panicIfError(h.db.All(&dbObjects))
+	panicIfError(VolumeRepository.Each(volumeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, Volume{
@@ -282,8 +287,12 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]VolumeMount {
 	ret := []VolumeMount{}
 
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
 	dbObjects := []varastotypes.VolumeMount{}
-	panicIfError(h.db.All(&dbObjects))
+	panicIfError(VolumeMountRepository.Each(volumeMountAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		_, online := h.conf.VolumeDrivers[dbObject.Volume]
@@ -304,8 +313,12 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]ReplicationPolicy {
 	ret := []ReplicationPolicy{}
 
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
 	dbObjects := []varastotypes.ReplicationPolicy{}
-	panicIfError(h.db.All(&dbObjects))
+	panicIfError(ReplicationPolicyRepository.Each(replicationPolicyAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, ReplicationPolicy{
@@ -321,8 +334,12 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Node {
 	ret := []Node{}
 
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
 	dbObjects := []varastotypes.Node{}
-	panicIfError(h.db.All(&dbObjects))
+	panicIfError(NodeRepository.Each(nodeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, Node{
@@ -338,8 +355,12 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Client {
 	ret := []Client{}
 
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
 	dbObjects := []varastotypes.Client{}
-	panicIfError(h.db.All(&dbObjects))
+	panicIfError(ClientRepository.Each(clientAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, Client{
@@ -405,7 +426,7 @@ func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {
 	}
 }
 
-func getParentDirs(of varastotypes.Directory, tx storm.Node) ([]varastotypes.Directory, error) {
+func getParentDirs(of varastotypes.Directory, tx *bolt.Tx) ([]varastotypes.Directory, error) {
 	parentDirs := []varastotypes.Directory{}
 
 	current := &of

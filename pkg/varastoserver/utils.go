@@ -72,3 +72,12 @@ func contentTypeForFilename(path string) string {
 
 	return contentType
 }
+
+func allOk(errs []error) error {
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

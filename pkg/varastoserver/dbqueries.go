@@ -1,26 +1,22 @@
 package varastoserver
 
 import (
-	"github.com/asdine/storm"
 	"github.com/function61/varasto/pkg/varastotypes"
-	"github.com/pkg/errors"
+	"go.etcd.io/bbolt"
 )
 
-// abstraction for storm's storm.ErrNotFound
-var ErrDbRecordNotFound = errors.New("database: record not found")
-
 type dbQueries struct {
-	tx storm.Node
+	tx *bolt.Tx
 }
 
-func QueryWithTx(tx storm.Node) *dbQueries {
+func QueryWithTx(tx *bolt.Tx) *dbQueries {
 	return &dbQueries{tx}
 }
 
 func (d *dbQueries) Blob(ref varastotypes.BlobRef) (*varastotypes.Blob, error) {
 	record := &varastotypes.Blob{}
-	if err := d.tx.One("Ref", ref, record); err != nil {
-		return nil, translateDbError(err)
+	if err := BlobRepository.OpenByPrimaryKey([]byte(ref), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
@@ -28,8 +24,8 @@ func (d *dbQueries) Blob(ref varastotypes.BlobRef) (*varastotypes.Blob, error) {
 
 func (d *dbQueries) Collection(id string) (*varastotypes.Collection, error) {
 	record := &varastotypes.Collection{}
-	if err := d.tx.One("ID", id, record); err != nil {
-		return nil, translateDbError(err)
+	if err := CollectionRepository.OpenByPrimaryKey([]byte(id), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
@@ -37,8 +33,15 @@ func (d *dbQueries) Collection(id string) (*varastotypes.Collection, error) {
 
 func (d *dbQueries) CollectionsByDirectory(dirId string) ([]varastotypes.Collection, error) {
 	collections := []varastotypes.Collection{}
-	if err := d.tx.Find("Directory", dirId, &collections); err != nil && err != storm.ErrNotFound {
-		return nil, translateDbError(err)
+
+	// TODO: might need to index this later for better perf..
+	if err := CollectionRepository.Each(func(record interface{}) {
+		coll := record.(*varastotypes.Collection)
+		if coll.Directory == dirId {
+			collections = append(collections, *coll)
+		}
+	}, d.tx); err != nil {
+		return nil, err
 	}
 
 	return collections, nil
@@ -46,8 +49,8 @@ func (d *dbQueries) CollectionsByDirectory(dirId string) ([]varastotypes.Collect
 
 func (d *dbQueries) Directory(id string) (*varastotypes.Directory, error) {
 	record := &varastotypes.Directory{}
-	if err := d.tx.One("ID", id, record); err != nil {
-		return nil, translateDbError(err)
+	if err := DirectoryRepository.OpenByPrimaryKey([]byte(id), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
@@ -55,7 +58,14 @@ func (d *dbQueries) Directory(id string) (*varastotypes.Directory, error) {
 
 func (d *dbQueries) SubDirectories(of string) ([]varastotypes.Directory, error) {
 	subDirs := []varastotypes.Directory{}
-	if err := d.tx.Find("Parent", of, &subDirs); err != nil && err != storm.ErrNotFound {
+
+	// TODO: might need to index this later for better perf..
+	if err := DirectoryRepository.Each(func(record interface{}) {
+		dir := record.(*varastotypes.Directory)
+		if dir.Parent == of {
+			subDirs = append(subDirs, *dir)
+		}
+	}, d.tx); err != nil {
 		return nil, err
 	}
 
@@ -64,8 +74,8 @@ func (d *dbQueries) SubDirectories(of string) ([]varastotypes.Directory, error) 
 
 func (d *dbQueries) Volume(id int) (*varastotypes.Volume, error) {
 	record := &varastotypes.Volume{}
-	if err := d.tx.One("ID", id, record); err != nil {
-		return nil, translateDbError(err)
+	if err := VolumeRepository.OpenByPrimaryKey(volumeIntIdToBytes(id), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
@@ -73,8 +83,8 @@ func (d *dbQueries) Volume(id int) (*varastotypes.Volume, error) {
 
 func (d *dbQueries) VolumeMount(id string) (*varastotypes.VolumeMount, error) {
 	record := &varastotypes.VolumeMount{}
-	if err := d.tx.One("ID", id, record); err != nil {
-		return nil, translateDbError(err)
+	if err := VolumeMountRepository.OpenByPrimaryKey([]byte(id), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
@@ -82,8 +92,8 @@ func (d *dbQueries) VolumeMount(id string) (*varastotypes.VolumeMount, error) {
 
 func (d *dbQueries) Node(id string) (*varastotypes.Node, error) {
 	record := &varastotypes.Node{}
-	if err := d.tx.One("ID", id, record); err != nil {
-		return nil, translateDbError(err)
+	if err := NodeRepository.OpenByPrimaryKey([]byte(id), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
@@ -91,17 +101,9 @@ func (d *dbQueries) Node(id string) (*varastotypes.Node, error) {
 
 func (d *dbQueries) ReplicationPolicy(id string) (*varastotypes.ReplicationPolicy, error) {
 	record := &varastotypes.ReplicationPolicy{}
-	if err := d.tx.One("ID", id, record); err != nil {
-		return nil, translateDbError(err)
+	if err := ReplicationPolicyRepository.OpenByPrimaryKey([]byte(id), record, d.tx); err != nil {
+		return nil, err
 	}
 
 	return record, nil
-}
-
-func translateDbError(err error) error {
-	if err == storm.ErrNotFound {
-		return ErrDbRecordNotFound
-	} else {
-		return errors.Wrap(err, "database")
-	}
 }
