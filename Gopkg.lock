@@ -109,14 +109,6 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:78bbb1ba5b7c3f2ed0ea1eab57bdd3859aec7e177811563edc41198a760b06af"
-  name = "github.com/mitchellh/go-homedir"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "ae18d6b8b3205b561c79e8e5f69bff09736185f4"
-  version = "v1.0.0"
-
-[[projects]]
   branch = "master"
   digest = "1:9ea97158ea06d60b1f324aa384f6a4cbd596a81b3cae994e17108b195f398d01"
   name = "github.com/prometheus/procfs"
@@ -226,7 +218,6 @@
     "github.com/function61/pi-security-module/pkg/f61ui",
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
     "github.com/gorilla/mux",
-    "github.com/mitchellh/go-homedir",
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
     "go.etcd.io/bbolt",

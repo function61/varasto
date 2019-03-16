@@ -13,7 +13,7 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20190215_1406_9218bf67",
+			"uses": "docker://fn61/buildkit-golang:20190316_0913_96b56b86",
 			"mount_source": "",
 			"mount_destination": "/go/src/github.com/function61/varasto",
 			"workdir": "/go/src/github.com/function61/varasto",

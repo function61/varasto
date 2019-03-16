@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
-	gohomedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -48,7 +47,7 @@ func readConfig() (*ClientConfig, error) {
 }
 
 func configFilePath() (string, error) {
-	usersHomeDirectory, err := gohomedir.Dir()
+	usersHomeDirectory, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
