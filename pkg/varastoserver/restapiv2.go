@@ -18,13 +18,15 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"runtime"
 	"sort"
 )
 
 type handlers struct {
-	db   *bolt.DB
-	conf *ServerConfig
+	db         *bolt.DB
+	conf       *ServerConfig
+	dbLocation string // for server info to show file size
 }
 
 func convertDir(dir varastotypes.Directory) Directory {
@@ -382,16 +384,24 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 }
 
 func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *ServerInfo {
+	dbFileInfo, err := os.Stat(h.dbLocation)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
 	ms := &runtime.MemStats{}
 	runtime.ReadMemStats(ms)
+
 	return &ServerInfo{
-		AppVersion: dynversion.Version,
-		AppUptime:  appuptime.Elapsed().String(),
-		HeapBytes:  int(ms.HeapAlloc),
-		GoVersion:  runtime.Version(),
-		Goroutines: runtime.NumGoroutine(),
-		ServerOs:   runtime.GOOS,
-		ServerArch: runtime.GOARCH,
+		AppVersion:   dynversion.Version,
+		AppUptime:    appuptime.Elapsed().String(),
+		DatabaseSize: int(dbFileInfo.Size()),
+		HeapBytes:    int(ms.HeapAlloc),
+		GoVersion:    runtime.Version(),
+		Goroutines:   runtime.NumGoroutine(),
+		ServerOs:     runtime.GOOS,
+		ServerArch:   runtime.GOARCH,
 	}
 }
 

@@ -127,6 +127,7 @@
 			"type": {"_": "object", "fields": {
 				"AppVersion": {"_": "string"},
 				"AppUptime": {"_": "string"},
+				"DatabaseSize": {"_": "integer"},
 				"GoVersion": {"_": "string"},
 				"Goroutines": {"_": "integer"},
 				"HeapBytes": {"_": "integer"},
