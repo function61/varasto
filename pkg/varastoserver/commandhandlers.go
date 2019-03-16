@@ -66,6 +66,27 @@ func (c *cHandlers) VolumeChangeQuota(cmd *VolumeChangeQuota, ctx *command.Ctx) 
 	return tx.Commit()
 }
 
+func (c *cHandlers) VolumeChangeDescription(cmd *VolumeChangeDescription, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	vol, err := QueryWithTx(tx).Volume(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	vol.Description = cmd.Description
+
+	if err := VolumeRepository.Update(vol, tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // FIXME: name ends in 2 because conflicts with types.VolumeMount
 func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)

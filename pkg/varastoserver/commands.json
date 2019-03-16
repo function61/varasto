@@ -22,6 +22,17 @@
 		]
 	},
 	{
+		"command": "volume.ChangeDescription",
+		"chain": "public",
+		"ctor": ["Id", "Description"],
+		"crudNature": "update",
+		"title": "Change description",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Description", "optional": true }
+		]
+	},
+	{
 		"command": "volume.Mount2",
 		"chain": "public",
 		"ctor": ["Id"],

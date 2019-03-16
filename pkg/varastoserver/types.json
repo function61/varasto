@@ -97,6 +97,7 @@
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "integer"},
 				"Uuid": {"_": "string"},
+				"Description": {"_": "string"},
 				"Label": {"_": "string"},
 				"Quota": {"_": "integer"},
 				"BlobSizeTotal": {"_": "integer"},

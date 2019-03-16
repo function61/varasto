@@ -29,6 +29,7 @@ type Volume struct {
 	Quota         int64
 	BlobSizeTotal int64
 	BlobCount     int64
+	Description   string // added to bottom to not need data migration
 }
 
 type VolumeMount struct {

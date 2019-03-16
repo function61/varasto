@@ -277,6 +277,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 			Id:            dbObject.ID,
 			Uuid:          dbObject.UUID,
 			Label:         dbObject.Label,
+			Description:   dbObject.Description,
 			Quota:         int(dbObject.Quota), // FIXME: lossy conversions here
 			BlobSizeTotal: int(dbObject.BlobSizeTotal),
 			BlobCount:     int(dbObject.BlobCount),

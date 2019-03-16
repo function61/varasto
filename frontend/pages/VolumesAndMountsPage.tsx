@@ -7,6 +7,7 @@ import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
+	VolumeChangeDescription,
 	VolumeChangeQuota,
 	VolumeCreate,
 	VolumeMount2,
@@ -52,9 +53,8 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 
 		const toRow = (obj: Volume) => (
 			<tr key={obj.Id}>
-				<td>{obj.Id}</td>
-				<td>{obj.Uuid}</td>
-				<td>{obj.Label}</td>
+				<td title={`Uuid=${obj.Uuid} Id=${obj.Id}`}>{obj.Label}</td>
+				<td>{obj.Description}</td>
 				<td>{thousandSeparate(obj.BlobCount)}</td>
 				<td>
 					{bytesToHumanReadable(obj.BlobSizeTotal)} / {bytesToHumanReadable(obj.Quota)}
@@ -66,6 +66,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 					<Dropdown>
 						<CommandLink command={VolumeMount2(obj.Id)} />
 						<CommandLink command={VolumeChangeQuota(obj.Id, obj.Quota)} />
+						<CommandLink command={VolumeChangeDescription(obj.Id, obj.Description)} />
 					</Dropdown>
 				</td>
 			</tr>
@@ -75,9 +76,8 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			<table className="table table-striped table-hover">
 				<thead>
 					<tr>
-						<th>Id</th>
-						<th>Uuid</th>
 						<th>Label</th>
+						<th>Make/model</th>
 						<th>Blob count</th>
 						<th>Usage</th>
 						<th style={{ width: '220px' }} />
