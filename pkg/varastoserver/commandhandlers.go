@@ -1,6 +1,7 @@
 package varastoserver
 
 import (
+	"errors"
 	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
@@ -245,19 +246,24 @@ func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
 	}
 	defer tx.Rollback()
 
-	dir, err := QueryWithTx(tx).Directory(cmd.Id)
+	dirToMove, err := QueryWithTx(tx).Directory(cmd.Id)
 	if err != nil {
 		return err
 	}
 
 	// verify that new parent exists
-	if _, err := QueryWithTx(tx).Directory(cmd.Directory); err != nil {
+	newParent, err := QueryWithTx(tx).Directory(cmd.Directory)
+	if err != nil {
 		return err
 	}
 
-	dir.Parent = cmd.Directory
+	if dirToMove.ID == newParent.ID {
+		return errors.New("dir cannot be its own parent, dawg")
+	}
 
-	if err := DirectoryRepository.Update(dir, tx); err != nil {
+	dirToMove.Parent = newParent.ID
+
+	if err := DirectoryRepository.Update(dirToMove, tx); err != nil {
 		return err
 	}
 
