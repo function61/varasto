@@ -37,7 +37,7 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 		ID:    len(allVolumes) + 1,
 		UUID:  varastoutils.NewVolumeUuid(),
 		Label: cmd.Name,
-		Quota: int64(1024 * 1024 * cmd.Quota),
+		Quota: mebibytesToBytes(cmd.Quota),
 	}, tx); err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (c *cHandlers) VolumeChangeQuota(cmd *VolumeChangeQuota, ctx *command.Ctx) 
 		return err
 	}
 
-	vol.Quota = int64(cmd.Quota) // FIXME
+	vol.Quota = mebibytesToBytes(cmd.Quota)
 
 	if err := VolumeRepository.Update(vol, tx); err != nil {
 		return err
@@ -375,4 +375,8 @@ func registerCommandEndpoints(
 			w.Write([]byte(`{}`))
 		}
 	})).Methods(http.MethodPost)
+}
+
+func mebibytesToBytes(mebibytes int) int64 {
+	return int64(mebibytes * 1024 * 1024)
 }

@@ -7,7 +7,7 @@
 		"title": "Create volume",
 		"fields": [
 			{ "key": "Name" },
-			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes" }
+			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes (MiB)" }
 		]
 	},
 	{
@@ -18,7 +18,7 @@
 		"title": "Change quota",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes" }
+			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes (MiB)" }
 		]
 	},
 	{
