@@ -190,6 +190,14 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 												<ClipboardButton text={output.Directory.Id} />
 											</td>
 										</tr>
+										<tr>
+											<th>Content</th>
+											<td>
+												{output.Directories.length} subdirectories
+												<br />
+												{output.Collections.length} collections
+											</td>
+										</tr>
 									</tbody>
 								</table>
 							</Panel>
