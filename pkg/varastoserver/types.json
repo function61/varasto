@@ -34,6 +34,7 @@
 				"Id": {"_": "string"},
 				"Parent": {"_": "string"},
 				"Name": {"_": "string"},
+				"Description": {"_": "string"},
 				"Sensitivity": {"_": "integer"}
 			}}
 		},

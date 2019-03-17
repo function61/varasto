@@ -218,6 +218,27 @@ func (c *cHandlers) DirectoryRename(cmd *DirectoryRename, ctx *command.Ctx) erro
 	return tx.Commit()
 }
 
+func (c *cHandlers) DirectoryChangeDescription(cmd *DirectoryChangeDescription, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	dir, err := QueryWithTx(tx).Directory(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	dir.Description = cmd.Description
+
+	if err := DirectoryRepository.Update(dir, tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (c *cHandlers) DirectoryChangeSensitivity(cmd *DirectoryChangeSensitivity, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)
 	if err != nil {

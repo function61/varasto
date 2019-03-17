@@ -76,6 +76,17 @@
 		]
 	},
 	{
+		"command": "directory.ChangeDescription",
+		"chain": "public",
+		"ctor": ["Id", "Description"],
+		"crudNature": "update",
+		"title": "Change description",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Description", "optional": true }
+		]
+	},
+	{
 		"command": "directory.Move",
 		"chain": "public",
 		"ctor": ["Id"],

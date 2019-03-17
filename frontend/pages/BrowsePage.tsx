@@ -10,6 +10,7 @@ import {
 	CollectionDelete,
 	CollectionMove,
 	CollectionRename,
+	DirectoryChangeDescription,
 	DirectoryChangeSensitivity,
 	DirectoryCreate,
 	DirectoryDelete,
@@ -102,6 +103,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				dir.Sensitivity <= showMaxSensitivity ? (
 					<div>
 						<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
+						{dir.Description ? (
+							<span className="label label-default margin-left">
+								{dir.Description}
+							</span>
+						) : (
+							''
+						)}
 						{dir.Sensitivity > 0 ? sensitivityBadge : ''}
 					</div>
 				) : (
@@ -123,6 +131,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					<td>
 						<Dropdown>
 							<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
+							<CommandLink
+								command={DirectoryChangeDescription(dir.Id, dir.Description)}
+							/>
 							<CommandLink
 								command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)}
 							/>

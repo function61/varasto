@@ -34,6 +34,7 @@ func convertDir(dir varastotypes.Directory) Directory {
 		Id:          dir.ID,
 		Parent:      dir.Parent,
 		Name:        dir.Name,
+		Description: dir.Description,
 		Sensitivity: dir.Sensitivity,
 	}
 }

@@ -26,10 +26,10 @@ type Volume struct {
 	ID            int `storm:"id"`
 	UUID          string
 	Label         string
+	Description   string
 	Quota         int64
 	BlobSizeTotal int64
 	BlobCount     int64
-	Description   string // added to bottom to not need data migration
 }
 
 type VolumeMount struct {
@@ -44,6 +44,7 @@ type Directory struct {
 	ID          string `storm:"id"`
 	Parent      string `storm:"index"`
 	Name        string
+	Description string
 	Sensitivity int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 }
 
@@ -51,10 +52,10 @@ type Collection struct {
 	ID                string `storm:"id"`
 	Directory         string
 	Name              string
+	Description       string
 	ReplicationPolicy string
 	Head              string
 	Changesets        []CollectionChangeset
-	Description       string // added to bottom to not need data migration
 }
 
 type CollectionChangeset struct {
