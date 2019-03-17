@@ -7,6 +7,7 @@ import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionChangeDescription,
+	CollectionDelete,
 	CollectionMove,
 	CollectionRename,
 	DirectoryChangeSensitivity,
@@ -83,6 +84,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							command={CollectionChangeDescription(coll.Id, coll.Description)}
 						/>
 						<CommandLink command={CollectionMove(coll.Id)} />
+						<CommandLink command={CollectionDelete(coll.Id)} />
 					</Dropdown>
 				</td>
 			</tr>

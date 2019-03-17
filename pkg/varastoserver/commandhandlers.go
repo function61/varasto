@@ -339,6 +339,29 @@ func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) er
 	return tx.Commit()
 }
 
+func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	coll, err := QueryWithTx(tx).Collection(cmd.Collection)
+	if err != nil {
+		return err
+	}
+
+	if cmd.Name != coll.Name {
+		return fmt.Errorf("repeated name incorrect, expecting %s", coll.Name)
+	}
+
+	if err := CollectionRepository.Delete(coll, tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(true)
 	if err != nil {

@@ -130,6 +130,17 @@
 		]
 	},
 	{
+		"command": "collection.Delete",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "delete",
+		"title": "Delete",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "Name" }
+		]
+	},
+	{
 		"command": "collection.ChangeDescription",
 		"chain": "public",
 		"ctor": ["Collection", "Description"],
