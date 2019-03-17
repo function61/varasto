@@ -1,4 +1,3 @@
-import { AssetImg } from 'component/assetimg';
 import { ClipboardButton } from 'component/clipboardbutton';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
@@ -60,7 +59,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const collectionToRow = (coll: CollectionSubset) => (
 			<tr>
 				<td>
-					<AssetImg src="/collection.png" />
+					<span title="Collection" className="glyphicon glyphicon-duplicate" />
 				</td>
 				<td>
 					<a
@@ -116,7 +115,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			return (
 				<tr>
 					<td>
-						<AssetImg src="/directory.png" />
+						<span title="Directory" className="glyphicon glyphicon-folder-open" />
 					</td>
 					<td>{content}</td>
 					<td>
