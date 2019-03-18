@@ -31,6 +31,8 @@ interface CollectionPageProps {
 	pathBase64: string;
 }
 
+// TODO: proper icons for dirs/files here as well
+
 interface CollectionPageState {
 	collectionOutput?: CollectionOutput;
 	directoryOutput?: DirectoryOutput;
@@ -87,9 +89,6 @@ export default class CollectionPage extends React.Component<
 						<a href={dl} target="_new">
 							{filenameFromPath(file.Path)}
 						</a>
-					</td>
-					<td>
-						<Timestamp ts={file.Created} />
 					</td>
 					<td>
 						<Timestamp ts={file.Modified} />
