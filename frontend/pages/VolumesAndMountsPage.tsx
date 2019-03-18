@@ -51,26 +51,39 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			return <Loading />;
 		}
 
-		const toRow = (obj: Volume) => (
-			<tr key={obj.Id}>
-				<td title={`Uuid=${obj.Uuid} Id=${obj.Id}`}>{obj.Label}</td>
-				<td>{obj.Description}</td>
-				<td>{thousandSeparate(obj.BlobCount)}</td>
-				<td>
-					{bytesToHumanReadable(obj.BlobSizeTotal)} / {bytesToHumanReadable(obj.Quota)}
-				</td>
-				<td>
-					<ProgressBar progress={(obj.BlobSizeTotal / obj.Quota) * 100} />
-				</td>
-				<td>
-					<Dropdown>
-						<CommandLink command={VolumeMount2(obj.Id)} />
-						<CommandLink command={VolumeChangeQuota(obj.Id, obj.Quota)} />
-						<CommandLink command={VolumeChangeDescription(obj.Id, obj.Description)} />
-					</Dropdown>
-				</td>
-			</tr>
-		);
+		const toRow = (obj: Volume) => {
+			// TODO: this is a stupid heuristic
+			const tb = 1024 * 1024 * 1024 * 1024;
+			const techName = obj.Quota < 1 * tb ? 'SSD' : 'HDD';
+
+			const techTag = <span className="label label-default">{techName}</span>;
+
+			return (
+				<tr key={obj.Id}>
+					<td title={`Uuid=${obj.Uuid} Id=${obj.Id}`}>{obj.Label}</td>
+					<td>
+						{techTag} {obj.Description}
+					</td>
+					<td>{thousandSeparate(obj.BlobCount)}</td>
+					<td>
+						{bytesToHumanReadable(obj.BlobSizeTotal)} /{' '}
+						{bytesToHumanReadable(obj.Quota)}
+					</td>
+					<td>
+						<ProgressBar progress={(obj.BlobSizeTotal / obj.Quota) * 100} />
+					</td>
+					<td>
+						<Dropdown>
+							<CommandLink command={VolumeMount2(obj.Id)} />
+							<CommandLink command={VolumeChangeQuota(obj.Id, obj.Quota)} />
+							<CommandLink
+								command={VolumeChangeDescription(obj.Id, obj.Description)}
+							/>
+						</Dropdown>
+					</td>
+				</tr>
+			);
+		};
 
 		return (
 			<table className="table table-striped table-hover">
