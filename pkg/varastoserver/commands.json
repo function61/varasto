@@ -146,6 +146,7 @@
 		"ctor": ["Collection"],
 		"crudNature": "delete",
 		"title": "Delete",
+		"additional_confirmation": "If files-to-delete are not deduplicated, they´ll show up later in orphan report",
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
 			{ "key": "Name" }
