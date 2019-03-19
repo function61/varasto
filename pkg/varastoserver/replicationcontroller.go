@@ -154,43 +154,43 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled) ([]*replicationJo
 	}
 	defer tx.Rollback()
 
-	return []*replicationJob{}, nil
-	/*
-		batchLimit := 100
-		var blobsNeedingReplication []*varastotypes.Blob
-		if err := tx.Find("IsPendingReplication", true, &blobsNeedingReplication, storm.Limit(batchLimit)); err != nil {
-			if err == storm.ErrNotFound {
-				return nil, nil // not an error at all
-			}
+	blobsPendingReplication := BlobsPendingReplicationIndex.Bucket(tx)
 
-			return nil, err
-		}
+	batchLimit := 100
 
-		if len(blobsNeedingReplication) == batchLimit {
+	jobs := []*replicationJob{}
+
+	all := blobsPendingReplication.Cursor()
+	for key, _ := all.First(); key != nil; key, _ = all.Next() {
+		if len(jobs) == batchLimit {
 			logl.Info.Printf(
 				"operating @ batchLimit (%d)",
 				batchLimit)
+			break
 		}
 
-		jobs := []*replicationJob{}
+		ref := varastotypes.BlobRef(key)
 
-		for _, blob := range blobsNeedingReplication {
-			for _, toVolumeId := range blob.VolumesPendingReplication {
-				if len(blob.Volumes) == 0 { // should not happen
-					panic("blob does not exist at any volume")
-				}
+		blob, err := QueryWithTx(tx).Blob(ref)
+		if err != nil {
+			return nil, err
+		}
 
-				// FIXME: find first thisnode-mounted volume
-				firstVolume := blob.Volumes[0]
-
-				jobs = append(jobs, &replicationJob{
-					Ref:          blob.Ref,
-					FromVolumeId: firstVolume,
-					ToVolumeId:   toVolumeId,
-				})
+		for _, toVolumeId := range blob.VolumesPendingReplication {
+			if len(blob.Volumes) == 0 { // should not happen
+				panic("blob does not exist at any volume")
 			}
-		}
 
-		return jobs, nil
-	*/
+			// FIXME: find first thisnode-mounted volume
+			firstVolume := blob.Volumes[0]
+
+			jobs = append(jobs, &replicationJob{
+				Ref:          blob.Ref,
+				FromVolumeId: firstVolume,
+				ToVolumeId:   toVolumeId,
+			})
+		}
+	}
+
+	return jobs, nil
 }
