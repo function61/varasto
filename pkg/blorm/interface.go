@@ -10,6 +10,8 @@ import (
 var ErrNotFound = errors.New("database: record not found")
 
 type Repository interface {
+	Bootstrap(tx *bolt.Tx) error
+	DefineSetIndex(name string, memberEvaluator setIndexMemberEvaluator) SetIndexApi
 	OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error
 	Update(record interface{}, tx *bolt.Tx) error
 	Delete(record interface{}, tx *bolt.Tx) error

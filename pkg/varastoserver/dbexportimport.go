@@ -57,6 +57,10 @@ func importDb(content io.Reader, nodeId string) error {
 	}
 	defer db.Close()
 
+	if err := bootstrapRepos(db); err != nil {
+		return err
+	}
+
 	var openTx *bolt.Tx
 
 	commitOpenTx := func() error {

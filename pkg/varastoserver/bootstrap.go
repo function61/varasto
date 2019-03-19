@@ -16,6 +16,10 @@ var (
 func bootstrap(db *bolt.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
+	if err := bootstrapRepos(db); err != nil {
+		return err
+	}
+
 	tx, err := db.Begin(true)
 	if err != nil {
 		return err
@@ -60,4 +64,20 @@ func bootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
 	}
 
 	return configBucket.Put(configBucketNodeKey, []byte(nodeId))
+}
+
+func bootstrapRepos(db *bolt.DB) error {
+	tx, err := db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	for _, repo := range repoByRecordType {
+		if err := repo.Bootstrap(tx); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }

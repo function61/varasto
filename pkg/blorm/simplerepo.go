@@ -10,6 +10,7 @@ type simpleRepository struct {
 	bucketName  []byte
 	alloc       func() interface{}
 	idExtractor func(record interface{}) []byte
+	indices     []index
 }
 
 func NewSimpleRepo(
@@ -17,7 +18,32 @@ func NewSimpleRepo(
 	alloc func() interface{},
 	idExtractor func(record interface{}) []byte,
 ) Repository {
-	return &simpleRepository{[]byte(bucketName), alloc, idExtractor}
+	return &simpleRepository{[]byte(bucketName), alloc, idExtractor, []index{}}
+}
+
+func (r *simpleRepository) DefineSetIndex(name string, memberEvaluator setIndexMemberEvaluator) SetIndexApi {
+	idx := index{
+		indexBucketName: []byte(string(r.bucketName) + ":" + name),
+		memberEvaluator: memberEvaluator,
+	}
+
+	r.indices = append(r.indices, idx)
+
+	return &idx
+}
+
+func (r *simpleRepository) Bootstrap(tx *bolt.Tx) error {
+	if _, err := tx.CreateBucket(r.bucketName); err != nil {
+		return err
+	}
+
+	for _, index := range r.indices {
+		if _, err := tx.CreateBucket(index.indexBucketName); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *simpleRepository) Alloc() interface{} {
@@ -43,9 +69,9 @@ func (r *simpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *b
 }
 
 func (r *simpleRepository) Update(record interface{}, tx *bolt.Tx) error {
-	bucket, err := tx.CreateBucketIfNotExists(r.bucketName)
-	if err != nil {
-		return err
+	bucket := tx.Bucket(r.bucketName)
+	if bucket == nil {
+		return errors.New("no bucket")
 	}
 
 	id := r.idExtractor(record)
@@ -55,19 +81,35 @@ func (r *simpleRepository) Update(record interface{}, tx *bolt.Tx) error {
 		return err
 	}
 
-	return bucket.Put(id, data)
+	if err := bucket.Put(id, data); err != nil {
+		return err
+	}
+
+	for _, idx := range r.indices {
+		if err := idx.act(record, r, tx); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *simpleRepository) Delete(record interface{}, tx *bolt.Tx) error {
-	bucket, err := tx.CreateBucketIfNotExists(r.bucketName)
-	if err != nil {
-		return err
+	bucket := tx.Bucket(r.bucketName)
+	if bucket == nil {
+		return errors.New("no bucket")
 	}
 
 	id := r.idExtractor(record)
 
-	if bucket.Get(id) == nil { // Delete() does not return error for non-existing keys
+	if bucket.Get(id) == nil { // bucket.Delete() does not return error for non-existing keys
 		return errors.New("record to delete does not exist")
+	}
+
+	for _, index := range r.indices {
+		if err := index.actWithEvaluator(record, r, tx, dropFromIndex); err != nil {
+			return err
+		}
 	}
 
 	return bucket.Delete(id)
