@@ -5,25 +5,25 @@ import (
 )
 
 type Node struct {
-	ID   string `storm:"id"`
+	ID   string
 	Addr string
 	Name string
 }
 
 type Client struct {
-	ID        string `storm:"id"`
+	ID        string
 	AuthToken string
 	Name      string
 }
 
 type ReplicationPolicy struct {
-	ID             string `storm:"id"`
+	ID             string
 	Name           string
 	DesiredVolumes []int
 }
 
 type Volume struct {
-	ID            int `storm:"id"`
+	ID            int
 	UUID          string
 	Label         string
 	Description   string
@@ -33,7 +33,7 @@ type Volume struct {
 }
 
 type VolumeMount struct {
-	ID         string `storm:"id"`
+	ID         string
 	Volume     int
 	Node       string
 	Driver     VolumeDriverKind
@@ -41,15 +41,15 @@ type VolumeMount struct {
 }
 
 type Directory struct {
-	ID          string `storm:"id"`
-	Parent      string `storm:"index"`
+	ID          string
+	Parent      string
 	Name        string
 	Description string
 	Sensitivity int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 }
 
 type Collection struct {
-	ID                string `storm:"id"`
+	ID                string
 	Directory         string
 	Name              string
 	Description       string
@@ -59,7 +59,7 @@ type Collection struct {
 }
 
 type CollectionChangeset struct {
-	ID           string `storm:"id"`
+	ID           string
 	Parent       string
 	Created      time.Time
 	FilesCreated []File
@@ -77,9 +77,9 @@ type File struct {
 }
 
 type Blob struct {
-	Ref                       BlobRef `storm:"id"`
+	Ref                       BlobRef
 	Volumes                   []int
 	VolumesPendingReplication []int
-	IsPendingReplication      bool `storm:"index"`
+	IsPendingReplication      bool
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
 }
