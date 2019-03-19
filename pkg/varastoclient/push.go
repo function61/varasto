@@ -260,7 +260,7 @@ func push(wd *workdirLocation) error {
 		return err
 	}
 
-	if (len(ch.FilesCreated) + len(ch.FilesUpdated) + len(ch.FilesDeleted)) == 0 {
+	if !ch.AnyChanges() {
 		log.Println("No files changed")
 		return nil
 	}

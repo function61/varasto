@@ -67,6 +67,10 @@ type CollectionChangeset struct {
 	FilesDeleted []string
 }
 
+func (c *CollectionChangeset) AnyChanges() bool {
+	return (len(c.FilesCreated) + len(c.FilesUpdated) + len(c.FilesDeleted)) > 0
+}
+
 type File struct {
 	Path     string
 	Sha256   string
