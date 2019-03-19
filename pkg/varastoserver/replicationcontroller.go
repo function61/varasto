@@ -10,6 +10,7 @@ import (
 	"github.com/function61/varasto/pkg/varastoutils"
 	"go.etcd.io/bbolt"
 	"log"
+	"sync"
 	"time"
 )
 
@@ -52,17 +53,39 @@ func discoverAndRunReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfi
 		return err
 	}
 
-	for _, job := range jobs {
-		logl.Debug.Printf(
-			"replicating %s from %d to %d",
-			job.Ref.AsHex(),
-			job.FromVolumeId,
-			job.ToVolumeId)
+	// cap is the amount of runners we'll spawn
+	jobQueue := make(chan *replicationJob, 3)
 
-		if err := replicateJob(job, db, serverConfig); err != nil {
-			logl.Error.Printf("replicating blob %s", job.Ref.AsHex())
+	jobRunnersDone := sync.WaitGroup{}
+
+	runner := func() {
+		defer jobRunnersDone.Done()
+
+		for job := range jobQueue {
+			logl.Debug.Printf(
+				"replicating %s from %d to %d",
+				job.Ref.AsHex(),
+				job.FromVolumeId,
+				job.ToVolumeId)
+
+			if err := replicateJob(job, db, serverConfig); err != nil {
+				logl.Error.Printf("replicating blob %s", job.Ref.AsHex())
+			}
 		}
 	}
+
+	for i := 0; i < cap(jobQueue); i++ {
+		jobRunnersDone.Add(1)
+		go runner()
+	}
+
+	for _, job := range jobs {
+		jobQueue <- job
+	}
+
+	close(jobQueue)
+
+	jobRunnersDone.Wait()
 
 	return nil
 }
