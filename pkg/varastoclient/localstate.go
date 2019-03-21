@@ -1,7 +1,7 @@
 package varastoclient
 
 import (
-	"errors"
+	"fmt"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"os"
@@ -46,7 +46,7 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 	statefile, err := os.Open(loc.Join(localStatefile))
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.New("current dir not a Varasto workdir")
+			return nil, fmt.Errorf("not a Varasto workdir: %s", loc.path)
 		}
 
 		return nil, err // some other error
