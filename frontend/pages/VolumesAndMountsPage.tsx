@@ -13,14 +13,15 @@ import {
 	VolumeMount2,
 	VolumeUnmount,
 } from 'generated/varastoserver_commands';
-import { getVolumeMounts, getVolumes } from 'generated/varastoserver_endpoints';
-import { Volume, VolumeMount } from 'generated/varastoserver_types';
+import { getNodes, getVolumeMounts, getVolumes } from 'generated/varastoserver_endpoints';
+import { Node, Volume, VolumeMount } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 
 interface VolumesAndMountsPageState {
 	volumes?: Volume[];
 	mounts?: VolumeMount[];
+	nodes?: Node[];
 }
 
 export default class VolumesAndMountsPage extends React.Component<{}, VolumesAndMountsPageState> {
@@ -111,8 +112,10 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 
 	private renderMounts() {
 		const mounts = this.state.mounts;
+		const volumes = this.state.volumes;
+		const nodes = this.state.nodes;
 
-		if (!mounts) {
+		if (!mounts || !volumes || !nodes) {
 			return <Loading />;
 		}
 
@@ -123,15 +126,22 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<span className="label label-danger">Offline</span>
 			);
 
+			const volume = volumes.filter((vol) => vol.Id === obj.Volume);
+			const node = nodes.filter((nd) => nd.Id === obj.Node);
+
+			const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
+			const nodeName = node.length === 1 ? node[0].Name : '(error)';
+
 			return (
 				<tr key={obj.Id}>
 					<td>
-						<span className="margin-right">{obj.Id}</span>
+						<span title={`MountId=${obj.Id}`} className="margin-right">
+							{volumeName}
+						</span>
 						&nbsp;
 						{onlineBadge}
 					</td>
-					<td>{obj.Volume}</td>
-					<td>{obj.Node}</td>
+					<td>{nodeName}</td>
 					<td>{obj.Driver}</td>
 					<td>{obj.DriverOpts}</td>
 					<td>
@@ -145,7 +155,6 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			<table className="table table-striped table-hover">
 				<thead>
 					<tr>
-						<th>Id</th>
 						<th>Volume</th>
 						<th>Node</th>
 						<th>Driver</th>
@@ -159,9 +168,12 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 	}
 
 	private async fetchData() {
-		const volumes = await getVolumes();
-		const mounts = await getVolumeMounts();
+		const [volumes, mounts, nodes] = await Promise.all([
+			getVolumes(),
+			getVolumeMounts(),
+			getNodes(),
+		]);
 
-		this.setState({ volumes, mounts });
+		this.setState({ volumes, mounts, nodes });
 	}
 }
