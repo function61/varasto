@@ -23,7 +23,7 @@ import {
 } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseRoute, collectionRoute, replicationPoliciesRoute } from 'routes';
+import { browseRoute, collectionRoute } from 'routes';
 
 interface CollectionPageProps {
 	id: string;
@@ -170,11 +170,9 @@ export default class CollectionPage extends React.Component<
 									<td>{bytesToHumanReadable(collOutput.TotalSize)}</td>
 								</tr>
 								<tr>
-									<th>Replication policy</th>
+									<th>Desired volumes</th>
 									<td>
-										<a href={replicationPoliciesRoute.buildUrl({})}>
-											{collOutput.Collection.ReplicationPolicy}
-										</a>
+										{collOutput.Collection.DesiredVolumes.join(', ')}
 									</td>
 								</tr>
 								<tr>

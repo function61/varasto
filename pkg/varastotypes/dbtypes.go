@@ -49,13 +49,13 @@ type Directory struct {
 }
 
 type Collection struct {
-	ID                string
-	Directory         string
-	Name              string
-	Description       string
-	ReplicationPolicy string
-	Head              string
-	Changesets        []CollectionChangeset
+	ID             string
+	Directory      string
+	Name           string
+	Description    string
+	DesiredVolumes []int
+	Head           string
+	Changesets     []CollectionChangeset
 }
 
 type CollectionChangeset struct {

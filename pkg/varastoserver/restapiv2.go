@@ -41,12 +41,12 @@ func convertDir(dir varastotypes.Directory) Directory {
 
 func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSubset) CollectionSubset {
 	return CollectionSubset{
-		Id:                coll.ID,
-		Directory:         coll.Directory,
-		Name:              coll.Name,
-		Description:       coll.Description,
-		ReplicationPolicy: coll.ReplicationPolicy,
-		Changesets:        changesets,
+		Id:             coll.ID,
+		Directory:      coll.Directory,
+		Name:           coll.Name,
+		Description:    coll.Description,
+		DesiredVolumes: coll.DesiredVolumes,
+		Changesets:     changesets,
 	}
 }
 

@@ -87,13 +87,17 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 			return
 		}
 
+		// TODO: resolve this from closest parent that has policy defined?
+		replicationPolicy, err := QueryWithTx(tx).ReplicationPolicy("default")
+		panicIfError(err)
+
 		collection := &varastotypes.Collection{
-			ID:                varastoutils.NewCollectionId(),
-			Directory:         req.ParentDirectoryId,
-			Name:              req.Name,
-			ReplicationPolicy: "default",
-			Head:              varastotypes.NoParentId,
-			Changesets:        []varastotypes.CollectionChangeset{},
+			ID:             varastoutils.NewCollectionId(),
+			Directory:      req.ParentDirectoryId,
+			Name:           req.Name,
+			DesiredVolumes: replicationPolicy.DesiredVolumes,
+			Head:           varastotypes.NoParentId,
+			Changesets:     []varastotypes.CollectionChangeset{},
 		}
 
 		// highly unlikely
@@ -130,10 +134,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 		coll, err := QueryWithTx(tx).Collection(collectionId)
 		panicIfError(err)
 
-		policy, err := QueryWithTx(tx).ReplicationPolicy(coll.ReplicationPolicy)
-		panicIfError(err)
-
-		volumeId := policy.DesiredVolumes[0]
+		volumeId := coll.DesiredVolumes[0]
 
 		volumeDriver, driverFound := conf.VolumeDrivers[volumeId]
 		if !driverFound {
@@ -178,9 +179,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 		coll, err := QueryWithTx(tx).Collection(collectionId)
 		panicIfError(err)
 
-		replPolicy, err := QueryWithTx(tx).ReplicationPolicy(coll.ReplicationPolicy)
-		panicIfError(err)
-
 		if collectionHasChangesetId(changeset.ID, coll) {
 			http.Error(w, "changeset ID already in collection", http.StatusBadRequest)
 			return
@@ -217,7 +215,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 				blob.Referenced = true
 				blob.VolumesPendingReplication = missingFromLeftHandSide(
 					blob.Volumes,
-					replPolicy.DesiredVolumes)
+					coll.DesiredVolumes)
 				blob.IsPendingReplication = len(blob.VolumesPendingReplication) > 0
 
 				panicIfError(BlobRepository.Update(blob, tx))

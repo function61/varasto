@@ -62,7 +62,7 @@
 				"Directory": {"_": "string"},
 				"Name": {"_": "string"},
 				"Description": {"_": "string"},
-				"ReplicationPolicy": {"_": "string"},
+				"DesiredVolumes": {"_": "list", "of": {"_": "integer"}},
 				"Changesets": {"_": "list", "of": {"_": "ChangesetSubset"}}
 			}}
 		},
