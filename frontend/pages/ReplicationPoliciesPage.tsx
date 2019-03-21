@@ -1,5 +1,8 @@
+import { CommandLink } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { ReplicationpolicyChangeDesiredVolumes } from 'generated/varastoserver_commands';
 import { getReplicationPolicies } from 'generated/varastoserver_endpoints';
 import { ReplicationPolicy } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -43,6 +46,11 @@ export default class ReplicationPoliciesPage extends React.Component<
 				<td>{obj.Id}</td>
 				<td>{obj.Name}</td>
 				<td>{obj.DesiredVolumes.join(', ')}</td>
+				<td>
+					<Dropdown>
+						<CommandLink command={ReplicationpolicyChangeDesiredVolumes(obj.Id)} />
+					</Dropdown>
+				</td>
 			</tr>
 		);
 
@@ -53,6 +61,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 						<th>Id</th>
 						<th>Name</th>
 						<th>Desired volumes</th>
+						<th />
 					</tr>
 				</thead>
 				<tbody>{replicationpolicies.map(toRow)}</tbody>

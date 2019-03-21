@@ -1,6 +1,7 @@
 package varastoserver
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/function61/eventkit/command"
@@ -414,6 +415,42 @@ func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 		return err
 	}
 
+	return tx.Commit()
+}
+
+func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {
+	tx, err := c.db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	desiredVolumes := []int{}
+	if err := json.Unmarshal([]byte(cmd.DesiredVolumes), &desiredVolumes); err != nil {
+		return err
+	}
+
+	if len(desiredVolumes) < 1 {
+		return errors.New("need at least 1 volume")
+	}
+
+	// verify that each volume exists
+	for _, desiredVolume := range desiredVolumes {
+		if _, err := QueryWithTx(tx).Volume(desiredVolume); err != nil {
+			return fmt.Errorf("desiredVolume %d: %v", desiredVolume, err)
+		}
+	}
+
+	policy, err := QueryWithTx(tx).ReplicationPolicy(cmd.Id)
+	if err != nil {
+		return err
+	}
+
+	policy.DesiredVolumes = desiredVolumes
+
+	if err := ReplicationPolicyRepository.Update(policy, tx); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 

@@ -164,6 +164,17 @@
 		]
 	},
 	{
+		"command": "replicationpolicy.ChangeDesiredVolumes",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "update",
+		"title": "Change desired volumes",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "DesiredVolumes" }
+		]
+	},
+	{
 		"command": "client.Create",
 		"chain": "public",
 		"ctor": [],
