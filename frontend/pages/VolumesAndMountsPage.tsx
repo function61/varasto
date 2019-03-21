@@ -55,7 +55,12 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 		const toRow = (obj: Volume) => {
 			// TODO: this is a stupid heuristic
 			const tb = 1024 * 1024 * 1024 * 1024;
-			const techName = obj.Quota < 1 * tb ? 'SSD' : 'HDD';
+			let techName = obj.Quota < 1 * tb ? 'SSD' : 'HDD';
+
+			// email address? => maybe cloud account
+			if (obj.Description.indexOf('@') !== -1) {
+				techName = '☁';
+			}
 
 			const techTag = <span className="label label-default">{techName}</span>;
 
@@ -91,7 +96,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				<thead>
 					<tr>
 						<th>Label</th>
-						<th>Make/model</th>
+						<th>Description</th>
 						<th>Blob count</th>
 						<th>Usage</th>
 						<th style={{ width: '220px' }} />
