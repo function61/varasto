@@ -141,12 +141,9 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 
 			return (
 				<tr key={obj.Id}>
+					<td>{onlineBadge}</td>
 					<td>
-						<span title={`MountId=${obj.Id}`} className="margin-right">
-							{volumeName}
-						</span>
-						&nbsp;
-						{onlineBadge}
+						<span title={`MountId=${obj.Id}`}>{volumeName}</span>
 					</td>
 					<td>{nodeName}</td>
 					<td>{obj.Driver}</td>
@@ -162,6 +159,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			<table className="table table-striped table-hover">
 				<thead>
 					<tr>
+						<th style={{ width: '1%' }} />
 						<th>Volume</th>
 						<th>Node</th>
 						<th>Driver</th>
