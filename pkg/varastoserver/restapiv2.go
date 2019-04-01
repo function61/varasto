@@ -377,6 +377,32 @@ func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWrit
 	return &ret
 }
 
+func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	w.Header().Set("Content-Type", "text/plain")
+
+	processFile := func(file *varastotypes.File){
+		fmt.Fprintf(w, "%s %s\n", file.Sha256, file.Path)
+	}
+
+	panicIfError(CollectionRepository.Each(func(record interface{}){
+		coll := record.(*varastotypes.Collection)
+
+		for _, changeset := range coll.Changesets {
+			for _, file := range changeset.FilesCreated {
+				processFile(&file)
+			}
+
+			for _, file := range changeset.FilesUpdated {
+				processFile(&file)
+			}
+		}
+	}, tx))
+}
+
 func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin(false)
 	panicIfError(err)

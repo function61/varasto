@@ -1,6 +1,7 @@
 {
 	"endpoints": [
 		{ "chain": "authenticated", "method": "GET", "path": "/api_v2/database/export", "name": "databaseExport" },
+		{ "chain": "authenticated", "method": "GET", "path": "/api_v2/database/export_sha256s", "name": "databaseExportSha256s" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/serverinfo", "produces": {"_": "ServerInfo"}, "name": "getServerInfo" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dir/{path}", "produces": {"_": "CollectionOutput"}, "name": "getCollectiotAtRev" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dl", "name": "downloadFile", "description": "Downloads a file from specific revision" },
