@@ -384,11 +384,11 @@ func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.R
 
 	w.Header().Set("Content-Type", "text/plain")
 
-	processFile := func(file *varastotypes.File){
+	processFile := func(file *varastotypes.File) {
 		fmt.Fprintf(w, "%s %s\n", file.Sha256, file.Path)
 	}
 
-	panicIfError(CollectionRepository.Each(func(record interface{}){
+	panicIfError(CollectionRepository.Each(func(record interface{}) {
 		coll := record.(*varastotypes.Collection)
 
 		for _, changeset := range coll.Changesets {
