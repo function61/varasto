@@ -225,7 +225,7 @@ func uploadChunks(wd *workdirLocation, bfile varastotypes.File) error {
 		chunk := io.LimitReader(file, chunkSize)
 
 		// 10 seconds can be too fast waiting for HDD to spin up + blob write
-		ctx, cancel := context.WithTimeout(context.TODO(), 30 * time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 		defer cancel()
 
 		if _, err := ezhttp.Post(
