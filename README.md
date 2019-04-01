@@ -11,6 +11,12 @@ deleted so if metadata DB is properly backed up, you can't lose data) that I'm a
 moving *all my files in*, but I wouldn't yet recommend this for anybody else.
 
 
+Architecture
+------------
+
+![](docs/architecture.png)
+
+
 Ideas / goals
 -------------
 
