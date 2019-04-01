@@ -21,8 +21,7 @@
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
 			},
-			"dev_ports": ["8066:8066"],
-			"contextless_build": true
+			"dev_ports": ["8066:8066"]
 		},
 		{
 			"name": "frontend",
