@@ -200,6 +200,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<div className="row">
 							<div className="col-md-9">
 								<table className="table table-striped table-hover">
+									<thead>
+										<tr>
+											<th style={{ width: '1%' }} />
+											<th />
+											<th style={{ width: '1%' }} />
+										</tr>
+									</thead>
 									<tbody>
 										{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}
 									</tbody>
