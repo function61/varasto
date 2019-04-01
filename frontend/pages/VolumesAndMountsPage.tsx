@@ -1,7 +1,7 @@
 import { thousandSeparate } from 'component/numberformatter';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
+import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
@@ -36,9 +36,18 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 	}
 
 	render() {
+		const volumesHeading = (
+			<div>
+				Volumes &nbsp;
+				<Dropdown>
+					<CommandLink command={VolumeCreate()} />
+				</Dropdown>
+			</div>
+		);
+
 		return (
 			<AppDefaultLayout title="Volumes &amp; mounts" breadcrumbs={[]}>
-				<Panel heading="Volumes">{this.renderVolumes()}</Panel>
+				<Panel heading={volumesHeading}>{this.renderVolumes()}</Panel>
 
 				<Panel heading="Mounts">{this.renderMounts()}</Panel>
 			</AppDefaultLayout>
@@ -104,13 +113,6 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 					</tr>
 				</thead>
 				<tbody>{volumes.map(toRow)}</tbody>
-				<tfoot>
-					<tr>
-						<td colSpan={99}>
-							<CommandButton command={VolumeCreate()} />
-						</td>
-					</tr>
-				</tfoot>
 			</table>
 		);
 	}

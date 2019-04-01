@@ -171,9 +171,7 @@ export default class CollectionPage extends React.Component<
 								</tr>
 								<tr>
 									<th>Desired volumes</th>
-									<td>
-										{collOutput.Collection.DesiredVolumes.join(', ')}
-									</td>
+									<td>{collOutput.Collection.DesiredVolumes.join(', ')}</td>
 								</tr>
 								<tr>
 									<th>Clone command</th>
