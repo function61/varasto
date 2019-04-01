@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/varasto/pkg/varastoclient"
+	"github.com/function61/varasto/pkg/varastofuse"
 	"github.com/function61/varasto/pkg/varastoserver"
 	"github.com/spf13/cobra"
 	"os"
@@ -21,6 +22,7 @@ func main() {
 	}
 
 	rootCmd.AddCommand(varastoserver.Entrypoint())
+	rootCmd.AddCommand(varastofuse.Entrypoint())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

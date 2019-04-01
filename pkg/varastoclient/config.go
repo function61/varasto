@@ -32,7 +32,7 @@ func writeConfig(conf *ClientConfig) error {
 	return jsonfile.Write(confPath, conf)
 }
 
-func readConfig() (*ClientConfig, error) {
+func ReadConfig() (*ClientConfig, error) {
 	confPath, err := configFilePath()
 	if err != nil {
 		return nil, err

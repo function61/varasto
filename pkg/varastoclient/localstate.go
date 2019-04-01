@@ -33,7 +33,7 @@ func (w *workdirLocation) SaveToDisk() error {
 }
 
 func NewWorkdirLocation(path string) (*workdirLocation, error) {
-	clientConfig, err := readConfig()
+	clientConfig, err := ReadConfig()
 	if err != nil {
 		return nil, err
 	}

@@ -16,12 +16,12 @@ import (
 )
 
 func clone(collectionId string, revisionId string, parentDir string, dirName string) error {
-	clientConfig, err := readConfig()
+	clientConfig, err := ReadConfig()
 	if err != nil {
 		return err
 	}
 
-	collection, err := fetchCollectionMetadata(*clientConfig, collectionId)
+	collection, err := FetchCollectionMetadata(*clientConfig, collectionId)
 	if err != nil {
 		return err
 	}
@@ -124,20 +124,17 @@ func cloneOneFile(wd *workdirLocation, file varastotypes.File) error {
 		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
 		defer cancel()
 
-		chunkDataRes, err := ezhttp.Get(
-			ctx,
-			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
-			ezhttp.AuthBearer(wd.clientConfig.AuthToken))
+		verifiedBody, closeBody, err := DownloadChunk(ctx, *blobRef, wd.clientConfig)
 		if err != nil {
 			return err
 		}
-		defer chunkDataRes.Body.Close()
-
-		verifiedBody := varastoutils.BlobHashVerifier(chunkDataRes.Body, *blobRef)
 
 		if _, err := io.Copy(fileHandle, verifiedBody); err != nil {
+			closeBody()
 			return err
 		}
+
+		closeBody()
 	}
 
 	fileHandle.Close() // even though we have the defer above - we probably need this for Chtimes()
@@ -149,7 +146,7 @@ func cloneOneFile(wd *workdirLocation, file varastotypes.File) error {
 	return os.Rename(filenameTemp, filename)
 }
 
-func fetchCollectionMetadata(clientConfig ClientConfig, id string) (*varastotypes.Collection, error) {
+func FetchCollectionMetadata(clientConfig ClientConfig, id string) (*varastotypes.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
@@ -161,4 +158,17 @@ func fetchCollectionMetadata(clientConfig ClientConfig, id string) (*varastotype
 		ezhttp.RespondsJson(collection, false))
 
 	return collection, err
+}
+
+// verifies chunk integrity on-the-fly
+func DownloadChunk(ctx context.Context, ref varastotypes.BlobRef, clientConfig ClientConfig) (io.Reader, func(), error) {
+	chunkDataRes, err := ezhttp.Get(
+		ctx,
+		clientConfig.ApiPath("/api/blobs/"+ref.AsHex()),
+		ezhttp.AuthBearer(clientConfig.AuthToken))
+	if err != nil {
+		return nil, func() {}, err
+	}
+
+	return varastoutils.BlobHashVerifier(chunkDataRes.Body, ref), func() { chunkDataRes.Body.Close() }, nil
 }

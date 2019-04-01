@@ -12,7 +12,7 @@ func mk(parentPath string, parentDirectoryId string, collectionName string) erro
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
-	clientConfig, err := readConfig()
+	clientConfig, err := ReadConfig()
 	if err != nil {
 		return err
 	}
