@@ -10,7 +10,7 @@ export function main(appElement: HTMLElement, config: GlobalConfig): void {
 		<AppDefaultLayout title="404" breadcrumbs={[]}>
 			<h1>404</h1>
 
-			<DangerAlert text="The page you were looking for is not found." />
+			<DangerAlert>The page you were looking for is not found.</DangerAlert>
 		</AppDefaultLayout>
 	);
 

@@ -1,4 +1,5 @@
 import { ClipboardButton } from 'component/clipboardbutton';
+import { WarningAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
@@ -169,55 +170,84 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			});
 		}
 
+		const sensitivityHeadsUp =
+			showMaxSensitivity !== 0 ? (
+				<div className="row">
+					<div className="col-md-12">
+						<WarningAlert>
+							Showing sensitive content. &nbsp;
+							<a
+								className="btn btn-warning"
+								onClick={() => {
+									this.dropSensitivityLevel();
+								}}>
+								Downgrade privileges
+							</a>
+						</WarningAlert>
+					</div>
+				</div>
+			) : (
+				''
+			);
+
 		return (
 			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
 				{!output ? (
 					<Loading />
 				) : (
-					<div className="row">
-						<div className="col-md-9">
-							<table className="table table-striped table-hover">
-								<tbody>
-									{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}
-								</tbody>
-								<tfoot>
-									<tr>
-										<td colSpan={99}>
-											<CommandButton
-												command={DirectoryCreate(output.Directory.Id)}
-											/>
-										</td>
-									</tr>
-								</tfoot>
-							</table>
-						</div>
-						<div className="col-md-3">
-							<Panel heading={`Directory: ${output.Directory.Name}`}>
+					<div>
+						{sensitivityHeadsUp}
+						<div className="row">
+							<div className="col-md-9">
 								<table className="table table-striped table-hover">
 									<tbody>
-										<tr>
-											<th>Id</th>
-											<td>
-												{output.Directory.Id}
-												<ClipboardButton text={output.Directory.Id} />
-											</td>
-										</tr>
-										<tr>
-											<th>Content</th>
-											<td>
-												{output.Directories.length} subdirectories
-												<br />
-												{output.Collections.length} collections
-											</td>
-										</tr>
+										{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}
 									</tbody>
+									<tfoot>
+										<tr>
+											<td colSpan={99}>
+												<CommandButton
+													command={DirectoryCreate(output.Directory.Id)}
+												/>
+											</td>
+										</tr>
+									</tfoot>
 								</table>
-							</Panel>
+							</div>
+							<div className="col-md-3">
+								<Panel heading={`Directory: ${output.Directory.Name}`}>
+									<table className="table table-striped table-hover">
+										<tbody>
+											<tr>
+												<th>Id</th>
+												<td>
+													{output.Directory.Id}
+													<ClipboardButton text={output.Directory.Id} />
+												</td>
+											</tr>
+											<tr>
+												<th>Content</th>
+												<td>
+													{output.Directories.length} subdirectories
+													<br />
+													{output.Collections.length} collections
+												</td>
+											</tr>
+										</tbody>
+									</table>
+								</Panel>
+							</div>
 						</div>
 					</div>
 				)}
 			</AppDefaultLayout>
 		);
+	}
+
+	private dropSensitivityLevel() {
+		localStorage.setItem(sensitityLevelLocalStorageKey, '0');
+		// FIXME: this is not idiomatic React
+		window.location.reload();
 	}
 
 	private async fetchData() {
@@ -227,8 +257,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 }
 
+const sensitityLevelLocalStorageKey = 'max_sensitivity';
+
 function getMaxSensitivityFromLocalStorage(): number {
-	const stored = localStorage.getItem('max_sensitivity');
+	const stored = localStorage.getItem(sensitityLevelLocalStorageKey);
 	if (stored !== null) {
 		return +stored;
 	}
