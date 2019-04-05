@@ -61,6 +61,14 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			return <Loading />;
 		}
 
+		const blobCount = (vol: Volume) => thousandSeparate(vol.BlobCount);
+		const free = (vol: Volume) => bytesToHumanReadable(vol.Quota - vol.BlobSizeTotal);
+		const used = (vol: Volume) =>
+			bytesToHumanReadable(vol.BlobSizeTotal) + ' / ' + bytesToHumanReadable(vol.Quota);
+		const progressBar = (vol: Volume) => (
+			<ProgressBar progress={(vol.BlobSizeTotal / vol.Quota) * 100} />
+		);
+
 		const toRow = (obj: Volume) => {
 			// TODO: this is a stupid heuristic
 			const tb = 1024 * 1024 * 1024 * 1024;
@@ -79,14 +87,10 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 					<td>
 						{techTag} {obj.Description}
 					</td>
-					<td>{thousandSeparate(obj.BlobCount)}</td>
-					<td>
-						{bytesToHumanReadable(obj.BlobSizeTotal)} /{' '}
-						{bytesToHumanReadable(obj.Quota)}
-					</td>
-					<td>
-						<ProgressBar progress={(obj.BlobSizeTotal / obj.Quota) * 100} />
-					</td>
+					<td>{blobCount(obj)}</td>
+					<td>{free(obj)}</td>
+					<td>{used(obj)}</td>
+					<td>{progressBar(obj)}</td>
 					<td>
 						<Dropdown>
 							<CommandLink command={VolumeMount2(obj.Id)} />
@@ -100,6 +104,24 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			);
 		};
 
+		const totals: Volume = volumes.reduce(
+			(prev, vol: Volume) => {
+				prev.BlobCount += vol.BlobCount;
+				prev.Quota += vol.Quota;
+				prev.BlobSizeTotal += vol.BlobSizeTotal;
+				return prev;
+			},
+			{
+				BlobCount: 0,
+				Quota: 0,
+				BlobSizeTotal: 0,
+				Description: '',
+				Label: '',
+				Uuid: '',
+				Id: 0,
+			},
+		);
+
 		return (
 			<table className="table table-striped table-hover">
 				<thead>
@@ -107,12 +129,24 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 						<th>Label</th>
 						<th>Description</th>
 						<th>Blob count</th>
-						<th>Usage</th>
+						<th>Free</th>
+						<th>Used</th>
 						<th style={{ width: '220px' }} />
 						<th />
 					</tr>
 				</thead>
 				<tbody>{volumes.map(toRow)}</tbody>
+				<tfoot>
+					<tr>
+						<td />
+						<td />
+						<td>{blobCount(totals)}</td>
+						<td>{free(totals)}</td>
+						<td>{used(totals)}</td>
+						<td>{progressBar(totals)}</td>
+						<td />
+					</tr>
+				</tfoot>
 			</table>
 		);
 	}
