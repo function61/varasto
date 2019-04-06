@@ -1,5 +1,5 @@
 import { ClipboardButton } from 'component/clipboardbutton';
-import { WarningAlert } from 'f61ui/component/alerts';
+import { getMaxSensitivityFromLocalStorage, SensitivityHeadsUp } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
@@ -170,33 +170,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			});
 		}
 
-		const sensitivityHeadsUp =
-			showMaxSensitivity !== 0 ? (
-				<div className="row">
-					<div className="col-md-12">
-						<WarningAlert>
-							Showing sensitive content. &nbsp;
-							<a
-								className="btn btn-warning"
-								onClick={() => {
-									this.dropSensitivityLevel();
-								}}>
-								Downgrade privileges
-							</a>
-						</WarningAlert>
-					</div>
-				</div>
-			) : (
-				''
-			);
-
 		return (
 			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
 				{!output ? (
 					<Loading />
 				) : (
 					<div>
-						{sensitivityHeadsUp}
+						<SensitivityHeadsUp />
 						<div className="row">
 							<div className="col-md-9">
 								<table className="table table-striped table-hover">
@@ -251,28 +231,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 	}
 
-	private dropSensitivityLevel() {
-		localStorage.setItem(sensitityLevelLocalStorageKey, '0');
-		// FIXME: this is not idiomatic React
-		window.location.reload();
-	}
-
 	private async fetchData() {
 		const output = await getDirectory(this.props.directoryId);
 
 		this.setState({ output });
 	}
-}
-
-const sensitityLevelLocalStorageKey = 'max_sensitivity';
-
-function getMaxSensitivityFromLocalStorage(): number {
-	const stored = localStorage.getItem(sensitityLevelLocalStorageKey);
-	if (stored !== null) {
-		return +stored;
-	}
-
-	return 0;
 }
 
 function mergeDirectoriesAndCollectionsSorted(output: DirectoryOutput): DirOrCollection[] {

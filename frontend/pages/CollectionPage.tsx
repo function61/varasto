@@ -1,6 +1,7 @@
 import { AssetImg } from 'component/assetimg';
 import { ClipboardButton } from 'component/clipboardbutton';
 import { thousandSeparate } from 'component/numberformatter';
+import { SensitivityHeadsUp } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -140,55 +141,64 @@ export default class CollectionPage extends React.Component<
 		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
 
 		return (
-			<div className="row">
-				<div className="col-md-8">
-					<Panel heading="Files">
-						<table className="table table-striped table-hover">
-							<tbody>
-								{collOutput.SelectedPathContents.SubDirs.map(subDirToRow)}
-								{collOutput.SelectedPathContents.Files.map(fileToRow)}
-							</tbody>
-						</table>
-					</Panel>
-				</div>
-				<div className="col-md-4">
-					<Panel heading="Details">
-						<table className="table table-striped table-hover">
-							<tbody>
-								<tr>
-									<th>Changeset</th>
-									<td>{collOutput.ChangesetId}</td>
-								</tr>
-								<tr>
-									<th>File count</th>
-									<td>{thousandSeparate(collOutput.FileCount)}</td>
-								</tr>
-								<tr>
-									<th>
-										Total size <Info text="at selected revision" />
-									</th>
-									<td>{bytesToHumanReadable(collOutput.TotalSize)}</td>
-								</tr>
-								<tr>
-									<th>Desired volumes</th>
-									<td>{collOutput.Collection.DesiredVolumes.join(', ')}</td>
-								</tr>
-								<tr>
-									<th>Clone command</th>
-									<td>
-										<ClipboardButton
-											text={`varasto clone ${collOutput.Collection.Id}`}
-										/>
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</Panel>
-					<Panel heading="Changesets">
-						<table className="table table-striped table-hover">
-							<tbody>{changesetsReversed.map(changesetToItem)}</tbody>
-						</table>
-					</Panel>
+			<div>
+				<SensitivityHeadsUp />
+				<div className="row">
+					<div className="col-md-8">
+						<Panel heading="Files">
+							<table className="table table-striped table-hover">
+								<thead>
+									<tr>
+										<td style={{ width: '1%' }} />
+										<td colSpan={99} />
+									</tr>
+								</thead>
+								<tbody>
+									{collOutput.SelectedPathContents.SubDirs.map(subDirToRow)}
+									{collOutput.SelectedPathContents.Files.map(fileToRow)}
+								</tbody>
+							</table>
+						</Panel>
+					</div>
+					<div className="col-md-4">
+						<Panel heading="Details">
+							<table className="table table-striped table-hover">
+								<tbody>
+									<tr>
+										<th>Changeset</th>
+										<td>{collOutput.ChangesetId}</td>
+									</tr>
+									<tr>
+										<th>File count</th>
+										<td>{thousandSeparate(collOutput.FileCount)}</td>
+									</tr>
+									<tr>
+										<th>
+											Total size <Info text="at selected revision" />
+										</th>
+										<td>{bytesToHumanReadable(collOutput.TotalSize)}</td>
+									</tr>
+									<tr>
+										<th>Desired volumes</th>
+										<td>{collOutput.Collection.DesiredVolumes.join(', ')}</td>
+									</tr>
+									<tr>
+										<th>Clone command</th>
+										<td>
+											<ClipboardButton
+												text={`varasto clone ${collOutput.Collection.Id}`}
+											/>
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</Panel>
+						<Panel heading="Changesets">
+							<table className="table table-striped table-hover">
+								<tbody>{changesetsReversed.map(changesetToItem)}</tbody>
+							</table>
+						</Panel>
+					</div>
 				</div>
 			</div>
 		);
