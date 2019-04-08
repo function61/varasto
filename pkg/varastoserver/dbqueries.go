@@ -35,11 +35,13 @@ func (d *dbQueries) CollectionsByDirectory(dirId string) ([]varastotypes.Collect
 	collections := []varastotypes.Collection{}
 
 	// TODO: might need to index this later for better perf..
-	if err := CollectionRepository.Each(func(record interface{}) {
+	if err := CollectionRepository.Each(func(record interface{}) error {
 		coll := record.(*varastotypes.Collection)
 		if coll.Directory == dirId {
 			collections = append(collections, *coll)
 		}
+
+		return nil
 	}, d.tx); err != nil {
 		return nil, err
 	}
@@ -60,11 +62,13 @@ func (d *dbQueries) SubDirectories(of string) ([]varastotypes.Directory, error) 
 	subDirs := []varastotypes.Directory{}
 
 	// TODO: might need to index this later for better perf..
-	if err := DirectoryRepository.Each(func(record interface{}) {
+	if err := DirectoryRepository.Each(func(record interface{}) error {
 		dir := record.(*varastotypes.Directory)
 		if dir.Parent == of {
 			subDirs = append(subDirs, *dir)
 		}
+
+		return nil
 	}, d.tx); err != nil {
 		return nil, err
 	}

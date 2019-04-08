@@ -28,10 +28,12 @@ func exportDb(tx *bolt.Tx, output io.Writer) error {
 			return err
 		}
 
-		if err := repo.Each(func(record interface{}) {
+		if err := repo.Each(func(record interface{}) error {
 			if err := jsonEncoderOutput.Encode(record); err != nil {
-				panic(err)
+				return err
 			}
+
+			return nil
 		}, tx); err != nil {
 			return err
 		}

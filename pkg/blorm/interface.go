@@ -15,6 +15,6 @@ type Repository interface {
 	OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error
 	Update(record interface{}, tx *bolt.Tx) error
 	Delete(record interface{}, tx *bolt.Tx) error
-	Each(fn func(record interface{}), tx *bolt.Tx) error
+	Each(fn func(record interface{}) error, tx *bolt.Tx) error
 	Alloc() interface{}
 }

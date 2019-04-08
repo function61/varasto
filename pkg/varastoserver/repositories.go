@@ -62,32 +62,37 @@ func volumeIntIdToBytes(id int) []byte {
 
 // appenders. Go surely would need some generic love..
 
-func clientAppender(slice *[]varastotypes.Client) func(record interface{}) {
-	return func(record interface{}) {
+func clientAppender(slice *[]varastotypes.Client) func(record interface{}) error {
+	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*varastotypes.Client))
+		return nil
 	}
 }
 
-func nodeAppender(slice *[]varastotypes.Node) func(record interface{}) {
-	return func(record interface{}) {
+func nodeAppender(slice *[]varastotypes.Node) func(record interface{}) error {
+	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*varastotypes.Node))
+		return nil
 	}
 }
 
-func replicationPolicyAppender(slice *[]varastotypes.ReplicationPolicy) func(record interface{}) {
-	return func(record interface{}) {
+func replicationPolicyAppender(slice *[]varastotypes.ReplicationPolicy) func(record interface{}) error {
+	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*varastotypes.ReplicationPolicy))
+		return nil
 	}
 }
 
-func volumeAppender(slice *[]varastotypes.Volume) func(record interface{}) {
-	return func(record interface{}) {
+func volumeAppender(slice *[]varastotypes.Volume) func(record interface{}) error {
+	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*varastotypes.Volume))
+		return nil
 	}
 }
 
-func volumeMountAppender(slice *[]varastotypes.VolumeMount) func(record interface{}) {
-	return func(record interface{}) {
+func volumeMountAppender(slice *[]varastotypes.VolumeMount) func(record interface{}) error {
+	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*varastotypes.VolumeMount))
+		return nil
 	}
 }

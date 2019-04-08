@@ -115,7 +115,7 @@ func (r *simpleRepository) Delete(record interface{}, tx *bolt.Tx) error {
 	return bucket.Delete(id)
 }
 
-func (r *simpleRepository) Each(fn func(record interface{}), tx *bolt.Tx) error {
+func (r *simpleRepository) Each(fn func(record interface{}) error, tx *bolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return errors.New("no bucket")
@@ -129,7 +129,9 @@ func (r *simpleRepository) Each(fn func(record interface{}), tx *bolt.Tx) error 
 			return err
 		}
 
-		fn(record)
+		if err := fn(record); err != nil {
+			return err
+		}
 	}
 
 	return nil
