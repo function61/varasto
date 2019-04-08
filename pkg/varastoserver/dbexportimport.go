@@ -20,11 +20,14 @@ import (
 // 	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" http://localhost:8066/api/db/export
 
 func exportDb(tx *bolt.Tx, output io.Writer) error {
-	jsonEncoderOutput := json.NewEncoder(output)
+	outputBuffered := bufio.NewWriterSize(output, 1024*100)
+	defer outputBuffered.Flush()
+
+	jsonEncoderOutput := json.NewEncoder(outputBuffered)
 
 	for heading, repo := range repoByRecordType {
 		// print heading
-		if _, err := output.Write([]byte("\n# " + heading + "\n")); err != nil {
+		if _, err := outputBuffered.Write([]byte("\n# " + heading + "\n")); err != nil {
 			return err
 		}
 
