@@ -38,7 +38,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	}
 	defer db.Close()
 
-	serverConfig, err := readConfigFromDatabase(db, logger)
+	serverConfig, err := readConfigFromDatabase(db, scf, logger)
 	if err != nil { // maybe need bootstrap?
 		// totally unexpected error?
 		if err != blorm.ErrNotFound {
@@ -54,7 +54,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 			return err
 		}
 
-		serverConfig, err = readConfigFromDatabase(db, logger)
+		serverConfig, err = readConfigFromDatabase(db, scf, logger)
 		if err != nil {
 			return err
 		}
@@ -71,7 +71,6 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	if err := defineRestApi(
 		router,
 		serverConfig,
-		scf.DbLocation,
 		db,
 		mwares,
 		logex.Prefix("restapi", logger),
@@ -136,6 +135,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 type VolumeDriverByVolumeId map[int]blobdriver.Driver
 
 type ServerConfig struct {
+	File              ServerConfigFile
 	SelfNode          varastotypes.Node
 	ClusterWideMounts map[int]varastotypes.VolumeMount
 	VolumeDrivers     VolumeDriverByVolumeId // only for mounts on self node
@@ -143,7 +143,7 @@ type ServerConfig struct {
 }
 
 // returns ErrNotFound if bootstrap needed
-func readConfigFromDatabase(db *bolt.DB, logger *log.Logger) (*ServerConfig, error) {
+func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logger) (*ServerConfig, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
@@ -212,6 +212,7 @@ func readConfigFromDatabase(db *bolt.DB, logger *log.Logger) (*ServerConfig, err
 	}
 
 	return &ServerConfig{
+		File:              *scf,
 		SelfNode:          *selfNode,
 		ClusterWideMounts: clusterWideMountsMapped,
 		VolumeDrivers:     volumeDrivers,

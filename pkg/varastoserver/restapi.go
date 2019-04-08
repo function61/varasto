@@ -21,12 +21,11 @@ import (
 func defineRestApi(
 	router *mux.Router,
 	conf *ServerConfig,
-	dbLocation string,
 	db *bolt.DB,
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
 ) error {
-	var han HttpHandlers = &handlers{db, conf, dbLocation}
+	var han HttpHandlers = &handlers{db, conf}
 
 	// v2 endpoints
 	RegisterRoutes(han, mwares, muxregistrator.New(router))

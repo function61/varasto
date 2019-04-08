@@ -24,9 +24,8 @@ import (
 )
 
 type handlers struct {
-	db         *bolt.DB
-	conf       *ServerConfig
-	dbLocation string // for server info to show file size
+	db   *bolt.DB
+	conf *ServerConfig
 }
 
 func convertDir(dir varastotypes.Directory) Directory {
@@ -414,7 +413,7 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 }
 
 func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *ServerInfo {
-	dbFileInfo, err := os.Stat(h.dbLocation)
+	dbFileInfo, err := os.Stat(h.conf.File.DbLocation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
