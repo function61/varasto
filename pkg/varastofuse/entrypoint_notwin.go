@@ -5,6 +5,7 @@ package varastofuse
 import (
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/varastofuse/varastofuseclient"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -16,9 +17,31 @@ func Entrypoint() *cobra.Command {
 	}
 
 	cmd.AddCommand(&cobra.Command{
-		Use:   "serve <collectionId>",
-		Short: "Mounts a Varasto collection via FUSE as a local directory",
+		Use:   "mount <collectionId>",
+		Short: "Mounts a collection by id",
 		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := varastofuseclient.New().Mount(args[0]); err != nil {
+				panic(err)
+			}
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "unmount <collectionId>",
+		Short: "Unmounts a collection by id",
+		Args:  cobra.ExactArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := varastofuseclient.New().Unmount(args[0]); err != nil {
+				panic(err)
+			}
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "serve",
+		Short: "Mounts a FUSE-based FS to serve collections from Varasto",
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			workers := stopper.NewManager()
 
@@ -27,7 +50,11 @@ func Entrypoint() *cobra.Command {
 				workers.StopAllWorkersAndWait()
 			}()
 
-			if err := fuseServe(args[0], "/samba/joonas/varasto", workers.Stopper()); err != nil {
+			sigs := newSigs()
+
+			go rpcServe(sigs, workers.Stopper())
+
+			if err := fuseServe(sigs, "/samba/joonas/varasto", workers.Stopper()); err != nil {
 				panic(err)
 			}
 

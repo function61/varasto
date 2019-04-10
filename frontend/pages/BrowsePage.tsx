@@ -9,6 +9,7 @@ import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionChangeDescription,
 	CollectionDelete,
+	CollectionFuseMount,
 	CollectionMove,
 	CollectionRename,
 	DirectoryChangeDescription,
@@ -86,6 +87,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							command={CollectionChangeDescription(coll.Id, coll.Description)}
 						/>
 						<CommandLink command={CollectionMove(coll.Id)} />
+						<CommandLink command={CollectionFuseMount(coll.Id)} />
 						<CommandLink command={CollectionDelete(coll.Id)} />
 					</Dropdown>
 				</td>

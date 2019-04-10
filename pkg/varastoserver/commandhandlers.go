@@ -10,6 +10,7 @@ import (
 	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/varasto/pkg/varastofuse/varastofuseclient"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
@@ -246,6 +247,10 @@ func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) er
 
 		return CollectionRepository.Update(coll, tx)
 	})
+}
+
+func (c *cHandlers) CollectionFuseMount(cmd *CollectionFuseMount, ctx *command.Ctx) error {
+	return varastofuseclient.New().Mount(cmd.Collection)
 }
 
 func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) error {

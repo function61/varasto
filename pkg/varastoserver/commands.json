@@ -130,6 +130,16 @@
 		]
 	},
 	{
+		"command": "collection.FuseMount",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "create",
+		"title": "Fuse mount",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "collection.Rename",
 		"chain": "public",
 		"ctor": ["Collection", "Name"],

@@ -12,12 +12,66 @@ import (
 	"github.com/function61/varasto/pkg/varastoclient"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
 )
 
-func fuseServe(collectionId string, mountPath string, stop *stopper.Stopper) error {
+type sigFabric struct {
+	mount   chan string
+	unmount chan string
+}
+
+func newSigs() *sigFabric {
+	return &sigFabric{
+		mount:   make(chan string),
+		unmount: make(chan string),
+	}
+}
+
+func rpcServe(sigs *sigFabric, stop *stopper.Stopper) {
+	srv := http.Server{
+		Addr: ":8689",
+	}
+
+	http.HandleFunc("/mounts", func(w http.ResponseWriter, r *http.Request) {
+		collectionId := r.URL.Query().Get("collection")
+		if collectionId == "" {
+			http.Error(w, "collectionId not specified", http.StatusBadRequest)
+			return
+		}
+
+		sigs.mount <- collectionId
+	})
+
+	http.HandleFunc("/unmounts", func(w http.ResponseWriter, r *http.Request) {
+		collectionId := r.URL.Query().Get("collection")
+		if collectionId == "" {
+			http.Error(w, "collectionId not specified", http.StatusBadRequest)
+			return
+		}
+
+		sigs.unmount <- collectionId
+	})
+
+	go func() {
+		defer stop.Done()
+
+		<-stop.Signal
+
+		if err := srv.Shutdown(nil); err != nil {
+			panic(err)
+			// logl.Error.Fatalf("Shutdown() failed: %v", err)
+		}
+	}()
+
+	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		panic(err)
+	}
+}
+
+func fuseServe(sigs *sigFabric, mountPath string, stop *stopper.Stopper) error {
 	defer stop.Done()
 
 	conf, err := varastoclient.ReadConfig()
@@ -27,7 +81,7 @@ func fuseServe(collectionId string, mountPath string, stop *stopper.Stopper) err
 
 	NewFsServer(*conf)
 
-	varastoFs, err := NewVarastoFS(collectionId)
+	varastoFs, err := NewVarastoFS(sigs)
 	if err != nil {
 		return err
 	}
@@ -43,6 +97,61 @@ func fuseServe(collectionId string, mountPath string, stop *stopper.Stopper) err
 		return err
 	}
 	defer fuseConn.Close()
+
+	go func() {
+		mountAdd := func(collectionId string) error {
+			coll, err := varastoclient.FetchCollectionMetadata(globalFsServer.clientConfig, collectionId)
+			if err != nil {
+				return err
+			}
+
+			state, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+			if err != nil {
+				return err
+			}
+
+			collectionRoot := processOneDir(state.FileList(), ".")
+			collectionRoot.collection = coll
+
+			// collection's root dir has always dot as name, fix it
+			collectionRoot.name = coll.Name
+
+			root := varastoFs.root
+			root.subdirs = append(root.subdirs, collectionRoot)
+
+			return nil
+		}
+
+		mountRemove := func(collectionId string) error {
+			subdirsWithCollectionRemoved := []*Dir{}
+			for _, dir := range varastoFs.root.subdirs {
+				if dir.collection.ID != collectionId {
+					subdirsWithCollectionRemoved = append(subdirsWithCollectionRemoved, dir)
+				}
+			}
+
+			varastoFs.root.subdirs = subdirsWithCollectionRemoved
+
+			return nil
+		}
+
+		for {
+			select {
+			case <-stop.Signal:
+				break
+			case collectionId := <-sigs.mount:
+				log.Printf("mount: %s", collectionId)
+				if err := mountAdd(collectionId); err != nil {
+					panic(err)
+				}
+			case collectionId := <-sigs.unmount:
+				log.Printf("unmount: %s", collectionId)
+				if err := mountRemove(collectionId); err != nil {
+					panic(err)
+				}
+			}
+		}
+	}()
 
 	go func() {
 		<-stop.Signal
@@ -72,6 +181,7 @@ func fuseServe(collectionId string, mountPath string, stop *stopper.Stopper) err
 	}
 
 	// check if the mount process has an error to report
+	// blocks as long as server is up
 	<-fuseConn.Ready
 	if err := fuseConn.MountError; err != nil {
 		log.Fatal(err)
@@ -84,8 +194,8 @@ type VarastoFSRoot struct {
 	root *Dir
 }
 
-func processOneDir(allFilesFlattened []varastotypes.File, pathForDirpeek string) *Dir {
-	dpr := stateresolver.DirPeek(allFilesFlattened, pathForDirpeek)
+func processOneDir(dirFiles []varastotypes.File, pathForDirpeek string) *Dir {
+	dpr := stateresolver.DirPeek(dirFiles, pathForDirpeek)
 
 	rootFiles := []*File{}
 
@@ -101,7 +211,7 @@ func processOneDir(allFilesFlattened []varastotypes.File, pathForDirpeek string)
 	subDirs := []*Dir{}
 
 	for _, subDirPath := range dpr.SubDirs {
-		subDir := processOneDir(allFilesFlattened, subDirPath)
+		subDir := processOneDir(dirFiles, subDirPath)
 
 		subDirs = append(subDirs, subDir)
 	}
@@ -109,27 +219,8 @@ func processOneDir(allFilesFlattened []varastotypes.File, pathForDirpeek string)
 	return NewDir(filepath.Base(pathForDirpeek), nextInode(), rootFiles, subDirs)
 }
 
-func NewVarastoFS(collectionId string) (*VarastoFSRoot, error) {
-	root := NewDir("/", nextInode(), nil, nil)
-
-	coll, err := varastoclient.FetchCollectionMetadata(globalFsServer.clientConfig, collectionId)
-	if err != nil {
-		return nil, err
-	}
-
-	state, err := stateresolver.ComputeStateAt(*coll, coll.Head)
-	if err != nil {
-		return nil, err
-	}
-
-	allFilesFlattened := state.FileList()
-
-	collectionRoot := processOneDir(allFilesFlattened, ".")
-
-	// collection's root dir has always dot as name, fix it
-	collectionRoot.name = coll.Name
-
-	root.subdirs = []*Dir{collectionRoot}
+func NewVarastoFS(sigs *sigFabric) (*VarastoFSRoot, error) {
+	root := NewDir("/", nextInode(), nil, []*Dir{})
 
 	return &VarastoFSRoot{root}, nil
 }
@@ -157,10 +248,11 @@ func NewDir(name string, inode uint64, files []*File, subdirs []*Dir) *Dir {
 
 // Dir implements both Node and Handle for the root directory.
 type Dir struct {
-	name    string
-	inode   uint64
-	files   []*File
-	subdirs []*Dir
+	name       string
+	collection *varastotypes.Collection
+	inode      uint64
+	files      []*File
+	subdirs    []*Dir
 }
 
 func (d Dir) Attr(ctx context.Context, a *fuse.Attr) error {
