@@ -1,6 +1,9 @@
+import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { DatabaseBackup } from 'generated/varastoserver_commands';
 import { getServerInfo } from 'generated/varastoserver_endpoints';
 import { ServerInfo } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -52,16 +55,27 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		];
 
 		return (
-			<table className="table table-striped table-hover">
-				<tbody>
-					{items.map((item) => (
-						<tr>
-							<th>{item.h}</th>
-							<td>{item.t}</td>
-						</tr>
-					))}
-				</tbody>
-			</table>
+			<div>
+				<Panel heading="Server info">
+					<table className="table table-striped table-hover">
+						<tbody>
+							{items.map((item) => (
+								<tr>
+									<th>{item.h}</th>
+									<td>{item.t}</td>
+								</tr>
+							))}
+						</tbody>
+						<tfoot>
+							<tr>
+								<td colSpan={99}>
+									<CommandButton command={DatabaseBackup()} />
+								</td>
+							</tr>
+						</tfoot>
+					</table>
+				</Panel>
+			</div>
 		);
 	}
 

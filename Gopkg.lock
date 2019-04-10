@@ -81,12 +81,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:cb995228186eb0d6b48f4ebf678da08832d708f2d326f5a55121bd576b40e539"
+  digest = "1:42e8c7ca31f42d9741fcf3b3588ed988af6a1674be895f64d994b73eb24dc3f0"
   name = "github.com/function61/gokit"
   packages = [
     "assert",
     "backoff",
     "cryptorandombytes",
+    "cryptoutil",
     "csrf",
     "dynversion",
     "dynversion/precompilationversion",
@@ -97,6 +98,7 @@
     "jsonfile",
     "logex",
     "ossignal",
+    "pkencryptedstream",
     "retry",
     "stopper",
   ]
@@ -409,6 +411,7 @@
     "github.com/function61/eventkit/httpcommand",
     "github.com/function61/gokit/assert",
     "github.com/function61/gokit/cryptorandombytes",
+    "github.com/function61/gokit/cryptoutil",
     "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/dynversion/precompilationversion",
     "github.com/function61/gokit/ezhttp",
@@ -418,6 +421,7 @@
     "github.com/function61/gokit/jsonfile",
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
+    "github.com/function61/gokit/pkencryptedstream",
     "github.com/function61/gokit/retry",
     "github.com/function61/gokit/stopper",
     "github.com/function61/pi-security-module/pkg/f61ui",

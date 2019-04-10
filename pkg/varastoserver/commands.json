@@ -175,6 +175,14 @@
 		]
 	},
 	{
+		"command": "database.Backup",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "Backup database",
+		"fields": []
+	},
+	{
 		"command": "client.Create",
 		"chain": "public",
 		"ctor": [],
