@@ -74,6 +74,11 @@ export default class CollectionPage extends React.Component<
 	}
 
 	private renderData(collOutput: CollectionOutput) {
+		const hasImageExtensionRe = /\.(jpg|jpeg|gif|png|bmp)$/i;
+		const eligibleForThumbnail = collOutput.SelectedPathContents.Files.filter((file) =>
+			hasImageExtensionRe.test(file.Path),
+		);
+
 		const fileToRow = (file: File) => {
 			const dl = downloadUrlFIXME(
 				collOutput.Collection.Id,
@@ -140,11 +145,33 @@ export default class CollectionPage extends React.Component<
 
 		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
 
+		const toThumbnail = (file: File) => {
+			const dl = downloadUrlFIXME(
+				collOutput.Collection.Id,
+				collOutput.ChangesetId,
+				file.Path,
+			);
+
+			const thumb = `http://localhost:8688/thumb?coll=${collOutput.Collection.Id}&amp;file=${file.Sha256}`;
+
+			return (
+				<a href={dl} target="_blank" title={file.Path} className="margin-left">
+					<img src={thumb} className="img-thumbnail" />
+				</a>
+			);
+		};
+
 		return (
 			<div>
 				<SensitivityHeadsUp />
 				<div className="row">
 					<div className="col-md-8">
+						{eligibleForThumbnail.length > 0 ? (
+							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
+						) : (
+							''
+						)}
+
 						<Panel heading="Files">
 							<table className="table table-striped table-hover">
 								<thead>

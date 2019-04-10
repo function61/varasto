@@ -98,6 +98,34 @@ func cloneCollection(path string, revisionId string, collection *varastotypes.Co
 	return cloneCollectionExistingDir(path, revisionId, collection)
 }
 
+func DownloadOneFile(file varastotypes.File, destination io.Writer, config ClientConfig) error {
+	for _, chunkDigest := range file.BlobRefs {
+		blobRef, err := varastotypes.BlobRefFromHex(chunkDigest)
+		if err != nil {
+			return err
+		}
+
+		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
+
+		verifiedBody, closeBody, err := DownloadChunk(ctx, *blobRef, config)
+		if err != nil {
+			cancel()
+			return err
+		}
+
+		if _, err := io.Copy(destination, verifiedBody); err != nil {
+			closeBody()
+			return err
+		}
+
+		cancel()
+
+		closeBody()
+	}
+
+	return nil
+}
+
 func cloneOneFile(wd *workdirLocation, file varastotypes.File) error {
 	log.Printf("Downloading %s", file.Path)
 
@@ -115,26 +143,8 @@ func cloneOneFile(wd *workdirLocation, file varastotypes.File) error {
 	}
 	defer fileHandle.Close()
 
-	for _, chunkDigest := range file.BlobRefs {
-		blobRef, err := varastotypes.BlobRefFromHex(chunkDigest)
-		if err != nil {
-			return err
-		}
-
-		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
-		defer cancel()
-
-		verifiedBody, closeBody, err := DownloadChunk(ctx, *blobRef, wd.clientConfig)
-		if err != nil {
-			return err
-		}
-
-		if _, err := io.Copy(fileHandle, verifiedBody); err != nil {
-			closeBody()
-			return err
-		}
-
-		closeBody()
+	if err := DownloadOneFile(file, fileHandle, wd.clientConfig); err != nil {
+		return err
 	}
 
 	fileHandle.Close() // even though we have the defer above - we probably need this for Chtimes()

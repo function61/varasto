@@ -6,6 +6,7 @@ import (
 	"github.com/function61/varasto/pkg/varastoclient"
 	"github.com/function61/varasto/pkg/varastofuse"
 	"github.com/function61/varasto/pkg/varastoserver"
+	"github.com/function61/varasto/pkg/varastothumb"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -23,6 +24,7 @@ func main() {
 
 	rootCmd.AddCommand(varastoserver.Entrypoint())
 	rootCmd.AddCommand(varastofuse.Entrypoint())
+	rootCmd.AddCommand(varastothumb.Entrypoint())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

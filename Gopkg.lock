@@ -41,6 +41,22 @@
   version = "v3.2.0"
 
 [[projects]]
+  digest = "1:b3af453d2bd5c7f1c6242b38d0416aa6cf96485a90b404fe638abeadb7ddd501"
+  name = "github.com/disintegration/gift"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e7b6d79ff1929f7f71e2de01198850f4e50db244"
+  version = "v1.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:388c1338725a674c01331d63024a5cacc8cad5b3d55c228fd9f2d995969cb9de"
+  name = "github.com/disintegration/imageorient"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "8147d86e83ec79f4e95cd95ec4c798b492478159"
+
+[[projects]]
   digest = "1:c2380638e0d78725aa246d93f8f9ee87befeb1146f5110fd65f0784709b22370"
   name = "github.com/djherbis/times"
   packages = ["."]
@@ -217,6 +233,18 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:cae4bc8ee8e1803deae4eaef7eaba71f45146d4308a42696347d5e15a3a867d2"
+  name = "golang.org/x/image"
+  packages = [
+    "bmp",
+    "draw",
+    "math/f64",
+  ]
+  pruneopts = "UT"
+  revision = "3fc05d484e9f77dd51816890e05f2602e4ca4d65"
+
+[[projects]]
+  branch = "master"
   digest = "1:29fe5460430a338b64f4a0259a6c59a1e2350bbcff54fa66f906fa8d10515c4d"
   name = "golang.org/x/net"
   packages = [
@@ -371,6 +399,7 @@
     "bazil.org/fuse/fs",
     "github.com/asdine/storm/codec",
     "github.com/asdine/storm/codec/msgpack",
+    "github.com/disintegration/imageorient",
     "github.com/djherbis/times",
     "github.com/function61/eventkit/codegen",
     "github.com/function61/eventkit/codegen/codegentemplates",
@@ -397,6 +426,8 @@
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
     "go.etcd.io/bbolt",
+    "golang.org/x/image/bmp",
+    "golang.org/x/image/draw",
     "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
