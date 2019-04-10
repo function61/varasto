@@ -125,7 +125,7 @@
 		"crudNature": "update",
 		"title": "Move",
 		"fields": [
-			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "Collection", "max_length": 4096, "hideIfDefaultValue": true },
 			{ "key": "Directory" }
 		]
 	},

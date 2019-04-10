@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
 	"net/http"
+	"strings"
 )
 
 // we are currently using the command pattern very wrong!
@@ -212,14 +213,23 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 			return err
 		}
 
-		coll, err := QueryWithTx(tx).Collection(cmd.Collection)
-		if err != nil {
-			return err
+		// Collection is validated as non-empty
+		collIds := strings.Split(cmd.Collection, ",")
+
+		for _, collId := range collIds {
+			coll, err := QueryWithTx(tx).Collection(collId)
+			if err != nil {
+				return err
+			}
+
+			coll.Directory = cmd.Directory
+
+			if err := CollectionRepository.Update(coll, tx); err != nil {
+				return err
+			}
 		}
 
-		coll.Directory = cmd.Directory
-
-		return CollectionRepository.Update(coll, tx)
+		return nil
 	})
 }
 

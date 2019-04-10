@@ -37,6 +37,7 @@ interface BrowsePageProps {
 
 interface BrowsePageState {
 	output?: DirectoryOutput;
+	selectedCollIds: string[];
 }
 
 // for decorate-sort-undecorate
@@ -47,7 +48,7 @@ interface DirOrCollection {
 }
 
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
-	state: BrowsePageState = {};
+	state: BrowsePageState = { selectedCollIds: [] };
 
 	componentDidMount() {
 		shouldAlwaysSucceed(this.fetchData());
@@ -60,8 +61,29 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	render() {
 		const showMaxSensitivity = getMaxSensitivityFromLocalStorage();
 
+		const collCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+			const collId = e.target.value;
+
+			// removes collId if it already exists
+			const selectedCollIds = this.state.selectedCollIds.filter((id) => id !== collId);
+
+			if (e.target.checked) {
+				selectedCollIds.push(collId);
+			}
+
+			this.setState({ selectedCollIds });
+		};
+
 		const collectionToRow = (coll: CollectionSubset) => (
-			<tr>
+			<tr key={coll.Id}>
+				<td>
+					<input
+						type="checkbox"
+						checked={this.state.selectedCollIds.indexOf(coll.Id) !== -1}
+						onChange={collCheckedChange}
+						value={coll.Id}
+					/>
+				</td>
 				<td>
 					<span title="Collection" className="glyphicon glyphicon-duplicate" />
 				</td>
@@ -127,6 +149,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 			return (
 				<tr>
+					<td />
 					<td>
 						<span title="Directory" className="glyphicon glyphicon-folder-open" />
 					</td>
@@ -172,6 +195,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			});
 		}
 
+		const selectedCollIdsSerialized = this.state.selectedCollIds.join(',');
+
 		return (
 			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
 				{!output ? (
@@ -185,6 +210,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 									<thead>
 										<tr>
 											<th style={{ width: '1%' }} />
+											<th style={{ width: '1%' }} />
 											<th />
 											<th style={{ width: '1%' }} />
 										</tr>
@@ -195,6 +221,16 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 									<tfoot>
 										<tr>
 											<td colSpan={99}>
+												{selectedCollIdsSerialized ? (
+													<CommandButton
+														command={CollectionMove(
+															selectedCollIdsSerialized,
+														)}
+													/>
+												) : (
+													''
+												)}
+
 												<CommandButton
 													command={DirectoryCreate(output.Directory.Id)}
 												/>
