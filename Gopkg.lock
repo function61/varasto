@@ -81,9 +81,10 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:42e8c7ca31f42d9741fcf3b3588ed988af6a1674be895f64d994b73eb24dc3f0"
+  digest = "1:20fbfa47591a929a7f7b244b84a1d8ce26bcd7671e1329efaa1a88cb04922174"
   name = "github.com/function61/gokit"
   packages = [
+    "appuptime",
     "assert",
     "backoff",
     "cryptorandombytes",
@@ -103,7 +104,7 @@
     "stopper",
   ]
   pruneopts = "UT"
-  revision = "bb2ee0025ab51857d08f8387ff7f6da822c5e40a"
+  revision = "ae109d0448fe1b8e2ba01209ee7b76a0c6b13f9e"
 
 [[projects]]
   branch = "master"
@@ -409,6 +410,7 @@
     "github.com/function61/eventkit/event",
     "github.com/function61/eventkit/eventlog",
     "github.com/function61/eventkit/httpcommand",
+    "github.com/function61/gokit/appuptime",
     "github.com/function61/gokit/assert",
     "github.com/function61/gokit/cryptorandombytes",
     "github.com/function61/gokit/cryptoutil",
