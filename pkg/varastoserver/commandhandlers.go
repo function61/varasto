@@ -206,6 +206,13 @@ func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
 	})
 }
 
+func (c *cHandlers) CollectionCreate(cmd *CollectionCreate, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		_, err := saveNewCollection(cmd.ParentDir, cmd.Name, tx)
+		return err
+	})
+}
+
 func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		// check for existence

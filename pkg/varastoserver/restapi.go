@@ -3,6 +3,7 @@ package varastoserver
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
@@ -78,41 +79,12 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 			return
 		}
 
-		if _, err := QueryWithTx(tx).Directory(req.ParentDirectoryId); err != nil {
-			if err == blorm.ErrNotFound {
-				http.Error(w, "parent directory not found", http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+		collection, err := saveNewCollection(req.ParentDirectoryId, req.Name, tx)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		// TODO: resolve this from closest parent that has policy defined?
-		replicationPolicy, err := QueryWithTx(tx).ReplicationPolicy("default")
-		panicIfError(err)
-
-		encryptionKey := [32]byte{}
-		if _, err := rand.Read(encryptionKey[:]); err != nil {
-			panic(err)
-		}
-
-		collection := &varastotypes.Collection{
-			ID:             varastoutils.NewCollectionId(),
-			Directory:      req.ParentDirectoryId,
-			Name:           req.Name,
-			DesiredVolumes: replicationPolicy.DesiredVolumes,
-			Head:           varastotypes.NoParentId,
-			EncryptionKey:  encryptionKey,
-			Changesets:     []varastotypes.CollectionChangeset{},
-		}
-
-		// highly unlikely
-		if _, err := QueryWithTx(tx).Collection(collection.ID); err != blorm.ErrNotFound {
-			http.Error(w, "accidentally generated duplicate collection ID", http.StatusInternalServerError)
-			return
-		}
-
-		panicIfError(CollectionRepository.Update(collection, tx))
 		panicIfError(tx.Commit())
 
 		outJson(w, collection)
@@ -335,4 +307,42 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 	router.HandleFunc("/api/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
 
 	return nil
+}
+
+func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*varastotypes.Collection, error) {
+	if _, err := QueryWithTx(tx).Directory(parentDirectoryId); err != nil {
+		if err == blorm.ErrNotFound {
+			return nil, errors.New("parent directory not found")
+		} else {
+			return nil, err
+		}
+	}
+
+	// TODO: resolve this from closest parent that has policy defined?
+	replicationPolicy, err := QueryWithTx(tx).ReplicationPolicy("default")
+	if err != nil {
+		return nil, err
+	}
+
+	encryptionKey := [32]byte{}
+	if _, err := rand.Read(encryptionKey[:]); err != nil {
+		return nil, err
+	}
+
+	collection := &varastotypes.Collection{
+		ID:             varastoutils.NewCollectionId(),
+		Directory:      parentDirectoryId,
+		Name:           name,
+		DesiredVolumes: replicationPolicy.DesiredVolumes,
+		Head:           varastotypes.NoParentId,
+		EncryptionKey:  encryptionKey,
+		Changesets:     []varastotypes.CollectionChangeset{},
+	}
+
+	// highly unlikely
+	if _, err := QueryWithTx(tx).Collection(collection.ID); err != blorm.ErrNotFound {
+		return nil, errors.New("accidentally generated duplicate collection ID")
+	}
+
+	return collection, CollectionRepository.Update(collection, tx)
 }

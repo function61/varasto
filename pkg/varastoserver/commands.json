@@ -119,6 +119,17 @@
 		]
 	},
 	{
+		"command": "collection.Create",
+		"chain": "public",
+		"ctor": ["ParentDir"],
+		"crudNature": "create",
+		"title": "+ Collection",
+		"fields": [
+			{ "key": "ParentDir", "hideIfDefaultValue": true },
+			{ "key": "Name" }
+		]
+	},
+	{
 		"command": "collection.Move",
 		"chain": "public",
 		"ctor": ["Collection"],

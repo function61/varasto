@@ -8,6 +8,7 @@ import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionChangeDescription,
+	CollectionCreate,
 	CollectionDelete,
 	CollectionFuseMount,
 	CollectionMove,
@@ -233,6 +234,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 												<CommandButton
 													command={DirectoryCreate(output.Directory.Id)}
+												/>
+
+												<CommandButton
+													command={CollectionCreate(output.Directory.Id)}
 												/>
 											</td>
 										</tr>
