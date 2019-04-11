@@ -94,14 +94,15 @@ func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, e
 	}
 	sort.Strings(deleted)
 
-	return &varastotypes.CollectionChangeset{
-		ID:           varastoutils.NewCollectionChangesetId(),
-		Parent:       wd.manifest.ChangesetId,
-		Created:      time.Now(),
-		FilesCreated: created,
-		FilesUpdated: updated,
-		FilesDeleted: deleted,
-	}, nil
+	ch := varastotypes.NewChangeset(
+		varastoutils.NewCollectionChangesetId(),
+		wd.manifest.ChangesetId,
+		time.Now(),
+		created,
+		updated,
+		deleted)
+
+	return &ch, nil
 }
 
 // returns ErrChunkMetadataNotFound if blob is not found

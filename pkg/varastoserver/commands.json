@@ -141,6 +141,18 @@
 		]
 	},
 	{
+		"command": "collection.MoveFilesIntoAnotherCollection",
+		"chain": "public",
+		"ctor": ["Source", "Files"],
+		"crudNature": "update",
+		"title": "Move files to another collection",
+		"fields": [
+			{ "key": "Source", "hideIfDefaultValue": true },
+			{ "key": "Files", "max_length": 4096, "hideIfDefaultValue": true },
+			{ "key": "Destination" }
+		]
+	},
+	{
 		"command": "collection.FuseMount",
 		"chain": "public",
 		"ctor": ["Collection"],

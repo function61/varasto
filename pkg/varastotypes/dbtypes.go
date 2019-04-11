@@ -88,3 +88,21 @@ type Blob struct {
 	IsPendingReplication      bool
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
 }
+
+func NewChangeset(
+	id string,
+	parent string,
+	created time.Time,
+	filesCreated []File,
+	filesUpdated []File,
+	filesDeleted []string,
+) CollectionChangeset {
+	return CollectionChangeset{
+		ID:           id,
+		Parent:       parent,
+		Created:      created,
+		FilesCreated: filesCreated,
+		FilesUpdated: filesUpdated,
+		FilesDeleted: filesDeleted,
+	}
+}

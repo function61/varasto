@@ -3,11 +3,12 @@ package stateresolver
 import (
 	"fmt"
 	"github.com/function61/gokit/assert"
-	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestComputeStateAt(t *testing.T) {
@@ -53,13 +54,13 @@ c.txt (size 33)
 // test helpers
 
 func pushChangeset(coll varastotypes.Collection, parentId string, mutations ...chMutFn) varastotypes.Collection {
-	changeset := varastotypes.CollectionChangeset{
-		ID:           cryptorandombytes.Hex(4),
-		Parent:       parentId,
-		FilesCreated: []varastotypes.File{},
-		FilesUpdated: []varastotypes.File{},
-		FilesDeleted: []string{},
-	}
+	changeset := varastotypes.NewChangeset(
+		varastoutils.NewCollectionChangesetId(),
+		parentId,
+		time.Now(),
+		nil,
+		nil,
+		nil)
 
 	for _, mutate := range mutations {
 		mutate(&changeset)

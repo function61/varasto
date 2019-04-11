@@ -5,10 +5,12 @@ import { SensitivityHeadsUp } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { CommandButton } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { CollectionMoveFilesIntoAnotherCollection } from 'generated/varastoserver_commands';
 import {
 	downloadFileUrl,
 	getCollectiotAtRev,
@@ -32,18 +34,17 @@ interface CollectionPageProps {
 	pathBase64: string;
 }
 
-// TODO: proper icons for dirs/files here as well
-
 interface CollectionPageState {
 	collectionOutput?: CollectionOutput;
 	directoryOutput?: DirectoryOutput;
+	selectedFilePaths: string[];
 }
 
 export default class CollectionPage extends React.Component<
 	CollectionPageProps,
 	CollectionPageState
 > {
-	state: CollectionPageState = {};
+	state: CollectionPageState = { selectedFilePaths: [] };
 
 	componentDidMount() {
 		shouldAlwaysSucceed(this.fetchData());
@@ -79,6 +80,19 @@ export default class CollectionPage extends React.Component<
 			hasImageExtensionRe.test(file.Path),
 		);
 
+		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+			// remove from currently selected, so depending on checked we can add or not add it
+			const selectedFilePaths = this.state.selectedFilePaths.filter(
+				(sel) => sel !== e.target.value,
+			);
+
+			if (e.target.checked) {
+				selectedFilePaths.push(e.target.value);
+			}
+
+			this.setState({ selectedFilePaths });
+		};
+
 		const fileToRow = (file: File) => {
 			const dl = downloadUrlFIXME(
 				collOutput.Collection.Id,
@@ -87,7 +101,15 @@ export default class CollectionPage extends React.Component<
 			);
 
 			return (
-				<tr>
+				<tr key={file.Path}>
+					<td>
+						<input
+							type="checkbox"
+							onChange={fileCheckedChange}
+							checked={this.state.selectedFilePaths.indexOf(file.Path) !== -1}
+							value={file.Path}
+						/>
+					</td>
 					<td>
 						<AssetImg src="/file.png" />
 					</td>
@@ -186,6 +208,17 @@ export default class CollectionPage extends React.Component<
 								</tbody>
 							</table>
 						</Panel>
+
+						{this.state.selectedFilePaths.length > 0 ? (
+							<CommandButton
+								command={CollectionMoveFilesIntoAnotherCollection(
+									collOutput.Collection.Id,
+									this.state.selectedFilePaths.join(','),
+								)}
+							/>
+						) : (
+							''
+						)}
 					</div>
 					<div className="col-md-4">
 						<Panel heading="Details">
