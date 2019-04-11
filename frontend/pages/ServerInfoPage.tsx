@@ -1,3 +1,9 @@
+import {
+	changeSensitivity,
+	getMaxSensitivityFromLocalStorage,
+	Sensitivity,
+	sensitivityLabel,
+} from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton } from 'f61ui/component/CommandButton';
@@ -11,10 +17,11 @@ import * as React from 'react';
 
 interface ServerInfoPageState {
 	serverInfo?: ServerInfo;
+	currSens: Sensitivity;
 }
 
 export default class ServerInfoPage extends React.Component<{}, ServerInfoPageState> {
-	state: ServerInfoPageState = {};
+	state: ServerInfoPageState = { currSens: getMaxSensitivityFromLocalStorage() };
 
 	componentDidMount() {
 		shouldAlwaysSucceed(this.fetchData());
@@ -75,6 +82,37 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 						</tfoot>
 					</table>
 				</Panel>
+				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
+			</div>
+		);
+	}
+
+	private renderSensitivitySelector() {
+		const sensitivityRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+			changeSensitivity(+e.target.value);
+			this.setState({ currSens: getMaxSensitivityFromLocalStorage() });
+		};
+
+		const oneSensitivityRadio = (sens: Sensitivity) => (
+			<div key={sens}>
+				<label>
+					<input
+						type="radio"
+						name="changeSensitivityRadio"
+						onChange={sensitivityRadioChange}
+						value={sens}
+						checked={sens === this.state.currSens}
+					/>{' '}
+					{sensitivityLabel(sens)}
+				</label>
+			</div>
+		);
+
+		return (
+			<div>
+				{oneSensitivityRadio(Sensitivity.FamilyFriendly)}
+				{oneSensitivityRadio(Sensitivity.Sensitive)}
+				{oneSensitivityRadio(Sensitivity.MyEyesOnly)}
 			</div>
 		);
 	}

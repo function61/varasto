@@ -1,5 +1,10 @@
 import { ClipboardButton } from 'component/clipboardbutton';
-import { getMaxSensitivityFromLocalStorage, SensitivityHeadsUp } from 'component/sensitivity';
+import {
+	createSensitivityAuthorizer,
+	Sensitivity,
+	SensitivityHeadsUp,
+	sensitivityLabel,
+} from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
@@ -60,7 +65,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 
 	render() {
-		const showMaxSensitivity = getMaxSensitivityFromLocalStorage();
+		const sensitivityAuthorize = createSensitivityAuthorizer();
 
 		const collCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 			const collId = e.target.value;
@@ -121,32 +126,28 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			const sensitivityBadge = (
 				<span className="badge margin-left">
 					<span className="glyphicon glyphicon-lock" />
-					&nbsp;Level: {dir.Sensitivity}
+					&nbsp;Level: {sensitivityLabel(dir.Sensitivity)}
 				</span>
 			);
 
-			const content =
-				dir.Sensitivity <= showMaxSensitivity ? (
-					<div>
-						<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
-						{dir.Description ? (
-							<span className="label label-default margin-left">
-								{dir.Description}
-							</span>
-						) : (
-							''
-						)}
-						{dir.Sensitivity > 0 ? sensitivityBadge : ''}
-					</div>
-				) : (
-					<div>
-						<span
-							style={{ color: 'transparent', textShadow: '0 0 7px rgba(0,0,0,0.5)' }}>
-							{dir.Name}
-						</span>
-						{sensitivityBadge}
-					</div>
-				);
+			const content = sensitivityAuthorize(dir.Sensitivity) ? (
+				<div>
+					<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
+					{dir.Description ? (
+						<span className="label label-default margin-left">{dir.Description}</span>
+					) : (
+						''
+					)}
+					{dir.Sensitivity > Sensitivity.FamilyFriendly ? sensitivityBadge : ''}
+				</div>
+			) : (
+				<div>
+					<span style={{ color: 'transparent', textShadow: '0 0 7px rgba(0,0,0,0.5)' }}>
+						{dir.Name}
+					</span>
+					{sensitivityBadge}
+				</div>
+			);
 
 			return (
 				<tr>
