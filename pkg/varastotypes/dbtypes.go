@@ -55,6 +55,7 @@ type Collection struct {
 	Description    string
 	DesiredVolumes []int
 	Head           string
+	EncryptionKey  [32]byte
 	Changesets     []CollectionChangeset
 }
 

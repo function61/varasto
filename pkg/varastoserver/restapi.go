@@ -1,6 +1,7 @@
 package varastoserver
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
 	"github.com/function61/gokit/httpauth"
@@ -90,12 +91,18 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 		replicationPolicy, err := QueryWithTx(tx).ReplicationPolicy("default")
 		panicIfError(err)
 
+		encryptionKey := [32]byte{}
+		if _, err := rand.Read(encryptionKey[:]); err != nil {
+			panic(err)
+		}
+
 		collection := &varastotypes.Collection{
 			ID:             varastoutils.NewCollectionId(),
 			Directory:      req.ParentDirectoryId,
 			Name:           req.Name,
 			DesiredVolumes: replicationPolicy.DesiredVolumes,
 			Head:           varastotypes.NoParentId,
+			EncryptionKey:  encryptionKey,
 			Changesets:     []varastotypes.CollectionChangeset{},
 		}
 
