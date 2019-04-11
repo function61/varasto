@@ -1,5 +1,6 @@
 import { AssetImg } from 'component/assetimg';
 import { ClipboardButton } from 'component/clipboardbutton';
+import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { thousandSeparate } from 'component/numberformatter';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
@@ -75,9 +76,8 @@ export default class CollectionPage extends React.Component<
 	}
 
 	private renderData(collOutput: CollectionOutput) {
-		const hasImageExtensionRe = /\.(jpg|jpeg|gif|png|bmp)$/i;
-		const eligibleForThumbnail = collOutput.SelectedPathContents.Files.filter((file) =>
-			hasImageExtensionRe.test(file.Path),
+		const eligibleForThumbnail = collOutput.SelectedPathContents.Files.filter(
+			(file) => filetypeForFile(file) === Filetype.Picture,
 		);
 
 		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,7 +111,11 @@ export default class CollectionPage extends React.Component<
 						/>
 					</td>
 					<td>
-						<AssetImg src="/file.png" />
+						<AssetImg
+							width={22}
+							height={22}
+							src={'/filetypes/' + iconForFiletype(filetypeForFile(file))}
+						/>
 					</td>
 					<td>
 						<a href={dl} target="_new">
@@ -129,8 +133,9 @@ export default class CollectionPage extends React.Component<
 		const subDirToRow = (subDir: string) => {
 			return (
 				<tr>
+					<td />
 					<td>
-						<AssetImg src="/directory.png" />
+						<span className="glyphicon glyphicon-folder-open" />
 					</td>
 					<td>
 						<a
@@ -174,7 +179,9 @@ export default class CollectionPage extends React.Component<
 				file.Path,
 			);
 
-			const thumb = `http://localhost:8688/thumb?coll=${collOutput.Collection.Id}&amp;file=${file.Sha256}`;
+			const thumb = `http://localhost:8688/thumb?coll=${collOutput.Collection.Id}&amp;file=${
+				file.Sha256
+			}`;
 
 			return (
 				<a href={dl} target="_blank" title={file.Path} className="margin-left">
