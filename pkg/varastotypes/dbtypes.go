@@ -53,6 +53,7 @@ type Collection struct {
 	Directory      string
 	Name           string
 	Description    string
+	Sensitivity    int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 	DesiredVolumes []int
 	Head           string
 	EncryptionKey  [32]byte

@@ -213,6 +213,19 @@ func (c *cHandlers) CollectionCreate(cmd *CollectionCreate, ctx *command.Ctx) er
 	})
 }
 
+func (c *cHandlers) CollectionChangeSensitivity(cmd *CollectionChangeSensitivity, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		coll, err := QueryWithTx(tx).Collection(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		coll.Sensitivity = cmd.Sensitivity
+
+		return CollectionRepository.Update(coll, tx)
+	})
+}
+
 func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		// check for existence

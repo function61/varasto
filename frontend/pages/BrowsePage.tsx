@@ -13,6 +13,7 @@ import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionChangeDescription,
+	CollectionChangeSensitivity,
 	CollectionCreate,
 	CollectionDelete,
 	CollectionFuseMount,
@@ -67,6 +68,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	render() {
 		const sensitivityAuthorize = createSensitivityAuthorizer();
 
+		const mkSensitivityBadge = (sens: Sensitivity) => (
+			<span className="badge margin-left">
+				<span className="glyphicon glyphicon-lock" />
+				&nbsp;Level: {sensitivityLabel(sens)}
+			</span>
+		);
+
 		const collCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 			const collId = e.target.value;
 
@@ -94,18 +102,38 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					<span title="Collection" className="glyphicon glyphicon-duplicate" />
 				</td>
 				<td>
-					<a
-						href={collectionRoute.buildUrl({
-							id: coll.Id,
-							rev: HeadRevisionId,
-							path: RootPathDotBase64FIXME,
-						})}>
-						{coll.Name}
-					</a>
-					{coll.Description ? (
-						<span className="label label-default margin-left">{coll.Description}</span>
+					{sensitivityAuthorize(coll.Sensitivity) ? (
+						<div>
+							<a
+								href={collectionRoute.buildUrl({
+									id: coll.Id,
+									rev: HeadRevisionId,
+									path: RootPathDotBase64FIXME,
+								})}>
+								{coll.Name}
+							</a>
+							{coll.Description ? (
+								<span className="label label-default margin-left">
+									{coll.Description}
+								</span>
+							) : (
+								''
+							)}
+							{coll.Sensitivity > Sensitivity.FamilyFriendly
+								? mkSensitivityBadge(coll.Sensitivity)
+								: ''}
+						</div>
 					) : (
-						''
+						<div>
+							<span
+								style={{
+									color: 'transparent',
+									textShadow: '0 0 7px rgba(0,0,0,0.5)',
+								}}>
+								{coll.Name}
+							</span>
+							{mkSensitivityBadge(coll.Sensitivity)}
+						</div>
 					)}
 				</td>
 				<td>
@@ -115,6 +143,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							command={CollectionChangeDescription(coll.Id, coll.Description)}
 						/>
 						<CommandLink command={CollectionMove(coll.Id)} />
+						<CommandLink
+							command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)}
+						/>
 						<CommandLink command={CollectionFuseMount(coll.Id)} />
 						<CommandLink command={CollectionDelete(coll.Id)} />
 					</Dropdown>
@@ -123,13 +154,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 
 		const directoryToRow = (dir: Directory) => {
-			const sensitivityBadge = (
-				<span className="badge margin-left">
-					<span className="glyphicon glyphicon-lock" />
-					&nbsp;Level: {sensitivityLabel(dir.Sensitivity)}
-				</span>
-			);
-
 			const content = sensitivityAuthorize(dir.Sensitivity) ? (
 				<div>
 					<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
@@ -138,14 +162,16 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					) : (
 						''
 					)}
-					{dir.Sensitivity > Sensitivity.FamilyFriendly ? sensitivityBadge : ''}
+					{dir.Sensitivity > Sensitivity.FamilyFriendly
+						? mkSensitivityBadge(dir.Sensitivity)
+						: ''}
 				</div>
 			) : (
 				<div>
 					<span style={{ color: 'transparent', textShadow: '0 0 7px rgba(0,0,0,0.5)' }}>
 						{dir.Name}
 					</span>
-					{sensitivityBadge}
+					{mkSensitivityBadge(dir.Sensitivity)}
 				</div>
 			);
 

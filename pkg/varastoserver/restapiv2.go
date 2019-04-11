@@ -45,6 +45,7 @@ func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSub
 		Name:           coll.Name,
 		Description:    coll.Description,
 		DesiredVolumes: coll.DesiredVolumes,
+		Sensitivity:    coll.Sensitivity,
 		Changesets:     changesets,
 	}
 }
