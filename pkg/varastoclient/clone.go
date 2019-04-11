@@ -114,6 +114,7 @@ func DownloadOneFile(file varastotypes.File, destination io.Writer, config Clien
 		}
 
 		if _, err := io.Copy(destination, verifiedBody); err != nil {
+			cancel()
 			closeBody()
 			return err
 		}
