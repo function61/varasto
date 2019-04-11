@@ -109,6 +109,11 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 		panicIfError(errTxBegin)
 		defer tx.Rollback()
 
+		if _, err := QueryWithTx(tx).Blob(*blobRef); err != blorm.ErrNotFound {
+			http.Error(w, "blob already exists!", http.StatusBadRequest)
+			return
+		}
+
 		coll, err := QueryWithTx(tx).Collection(collectionId)
 		panicIfError(err)
 
