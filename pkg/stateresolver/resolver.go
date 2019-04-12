@@ -1,3 +1,5 @@
+// State resolver is used to compute the state of collection at an exact revision. The
+// revision's parent DAG is traversed back to the root to compute all the deltas.
 package stateresolver
 
 import (
@@ -24,6 +26,7 @@ func (s *StateAt) Files() fileMap {
 	return files
 }
 
+// List of files present at this revision
 func (s *StateAt) FileList() []varastotypes.File {
 	files := []varastotypes.File{}
 

@@ -14,6 +14,8 @@ type DirPeekResult struct {
 	SubDirs    []string
 }
 
+// given a bunch of files with paths, we can create a directory model that lets us look
+// at one directory at a time, listing its sub- and parent dirs
 func DirPeek(files []varastotypes.File, dirToPeek string) *DirPeekResult {
 	res := &DirPeekResult{
 		Path:       dirToPeek,
