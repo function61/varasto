@@ -22,8 +22,8 @@ import (
 )
 
 const (
-	megabyte  = 1024 * 1024
-	chunkSize = 4 * megabyte
+	mebibyte = 1024 * 1024
+	blobSize = 4 * mebibyte
 )
 
 func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, error) {
@@ -163,15 +163,15 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 			return nil, err
 		}
 
-		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, chunkSize))
+		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, blobSize))
 		if errRead != nil {
 			return nil, errRead
 		}
 
-		pos += chunkSize
+		pos += blobSize
 
 		if len(chunk) == 0 {
-			// should only happen if file size is exact multiple of chunkSize
+			// should only happen if file size is exact multiple of blobSize
 			break
 		}
 
@@ -188,7 +188,7 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 
 		bfile.BlobRefs = append(bfile.BlobRefs, blobRef.AsHex())
 
-		if int64(len(chunk)) < chunkSize {
+		if int64(len(chunk)) < blobSize {
 			break
 		}
 	}
@@ -222,11 +222,11 @@ func uploadChunks(wd *workdirLocation, bfile varastotypes.File) error {
 			continue
 		}
 
-		if _, err := file.Seek(int64(blobIdx*chunkSize), io.SeekStart); err != nil {
+		if _, err := file.Seek(int64(blobIdx*blobSize), io.SeekStart); err != nil {
 			return err
 		}
 
-		chunk := io.LimitReader(file, chunkSize)
+		chunk := io.LimitReader(file, blobSize)
 
 		// 10 seconds can be too fast waiting for HDD to spin up + blob write
 		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
