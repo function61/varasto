@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -48,10 +49,12 @@ func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, e
 				return nil
 			}
 
+			// this returns \ on Windows, but we'll need to normalize to slashes for interop
 			relativePath, errRel := filepath.Rel(wd.path, path)
 			if errRel != nil {
 				return errRel
 			}
+			relativePath = backslashesToForwardSlashes(relativePath)
 
 			// ok if key missing
 			delete(filesMissing, relativePath)
@@ -288,4 +291,8 @@ func push(wd *workdirLocation) error {
 	wd.manifest.Collection = *updatedCollection
 
 	return wd.SaveToDisk()
+}
+
+func backslashesToForwardSlashes(in string) string {
+	return strings.Replace(in, `\`, "/", -1)
 }

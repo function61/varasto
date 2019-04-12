@@ -43,3 +43,10 @@ func TestDirPeek(t *testing.T) {
 	oneCase("sub/subsub2", 2, "sub/subsub2/inception", "sub")
 	oneCase("sub/subsub2/inception", 1, "", "sub/subsub2,sub")
 }
+
+func TestParents(t *testing.T) {
+	assert.EqualString(
+		t,
+		strings.Join(parents("sub/subsub2/inception/going-deeper.mp4"), ","),
+		"sub/subsub2/inception,sub/subsub2,sub")
+}

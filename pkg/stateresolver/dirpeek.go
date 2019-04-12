@@ -3,7 +3,7 @@ package stateresolver
 import (
 	"github.com/function61/varasto/pkg/sliceutil"
 	"github.com/function61/varasto/pkg/varastotypes"
-	"path/filepath"
+	"path"
 	"strings"
 )
 
@@ -34,7 +34,7 @@ func DirPeek(files []varastotypes.File, dirToPeek string) *DirPeekResult {
 
 	for _, file := range files {
 		// "foo/bar/baz.txt" => "foo/bar"
-		dir := filepath.Dir(file.Path)
+		dir := path.Dir(file.Path)
 
 		if dir == dirToPeek {
 			res.Files = append(res.Files, file)
@@ -57,15 +57,15 @@ func DirPeek(files []varastotypes.File, dirToPeek string) *DirPeekResult {
 }
 
 // doesn't include root
-func parents(path string) []string {
+func parents(dirPath string) []string {
 	ret := []string{}
 
-	curr := filepath.Dir(path)
+	curr := path.Dir(dirPath)
 
 	for curr != "." && curr != "/" {
 		ret = append(ret, curr)
 
-		curr = filepath.Dir(curr)
+		curr = path.Dir(curr)
 	}
 
 	return ret
