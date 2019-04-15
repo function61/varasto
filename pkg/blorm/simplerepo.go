@@ -116,13 +116,17 @@ func (r *simpleRepository) Delete(record interface{}, tx *bolt.Tx) error {
 }
 
 func (r *simpleRepository) Each(fn func(record interface{}) error, tx *bolt.Tx) error {
+	return r.EachFrom([]byte(""), fn, tx)
+}
+
+func (r *simpleRepository) EachFrom(from []byte, fn func(record interface{}) error, tx *bolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return errors.New("no bucket")
 	}
 
 	all := bucket.Cursor()
-	for key, value := all.First(); key != nil; key, value = all.Next() {
+	for key, value := all.Seek(from); key != nil; key, value = all.Next() {
 		record := r.alloc()
 
 		if err := msgpack.Codec.Unmarshal(value, record); err != nil {
@@ -130,6 +134,10 @@ func (r *simpleRepository) Each(fn func(record interface{}) error, tx *bolt.Tx) 
 		}
 
 		if err := fn(record); err != nil {
+			if err == StopIteration {
+				return nil // not an error, so don't give one out
+			}
+
 			return err
 		}
 	}
