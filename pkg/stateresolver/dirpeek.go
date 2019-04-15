@@ -1,7 +1,7 @@
 package stateresolver
 
 import (
-	"github.com/function61/varasto/pkg/sliceutil"
+	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"path"
 	"strings"

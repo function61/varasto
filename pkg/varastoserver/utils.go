@@ -2,7 +2,7 @@ package varastoserver
 
 import (
 	"encoding/json"
-	"github.com/function61/varasto/pkg/sliceutil"
+	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"mime"
 	"net/http"

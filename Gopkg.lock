@@ -81,7 +81,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:20fbfa47591a929a7f7b244b84a1d8ce26bcd7671e1329efaa1a88cb04922174"
+  digest = "1:3cc28ba36cea645f0a598345b47f917184ade88ae5f4eadfc530c65598e969e2"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
@@ -101,10 +101,11 @@
     "ossignal",
     "pkencryptedstream",
     "retry",
+    "sliceutil",
     "stopper",
   ]
   pruneopts = "UT"
-  revision = "ae109d0448fe1b8e2ba01209ee7b76a0c6b13f9e"
+  revision = "c40c967604799b9762ea6dc32b7a286eee1f7d81"
 
 [[projects]]
   branch = "master"
@@ -425,6 +426,7 @@
     "github.com/function61/gokit/ossignal",
     "github.com/function61/gokit/pkencryptedstream",
     "github.com/function61/gokit/retry",
+    "github.com/function61/gokit/sliceutil",
     "github.com/function61/gokit/stopper",
     "github.com/function61/pi-security-module/pkg/f61ui",
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
