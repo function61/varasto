@@ -52,6 +52,11 @@ var CollectionRepository = blorm.NewSimpleRepo(
 	func() interface{} { return &varastotypes.Collection{} },
 	func(record interface{}) []byte { return []byte(record.(*varastotypes.Collection).ID) })
 
+var IntegrityVerificationJobRepository = blorm.NewSimpleRepo(
+	"ivjobs",
+	func() interface{} { return &varastotypes.IntegrityVerificationJob{} },
+	func(record interface{}) []byte { return []byte(record.(*varastotypes.IntegrityVerificationJob).ID) })
+
 // helpers
 
 func volumeIntIdToBytes(id int) []byte {
@@ -93,6 +98,13 @@ func volumeAppender(slice *[]varastotypes.Volume) func(record interface{}) error
 func volumeMountAppender(slice *[]varastotypes.VolumeMount) func(record interface{}) error {
 	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*varastotypes.VolumeMount))
+		return nil
+	}
+}
+
+func integrityVerificationJobAppender(slice *[]varastotypes.IntegrityVerificationJob) func(record interface{}) error {
+	return func(record interface{}) error {
+		*slice = append(*slice, *record.(*varastotypes.IntegrityVerificationJob))
 		return nil
 	}
 }

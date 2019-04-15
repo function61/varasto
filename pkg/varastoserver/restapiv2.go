@@ -10,8 +10,10 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
@@ -24,8 +26,9 @@ import (
 )
 
 type handlers struct {
-	db   *bolt.DB
-	conf *ServerConfig
+	db           *bolt.DB
+	conf         *ServerConfig
+	ivController *varastointegrityverifier.Controller
 }
 
 func convertDir(dir varastotypes.Directory) Directory {
@@ -411,6 +414,44 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	defer tx.Rollback()
 
 	panicIfError(exportDb(tx, w))
+}
+
+func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]IntegrityVerificationJob {
+	ret := []IntegrityVerificationJob{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []varastotypes.IntegrityVerificationJob{}
+	panicIfError(IntegrityVerificationJobRepository.Each(integrityVerificationJobAppender(&dbObjects), tx))
+
+	sort.Slice(dbObjects, func(i, j int) bool { return !dbObjects[i].Started.Before(dbObjects[j].Started) })
+
+	runningIds := h.ivController.ListRunningJobs()
+
+	for _, dbObject := range dbObjects {
+		completed := dbObject.Completed
+
+		completedPtr := &completed
+		if completed.IsZero() {
+			completedPtr = nil
+		}
+
+		ret = append(ret, IntegrityVerificationJob{
+			Id:                   dbObject.ID,
+			Running:              sliceutil.ContainsString(runningIds, dbObject.ID),
+			Created:              dbObject.Started,
+			Completed:            completedPtr,
+			VolumeId:             dbObject.VolumeId,
+			LastCompletedBlobRef: dbObject.LastCompletedBlobRef.AsHex(),
+			BytesScanned:         int(dbObject.BytesScanned),
+			ErrorsFound:          dbObject.ErrorsFound,
+			Report:               dbObject.Report,
+		})
+	}
+
+	return &ret
 }
 
 func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *ServerInfo {

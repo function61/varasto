@@ -90,6 +90,17 @@ type Blob struct {
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
 }
 
+type IntegrityVerificationJob struct {
+	ID                   string
+	Started              time.Time
+	Completed            time.Time
+	VolumeId             int
+	LastCompletedBlobRef BlobRef
+	BytesScanned         uint64
+	ErrorsFound          int
+	Report               string
+}
+
 func NewChangeset(
 	id string,
 	parent string,

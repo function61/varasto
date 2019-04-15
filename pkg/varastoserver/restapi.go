@@ -10,6 +10,7 @@ import (
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
@@ -24,10 +25,11 @@ func defineRestApi(
 	router *mux.Router,
 	conf *ServerConfig,
 	db *bolt.DB,
+	ivController *varastointegrityverifier.Controller,
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
 ) error {
-	var han HttpHandlers = &handlers{db, conf}
+	var han HttpHandlers = &handlers{db, conf, ivController}
 
 	// v2 endpoints
 	RegisterRoutes(han, mwares, muxregistrator.New(router))

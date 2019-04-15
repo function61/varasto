@@ -11,6 +11,16 @@
 		]
 	},
 	{
+		"command": "volume.VerifyIntegrity",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Verify data integrity",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "volume.ChangeQuota",
 		"chain": "public",
 		"ctor": ["Id", "Quota"],
@@ -225,6 +235,26 @@
 		"crudNature": "create",
 		"title": "Backup database",
 		"fields": []
+	},
+	{
+		"command": "integrityverificationjob.Resume",
+		"chain": "public",
+		"ctor": ["JobId"],
+		"crudNature": "create",
+		"title": "Resume",
+		"fields": [
+			{ "key": "JobId", "hideIfDefaultValue": true }
+		]
+	},
+	{
+		"command": "integrityverificationjob.Stop",
+		"chain": "public",
+		"ctor": ["JobId"],
+		"crudNature": "delete",
+		"title": "Stop",
+		"fields": [
+			{ "key": "JobId", "hideIfDefaultValue": true }
+		]
 	},
 	{
 		"command": "client.Create",

@@ -9,6 +9,7 @@ import (
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
@@ -69,10 +70,21 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 	router := mux.NewRouter()
 
+	workers := stopper.NewManager()
+
+	ivController := varastointegrityverifier.NewController(
+		db,
+		IntegrityVerificationJobRepository,
+		BlobRepository,
+		serverConfig.VolumeDrivers,
+		logex.Prefix("integrityctrl", logger),
+		workers.Stopper())
+
 	if err := defineRestApi(
 		router,
 		serverConfig,
 		db,
+		ivController,
 		mwares,
 		logex.Prefix("restapi", logger),
 	); err != nil {
@@ -87,7 +99,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	registerCommandEndpoints(
 		router,
 		eventLog,
-		&cHandlers{db, serverConfig},
+		&cHandlers{db, serverConfig, ivController},
 		mwares)
 
 	if err := defineUi(router); err != nil {
@@ -98,8 +110,6 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		Addr:    ":8066",
 		Handler: router,
 	}
-
-	workers := stopper.NewManager()
 
 	// one might disable this during times of massive data ingestion to lessen the read
 	// pressure from the initial disk the blobs land on

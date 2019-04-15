@@ -11,6 +11,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/varastofuse/varastofuseclient"
+	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
@@ -21,8 +22,9 @@ import (
 
 // we are currently using the command pattern very wrong!
 type cHandlers struct {
-	db   *bolt.DB
-	conf *ServerConfig
+	db           *bolt.DB
+	conf         *ServerConfig
+	ivController *varastointegrityverifier.Controller
 }
 
 func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
@@ -102,6 +104,18 @@ func (c *cHandlers) VolumeUnmount(cmd *VolumeUnmount, ctx *command.Ctx) error {
 		}
 
 		return VolumeMountRepository.Delete(mount, tx)
+	})
+}
+
+func (c *cHandlers) VolumeVerifyIntegrity(cmd *VolumeVerifyIntegrity, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		job := &varastotypes.IntegrityVerificationJob{
+			ID:       varastoutils.NewIntegrityVerificationJobId(),
+			Started:  ctx.Meta.Timestamp,
+			VolumeId: cmd.Id,
+		}
+
+		return IntegrityVerificationJobRepository.Update(job, tx)
 	})
 }
 
@@ -314,6 +328,18 @@ func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 			ID: cmd.Id,
 		}, tx)
 	})
+}
+
+func (c *cHandlers) IntegrityverificationjobResume(cmd *IntegrityverificationjobResume, ctx *command.Ctx) error {
+	c.ivController.Resume(cmd.JobId)
+
+	return nil
+}
+
+func (c *cHandlers) IntegrityverificationjobStop(cmd *IntegrityverificationjobStop, ctx *command.Ctx) error {
+	c.ivController.Stop(cmd.JobId)
+
+	return nil
 }
 
 func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {

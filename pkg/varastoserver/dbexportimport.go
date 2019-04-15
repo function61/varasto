@@ -128,14 +128,15 @@ var msgpackCodec codec.MarshalUnmarshaler = msgpack.Codec
 
 // key is heading in export file under which all JSON records are dumped
 var repoByRecordType = map[string]blorm.Repository{
-	"Node":              NodeRepository,
-	"Client":            ClientRepository,
-	"ReplicationPolicy": ReplicationPolicyRepository,
-	"Volume":            VolumeRepository,
-	"VolumeMount":       VolumeMountRepository,
-	"Directory":         DirectoryRepository,
-	"Collection":        CollectionRepository,
-	"Blob":              BlobRepository,
+	"Blob":                     BlobRepository,
+	"Client":                   ClientRepository,
+	"Collection":               CollectionRepository,
+	"Directory":                DirectoryRepository,
+	"IntegrityVerificationJob": IntegrityVerificationJobRepository,
+	"Node":                     NodeRepository,
+	"ReplicationPolicy":        ReplicationPolicyRepository,
+	"Volume":                   VolumeRepository,
+	"VolumeMount":              VolumeMountRepository,
 }
 
 func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error) error) error {

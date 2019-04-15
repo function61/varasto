@@ -10,6 +10,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/clients", "produces": {"_": "list", "of": {"_": "Client"}}, "name": "getClients" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
@@ -137,6 +138,20 @@
 				"HeapBytes": {"_": "integer"},
 				"ServerOs": {"_": "string"},
 				"ServerArch": {"_": "string"}
+			}}
+		},
+		{
+			"name": "IntegrityVerificationJob",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Running": {"_": "boolean"},
+				"Created": {"_": "datetime"},
+				"Completed": {"_": "datetime", "nullable": true},
+				"VolumeId": {"_": "integer"},
+				"LastCompletedBlobRef": {"_": "string"},
+				"BytesScanned": {"_": "integer"},
+				"ErrorsFound": {"_": "integer"},
+				"Report": {"_": "string"}
 			}}
 		},
 		{

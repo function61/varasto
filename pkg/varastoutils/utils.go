@@ -23,6 +23,7 @@ var NewVolumeMountId = shortId
 var NewVolumeUuid = longId
 var NewNodeId = shortId
 var NewClientId = shortId
+var NewIntegrityVerificationJobId = shortId
 
 func shortId() string {
 	return cryptorandombytes.Base64Url(3)
