@@ -12,7 +12,6 @@ import (
 	"github.com/function61/varasto/pkg/varastoclient"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -27,47 +26,6 @@ func newSigs() *sigFabric {
 	return &sigFabric{
 		mount:   make(chan string),
 		unmount: make(chan string),
-	}
-}
-
-func rpcServe(sigs *sigFabric, stop *stopper.Stopper) {
-	srv := http.Server{
-		Addr: ":8689",
-	}
-
-	http.HandleFunc("/mounts", func(w http.ResponseWriter, r *http.Request) {
-		collectionId := r.URL.Query().Get("collection")
-		if collectionId == "" {
-			http.Error(w, "collectionId not specified", http.StatusBadRequest)
-			return
-		}
-
-		sigs.mount <- collectionId
-	})
-
-	http.HandleFunc("/unmounts", func(w http.ResponseWriter, r *http.Request) {
-		collectionId := r.URL.Query().Get("collection")
-		if collectionId == "" {
-			http.Error(w, "collectionId not specified", http.StatusBadRequest)
-			return
-		}
-
-		sigs.unmount <- collectionId
-	})
-
-	go func() {
-		defer stop.Done()
-
-		<-stop.Signal
-
-		if err := srv.Shutdown(nil); err != nil {
-			panic(err)
-			// logl.Error.Fatalf("Shutdown() failed: %v", err)
-		}
-	}()
-
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-		panic(err)
 	}
 }
 

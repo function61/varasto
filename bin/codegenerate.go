@@ -23,6 +23,7 @@ func mainInternal() error {
 
 	modules := []*codegen.Module{
 		codegen.NewModule("varastoserver", "pkg/varastoserver/types.json", "", "pkg/varastoserver/commands.json"),
+		codegen.NewModule("varastofuse/vstofusetypes", "pkg/varastofuse/vstofusetypes/types.json", "", ""),
 	}
 
 	opts := codegen.Opts{
