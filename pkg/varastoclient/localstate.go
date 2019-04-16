@@ -54,9 +54,5 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 	defer statefile.Close()
 
 	loc.manifest = &BupManifest{}
-	if err := jsonfile.Unmarshal(statefile, loc.manifest, true); err != nil {
-		return nil, err
-	}
-
-	return loc, nil
+	return loc, jsonfile.Unmarshal(statefile, loc.manifest, true)
 }

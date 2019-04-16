@@ -39,11 +39,7 @@ func ReadConfig() (*ClientConfig, error) {
 	}
 
 	conf := &ClientConfig{}
-	if err := jsonfile.Read(confPath, conf, true); err != nil {
-		return nil, err
-	}
-
-	return conf, nil
+	return conf, jsonfile.Read(confPath, conf, true)
 }
 
 func configFilePath() (string, error) {
