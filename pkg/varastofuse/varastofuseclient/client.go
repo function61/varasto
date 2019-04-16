@@ -19,7 +19,7 @@ func (v *Client) Mount(collectionId string) error {
 	_, err := ezhttp.Post(
 		context.Background(),
 		v.urls.FuseMount(),
-		ezhttp.SendJson(&vstofusetypes.CollectionId{collectionId}))
+		ezhttp.SendJson(&vstofusetypes.CollectionId{Id: collectionId}))
 	return err
 }
 
@@ -27,6 +27,6 @@ func (v *Client) Unmount(collectionId string) error {
 	_, err := ezhttp.Post(
 		context.Background(),
 		v.urls.FuseUnmount(),
-		ezhttp.SendJson(&vstofusetypes.CollectionId{collectionId}))
+		ezhttp.SendJson(&vstofusetypes.CollectionId{Id: collectionId}))
 	return err
 }
