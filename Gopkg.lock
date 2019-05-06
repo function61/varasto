@@ -81,11 +81,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3cc28ba36cea645f0a598345b47f917184ade88ae5f4eadfc530c65598e969e2"
+  digest = "1:0204aacb3d6d91ae1360418a67807eb32d1c08674a201eaff4609cb7887884dc"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
     "assert",
+    "atomicfilewrite",
     "backoff",
     "cryptorandombytes",
     "cryptoutil",
@@ -105,7 +106,7 @@
     "stopper",
   ]
   pruneopts = "UT"
-  revision = "c40c967604799b9762ea6dc32b7a286eee1f7d81"
+  revision = "e62489286be257ac90a4bb2c6c696d6c4ebcb94a"
 
 [[projects]]
   branch = "master"
@@ -413,6 +414,7 @@
     "github.com/function61/eventkit/httpcommand",
     "github.com/function61/gokit/appuptime",
     "github.com/function61/gokit/assert",
+    "github.com/function61/gokit/atomicfilewrite",
     "github.com/function61/gokit/cryptorandombytes",
     "github.com/function61/gokit/cryptoutil",
     "github.com/function61/gokit/dynversion",

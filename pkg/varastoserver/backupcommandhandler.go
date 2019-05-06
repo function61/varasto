@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"github.com/function61/eventkit/command"
+	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/pkencryptedstream"
-	"os"
+	"io"
 	"strings"
 	"time"
 )
@@ -38,50 +39,31 @@ func (c *cHandlers) DatabaseBackup(cmd *DatabaseBackup, ctx *command.Ctx) error 
 		return err
 	}
 
-	ts := time.Now().UTC().Format("2006-01-02T15-04-05Z07:00") // RFC3339 but time colons replaced with dashes
-	tempFilename, tempToFinal := tempRenamer(fmt.Sprintf(c.conf.File.BackupPath+"/%s.log.gz.aes", ts))
-	file, err := os.Create(tempFilename)
+	tx, err := c.db.Begin(false)
 	if err != nil {
 		return err
 	}
-	defer file.Close() // double close intentional (cleanup on errors)
-
-	tx, err := c.db.Begin(false)
-	panicIfError(err)
 	defer tx.Rollback()
 
-	encryptedStream, err := pkencryptedstream.Writer(file, encryptionPublicKey)
-	if err != nil {
-		return err
-	}
+	ts := time.Now().UTC().Format("2006-01-02T15-04-05Z07:00") // RFC3339 but time colons replaced with dashes
+	filename := fmt.Sprintf(c.conf.File.BackupPath+"/%s.log.gz.aes", ts)
 
-	compressor := gzip.NewWriter(encryptedStream)
-
-	if err := exportDb(tx, compressor); err != nil {
-		return err
-	}
-
-	if err := compressor.Close(); err != nil {
-		return err
-	}
-
-	// also closes backing file
-	if err := encryptedStream.Close(); err != nil {
-		return err
-	}
-
-	return tempToFinal(nil)
-}
-
-// TODO: move this to gokit?
-func tempRenamer(finalName string) (string, func(error) error) {
-	tempName := finalName + ".part"
-
-	return tempName, func(err error) error {
+	return atomicfilewrite.Write(filename, func(writer io.Writer) error {
+		encryptedStream, err := pkencryptedstream.Writer(writer, encryptionPublicKey)
 		if err != nil {
 			return err
 		}
 
-		return os.Rename(tempName, finalName)
-	}
+		compressor := gzip.NewWriter(encryptedStream)
+
+		if err := exportDb(tx, compressor); err != nil {
+			return err
+		}
+
+		if err := compressor.Close(); err != nil {
+			return err
+		}
+
+		return encryptedStream.Close()
+	})
 }

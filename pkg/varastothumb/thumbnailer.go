@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/disintegration/imageorient"
+	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/varastoclient"
@@ -18,6 +19,7 @@ import (
 	_ "image/gif"
 	"image/jpeg"
 	_ "image/png"
+	"io"
 	"log"
 	"math"
 	"os"
@@ -156,14 +158,9 @@ func makeThumbForFile(file varastotypes.File, config varastoclient.ClientConfig)
 
 	draw.ApproxBiLinear.Scale(thumb, thumb.Bounds(), orig, origBounds, draw.Over, nil)
 
-	// TODO: we should use a temp-file scheme
-	thumbFile, err := os.Create(thumbPath)
-	if err != nil {
-		return err
-	}
-	defer thumbFile.Close()
-
-	return jpeg.Encode(thumbFile, thumb, nil)
+	return atomicfilewrite.Write(thumbPath, func(writer io.Writer) error {
+		return jpeg.Encode(writer, thumb, nil)
+	})
 }
 
 func resizedDimensions(width, height, targetw, targeth int) (int, int) {

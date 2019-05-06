@@ -2,6 +2,7 @@ package blobdriver
 
 import (
 	"fmt"
+	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/varastotypes"
@@ -26,15 +27,14 @@ type localFs struct {
 }
 
 func (l *localFs) Store(ref varastotypes.BlobRef, content io.Reader) (int64, error) {
-	finalName := l.getPath(ref)
-	tempName := finalName + ".temp"
+	filename := l.getPath(ref)
 
 	// does not error if already exists
-	if err := os.MkdirAll(filepath.Dir(finalName), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
 		return 0, err
 	}
 
-	chunkExists, err := fileexists.Exists(finalName)
+	chunkExists, err := fileexists.Exists(filename)
 	if err != nil {
 		return 0, err
 	}
@@ -43,42 +43,13 @@ func (l *localFs) Store(ref varastotypes.BlobRef, content io.Reader) (int64, err
 		return 0, varastotypes.ErrChunkAlreadyExists
 	}
 
-	tempFileContent, err := os.Create(tempName)
-	if err != nil {
-		return 0, err
-	}
+	bytesWritten := int64(0)
+	err = atomicfilewrite.Write(filename, func(writer io.Writer) error {
+		bytesWritten, err = io.Copy(writer, content)
+		return err
+	})
 
-	success := false
-
-	// try to ensure cleanup
-	defer func() {
-		tempFileContent.Close()
-
-		if !success {
-			if err := os.Remove(tempName); err != nil {
-				l.log.Error.Printf("temp file %s cleanup: %s", tempName, err.Error())
-			}
-		}
-	}()
-
-	bytesWritten, err := io.Copy(tempFileContent, content)
-	if err != nil {
-		return bytesWritten, err
-	}
-
-	if err := tempFileContent.Close(); err != nil { // double close is intentional
-		return bytesWritten, err
-	}
-
-	// rename can replace target file (there's a race condition with the file exists check),
-	// but that is ok because both contents are hash-checked
-	if err := os.Rename(tempName, finalName); err != nil {
-		return bytesWritten, err
-	}
-
-	success = true
-
-	return bytesWritten, nil
+	return bytesWritten, err
 }
 
 func (l *localFs) Fetch(ref varastotypes.BlobRef) (io.ReadCloser, error) {
