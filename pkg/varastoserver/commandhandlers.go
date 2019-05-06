@@ -186,6 +186,10 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *DirectoryChangeDescription, 
 
 func (c *cHandlers) DirectoryChangeSensitivity(cmd *DirectoryChangeSensitivity, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
+		if err := validateSensitivity(cmd.Sensitivity); err != nil {
+			return err
+		}
+
 		dir, err := QueryWithTx(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
@@ -229,6 +233,10 @@ func (c *cHandlers) CollectionCreate(cmd *CollectionCreate, ctx *command.Ctx) er
 
 func (c *cHandlers) CollectionChangeSensitivity(cmd *CollectionChangeSensitivity, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
+		if err := validateSensitivity(cmd.Sensitivity); err != nil {
+			return err
+		}
+
 		coll, err := QueryWithTx(tx).Collection(cmd.Id)
 		if err != nil {
 			return err
@@ -404,4 +412,12 @@ func registerCommandEndpoints(
 
 func mebibytesToBytes(mebibytes int) int64 {
 	return int64(mebibytes * 1024 * 1024)
+}
+
+func validateSensitivity(in int) error {
+	if in < 0 || in > 2 {
+		return fmt.Errorf("sensitivity needs to be between 0-2; was %d", in)
+	}
+
+	return nil
 }
