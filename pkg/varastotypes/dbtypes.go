@@ -45,6 +45,7 @@ type Directory struct {
 	Parent      string
 	Name        string
 	Description string
+	Metadata    map[string]string
 	Sensitivity int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 }
 
@@ -58,6 +59,7 @@ type Collection struct {
 	Head           string
 	EncryptionKey  [32]byte
 	Changesets     []CollectionChangeset
+	Metadata       map[string]string
 }
 
 type CollectionChangeset struct {

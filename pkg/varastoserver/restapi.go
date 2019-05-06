@@ -344,6 +344,7 @@ func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*var
 		Head:           varastotypes.NoParentId,
 		EncryptionKey:  encryptionKey,
 		Changesets:     []varastotypes.CollectionChangeset{},
+		Metadata:       map[string]string{},
 	}
 
 	// highly unlikely

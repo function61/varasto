@@ -37,6 +37,7 @@
 				"Parent": {"_": "string"},
 				"Name": {"_": "string"},
 				"Description": {"_": "string"},
+				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Sensitivity": {"_": "integer"}
 			}}
 		},
@@ -58,6 +59,13 @@
 			}}
 		},
 		{
+			"name": "MetadataKv",
+			"type": {"_": "object", "fields": {
+				"Key": {"_": "string"},
+				"Value": {"_": "string"}
+			}}
+		},
+		{
 			"name": "CollectionSubset",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
@@ -66,6 +74,7 @@
 				"Description": {"_": "string"},
 				"Sensitivity": {"_": "integer"},
 				"DesiredVolumes": {"_": "list", "of": {"_": "integer"}},
+				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Changesets": {"_": "list", "of": {"_": "ChangesetSubset"}}
 			}}
 		},

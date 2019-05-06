@@ -37,6 +37,7 @@ func convertDir(dir varastotypes.Directory) Directory {
 		Parent:      dir.Parent,
 		Name:        dir.Name,
 		Description: dir.Description,
+		Metadata:    metadataMapToKvList(dir.Metadata),
 		Sensitivity: dir.Sensitivity,
 	}
 }
@@ -49,6 +50,7 @@ func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSub
 		Description:    coll.Description,
 		DesiredVolumes: coll.DesiredVolumes,
 		Sensitivity:    coll.Sensitivity,
+		Metadata:       metadataMapToKvList(coll.Metadata),
 		Changesets:     changesets,
 	}
 }
@@ -524,4 +526,16 @@ func getParentDirs(of varastotypes.Directory, tx *bolt.Tx) ([]varastotypes.Direc
 	}
 
 	return parentDirs, nil
+}
+
+func metadataMapToKvList(kvmap map[string]string) []MetadataKv {
+	kvList := []MetadataKv{}
+	for key, value := range kvmap {
+		kvList = append(kvList, MetadataKv{
+			Key:   key,
+			Value: value,
+		})
+	}
+
+	return kvList
 }

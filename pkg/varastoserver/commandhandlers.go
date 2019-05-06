@@ -122,9 +122,10 @@ func (c *cHandlers) VolumeVerifyIntegrity(cmd *VolumeVerifyIntegrity, ctx *comma
 func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return DirectoryRepository.Update(&varastotypes.Directory{
-			ID:     varastoutils.NewDirectoryId(),
-			Parent: cmd.Parent,
-			Name:   cmd.Name,
+			ID:       varastoutils.NewDirectoryId(),
+			Parent:   cmd.Parent,
+			Name:     cmd.Name,
+			Metadata: map[string]string{},
 		}, tx)
 	})
 }
