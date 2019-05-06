@@ -75,6 +75,17 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			</span>
 		);
 
+		const masterCheckedChange = () => {
+			const outp = this.state.outp; // name "output" would be shadowed
+			if (!outp) {
+				return;
+			}
+
+			const selectedCollIds = outp.Collections.map((coll) => coll.Id);
+
+			this.setState({ selectedCollIds });
+		};
+
 		const collCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 			const collId = e.target.value;
 
@@ -237,7 +248,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								<table className="table table-striped table-hover">
 									<thead>
 										<tr>
-											<th style={{ width: '1%' }} />
+											<th style={{ width: '1%' }}>
+												<input
+													type="checkbox"
+													onChange={masterCheckedChange}
+												/>
+											</th>
 											<th style={{ width: '1%' }} />
 											<th />
 											<th style={{ width: '1%' }} />
