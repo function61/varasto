@@ -235,6 +235,14 @@ export default class CollectionPage extends React.Component<
 							<table className="table table-striped table-hover">
 								<tbody>
 									<tr>
+										<th>Id</th>
+										<td>
+											{collOutput.Collection.Id}
+
+											<ClipboardButton text={collOutput.Collection.Id} />
+										</td>
+									</tr>
+									<tr>
 										<th>File count</th>
 										<td>{thousandSeparate(collOutput.FileCount)}</td>
 									</tr>
