@@ -19,6 +19,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 func defineRestApi(
@@ -207,9 +208,8 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 			}
 		}
 
-		// update head pointer
-		coll.Head = changeset.ID
-		coll.Changesets = append(coll.Changesets, changeset)
+		// update head pointer & calc Created timestamp
+		appendChangeset(changeset, coll)
 
 		panicIfError(CollectionRepository.Update(coll, tx))
 		panicIfError(tx.Commit())
@@ -338,6 +338,7 @@ func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*var
 
 	collection := &varastotypes.Collection{
 		ID:             varastoutils.NewCollectionId(),
+		Created:        time.Now(),
 		Directory:      parentDirectoryId,
 		Name:           name,
 		DesiredVolumes: replicationPolicy.DesiredVolumes,

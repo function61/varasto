@@ -45,6 +45,7 @@ func convertDir(dir varastotypes.Directory) Directory {
 func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSubset) CollectionSubset {
 	return CollectionSubset{
 		Id:             coll.ID,
+		Created:        coll.Created,
 		Directory:      coll.Directory,
 		Name:           coll.Name,
 		Description:    coll.Description,

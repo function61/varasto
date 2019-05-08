@@ -69,6 +69,7 @@
 			"name": "CollectionSubset",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
+				"Created": {"_": "datetime"},
 				"Directory": {"_": "string"},
 				"Name": {"_": "string"},
 				"Description": {"_": "string"},

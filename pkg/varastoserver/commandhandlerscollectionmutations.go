@@ -8,6 +8,7 @@ import (
 	"github.com/function61/varasto/pkg/varastoutils"
 	"go.etcd.io/bbolt"
 	"strings"
+	"time"
 )
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
@@ -72,11 +73,8 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMove
 			nil,
 			nil)
 
-		collSrc.Changesets = append(collSrc.Changesets, srcChangeset)
-		collSrc.Head = srcChangeset.ID
-
-		collDst.Changesets = append(collDst.Changesets, dstChangeset)
-		collDst.Head = dstChangeset.ID
+		appendChangeset(srcChangeset, collSrc)
+		appendChangeset(dstChangeset, collDst)
 
 		if err := CollectionRepository.Update(collSrc, tx); err != nil {
 			return err
@@ -88,4 +86,26 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMove
 
 		return nil
 	})
+}
+
+func appendChangeset(changeset varastotypes.CollectionChangeset, coll *varastotypes.Collection) {
+	for _, file := range changeset.FilesCreated {
+		coll.Created = minDate(coll.Created, file.Created)
+		coll.Created = minDate(coll.Created, file.Modified)
+	}
+
+	for _, file := range changeset.FilesUpdated {
+		coll.Created = minDate(coll.Created, file.Created)
+		coll.Created = minDate(coll.Created, file.Modified)
+	}
+
+	coll.Changesets = append(coll.Changesets, changeset)
+	coll.Head = changeset.ID
+}
+
+func minDate(a, b time.Time) time.Time {
+	if a.Before(b) {
+		return a
+	}
+	return b
 }

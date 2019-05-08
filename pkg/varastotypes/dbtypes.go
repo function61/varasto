@@ -51,6 +51,7 @@ type Directory struct {
 
 type Collection struct {
 	ID             string
+	Created        time.Time // earliest of all changesets' file create/update timestamps
 	Directory      string
 	Name           string
 	Description    string

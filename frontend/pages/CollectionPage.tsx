@@ -243,6 +243,12 @@ export default class CollectionPage extends React.Component<
 										</td>
 									</tr>
 									<tr>
+										<th>Created</th>
+										<td>
+											<Timestamp ts={collOutput.Collection.Created} />
+										</td>
+									</tr>
+									<tr>
 										<th>File count</th>
 										<td>{thousandSeparate(collOutput.FileCount)}</td>
 									</tr>
