@@ -120,3 +120,12 @@ func NewChangeset(
 		FilesDeleted: filesDeleted,
 	}
 }
+
+func NewDirectory(id string, parent string, name string) *Directory {
+	return &Directory{
+		ID:       id,
+		Parent:   parent,
+		Name:     name,
+		Metadata: map[string]string{},
+	}
+}

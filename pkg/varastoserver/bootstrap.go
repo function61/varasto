@@ -36,11 +36,7 @@ func bootstrap(db *bolt.DB, logger *log.Logger) error {
 
 	results := []error{
 		NodeRepository.Update(newNode, tx),
-		DirectoryRepository.Update(&varastotypes.Directory{
-			ID:     "root",
-			Parent: "", // root doesn't have parent
-			Name:   "root",
-		}, tx),
+		DirectoryRepository.Update(varastotypes.NewDirectory("root", "", "root"), tx),
 		ReplicationPolicyRepository.Update(&varastotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
