@@ -152,23 +152,26 @@ export default class CollectionPage extends React.Component<
 			);
 		};
 
-		const changesetToItem = (changeset: ChangesetSubset) => (
-			<tr>
-				<td>
-					<a
-						href={collectionRoute.buildUrl({
-							id: collOutput.Collection.Id,
-							rev: changeset.Id,
-							path: this.props.pathBase64,
-						})}>
-						{changeset.Id}
-					</a>
-				</td>
-				<td>
-					<Timestamp ts={changeset.Created} />
-				</td>
-			</tr>
-		);
+		const changesetToItem = (changeset: ChangesetSubset) => {
+			return (
+				<tr>
+					<td>{changeset.Id === collOutput.ChangesetId ? '*' : ''}</td>
+					<td>
+						<a
+							href={collectionRoute.buildUrl({
+								id: collOutput.Collection.Id,
+								rev: changeset.Id,
+								path: this.props.pathBase64,
+							})}>
+							{changeset.Id}
+						</a>
+					</td>
+					<td>
+						<Timestamp ts={changeset.Created} />
+					</td>
+				</tr>
+			);
+		};
 
 		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
 
@@ -232,10 +235,6 @@ export default class CollectionPage extends React.Component<
 							<table className="table table-striped table-hover">
 								<tbody>
 									<tr>
-										<th>Changeset</th>
-										<td>{collOutput.ChangesetId}</td>
-									</tr>
-									<tr>
 										<th>File count</th>
 										<td>{thousandSeparate(collOutput.FileCount)}</td>
 									</tr>
@@ -262,6 +261,13 @@ export default class CollectionPage extends React.Component<
 						</Panel>
 						<Panel heading="Changesets">
 							<table className="table table-striped table-hover">
+								<thead>
+									<tr>
+										<td style={{ width: '1%' }} />
+										<td />
+										<td />
+									</tr>
+								</thead>
 								<tbody>{changesetsReversed.map(changesetToItem)}</tbody>
 							</table>
 						</Panel>
