@@ -64,7 +64,7 @@ func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, e
 				maybeChanged := !before.Modified.Equal(fileInfo.ModTime())
 
 				if definitelyChanged || maybeChanged {
-					fil, err := analyzeFileForChanges(wd, relativePath, fileInfo)
+					fil, err := analyzeFileForChanges(wd.Join(relativePath), relativePath, fileInfo)
 					if err != nil {
 						return err
 					}
@@ -76,7 +76,7 @@ func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, e
 					}
 				}
 			} else {
-				fil, err := analyzeFileForChanges(wd, relativePath, fileInfo)
+				fil, err := analyzeFileForChanges(wd.Join(relativePath), relativePath, fileInfo)
 				if err != nil {
 					return err
 				}
@@ -109,15 +109,15 @@ func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, e
 }
 
 // returns ErrChunkMetadataNotFound if blob is not found
-func blobExists(wd *workdirLocation, blobRef varastotypes.BlobRef) (bool, error) {
+func blobExists(blobRef varastotypes.BlobRef, clientConfig ClientConfig) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	// do a HEAD request to see if the blob exists
 	resp, err := ezhttp.Head(
 		ctx,
-		wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
-		ezhttp.AuthBearer(wd.clientConfig.AuthToken))
+		clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
+		ezhttp.AuthBearer(clientConfig.AuthToken))
 
 	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {
 		return false, nil
@@ -130,7 +130,7 @@ func blobExists(wd *workdirLocation, blobRef varastotypes.BlobRef) (bool, error)
 	return true, nil
 }
 
-func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os.FileInfo) (*varastotypes.File, error) {
+func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os.FileInfo) (*varastotypes.File, error) {
 	// https://unix.stackexchange.com/questions/2802/what-is-the-difference-between-modify-and-change-in-stat-command-context
 	allTimes := times.Get(fileInfo)
 
@@ -148,7 +148,7 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 		BlobRefs: []string{}, // will be computed later in this method
 	}
 
-	file, err := os.Open(wd.Join(bfile.Path))
+	file, err := os.Open(absolutePath)
 	if err != nil {
 		return nil, err
 	}
@@ -198,8 +198,8 @@ func analyzeFileForChanges(wd *workdirLocation, relativePath string, fileInfo os
 	return bfile, nil
 }
 
-func uploadChunks(wd *workdirLocation, bfile varastotypes.File) error {
-	file, err := os.Open(wd.Join(bfile.Path))
+func uploadChunks(path string, bfile varastotypes.File, collection varastotypes.Collection, clientConfig ClientConfig) error {
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
@@ -212,7 +212,7 @@ func uploadChunks(wd *workdirLocation, bfile varastotypes.File) error {
 		}
 
 		// just check if the chunk exists already
-		blobAlreadyExists, err := blobExists(wd, *blobRef)
+		blobAlreadyExists, err := blobExists(*blobRef, clientConfig)
 		if err != nil {
 			return err
 		}
@@ -230,33 +230,79 @@ func uploadChunks(wd *workdirLocation, bfile varastotypes.File) error {
 
 		// 10 seconds can be too fast waiting for HDD to spin up + blob write
 		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-		defer cancel()
 
 		if _, err := ezhttp.Post(
 			ctx,
-			wd.clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()+"?collection="+wd.manifest.Collection.ID),
-			ezhttp.AuthBearer(wd.clientConfig.AuthToken),
+			clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()+"?collection="+collection.ID),
+			ezhttp.AuthBearer(clientConfig.AuthToken),
 			ezhttp.SendBody(varastoutils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
+			cancel()
 			return err
 		}
+
+		cancel()
 	}
 
 	return nil
 }
 
-func uploadChangeset(wd *workdirLocation, changeset varastotypes.CollectionChangeset) (*varastotypes.Collection, error) {
+func uploadChangeset(changeset varastotypes.CollectionChangeset, collection varastotypes.Collection, clientConfig ClientConfig) (*varastotypes.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	updatedCollection := &varastotypes.Collection{}
 	_, err := ezhttp.Post(
 		ctx,
-		wd.clientConfig.ApiPath("/api/collections/"+wd.manifest.Collection.ID+"/changesets"),
-		ezhttp.AuthBearer(wd.clientConfig.AuthToken),
+		clientConfig.ApiPath("/api/collections/"+collection.ID+"/changesets"),
+		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false))
 
 	return updatedCollection, err
+}
+
+func pushOne(collectionId string, path string) error {
+	clientConfig, err := ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	coll, err := FetchCollectionMetadata(*clientConfig, collectionId)
+	if err != nil {
+		return err
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	absolutePath := filepath.Join(wd, path)
+
+	fileInfo, err := os.Stat(absolutePath)
+	if err != nil {
+		return err
+	}
+
+	file, err := analyzeFileForChanges(absolutePath, path, fileInfo)
+	if err != nil {
+		return err
+	}
+
+	if err := uploadChunks(path, *file, *coll, *clientConfig); err != nil {
+		return err
+	}
+
+	changeset := varastotypes.NewChangeset(
+		varastoutils.NewCollectionChangesetId(),
+		coll.Head,
+		time.Now(),
+		[]varastotypes.File{*file},
+		[]varastotypes.File{},
+		[]string{})
+
+	_, err = uploadChangeset(changeset, *coll, *clientConfig)
+	return err
 }
 
 func push(wd *workdirLocation) error {
@@ -271,18 +317,18 @@ func push(wd *workdirLocation) error {
 	}
 
 	for _, created := range ch.FilesCreated {
-		if err := uploadChunks(wd, created); err != nil {
+		if err := uploadChunks(wd.Join(created.Path), created, wd.manifest.Collection, wd.clientConfig); err != nil {
 			return err
 		}
 	}
 
 	for _, updated := range ch.FilesUpdated {
-		if err := uploadChunks(wd, updated); err != nil {
+		if err := uploadChunks(wd.Join(updated.Path), updated, wd.manifest.Collection, wd.clientConfig); err != nil {
 			return err
 		}
 	}
 
-	updatedCollection, err := uploadChangeset(wd, *ch)
+	updatedCollection, err := uploadChangeset(*ch, wd.manifest.Collection, wd.clientConfig)
 	if err != nil {
 		return err
 	}
