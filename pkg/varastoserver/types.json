@@ -16,6 +16,20 @@
 	"stringConsts": [
 		{ "key": "RootFolderId", "value": "root" },
 		{ "key": "RootPathDotBase64FIXME", "value": "Lg==" },
+		{ "key": "MetadataBackdrop", "value": "backdrop_url" },
+		{ "key": "MetadataHomepage", "value": "homepage" },
+		{ "key": "MetadataImdbId", "value": "imdb.id" },
+		{ "key": "MetadataOverview", "value": "overview" },
+		{ "key": "MetadataReleaseDate", "value": "release_date" },
+		{ "key": "MetadataTheMovieDbMovieId", "value": "themoviedb.id" },
+		{ "key": "MetadataTheMovieDbTvEpisodeId", "value": "themoviedb.episode_id" },
+		{ "key": "MetadataTheMovieDbTvId", "value": "themoviedb.tv_id" },
+		{ "key": "MetadataTheTvDbEpisodeImage", "value": "thetvdb.ep_image" },
+		{ "key": "MetadataTheTvDbSeriesId", "value": "thetvdb.series_id" },
+		{ "key": "MetadataThumbnail", "value": "thumbnail_url" },
+		{ "key": "MetadataTitle", "value": "title" },
+		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },
+		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"types": [

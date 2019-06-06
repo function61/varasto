@@ -1,4 +1,5 @@
 import { ClipboardButton } from 'component/clipboardbutton';
+import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import {
 	createSensitivityAuthorizer,
 	Sensitivity,
@@ -10,6 +11,7 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
+import { globalConfig } from 'f61ui/globalconfig';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionChangeDescription,
@@ -18,12 +20,15 @@ import {
 	CollectionDelete,
 	CollectionFuseMount,
 	CollectionMove,
+	CollectionPullMetadata,
+	CollectionRefreshMetadataAutomatically,
 	CollectionRename,
 	DirectoryChangeDescription,
 	DirectoryChangeSensitivity,
 	DirectoryCreate,
 	DirectoryDelete,
 	DirectoryMove,
+	DirectoryPullMetadata,
 	DirectoryRename,
 } from 'generated/varastoserver_commands';
 import { getDirectory } from 'generated/varastoserver_endpoints';
@@ -32,6 +37,11 @@ import {
 	Directory,
 	DirectoryOutput,
 	HeadRevisionId,
+	MetadataImdbId,
+	MetadataOverview,
+	MetadataReleaseDate,
+	MetadataThumbnail,
+	MetadataTitle,
 	RootPathDotBase64FIXME,
 } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -75,8 +85,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			</span>
 		);
 
+		const hasMeta = (coll: CollectionSubset): boolean =>
+			coll.Metadata && coll.Metadata.length > 0;
+
 		const masterCheckedChange = () => {
-			const outp = this.state.outp; // name "output" would be shadowed
+			const outp = this.state.output; // name "output" would be shadowed
 			if (!outp) {
 				return;
 			}
@@ -99,70 +112,120 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			this.setState({ selectedCollIds });
 		};
 
-		const collectionToRow = (coll: CollectionSubset) => (
-			<tr key={coll.Id}>
-				<td>
-					<input
-						type="checkbox"
-						checked={this.state.selectedCollIds.indexOf(coll.Id) !== -1}
-						onChange={collCheckedChange}
-						value={coll.Id}
-					/>
-				</td>
-				<td>
-					<span title="Collection" className="glyphicon glyphicon-duplicate" />
-				</td>
-				<td>
-					{sensitivityAuthorize(coll.Sensitivity) ? (
+		const metadCollToPanel = (coll: CollectionSubset) => {
+			const metadata = metadataKvsToKv(coll.Metadata);
+
+			const image =
+				metadata[MetadataThumbnail] ||
+				globalConfig().assetsDir + '/image-not-available.png';
+
+			return (
+				<Panel
+					heading={
 						<div>
-							<a
-								href={collectionRoute.buildUrl({
-									id: coll.Id,
-									rev: HeadRevisionId,
-									path: RootPathDotBase64FIXME,
-								})}>
-								{coll.Name}
-							</a>
-							{coll.Description ? (
-								<span className="label label-default margin-left">
-									{coll.Description}
-								</span>
-							) : (
-								''
-							)}
-							{coll.Sensitivity > Sensitivity.FamilyFriendly
-								? mkSensitivityBadge(coll.Sensitivity)
-								: ''}
-						</div>
-					) : (
-						<div>
-							<span
-								style={{
-									color: 'transparent',
-									textShadow: '0 0 7px rgba(0,0,0,0.5)',
-								}}>
-								{coll.Name}
+							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
+							<span className="label label-default">
+								📅 {metadata[MetadataReleaseDate]}
 							</span>
-							{mkSensitivityBadge(coll.Sensitivity)}
 						</div>
-					)}
-				</td>
-				<td>
-					<Dropdown>
-						<CommandLink command={CollectionRename(coll.Id, coll.Name)} />
-						<CommandLink
-							command={CollectionChangeDescription(coll.Id, coll.Description)}
+					}>
+					<a
+						href={collectionRoute.buildUrl({
+							id: coll.Id,
+							rev: HeadRevisionId,
+							path: RootPathDotBase64FIXME,
+						})}>
+						<img
+							title={metadata[MetadataOverview] || ''}
+							src={image}
+							style={{ maxWidth: '100%' }}
 						/>
-						<CommandLink command={CollectionMove(coll.Id)} />
-						<CommandLink
-							command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)}
+					</a>
+				</Panel>
+			);
+		};
+
+		const collectionToRow = (coll: CollectionSubset) => {
+			const dirIsForMovies = coll.Directory === '70MqRF3FaxI'; // FIXME
+			const warning =
+				dirIsForMovies && !(MetadataImdbId in metadataKvsToKv(coll.Metadata)) ? (
+					<div>
+						<span
+							title="Metadata missing"
+							className="glyphicon glyphicon-exclamation-sign"
 						/>
-						<CommandLink command={CollectionFuseMount(coll.Id)} />
-						<CommandLink command={CollectionDelete(coll.Id)} />
-					</Dropdown>
-				</td>
-			</tr>
-		);
+					</div>
+				) : (
+					''
+				);
+
+			return (
+				<tr key={coll.Id}>
+					<td>
+						<input
+							type="checkbox"
+							checked={this.state.selectedCollIds.indexOf(coll.Id) !== -1}
+							onChange={collCheckedChange}
+							value={coll.Id}
+						/>
+					</td>
+					<td>
+						<span title="Collection" className="glyphicon glyphicon-duplicate" />
+					</td>
+					<td>
+						{sensitivityAuthorize(coll.Sensitivity) ? (
+							<div>
+								<a
+									href={collectionRoute.buildUrl({
+										id: coll.Id,
+										rev: HeadRevisionId,
+										path: RootPathDotBase64FIXME,
+									})}>
+									{coll.Name}
+								</a>
+								{coll.Description ? (
+									<span className="label label-default margin-left">
+										{coll.Description}
+									</span>
+								) : (
+									''
+								)}
+								{coll.Sensitivity > Sensitivity.FamilyFriendly
+									? mkSensitivityBadge(coll.Sensitivity)
+									: ''}
+							</div>
+						) : (
+							<div>
+								<span
+									style={{
+										color: 'transparent',
+										textShadow: '0 0 7px rgba(0,0,0,0.5)',
+									}}>
+									{coll.Name}
+								</span>
+								{mkSensitivityBadge(coll.Sensitivity)}
+							</div>
+						)}
+					</td>
+					<td>{warning}</td>
+					<td>
+						<Dropdown>
+							<CommandLink command={CollectionRename(coll.Id, coll.Name)} />
+							<CommandLink
+								command={CollectionChangeDescription(coll.Id, coll.Description)}
+							/>
+							<CommandLink command={CollectionMove(coll.Id)} />
+							<CommandLink
+								command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)}
+							/>
+							<CommandLink command={CollectionFuseMount(coll.Id)} />
+							<CommandLink command={CollectionPullMetadata(coll.Id)} />
+							<CommandLink command={CollectionDelete(coll.Id)} />
+						</Dropdown>
+					</td>
+				</tr>
+			);
+		};
 
 		const directoryToRow = (dir: Directory) => {
 			const content = sensitivityAuthorize(dir.Sensitivity) ? (
@@ -186,6 +249,17 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				</div>
 			);
 
+			const dirIsForSeries = dir.Parent === '7JczPh5-XSQ'; // FIXME
+			const warning =
+				dirIsForSeries && !(MetadataImdbId in metadataKvsToKv(dir.Metadata)) ? (
+					<span
+						title="Metadata missing"
+						className="glyphicon glyphicon-exclamation-sign"
+					/>
+				) : (
+					''
+				);
+
 			return (
 				<tr>
 					<td />
@@ -193,6 +267,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<span title="Directory" className="glyphicon glyphicon-folder-open" />
 					</td>
 					<td>{content}</td>
+					<td>{warning}</td>
 					<td>
 						<Dropdown>
 							<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
@@ -202,6 +277,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							<CommandLink
 								command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)}
 							/>
+							<CommandLink command={DirectoryPullMetadata(dir.Id)} />
 							<CommandLink command={DirectoryMove(dir.Id)} />
 							<CommandLink command={DirectoryDelete(dir.Id)} />
 						</Dropdown>
@@ -236,6 +312,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 		const selectedCollIdsSerialized = this.state.selectedCollIds.join(',');
 
+		const moviesDir = '70MqRF3FaxI'; // block from movies dir
+
 		return (
 			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
 				{!output ? (
@@ -245,6 +323,20 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<SensitivityHeadsUp />
 						<div className="row">
 							<div className="col-md-9">
+								<div>
+									{output.Parents.map((dir: Directory) => (
+										<MetadataPanel data={metadataKvsToKv(dir.Metadata)} />
+									))}
+									<MetadataPanel
+										data={metadataKvsToKv(output.Directory.Metadata)}
+									/>
+								</div>
+
+								{output.Collections.filter(hasMeta).length > 0 &&
+								output.Directory.Id !== moviesDir
+									? output.Collections.filter(hasMeta).map(metadCollToPanel)
+									: ''}
+
 								<table className="table table-striped table-hover">
 									<thead>
 										<tr>
@@ -257,6 +349,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 											<th style={{ width: '1%' }} />
 											<th />
 											<th style={{ width: '1%' }} />
+											<th style={{ width: '1%' }} />
 										</tr>
 									</thead>
 									<tbody>
@@ -266,11 +359,18 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 										<tr>
 											<td colSpan={99}>
 												{selectedCollIdsSerialized ? (
-													<CommandButton
-														command={CollectionMove(
-															selectedCollIdsSerialized,
-														)}
-													/>
+													<div>
+														<CommandButton
+															command={CollectionMove(
+																selectedCollIdsSerialized,
+															)}
+														/>
+														<CommandButton
+															command={CollectionRefreshMetadataAutomatically(
+																selectedCollIdsSerialized,
+															)}
+														/>
+													</div>
 												) : (
 													''
 												)}

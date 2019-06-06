@@ -22,6 +22,7 @@ type ServerConfigFile struct {
 	BackupPath                   string `json:"backup_path"`
 	AllowBootstrap               bool   `json:"allow_bootstrap"`
 	DisableReplicationController bool   `json:"disable_replication_controller"`
+	TheMovieDbApiKey             string `json:"themoviedb_apikey"`
 }
 
 func runServer(logger *log.Logger, stop *stopper.Stopper) error {

@@ -108,6 +108,17 @@
 		]
 	},
 	{
+		"command": "directory.PullMetadata",
+		"chain": "public",
+		"ctor": ["Directory"],
+		"crudNature": "update",
+		"title": "Metadata: pull",
+		"fields": [
+			{ "key": "Directory", "hideIfDefaultValue": true },
+			{ "key": "ForeignKey", "help": "IMDB ID or similar" }
+		]
+	},
+	{
 		"command": "directory.ChangeSensitivity",
 		"chain": "public",
 		"ctor": ["Id","Sensitivity"],
@@ -148,6 +159,27 @@
 		"fields": [
 			{ "key": "Collection", "max_length": 4096, "hideIfDefaultValue": true },
 			{ "key": "Directory" }
+		]
+	},
+	{
+		"command": "collection.RefreshMetadataAutomatically",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "update",
+		"title": "Refresh metadata automatically",
+		"fields": [
+			{ "key": "Collection", "max_length": 4096, "hideIfDefaultValue": true }
+		]
+	},
+	{
+		"command": "collection.PullMetadata",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "update",
+		"title": "Metadata: pull",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "ForeignKey", "help": "IMDB ID" }
 		]
 	},
 	{

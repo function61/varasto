@@ -1,6 +1,7 @@
 import { AssetImg } from 'component/assetimg';
 import { ClipboardButton } from 'component/clipboardbutton';
 import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
+import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
@@ -198,6 +199,8 @@ export default class CollectionPage extends React.Component<
 				<SensitivityHeadsUp />
 				<div className="row">
 					<div className="col-md-8">
+						<MetadataPanel data={metadataKvsToKv(collOutput.Collection.Metadata)} />
+
 						{eligibleForThumbnail.length > 0 ? (
 							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
 						) : (
