@@ -1,5 +1,6 @@
 import { AssetImg } from 'component/assetimg';
 import { ClipboardButton } from 'component/clipboardbutton';
+import { collectionDropdown } from 'component/collectiondropdown';
 import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
@@ -234,7 +235,13 @@ export default class CollectionPage extends React.Component<
 						)}
 					</div>
 					<div className="col-md-4">
-						<Panel heading="Details">
+						<Panel
+							heading={
+								<div>
+									Details &nbsp;
+									{collectionDropdown(collOutput.Collection)}
+								</div>
+							}>
 							<table className="table table-striped table-hover">
 								<tbody>
 									<tr>

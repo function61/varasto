@@ -1,4 +1,5 @@
 import { ClipboardButton } from 'component/clipboardbutton';
+import { collectionDropdown } from 'component/collectiondropdown';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import {
 	createSensitivityAuthorizer,
@@ -14,15 +15,9 @@ import { Loading } from 'f61ui/component/loading';
 import { globalConfig } from 'f61ui/globalconfig';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
-	CollectionChangeDescription,
-	CollectionChangeSensitivity,
 	CollectionCreate,
-	CollectionDelete,
-	CollectionFuseMount,
 	CollectionMove,
-	CollectionPullMetadata,
 	CollectionRefreshMetadataAutomatically,
-	CollectionRename,
 	DirectoryChangeDescription,
 	DirectoryChangeSensitivity,
 	DirectoryCreate,
@@ -208,21 +203,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						)}
 					</td>
 					<td>{warning}</td>
-					<td>
-						<Dropdown>
-							<CommandLink command={CollectionRename(coll.Id, coll.Name)} />
-							<CommandLink
-								command={CollectionChangeDescription(coll.Id, coll.Description)}
-							/>
-							<CommandLink command={CollectionMove(coll.Id)} />
-							<CommandLink
-								command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)}
-							/>
-							<CommandLink command={CollectionFuseMount(coll.Id)} />
-							<CommandLink command={CollectionPullMetadata(coll.Id)} />
-							<CommandLink command={CollectionDelete(coll.Id)} />
-						</Dropdown>
-					</td>
+					<td>{collectionDropdown(coll)}</td>
 				</tr>
 			);
 		};
