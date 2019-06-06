@@ -9,6 +9,9 @@ import (
 
 //go:generate go run codegenerate.go
 
+// FIXME: this is a dirty hack for fixing non-compiling generated code
+//go:generate rm ../frontend/generated/varastofuse/vstofusetypes_endpoints.ts
+
 func main() {
 	if err := mainInternal(); err != nil {
 		panic(err)
