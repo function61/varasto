@@ -20,18 +20,19 @@ Architecture
 Ideas / goals
 -------------
 
-- "RAID is not backup", so you would need backup on top of RAID anyway. But what if we
-  designed for backup first and used the redundant backup storage as the primary source of truth?
+- "[RAID is not backup](https://serverfault.com/questions/2888/why-is-raid-not-a-backup)",
+  so you would need backup in addition to RAID anyway. But what if we designed for backup
+  first and its redundant storage as the primary source of truth?
 - Varasto works like GitHub, with your different directories being like GitHub repos,
   (we call them collections) but with Varasto making automatic commits (= backup interval)
   against them. If you accidentally delete a file, you will find it from a previous
   collection revision. You can "clone" collections you want to work on, to your computer,
   and when you stop working on them you can tell Varasto to delete the local copy and
   Varasto client will ensure that the Varasto server has the latest state before removing.
-  This way your end devices can remain almost-stateless. Store only the things you are
-  working on currently!
+  This way your end devices can remain almost-stateless. Store locally only the things you
+  are working on currently!
 - You don't need to clone collections if all you want to do is view files (such as look at
-  photo albums, listen to music or watch movies) - Varasto server supports streaming too.
+  photo albums, listen to music or watch movies) - Varasto supports streaming too.
 - Works on Linux and Windows (mostly due to Go's awesomeness)
 - Integrity is the most important thing. Hashes are verified on writing to disk and on
   reading from disk.
@@ -72,3 +73,9 @@ Inspired by & alternative software
 - [Perkeep](https://perkeep.org/doc/overview)
 - [upspin](https://upspin.io/doc/arch.md)
 - [Bazil](https://bazil.org/)
+
+
+Philosophy
+----------
+
+- [How to Remember Your Life by Johnny Harris](https://www.youtube.com/watch?v=GLy4VKeYxD4)
