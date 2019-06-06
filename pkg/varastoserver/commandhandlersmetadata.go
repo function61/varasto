@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/function61/varasto/pkg/themoviedbapi"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"go.etcd.io/bbolt"
@@ -139,13 +140,13 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 		uniqueSeasonNumbers := []int{}
 
 		type episodeAndCollPair struct {
-			seasonEpisode SeasonEpisodeResult
+			seasonEpisode seasonepisodedetector.Result
 			coll          *varastotypes.Collection
 		}
 
 		pairs := []episodeAndCollPair{}
 
-		findPair := func(seasonEpisode SeasonEpisodeResult) *episodeAndCollPair {
+		findPair := func(seasonEpisode seasonepisodedetector.Result) *episodeAndCollPair {
 			for _, pair := range pairs {
 				if seasonEpisode.LaxEqual(pair.seasonEpisode) {
 					return &pair
@@ -165,7 +166,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 				return errors.New("all input collections must be siblings in the directory hierarchy")
 			}
 
-			seasonEpisode := detectSeasonEpisode(coll.Name)
+			seasonEpisode := seasonepisodedetector.Detect(coll.Name)
 			if seasonEpisode == nil {
 				continue
 			}
@@ -194,7 +195,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 			}
 
 			for _, ep := range episodes {
-				seasonEpisode := SeasonEpisodeResult{
+				seasonEpisode := seasonepisodedetector.Result{
 					Season:  fmt.Sprintf("%d", ep.SeasonNumber),
 					Episode: fmt.Sprintf("%d", ep.EpisodeNumber),
 				}
