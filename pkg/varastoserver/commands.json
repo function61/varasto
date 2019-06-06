@@ -212,7 +212,8 @@
 		"crudNature": "create",
 		"title": "Fuse mount",
 		"fields": [
-			{ "key": "Collection", "hideIfDefaultValue": true }
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "UnmountOthers", "type": "checkbox" }
 		]
 	},
 	{

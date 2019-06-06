@@ -30,3 +30,10 @@ func (v *Client) Unmount(collectionId string) error {
 		ezhttp.SendJson(&vstofusetypes.CollectionId{Id: collectionId}))
 	return err
 }
+
+func (v *Client) UnmountAll() error {
+	_, err := ezhttp.Post(
+		context.Background(),
+		v.urls.FuseUnmountAll())
+	return err
+}

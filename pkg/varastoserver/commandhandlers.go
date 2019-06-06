@@ -303,7 +303,15 @@ func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) er
 }
 
 func (c *cHandlers) CollectionFuseMount(cmd *CollectionFuseMount, ctx *command.Ctx) error {
-	return varastofuseclient.New().Mount(cmd.Collection)
+	vstofuse := varastofuseclient.New()
+
+	if cmd.UnmountOthers {
+		if err := vstofuse.UnmountAll(); err != nil {
+			return err
+		}
+	}
+
+	return vstofuse.Mount(cmd.Collection)
 }
 
 func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) error {

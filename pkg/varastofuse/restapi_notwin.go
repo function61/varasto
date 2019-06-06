@@ -23,6 +23,10 @@ func (h *handlers) FuseUnmount(rctx *httpauth.RequestContext, pars vstofusetypes
 	h.sigs.unmount <- pars.Id
 }
 
+func (h *handlers) FuseUnmountAll(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	h.sigs.unmountAll <- nil
+}
+
 func rpcServe(sigs *sigFabric, stop *stopper.Stopper) {
 	router := mux.NewRouter()
 

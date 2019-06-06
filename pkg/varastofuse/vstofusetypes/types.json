@@ -1,6 +1,7 @@
 {
 	"endpoints": [
 		{ "chain": "public", "method": "POST", "path": "/vstofuseapi/mount", "consumes": {"_": "CollectionId"}, "name": "fuseMount" },
+		{ "chain": "public", "method": "POST", "path": "/vstofuseapi/unmount_all", "name": "fuseUnmountAll" },
 		{ "chain": "public", "method": "POST", "path": "/vstofuseapi/unmount", "consumes": {"_": "CollectionId"}, "name": "fuseUnmount" }
 	],
 	"types": [

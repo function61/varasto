@@ -18,14 +18,16 @@ import (
 )
 
 type sigFabric struct {
-	mount   chan string
-	unmount chan string
+	mount      chan string
+	unmount    chan string
+	unmountAll chan interface{}
 }
 
 func newSigs() *sigFabric {
 	return &sigFabric{
-		mount:   make(chan string),
-		unmount: make(chan string),
+		mount:      make(chan string),
+		unmount:    make(chan string),
+		unmountAll: make(chan interface{}),
 	}
 }
 
@@ -107,6 +109,8 @@ func fuseServe(sigs *sigFabric, mountPath string, stop *stopper.Stopper) error {
 				if err := mountRemove(collectionId); err != nil {
 					panic(err)
 				}
+			case <-sigs.unmountAll:
+				varastoFs.root.subdirs = []*Dir{}
 			}
 		}
 	}()
