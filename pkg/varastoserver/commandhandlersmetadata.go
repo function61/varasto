@@ -1,6 +1,7 @@
 package varastoserver
 
 import (
+	"errors"
 	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/sliceutil"
@@ -8,7 +9,6 @@ import (
 	"github.com/function61/varasto/pkg/varastotypes"
 	"go.etcd.io/bbolt"
 	"strconv"
-	"errors"
 	"strings"
 )
 

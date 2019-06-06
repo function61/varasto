@@ -2,8 +2,8 @@ package themoviedbapi
 
 import (
 	"context"
-	"fmt"
 	"errors"
+	"fmt"
 	"github.com/function61/gokit/ezhttp"
 	"strconv"
 )
@@ -23,7 +23,7 @@ type Movie struct {
 }
 
 type Tv struct {
-	Id          int64 `json:"id"`
+	Id           int64  `json:"id"`
 	Name         string `json:"name"`
 	Overview     string `json:"overview"`
 	BackdropPath string `json:"backdrop_path"`
@@ -36,7 +36,7 @@ type Tv struct {
 
 type Episode struct {
 	Id            uint64 `json:"id"`
-	SeasonNumber int    `json:"season_number"`
+	SeasonNumber  int    `json:"season_number"`
 	EpisodeNumber int    `json:"episode_number"`
 	Name          string `json:"name"`
 	Overview      string `json:"overview"`
