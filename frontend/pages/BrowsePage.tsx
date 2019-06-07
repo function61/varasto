@@ -7,12 +7,14 @@ import {
 	SensitivityHeadsUp,
 	sensitivityLabel,
 } from 'component/sensitivity';
+import { TabController } from 'component/tabcontroller';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { globalConfig } from 'f61ui/globalconfig';
+import { jsxChildType } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionCreate,
@@ -59,6 +61,10 @@ interface DirOrCollection {
 	coll?: CollectionSubset;
 }
 
+// FIXME
+const moviesDirId = '70MqRF3FaxI';
+const seriesDirId = '7JczPh5-XSQ';
+
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
 	state: BrowsePageState = { selectedCollIds: [] };
 
@@ -71,17 +77,73 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 
 	render() {
-		const sensitivityAuthorize = createSensitivityAuthorizer();
+		const output = this.state.output;
 
-		const mkSensitivityBadge = (sens: Sensitivity) => (
-			<span className="badge margin-left">
-				<span className="glyphicon glyphicon-lock" />
-				&nbsp;Level: {sensitivityLabel(sens)}
-			</span>
+		if (!output) {
+			return (
+				<AppDefaultLayout title="Loading" breadcrumbs={[]}>
+					<Loading />
+				</AppDefaultLayout>
+			);
+		}
+
+		const breadcrumbs: Breadcrumb[] = output.Parents.map((dir) => {
+			return {
+				title: dir.Name,
+				url: browseRoute.buildUrl({ dir: dir.Id, v: '' }),
+			};
+		});
+
+		const collectionsWithMetadata = output.Collections.filter(hasMeta);
+
+		return (
+			<AppDefaultLayout title={output.Directory.Name} breadcrumbs={breadcrumbs}>
+				<SensitivityHeadsUp />
+				<div className="row">
+					<div className="col-md-9">
+						<div>
+							{output.Parents.map((dir: Directory) => (
+								<MetadataPanel data={metadataKvsToKv(dir.Metadata)} />
+							))}
+							<MetadataPanel data={metadataKvsToKv(output.Directory.Metadata)} />
+						</div>
+
+						{collectionsWithMetadata.length > 0 &&
+						output.Directory.Id !== moviesDirId ? (
+							<TabController
+								tabs={[
+									{
+										url: browseRoute.buildUrl({
+											dir: this.props.directoryId,
+											v: '',
+										}),
+										title: 'Metadata view',
+										content: this.richView(collectionsWithMetadata),
+									},
+									{
+										url: browseRoute.buildUrl({
+											dir: this.props.directoryId,
+											v: 'folder',
+										}),
+										title: 'Folder view',
+										content: output ? this.folderView(output) : '',
+									},
+								]}
+							/>
+						) : (
+							this.folderView(output)
+						)}
+					</div>
+					<div className="col-md-3">{this.directoryPanel(output)}</div>
+				</div>
+			</AppDefaultLayout>
 		);
+	}
 
-		const hasMeta = (coll: CollectionSubset): boolean =>
-			coll.Metadata && coll.Metadata.length > 0;
+	private folderView(output: DirectoryOutput): jsxChildType {
+		const selectedCollIdsSerialized = this.state.selectedCollIds.join(',');
+
+		const sensitivityAuthorize = createSensitivityAuthorizer();
 
 		const masterCheckedChange = () => {
 			const outp = this.state.output; // name "output" would be shadowed
@@ -107,41 +169,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			this.setState({ selectedCollIds });
 		};
 
-		const metadCollToPanel = (coll: CollectionSubset) => {
-			const metadata = metadataKvsToKv(coll.Metadata);
-
-			const image =
-				metadata[MetadataThumbnail] ||
-				globalConfig().assetsDir + '/image-not-available.png';
-
-			return (
-				<Panel
-					heading={
-						<div>
-							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
-							<span className="label label-default">
-								📅 {metadata[MetadataReleaseDate]}
-							</span>
-						</div>
-					}>
-					<a
-						href={collectionRoute.buildUrl({
-							id: coll.Id,
-							rev: HeadRevisionId,
-							path: RootPathDotBase64FIXME,
-						})}>
-						<img
-							title={metadata[MetadataOverview] || ''}
-							src={image}
-							style={{ maxWidth: '100%' }}
-						/>
-					</a>
-				</Panel>
-			);
-		};
-
 		const collectionToRow = (coll: CollectionSubset) => {
-			const dirIsForMovies = coll.Directory === '70MqRF3FaxI'; // FIXME
+			const dirIsForMovies = coll.Directory === moviesDirId;
 			const warning =
 				dirIsForMovies && !(MetadataImdbId in metadataKvsToKv(coll.Metadata)) ? (
 					<div>
@@ -211,7 +240,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const directoryToRow = (dir: Directory) => {
 			const content = sensitivityAuthorize(dir.Sensitivity) ? (
 				<div>
-					<a href={browseRoute.buildUrl({ dir: dir.Id })}>{dir.Name}</a>
+					<a href={browseRoute.buildUrl({ dir: dir.Id, v: '' })}>{dir.Name}</a>
 					{dir.Description ? (
 						<span className="label label-default margin-left">{dir.Description}</span>
 					) : (
@@ -230,7 +259,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				</div>
 			);
 
-			const dirIsForSeries = dir.Parent === '7JczPh5-XSQ'; // FIXME
+			const dirIsForSeries = dir.Parent === seriesDirId;
 			const warning =
 				dirIsForSeries && !(MetadataImdbId in metadataKvsToKv(dir.Metadata)) ? (
 					<span
@@ -249,20 +278,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					</td>
 					<td>{content}</td>
 					<td>{warning}</td>
-					<td>
-						<Dropdown>
-							<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
-							<CommandLink
-								command={DirectoryChangeDescription(dir.Id, dir.Description)}
-							/>
-							<CommandLink
-								command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)}
-							/>
-							<CommandLink command={DirectoryPullMetadata(dir.Id)} />
-							<CommandLink command={DirectoryMove(dir.Id)} />
-							<CommandLink command={DirectoryDelete(dir.Id)} />
-						</Dropdown>
-					</td>
+					<td>{directoryDropdown(dir)}</td>
 				</tr>
 			);
 		};
@@ -276,125 +292,106 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			throw new Error('should not happen');
 		};
 
-		const output = this.state.output;
-
-		let title = 'Loading';
-		let breadcrumbs: Breadcrumb[] = [];
-
-		if (output) {
-			title = output.Directory.Name;
-			breadcrumbs = output.Parents.map((dir) => {
-				return {
-					title: dir.Name,
-					url: browseRoute.buildUrl({ dir: dir.Id }),
-				};
-			});
-		}
-
-		const selectedCollIdsSerialized = this.state.selectedCollIds.join(',');
-
-		const moviesDir = '70MqRF3FaxI'; // block from movies dir
-
 		return (
-			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
-				{!output ? (
-					<Loading />
-				) : (
-					<div>
-						<SensitivityHeadsUp />
-						<div className="row">
-							<div className="col-md-9">
+			<table className="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th style={{ width: '1%' }}>
+							<input type="checkbox" onChange={masterCheckedChange} />
+						</th>
+						<th style={{ width: '1%' }} />
+						<th />
+						<th style={{ width: '1%' }} />
+						<th style={{ width: '1%' }} />
+					</tr>
+				</thead>
+				<tbody>{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>
+							{selectedCollIdsSerialized ? (
 								<div>
-									{output.Parents.map((dir: Directory) => (
-										<MetadataPanel data={metadataKvsToKv(dir.Metadata)} />
-									))}
-									<MetadataPanel
-										data={metadataKvsToKv(output.Directory.Metadata)}
+									<CommandButton
+										command={CollectionMove(selectedCollIdsSerialized)}
+									/>
+									<CommandButton
+										command={CollectionRefreshMetadataAutomatically(
+											selectedCollIdsSerialized,
+										)}
 									/>
 								</div>
+							) : (
+								''
+							)}
 
-								{output.Collections.filter(hasMeta).length > 0 &&
-								output.Directory.Id !== moviesDir
-									? output.Collections.filter(hasMeta).map(metadCollToPanel)
-									: ''}
+							<CommandButton command={DirectoryCreate(output.Directory.Id)} />
 
-								<table className="table table-striped table-hover">
-									<thead>
-										<tr>
-											<th style={{ width: '1%' }}>
-												<input
-													type="checkbox"
-													onChange={masterCheckedChange}
-												/>
-											</th>
-											<th style={{ width: '1%' }} />
-											<th />
-											<th style={{ width: '1%' }} />
-											<th style={{ width: '1%' }} />
-										</tr>
-									</thead>
-									<tbody>
-										{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}
-									</tbody>
-									<tfoot>
-										<tr>
-											<td colSpan={99}>
-												{selectedCollIdsSerialized ? (
-													<div>
-														<CommandButton
-															command={CollectionMove(
-																selectedCollIdsSerialized,
-															)}
-														/>
-														<CommandButton
-															command={CollectionRefreshMetadataAutomatically(
-																selectedCollIdsSerialized,
-															)}
-														/>
-													</div>
-												) : (
-													''
-												)}
+							<CommandButton command={CollectionCreate(output.Directory.Id)} />
+						</td>
+					</tr>
+				</tfoot>
+			</table>
+		);
+	}
 
-												<CommandButton
-													command={DirectoryCreate(output.Directory.Id)}
-												/>
+	private richView(collectionsWithMetadata: CollectionSubset[]): jsxChildType {
+		return collectionsWithMetadata.map((coll: CollectionSubset) => {
+			const metadata = metadataKvsToKv(coll.Metadata);
 
-												<CommandButton
-													command={CollectionCreate(output.Directory.Id)}
-												/>
-											</td>
-										</tr>
-									</tfoot>
-								</table>
-							</div>
-							<div className="col-md-3">
-								<Panel heading={`Directory: ${output.Directory.Name}`}>
-									<table className="table table-striped table-hover">
-										<tbody>
-											<tr>
-												<th>Id</th>
-												<td>
-													{output.Directory.Id}
-													<ClipboardButton text={output.Directory.Id} />
-												</td>
-											</tr>
-											<tr>
-												<th>Content</th>
-												<td>
-													{output.Directories.length} subdirectories
-													<br />
-													{output.Collections.length} collections
-												</td>
-											</tr>
-										</tbody>
-									</table>
-								</Panel>
-							</div>
+			const image =
+				metadata[MetadataThumbnail] ||
+				globalConfig().assetsDir + '/image-not-available.png';
+
+			return (
+				<Panel
+					heading={
+						<div>
+							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
+							<span className="label label-default">
+								📅 {metadata[MetadataReleaseDate]}
+							</span>
 						</div>
-					</div>
-				)}
-			</AppDefaultLayout>
+					}>
+					<a
+						href={collectionRoute.buildUrl({
+							id: coll.Id,
+							rev: HeadRevisionId,
+							path: RootPathDotBase64FIXME,
+						})}>
+						<img
+							title={metadata[MetadataOverview] || ''}
+							src={image}
+							style={{ maxWidth: '100%' }}
+						/>
+					</a>
+				</Panel>
+			);
+		});
+	}
+
+	private directoryPanel(output: DirectoryOutput): jsxChildType {
+		return (
+			<Panel heading={`Directory: ${output.Directory.Name}`}>
+				<table className="table table-striped table-hover">
+					<tbody>
+						<tr>
+							<th>Id</th>
+							<td>
+								{output.Directory.Id}
+								<ClipboardButton text={output.Directory.Id} />
+							</td>
+						</tr>
+						<tr>
+							<th>Content</th>
+							<td>
+								{output.Directories.length} subdirectories
+								<br />
+								{output.Collections.length} collections
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</Panel>
 		);
 	}
 
@@ -415,3 +412,25 @@ function mergeDirectoriesAndCollectionsSorted(output: DirectoryOutput): DirOrCol
 
 	return docs;
 }
+
+const mkSensitivityBadge = (sens: Sensitivity) => (
+	<span className="badge margin-left">
+		<span className="glyphicon glyphicon-lock" />
+		&nbsp;Level: {sensitivityLabel(sens)}
+	</span>
+);
+
+const directoryDropdown = (dir: Directory): jsxChildType => {
+	return (
+		<Dropdown>
+			<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
+			<CommandLink command={DirectoryChangeDescription(dir.Id, dir.Description)} />
+			<CommandLink command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)} />
+			<CommandLink command={DirectoryPullMetadata(dir.Id)} />
+			<CommandLink command={DirectoryMove(dir.Id)} />
+			<CommandLink command={DirectoryDelete(dir.Id)} />
+		</Dropdown>
+	);
+};
+
+const hasMeta = (coll: CollectionSubset): boolean => coll.Metadata && coll.Metadata.length > 0;

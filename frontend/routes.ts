@@ -1,6 +1,6 @@
 import { makeRoute } from 'f61ui/typescript-safe-router/saferouter';
 
-export const browseRoute = makeRoute('browse', { dir: 'string' });
+export const browseRoute = makeRoute('browse', { dir: 'string', v: 'string' });
 
 export const clientsRoute = makeRoute('clients', {});
 
