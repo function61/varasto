@@ -371,7 +371,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 	private directoryPanel(output: DirectoryOutput): jsxChildType {
 		return (
-			<Panel heading={`Directory: ${output.Directory.Name}`}>
+			<Panel
+				heading={
+					<div>
+						Details &nbsp;
+						{directoryDropdown(output.Directory)}
+					</div>
+				}>
 				<table className="table table-striped table-hover">
 					<tbody>
 						<tr>
