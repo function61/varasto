@@ -340,7 +340,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 			const image =
 				metadata[MetadataThumbnail] ||
-				globalConfig().assetsDir + '/image-not-available.png';
+				globalConfig().assetsDir + '/../image-not-available.png';
 
 			return (
 				<Panel

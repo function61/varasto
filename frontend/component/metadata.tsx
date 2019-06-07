@@ -36,7 +36,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 		const backdropImage =
 			metadata[MetadataBackdrop] ||
 			metadata[MetadataThumbnail] ||
-			globalConfig().assetsDir + '/image-not-available.png';
+			globalConfig().assetsDir + '/../image-not-available.png';
 
 		const overview: string = metadata[MetadataOverview] || '';
 
