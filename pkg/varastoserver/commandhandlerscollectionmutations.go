@@ -14,9 +14,9 @@ import (
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
 	// keep indexed map of filenames to move. they are removed on-the-fly, so in the end
 	// we can check for len() == 0 to see that we saw them all
-	filenamesToMove := map[string]bool{}
-	for _, filename := range strings.Split(cmd.Files, ",") {
-		filenamesToMove[filename] = true
+	hashesToMove := map[string]bool{}
+	for _, hash := range strings.Split(cmd.Files, ",") {
+		hashesToMove[hash] = true
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
@@ -43,17 +43,17 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMove
 		createToDestination := []varastotypes.File{}
 
 		for _, file := range state.Files() {
-			if _, shouldMove := filenamesToMove[file.Path]; !shouldMove {
+			if _, shouldMove := hashesToMove[file.Sha256]; shouldMove {
+				delete(hashesToMove, file.Sha256)
+			} else {
 				continue
 			}
 
 			deleteFromSource = append(deleteFromSource, file.Path)
 			createToDestination = append(createToDestination, file)
-
-			delete(filenamesToMove, file.Path)
 		}
 
-		if len(filenamesToMove) != 0 {
+		if len(hashesToMove) != 0 {
 			return errors.New("did not find all files to move")
 		}
 

@@ -40,14 +40,14 @@ interface CollectionPageProps {
 interface CollectionPageState {
 	collectionOutput?: CollectionOutput;
 	directoryOutput?: DirectoryOutput;
-	selectedFilePaths: string[];
+	selectedFileHashes: string[];
 }
 
 export default class CollectionPage extends React.Component<
 	CollectionPageProps,
 	CollectionPageState
 > {
-	state: CollectionPageState = { selectedFilePaths: [] };
+	state: CollectionPageState = { selectedFileHashes: [] };
 
 	componentDidMount() {
 		shouldAlwaysSucceed(this.fetchData());
@@ -84,15 +84,15 @@ export default class CollectionPage extends React.Component<
 
 		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 			// remove from currently selected, so depending on checked we can add or not add it
-			const selectedFilePaths = this.state.selectedFilePaths.filter(
+			const selectedFileHashes = this.state.selectedFileHashes.filter(
 				(sel) => sel !== e.target.value,
 			);
 
 			if (e.target.checked) {
-				selectedFilePaths.push(e.target.value);
+				selectedFileHashes.push(e.target.value);
 			}
 
-			this.setState({ selectedFilePaths });
+			this.setState({ selectedFileHashes });
 		};
 
 		const fileToRow = (file: File) => {
@@ -108,8 +108,8 @@ export default class CollectionPage extends React.Component<
 						<input
 							type="checkbox"
 							onChange={fileCheckedChange}
-							checked={this.state.selectedFilePaths.indexOf(file.Path) !== -1}
-							value={file.Path}
+							checked={this.state.selectedFileHashes.indexOf(file.Sha256) !== -1}
+							value={file.Sha256}
 						/>
 					</td>
 					<td>
@@ -223,11 +223,11 @@ export default class CollectionPage extends React.Component<
 							</table>
 						</Panel>
 
-						{this.state.selectedFilePaths.length > 0 ? (
+						{this.state.selectedFileHashes.length > 0 ? (
 							<CommandButton
 								command={CollectionMoveFilesIntoAnotherCollection(
 									collOutput.Collection.Id,
-									this.state.selectedFilePaths.join(','),
+									this.state.selectedFileHashes.join(','),
 								)}
 							/>
 						) : (
