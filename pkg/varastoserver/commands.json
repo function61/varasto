@@ -179,7 +179,8 @@
 		"title": "Metadata: pull",
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
-			{ "key": "ForeignKey", "help": "IMDB ID" }
+			{ "key": "ForeignKey", "help": "IMDB ID" },
+			{ "key": "ScrubName", "type": "checkbox" }
 		]
 	},
 	{

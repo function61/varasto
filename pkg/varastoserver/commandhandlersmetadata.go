@@ -32,11 +32,13 @@ func (c *cHandlers) CollectionPullMetadata(cmd *CollectionPullMetadata, ctx *com
 		}
 
 		// store because we might lose detail when scrubbing name
-		if collection.Name != info.OriginalTitle {
-			collection.Metadata["previous_name"] = collection.Name
-		}
+		if cmd.ScrubName {
+			if collection.Name != info.OriginalTitle {
+				collection.Metadata["previous_name"] = collection.Name
+			}
 
-		collection.Name = info.OriginalTitle
+			collection.Name = info.OriginalTitle
+		}
 
 		collection.Metadata[MetadataTheMovieDbMovieId] = strconv.Itoa(int(info.Id))
 		if info.ExternalIds.ImdbId != "" {
