@@ -5,12 +5,15 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/serverinfo", "produces": {"_": "ServerInfo"}, "name": "getServerInfo" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dir/{path}", "produces": {"_": "CollectionOutput"}, "name": "getCollectiotAtRev" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dl", "name": "downloadFile", "description": "Downloads a file from specific revision" },
+		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/changesets", "name": "commitChangeset", "consumes": {"_": "Changeset"} },
+		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/fileupload", "name": "uploadFile", "produces": {"_": "File"} },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/directories/{id}", "produces": {"_": "DirectoryOutput"}, "name": "getDirectory" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/clients", "produces": {"_": "list", "of": {"_": "Client"}}, "name": "getClients" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
@@ -65,6 +68,17 @@
 			}}
 		},
 		{
+			"name": "Changeset",
+			"type": {"_": "object", "fields": {
+				"ID": {"_": "string"},
+				"Parent": {"_": "string"},
+				"Created": {"_": "datetime"},
+				"FilesCreated": {"_": "list", "of": {"_": "File"}},
+				"FilesUpdated": {"_": "list", "of": {"_": "File"}},
+				"FilesDeleted": {"_": "list", "of": {"_": "string"}}
+			}}
+		},
+		{
 			"name": "ChangesetSubset",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
@@ -83,6 +97,7 @@
 			"name": "CollectionSubset",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
+				"Head": {"_": "string"},
 				"Created": {"_": "datetime"},
 				"Directory": {"_": "string"},
 				"Name": {"_": "string"},
@@ -162,6 +177,12 @@
 				"HeapBytes": {"_": "integer"},
 				"ServerOs": {"_": "string"},
 				"ServerArch": {"_": "string"}
+			}}
+		},
+		{
+			"name": "GeneratedIds",
+			"type": {"_": "object", "fields": {
+				"Changeset": {"_": "string"}
 			}}
 		},
 		{

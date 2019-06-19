@@ -2,7 +2,9 @@ package varastoserver
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
@@ -15,20 +17,25 @@ import (
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/varastoutils"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"runtime"
 	"sort"
+	"strconv"
+	"time"
 )
 
 type handlers struct {
 	db           *bolt.DB
 	conf         *ServerConfig
 	ivController *varastointegrityverifier.Controller
+	logger       *log.Logger
 }
 
 func convertDir(dir varastotypes.Directory) Directory {
@@ -45,6 +52,7 @@ func convertDir(dir varastotypes.Directory) Directory {
 func convertDbCollection(coll varastotypes.Collection, changesets []ChangesetSubset) CollectionSubset {
 	return CollectionSubset{
 		Id:             coll.ID,
+		Head:           coll.Head,
 		Created:        coll.Created,
 		Directory:      coll.Directory,
 		Name:           coll.Name,
@@ -320,6 +328,106 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	return &ret
 }
 
+func toDbFiles(files []File) []varastotypes.File {
+	ret := []varastotypes.File{}
+
+	for _, file := range files {
+		ret = append(ret, varastotypes.File{
+			Path:     file.Path,
+			Sha256:   file.Sha256,
+			Created:  file.Created,
+			Modified: file.Modified,
+			Size:     int64(file.Size),
+			BlobRefs: file.BlobRefs,
+		})
+	}
+
+	return ret
+}
+
+func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset Changeset, w http.ResponseWriter, r *http.Request) {
+	coll := commitChangesetInternal(
+		w,
+		r,
+		mux.Vars(r)["id"],
+		varastotypes.NewChangeset(
+			changeset.ID,
+			changeset.Parent,
+			changeset.Created,
+			toDbFiles(changeset.FilesCreated),
+			toDbFiles(changeset.FilesUpdated),
+			changeset.FilesDeleted),
+		h.db)
+
+	// FIXME: add "produces" to here because commitChangesetInternal responds with updated collection
+	if coll != nil {
+		// logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
+		log.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
+
+		outJson(w, coll)
+	}
+}
+
+func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionId string, changeset varastotypes.CollectionChangeset, db *bolt.DB) *varastotypes.Collection {
+	tx, errTxBegin := db.Begin(true)
+	panicIfError(errTxBegin)
+	defer tx.Rollback()
+
+	coll, err := QueryWithTx(tx).Collection(collectionId)
+	panicIfError(err)
+
+	if collectionHasChangesetId(changeset.ID, coll) {
+		http.Error(w, "changeset ID already in collection", http.StatusBadRequest)
+		return nil
+	}
+
+	if changeset.Parent != varastotypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
+		http.Error(w, "parent changeset not found", http.StatusBadRequest)
+		return nil
+	}
+
+	if changeset.Parent != coll.Head {
+		// TODO: force push or rebase support?
+		http.Error(w, "commit does not target current head. would result in dangling heads!", http.StatusBadRequest)
+		return nil
+	}
+
+	createdAndUpdated := append(changeset.FilesCreated, changeset.FilesUpdated...)
+
+	for _, file := range createdAndUpdated {
+		for _, refHex := range file.BlobRefs {
+			ref, err := varastotypes.BlobRefFromHex(refHex)
+			if err != nil {
+				panic(err)
+			}
+
+			blob, err := QueryWithTx(tx).Blob(*ref)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
+				return nil
+			}
+
+			// FIXME: if same changeset mentions same blob many times, we update the old blob
+			// metadata many times due to the transaction reads not seeing uncommitted writes
+			blob.Referenced = true
+			blob.VolumesPendingReplication = missingFromLeftHandSide(
+				blob.Volumes,
+				coll.DesiredVolumes)
+			blob.IsPendingReplication = len(blob.VolumesPendingReplication) > 0
+
+			panicIfError(BlobRepository.Update(blob, tx))
+		}
+	}
+
+	// update head pointer & calc Created timestamp
+	appendChangeset(changeset, coll)
+
+	panicIfError(CollectionRepository.Update(coll, tx))
+	panicIfError(tx.Commit())
+
+	return coll
+}
+
 func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]ReplicationPolicy {
 	ret := []ReplicationPolicy{}
 
@@ -419,6 +527,68 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	panicIfError(exportDb(tx, w))
 }
 
+func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *File {
+	collectionId := mux.Vars(r)["id"]
+	mtimeUnixMillis, err := strconv.Atoi(r.URL.Query().Get("mtime"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil
+	}
+
+	mtime := time.Unix(int64(mtimeUnixMillis/1000), 0)
+
+	// TODO: reuse the logic found in the client package?
+	wholeFileHash := sha256.New()
+
+	file := &File{
+		Path:     r.URL.Query().Get("filename"),
+		Sha256:   "",
+		Created:  mtime,
+		Modified: mtime,
+		Size:     0,
+		BlobRefs: []string{},
+	}
+
+	for {
+		chunk, errRead := ioutil.ReadAll(io.LimitReader(r.Body, varastotypes.BlobSize))
+		if errRead != nil {
+			http.Error(w, errRead.Error(), http.StatusBadRequest)
+			return nil
+		}
+
+		if len(chunk) == 0 {
+			// should only happen if file size is exact multiple of blobSize
+			break
+		}
+
+		file.Size += len(chunk)
+
+		if _, err := wholeFileHash.Write(chunk); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
+
+		chunkSha256Bytes := sha256.Sum256(chunk)
+
+		blobRef, err := varastotypes.BlobRefFromHex(hex.EncodeToString(chunkSha256Bytes[:]))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return nil
+		}
+
+		if err := storeBlob(collectionId, *blobRef, bytes.NewBuffer(chunk), h.conf, h.db); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
+
+		file.BlobRefs = append(file.BlobRefs, blobRef.AsHex())
+	}
+
+	file.Sha256 = fmt.Sprintf("%x", wholeFileHash.Sum(nil))
+
+	return file
+}
+
 func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]IntegrityVerificationJob {
 	ret := []IntegrityVerificationJob{}
 
@@ -476,6 +646,12 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 		Goroutines:   runtime.NumGoroutine(),
 		ServerOs:     runtime.GOOS,
 		ServerArch:   runtime.GOARCH,
+	}
+}
+
+func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *GeneratedIds {
+	return &GeneratedIds{
+		Changeset: varastoutils.NewCollectionChangesetId(),
 	}
 }
 

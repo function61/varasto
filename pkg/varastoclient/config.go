@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/varasto/pkg/varastoserver"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -21,6 +22,10 @@ type ClientConfig struct {
 
 func (c *ClientConfig) ApiPath(path string) string {
 	return c.ServerAddr + path
+}
+
+func (c *ClientConfig) UrlBuilder() *varastoserver.RestClientUrlBuilder {
+	return varastoserver.NewRestClientUrlBuilder(c.ServerAddr)
 }
 
 func writeConfig(conf *ClientConfig) error {

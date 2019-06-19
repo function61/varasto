@@ -5,6 +5,7 @@ import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes'
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { SensitivityHeadsUp } from 'component/sensitivity';
+import { reloadCurrentPage } from 'f61ui/browserutils';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -12,19 +13,24 @@ import { CommandButton } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
+import { httpMustBeOk } from 'f61ui/httputil';
+import { dateObjToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { CollectionMoveFilesIntoAnotherCollection } from 'generated/varastoserver_commands';
 import {
+	commitChangeset,
 	downloadFileUrl,
+	generateIds,
 	getCollectiotAtRev,
 	getDirectory,
+	uploadFileUrl,
 } from 'generated/varastoserver_endpoints';
 import {
 	ChangesetSubset,
 	CollectionOutput,
 	Directory,
 	DirectoryOutput,
-	File,
+	File as File2, // conflicts with HTML's "File" interface
 	RootPathDotBase64FIXME,
 } from 'generated/varastoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -95,7 +101,7 @@ export default class CollectionPage extends React.Component<
 			this.setState({ selectedFileHashes });
 		};
 
-		const fileToRow = (file: File) => {
+		const fileToRow = (file: File2) => {
 			const dl = downloadUrlFIXME(
 				collOutput.Collection.Id,
 				collOutput.ChangesetId,
@@ -177,7 +183,7 @@ export default class CollectionPage extends React.Component<
 
 		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
 
-		const toThumbnail = (file: File) => {
+		const toThumbnail = (file: File2) => {
 			const dl = downloadUrlFIXME(
 				collOutput.Collection.Id,
 				collOutput.ChangesetId,
@@ -221,6 +227,17 @@ export default class CollectionPage extends React.Component<
 									{collOutput.SelectedPathContents.Files.map(fileToRow)}
 								</tbody>
 							</table>
+						</Panel>
+
+						<Panel heading="Upload">
+							<input
+								type="file"
+								id="upload"
+								multiple={true}
+								onChange={(e) => {
+									this.fileChange(e);
+								}}
+							/>
 						</Panel>
 
 						{this.state.selectedFileHashes.length > 0 ? (
@@ -299,6 +316,61 @@ export default class CollectionPage extends React.Component<
 				</div>
 			</div>
 		);
+	}
+
+	private fileChange(e: React.ChangeEvent<HTMLInputElement>) {
+		if (!e.target.files || e.target.files.length === 0) {
+			return;
+		}
+
+		// is not an array, so convert to one
+		const files: File[] = [];
+		// tslint:disable-next-line:prefer-for-of
+		for (let i = 0; i < e.target.files.length; ++i) {
+			files.push(e.target.files[i]);
+		}
+
+		shouldAlwaysSucceed(this.uploadAllFiles(files));
+	}
+
+	private async uploadAllFiles(files: File[]) {
+		const createdFiles: File2[] = [];
+		for (const file of files) {
+			createdFiles.push(await this.uploadOneFile(file));
+		}
+
+		await commitChangeset(this.props.id, {
+			ID: (await generateIds()).Changeset,
+			Parent: this.state.collectionOutput!.Collection.Head,
+			Created: dateObjToDateTime(new Date()),
+			FilesCreated: createdFiles,
+			FilesUpdated: [],
+			FilesDeleted: [],
+		});
+
+		reloadCurrentPage();
+	}
+
+	private async uploadOneFile(file: File): Promise<File2> {
+		const uploadEndpoint = makePathUrl(
+			uploadFileUrl(this.state.collectionOutput!.Collection.Id),
+			{
+				mtime: file.lastModified.toString(),
+				filename: file.name, // spec says this is "without path information"
+			},
+		);
+
+		const result: File2 = await fetch(uploadEndpoint, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/octet-stream',
+			},
+			body: file,
+		})
+			.then(httpMustBeOk)
+			.then((response) => response.json());
+
+		return result;
 	}
 
 	private renderBreadcrumbs(
@@ -380,4 +452,12 @@ function downloadUrlFIXME(collectionId: string, changesetId: string, path: strin
 // 'foo.txt' => 'foo.txt'
 function filenameFromPath(path: string): string {
 	return /\/?([^/]+)$/.exec(path)![1];
+}
+
+function makePathUrl(path: string, queryParams: { [key: string]: string }): string {
+	const queryParamKvs = Object.keys(queryParams).map(
+		(key) => encodeURIComponent(key) + '=' + encodeURIComponent(queryParams[key]),
+	);
+
+	return queryParamKvs.length === 0 ? path : path + '?' + queryParamKvs.join('&');
 }

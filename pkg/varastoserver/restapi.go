@@ -4,9 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/function61/gokit/httpauth"
-	"github.com/function61/gokit/logex"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/blorm"
@@ -30,18 +28,16 @@ func defineRestApi(
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
 ) error {
-	var han HttpHandlers = &handlers{db, conf, ivController}
+	var han HttpHandlers = &handlers{db, conf, ivController, logger}
 
 	// v2 endpoints
 	RegisterRoutes(han, mwares, muxregistrator.New(router))
 
 	// legacy (TODO: move these to v2)
-	return defineLegacyRestApi(router, conf, db, logger)
+	return defineLegacyRestApi(router, conf, db)
 }
 
-func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, logger *log.Logger) error {
-	logl := logex.Levels(logger)
-
+func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) error {
 	getCollection := func(w http.ResponseWriter, r *http.Request) {
 		if !authenticate(conf, w, r) {
 			return
@@ -108,115 +104,11 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 			return
 		}
 
-		tx, errTxBegin := db.Begin(true)
-		panicIfError(errTxBegin)
-		defer tx.Rollback()
-
-		if _, err := QueryWithTx(tx).Blob(*blobRef); err != blorm.ErrNotFound {
-			http.Error(w, "blob already exists!", http.StatusBadRequest)
+		if err := storeBlob(collectionId, *blobRef, r.Body, conf, db); err != nil {
+			// FIXME: some could be StatusBadRequest
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		coll, err := QueryWithTx(tx).Collection(collectionId)
-		panicIfError(err)
-
-		volumeId := coll.DesiredVolumes[0]
-
-		volumeDriver, driverFound := conf.VolumeDrivers[volumeId]
-		if !driverFound {
-			http.Error(w, "volume driver not found", http.StatusInternalServerError)
-			return
-		}
-
-		blobSizeBytes, err := volumeDriver.Store(*blobRef, varastoutils.BlobHashVerifier(r.Body, *blobRef))
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		panicIfError(err)
-
-		logl.Debug.Printf("wrote blob %s", blobRef.AsHex())
-
-		panicIfError(volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes))
-
-		panicIfError(BlobRepository.Update(&varastotypes.Blob{
-			Ref:        *blobRef,
-			Volumes:    []int{volumeId},
-			Referenced: false,
-		}, tx))
-
-		panicIfError(tx.Commit())
-	}
-
-	commitChangeset := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		collectionId := mux.Vars(r)["collectionId"]
-
-		var changeset varastotypes.CollectionChangeset
-		panicIfError(json.NewDecoder(r.Body).Decode(&changeset))
-
-		tx, errTxBegin := db.Begin(true)
-		panicIfError(errTxBegin)
-		defer tx.Rollback()
-
-		coll, err := QueryWithTx(tx).Collection(collectionId)
-		panicIfError(err)
-
-		if collectionHasChangesetId(changeset.ID, coll) {
-			http.Error(w, "changeset ID already in collection", http.StatusBadRequest)
-			return
-		}
-
-		if changeset.Parent != varastotypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
-			http.Error(w, "parent changeset not found", http.StatusBadRequest)
-			return
-		}
-
-		if changeset.Parent != coll.Head {
-			// TODO: force push or rebase support?
-			http.Error(w, "commit does not target current head. would result in dangling heads!", http.StatusBadRequest)
-			return
-		}
-
-		createdAndUpdated := append(changeset.FilesCreated, changeset.FilesUpdated...)
-
-		for _, file := range createdAndUpdated {
-			for _, refHex := range file.BlobRefs {
-				ref, err := varastotypes.BlobRefFromHex(refHex)
-				if err != nil {
-					panic(err)
-				}
-
-				blob, err := QueryWithTx(tx).Blob(*ref)
-				if err != nil {
-					http.Error(w, fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
-					return
-				}
-
-				// FIXME: if same changeset mentions same blob many times, we update the old blob
-				// metadata many times due to the transaction reads not seeing uncommitted writes
-				blob.Referenced = true
-				blob.VolumesPendingReplication = missingFromLeftHandSide(
-					blob.Volumes,
-					coll.DesiredVolumes)
-				blob.IsPendingReplication = len(blob.VolumesPendingReplication) > 0
-
-				panicIfError(BlobRepository.Update(blob, tx))
-			}
-		}
-
-		// update head pointer & calc Created timestamp
-		appendChangeset(changeset, coll)
-
-		panicIfError(CollectionRepository.Update(coll, tx))
-		panicIfError(tx.Commit())
-
-		logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
-
-		outJson(w, coll)
 	}
 
 	// shared by getBlob(), getBlobHead()
@@ -311,7 +203,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB, lo
 
 	router.HandleFunc("/api/collections", newCollection).Methods(http.MethodPost)
 	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)
-	router.HandleFunc("/api/collections/{collectionId}/changesets", commitChangeset).Methods(http.MethodPost)
 
 	return nil
 }
@@ -354,4 +245,49 @@ func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*var
 	}
 
 	return collection, CollectionRepository.Update(collection, tx)
+}
+
+func storeBlob(collectionId string, blobRef varastotypes.BlobRef, content io.Reader, conf *ServerConfig, db *bolt.DB) error {
+	tx, errTxBegin := db.Begin(true)
+	if errTxBegin != nil {
+		return errTxBegin
+	}
+	defer tx.Rollback()
+
+	if _, err := QueryWithTx(tx).Blob(blobRef); err != blorm.ErrNotFound {
+		return errors.New("blob already exists!")
+	}
+
+	coll, err := QueryWithTx(tx).Collection(collectionId)
+	if err != nil {
+		return err
+	}
+
+	volumeId := coll.DesiredVolumes[0]
+
+	volumeDriver, driverFound := conf.VolumeDrivers[volumeId]
+	if !driverFound {
+		return errors.New("volume driver not found")
+	}
+
+	blobSizeBytes, err := volumeDriver.Store(blobRef, varastoutils.BlobHashVerifier(content, blobRef))
+	if err != nil {
+		return err
+	}
+
+	log.Printf("wrote blob %s", blobRef.AsHex())
+
+	if err := volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes); err != nil {
+		return err
+	}
+
+	if err := BlobRepository.Update(&varastotypes.Blob{
+		Ref:        blobRef,
+		Volumes:    []int{volumeId},
+		Referenced: false,
+	}, tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

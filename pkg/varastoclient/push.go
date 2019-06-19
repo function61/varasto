@@ -21,11 +21,6 @@ import (
 	"time"
 )
 
-const (
-	mebibyte = 1024 * 1024
-	blobSize = 4 * mebibyte
-)
-
 func computeChangeset(wd *workdirLocation) (*varastotypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAt(wd.manifest.Collection, wd.manifest.Collection.Head)
 	if err != nil {
@@ -163,12 +158,12 @@ func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os
 			return nil, err
 		}
 
-		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, blobSize))
+		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, varastotypes.BlobSize))
 		if errRead != nil {
 			return nil, errRead
 		}
 
-		pos += blobSize
+		pos += varastotypes.BlobSize
 
 		if len(chunk) == 0 {
 			// should only happen if file size is exact multiple of blobSize
@@ -179,16 +174,16 @@ func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os
 			return nil, err
 		}
 
-		fileSha256Bytes := sha256.Sum256(chunk)
+		chunkSha256Bytes := sha256.Sum256(chunk)
 
-		blobRef, err := varastotypes.BlobRefFromHex(hex.EncodeToString(fileSha256Bytes[:]))
+		blobRef, err := varastotypes.BlobRefFromHex(hex.EncodeToString(chunkSha256Bytes[:]))
 		if err != nil {
 			return nil, err
 		}
 
 		bfile.BlobRefs = append(bfile.BlobRefs, blobRef.AsHex())
 
-		if int64(len(chunk)) < blobSize {
+		if int64(len(chunk)) < varastotypes.BlobSize {
 			break
 		}
 	}
@@ -222,22 +217,22 @@ func uploadChunks(path string, bfile varastotypes.File, collection varastotypes.
 			continue
 		}
 
-		if _, err := file.Seek(int64(blobIdx*blobSize), io.SeekStart); err != nil {
+		if _, err := file.Seek(int64(blobIdx*varastotypes.BlobSize), io.SeekStart); err != nil {
 			return err
 		}
 
-		chunk := io.LimitReader(file, blobSize)
+		chunk := io.LimitReader(file, varastotypes.BlobSize)
 
 		// 10 seconds can be too fast waiting for HDD to spin up + blob write
 		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
 
-		if _, err := ezhttp.Post(
+		if res, err := ezhttp.Post(
 			ctx,
 			clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()+"?collection="+collection.ID),
 			ezhttp.AuthBearer(clientConfig.AuthToken),
 			ezhttp.SendBody(varastoutils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
 			cancel()
-			return err
+			return fmt.Errorf("error uploading chunk %s: %v", blobRef.AsHex(), errSample(err, res))
 		}
 
 		cancel()
@@ -251,14 +246,17 @@ func uploadChangeset(changeset varastotypes.CollectionChangeset, collection vara
 	defer cancel()
 
 	updatedCollection := &varastotypes.Collection{}
-	_, err := ezhttp.Post(
+	res, err := ezhttp.Post(
 		ctx,
-		clientConfig.ApiPath("/api/collections/"+collection.ID+"/changesets"),
+		clientConfig.UrlBuilder().CommitChangeset(collection.ID),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false))
+	if err != nil {
+		return nil, fmt.Errorf("error committing: %v", errSample(err, res))
+	}
 
-	return updatedCollection, err
+	return updatedCollection, nil
 }
 
 func pushOne(collectionId string, path string) error {
@@ -341,4 +339,9 @@ func push(wd *workdirLocation) error {
 
 func backslashesToForwardSlashes(in string) string {
 	return strings.Replace(in, `\`, "/", -1)
+}
+
+func errSample(err error, response *http.Response) error {
+	sample, _ := ioutil.ReadAll(io.LimitReader(response.Body, 256))
+	return fmt.Errorf("%v: %s", err, sample)
 }
