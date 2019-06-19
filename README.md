@@ -74,6 +74,7 @@ Inspired by & alternative software
 - [Perkeep](https://perkeep.org/doc/overview)
 - [upspin](https://upspin.io/doc/arch.md)
 - [Bazil](https://bazil.org/)
+- [MezzFS](https://medium.com/netflix-techblog/mezzfs-mounting-object-storage-in-netflixs-media-processing-platform-cda01c446ba)
 
 
 Philosophy
