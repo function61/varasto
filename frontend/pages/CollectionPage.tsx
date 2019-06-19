@@ -13,7 +13,7 @@ import { CommandButton } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { httpMustBeOk } from 'f61ui/httputil';
+import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { CollectionMoveFilesIntoAnotherCollection } from 'generated/varastoserver_commands';
@@ -352,7 +352,7 @@ export default class CollectionPage extends React.Component<
 	}
 
 	private async uploadOneFile(file: File): Promise<File2> {
-		const uploadEndpoint = makePathUrl(
+		const uploadEndpoint = makeQueryParams(
 			uploadFileUrl(this.state.collectionOutput!.Collection.Id),
 			{
 				mtime: file.lastModified.toString(),
@@ -452,12 +452,4 @@ function downloadUrlFIXME(collectionId: string, changesetId: string, path: strin
 // 'foo.txt' => 'foo.txt'
 function filenameFromPath(path: string): string {
 	return /\/?([^/]+)$/.exec(path)![1];
-}
-
-function makePathUrl(path: string, queryParams: { [key: string]: string }): string {
-	const queryParamKvs = Object.keys(queryParams).map(
-		(key) => encodeURIComponent(key) + '=' + encodeURIComponent(queryParams[key]),
-	);
-
-	return queryParamKvs.length === 0 ? path : path + '?' + queryParamKvs.join('&');
 }
