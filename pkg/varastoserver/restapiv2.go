@@ -264,16 +264,20 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
 
-	for _, refAndVolumeId := range refAndVolumeIds {
+	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
 		chunkStream, err := h.conf.VolumeDrivers[refAndVolumeId.VolumeId].Fetch(
 			refAndVolumeId.Ref)
-		panicIfError(err)
-
-		if _, err := io.Copy(w, chunkStream); err != nil {
-			panic(err)
+		if err != nil {
+			return err
 		}
+		defer chunkStream.Close()
 
-		chunkStream.Close()
+		_, err = io.Copy(w, chunkStream)
+		return err
+	}
+
+	for _, refAndVolumeId := range refAndVolumeIds {
+		panicIfError(sendBlob(refAndVolumeId))
 	}
 }
 
