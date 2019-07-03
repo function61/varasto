@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 )
 
@@ -74,7 +75,7 @@ func fuseServe(sigs *sigFabric, mountPath string, stop *stopper.Stopper) error {
 			collectionRoot.collection = coll
 
 			// collection's root dir has always dot as name, fix it
-			collectionRoot.name = coll.Name
+			collectionRoot.name = mkFsSafe(coll.Name)
 
 			root := varastoFs.root
 			root.subdirs = append(root.subdirs, collectionRoot)
@@ -163,7 +164,7 @@ func processOneDir(dirFiles []varastotypes.File, pathForDirpeek string) *Dir {
 
 	for _, file := range dpr.Files {
 		f := NewFile(
-			filepath.Base(file.Path),
+			mkFsSafe(filepath.Base(file.Path)),
 			nextInode(),
 			file)
 
@@ -316,4 +317,12 @@ func (f File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadRe
 
 	resp.Data = bd.Data[correctedOffset:end]
 	return nil
+}
+
+// https://serverfault.com/a/650041
+// \ / : * ? " < > |
+var fsWindowsUnsafeRe = regexp.MustCompile("[\\\\/:*?\"<>|]")
+
+func mkFsSafe(input string) string {
+	return fsWindowsUnsafeRe.ReplaceAllString(input, "_")
 }
