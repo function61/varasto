@@ -9,7 +9,8 @@ See [screenshots](docs/screenshots.md) to get a better picture.
 
 Status: currently *under heavy development*. Works so robustly (blobs currently cannot be
 deleted so if metadata DB is properly backed up, you can't lose data) that I'm already
-moving *all my files in*, but I wouldn't yet recommend this for anybody else.
+moving *all my files in*, but I wouldn't yet recommend this for anybody else. Also proper
+access controls are nowhere to be found.
 
 
 Architecture
@@ -36,7 +37,7 @@ Ideas / goals
   photo albums, listen to music or watch movies) - Varasto supports streaming too.
 - Works on Linux and Windows (mostly due to Go's awesomeness)
 - Integrity is the most important thing. Hashes are verified on writing to disk and on
-  reading from disk.
+  reading from disk. There is also a scheduled job for checking integrity of your volumes.
 - Unified view of all of your data - never again have to remember which disk a particular
   thing was stored on! Got 200 terabytes of data spread across tens of disks? No problem!
 - Decoupling metadata from file content. You can move/rename files and folders and modify
