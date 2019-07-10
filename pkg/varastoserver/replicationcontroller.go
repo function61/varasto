@@ -63,8 +63,8 @@ func discoverAndRunReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfi
 
 		for job := range jobQueue {
 			logl.Debug.Printf(
-				"replicating %s from %d to %d",
-				job.Ref.AsHex(),
+				"repl %s from %d -> %d",
+				job.Ref.AsHex()[0:7],
 				job.FromVolumeId,
 				job.ToVolumeId)
 
