@@ -69,7 +69,8 @@ func discoverAndRunReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfi
 				job.ToVolumeId)
 
 			if err := replicateJob(job, db, serverConfig); err != nil {
-				logl.Error.Printf("replicating blob %s", job.Ref.AsHex())
+				logl.Error.Printf("replicating blob %s: %v", job.Ref.AsHex(), err)
+				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
 		}
 	}
