@@ -130,7 +130,7 @@ func replicateJob(job *replicationJob, db *bolt.DB, serverConfig *ServerConfig) 
 
 	blobRecord.Volumes = append(blobRecord.Volumes, job.ToVolumeId)
 
-	// remove succesfully replicated volumes from pending list
+	// remove succesfully replicated volume from pending list
 	blobRecord.VolumesPendingReplication = sliceutil.FilterInt(blobRecord.VolumesPendingReplication, func(volId int) bool {
 		return volId != job.ToVolumeId
 	})
