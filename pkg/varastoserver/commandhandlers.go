@@ -29,13 +29,21 @@ type cHandlers struct {
 
 func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
+		max := 0
+
 		allVolumes := []varastotypes.Volume{}
 		if err := VolumeRepository.Each(volumeAppender(&allVolumes), tx); err != nil {
 			return err
 		}
 
+		for _, vol := range allVolumes {
+			if vol.ID > max {
+				max = vol.ID
+			}
+		}
+
 		return VolumeRepository.Update(&varastotypes.Volume{
-			ID:    len(allVolumes) + 1,
+			ID:    max + 1,
 			UUID:  varastoutils.NewVolumeUuid(),
 			Label: cmd.Name,
 			Quota: mebibytesToBytes(cmd.Quota),
