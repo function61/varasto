@@ -135,7 +135,6 @@ func replicateJob(job *replicationJob, db *bolt.DB, serverConfig *ServerConfig) 
 	blobRecord.VolumesPendingReplication = sliceutil.FilterInt(blobRecord.VolumesPendingReplication, func(volId int) bool {
 		return volId != job.ToVolumeId
 	})
-	blobRecord.IsPendingReplication = len(blobRecord.VolumesPendingReplication) > 0
 
 	if err := volumeManagerIncreaseBlobCount(tx, job.ToVolumeId, blobSizeBytes); err != nil {
 		return err

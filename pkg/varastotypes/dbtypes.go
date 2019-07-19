@@ -89,7 +89,6 @@ type Blob struct {
 	Ref                       BlobRef
 	Volumes                   []int
 	VolumesPendingReplication []int
-	IsPendingReplication      bool
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
 }
 

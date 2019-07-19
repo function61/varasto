@@ -417,7 +417,6 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 			blob.VolumesPendingReplication = missingFromLeftHandSide(
 				blob.Volumes,
 				coll.DesiredVolumes)
-			blob.IsPendingReplication = len(blob.VolumesPendingReplication) > 0
 
 			panicIfError(BlobRepository.Update(blob, tx))
 		}
