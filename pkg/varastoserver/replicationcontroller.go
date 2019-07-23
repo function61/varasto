@@ -42,6 +42,7 @@ func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger 
 		case <-fiveSeconds.C:
 			if err := discoverAndRunReplicationJobs(db, logl, serverConfig); err != nil {
 				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
+				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
 		}
 	}
