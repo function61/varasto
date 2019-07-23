@@ -108,7 +108,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	}
 
 	srv := http.Server{
-		Addr:    ":8066",
+		Addr:    "0.0.0.0:8066", // 0.0.0.0 = listen on all interfaces
 		Handler: router,
 	}
 
