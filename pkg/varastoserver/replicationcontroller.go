@@ -40,7 +40,7 @@ func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger 
 		case <-stop.Signal:
 			return
 		case <-fiveSeconds.C:
-			if err := discoverAndRunReplicationJobs(db, logl, serverConfig); err != nil {
+			if err := discoverAndRunReplicationJobs(db, logl, serverConfig, stop); err != nil {
 				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
@@ -48,8 +48,13 @@ func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger 
 	}
 }
 
-func discoverAndRunReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfig *ServerConfig) error {
-	jobs, err := discoverReplicationJobs(db, logl)
+func discoverAndRunReplicationJobs(
+	db *bolt.DB,
+	logl *logex.Leveled,
+	serverConfig *ServerConfig,
+	stop *stopper.Stopper,
+) error {
+	jobs, err := discoverReplicationJobs(db, logl, serverConfig)
 	if err != nil {
 		return err
 	}
@@ -81,13 +86,21 @@ func discoverAndRunReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfi
 		go runner()
 	}
 
+	defer func() {
+		close(jobQueue)
+
+		jobRunnersDone.Wait()
+	}()
+
 	for _, job := range jobs {
+		select {
+		case <-stop.Signal:
+			return nil
+		default:
+		}
+
 		jobQueue <- job
 	}
-
-	close(jobQueue)
-
-	jobRunnersDone.Wait()
 
 	return nil
 }
