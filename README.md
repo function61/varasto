@@ -13,10 +13,11 @@ moving *all my files in*, but I wouldn't yet recommend this for anybody else. Al
 access controls are nowhere to be found.
 
 
-Architecture
-------------
+Docs
+----
 
-![](docs/architecture.png)
+- [(storage) Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+- [Security policy](https://github.com/function61/varasto/security/policy)
 
 
 Ideas / goals
@@ -63,6 +64,12 @@ Ideas / goals
   system to reach the desired goals of integrity and availability. If your hard drive ever
   crashes, would you like to try the recovery with striped RAID / parity bits on a
   specialized filesystem, or just a regular NTFS or EXT4?
+
+
+Architecture
+------------
+
+![](docs/architecture.png)
 
 
 Inspired by & alternative software
