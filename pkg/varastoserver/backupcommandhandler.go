@@ -9,8 +9,6 @@ import (
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/pkencryptedstream"
 	"io"
-	"path/filepath"
-	"sort"
 	"strings"
 	"time"
 )
@@ -32,76 +30,40 @@ M8o31e7DQeEXOHL2E1kfUONG4VF2X3EEWPzj0BD/wf0yamkMGgaxeCUCAwEAAQ==
 `
 
 func (c *cHandlers) DatabaseBackup(cmd *DatabaseBackup, ctx *command.Ctx) error {
-	matches, err := filepath.Glob("gdrive-writes-*.log")
+	if c.conf.File.BackupPath == "" {
+		return errors.New("BackupPath empty")
+	}
+
+	encryptionPublicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(strings.NewReader(backupPublicKey))
 	if err != nil {
 		return err
 	}
 
-	foo := &dbbma{c.db}
-
-	sort.Strings(matches)
-
-	readers := []io.Reader{}
-	cleanup := []*os.File{}
-
-	defer func() {
-		for _, f := range cleanup {
-			f.Close()
-		}
-	}()
-
-	for _, match := range matches {
-		f, err := os.Open(match)
-		if err != nil {
-			return err
-		}
-
-		readers = append(readers, f)
-		cleanup = append(cleanup, f)
+	tx, err := c.db.Begin(false)
+	if err != nil {
+		return err
 	}
+	defer tx.Rollback()
 
-	combined := io.MultiReader(readers...)
+	ts := time.Now().UTC().Format("2006-01-02T15-04-05Z07:00") // RFC3339 but time colons replaced with dashes
+	filename := fmt.Sprintf(c.conf.File.BackupPath+"/%s.log.gz.aes", ts)
 
-	return parse(combined, func(data parsed) error {
-		return foo.WriteBlobCreated()
+	return atomicfilewrite.Write(filename, func(writer io.Writer) error {
+		encryptedStream, err := pkencryptedstream.Writer(writer, encryptionPublicKey)
+		if err != nil {
+			return err
+		}
+
+		compressor := gzip.NewWriter(encryptedStream)
+
+		if err := exportDb(tx, compressor); err != nil {
+			return err
+		}
+
+		if err := compressor.Close(); err != nil {
+			return err
+		}
+
+		return encryptedStream.Close()
 	})
-
-	/*
-		if c.conf.File.BackupPath == "" {
-			return errors.New("BackupPath empty")
-		}
-
-		encryptionPublicKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(strings.NewReader(backupPublicKey))
-		if err != nil {
-			return err
-		}
-
-		tx, err := c.db.Begin(false)
-		if err != nil {
-			return err
-		}
-		defer tx.Rollback()
-
-		ts := time.Now().UTC().Format("2006-01-02T15-04-05Z07:00") // RFC3339 but time colons replaced with dashes
-		filename := fmt.Sprintf(c.conf.File.BackupPath+"/%s.log.gz.aes", ts)
-
-		return atomicfilewrite.Write(filename, func(writer io.Writer) error {
-			encryptedStream, err := pkencryptedstream.Writer(writer, encryptionPublicKey)
-			if err != nil {
-				return err
-			}
-
-			compressor := gzip.NewWriter(encryptedStream)
-
-			if err := exportDb(tx, compressor); err != nil {
-				return err
-			}
-
-			if err := compressor.Close(); err != nil {
-				return err
-			}
-
-			return encryptedStream.Close()
-		})
-	*/
 }
