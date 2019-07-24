@@ -11,7 +11,9 @@ import (
 	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/blobdriver/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastoserver/stodiskaccess"
+	"github.com/function61/varasto/pkg/varastoserver/storeplication"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/gorilla/mux"
@@ -79,8 +81,8 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 
 	ivController := varastointegrityverifier.NewController(
 		db,
-		IntegrityVerificationJobRepository,
-		BlobRepository,
+		stodb.IntegrityVerificationJobRepository,
+		stodb.BlobRepository,
 		serverConfig.DiskAccess,
 		logex.Prefix("integrityctrl", logger),
 		workers.Stopper())
@@ -119,9 +121,9 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	// one might disable this during times of massive data ingestion to lessen the read
 	// pressure from the initial disk the blobs land on
 	if !scf.DisableReplicationController {
-		go StartReplicationController(
+		go storeplication.StartReplicationController(
 			db,
-			serverConfig,
+			serverConfig.DiskAccess,
 			logex.Prefix("replicationcontroller", logger),
 			workers.Stopper())
 	}
@@ -174,13 +176,13 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		return nil, errors.New("config bucket node ID not found")
 	}
 
-	selfNode, err := QueryWithTx(tx).Node(nodeId)
+	selfNode, err := stodb.Read(tx).Node(nodeId)
 	if err != nil {
 		return nil, err
 	}
 
 	clusterWideMounts := []varastotypes.VolumeMount{}
-	if err := VolumeMountRepository.Each(volumeMountAppender(&clusterWideMounts), tx); err != nil {
+	if err := stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&clusterWideMounts), tx); err != nil {
 		return nil, err
 	}
 
@@ -197,7 +199,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}
 
 	clients := []varastotypes.Client{}
-	if err := ClientRepository.Each(clientAppender(&clients), tx); err != nil {
+	if err := stodb.ClientRepository.Each(stodb.ClientAppender(&clients), tx); err != nil {
 		return nil, err
 	}
 
@@ -209,7 +211,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	dam := stodiskaccess.New(&dbbma{db})
 
 	for _, mountedVolume := range myMounts {
-		volume, err := QueryWithTx(tx).Volume(mountedVolume.Volume)
+		volume, err := stodb.Read(tx).Volume(mountedVolume.Volume)
 		if err != nil {
 			return nil, err
 		}
@@ -278,7 +280,7 @@ func (d *dbbma) QueryCollectionEncryptionKey(coll string) ([]byte, error) {
 	var result []byte
 
 	if err := d.db.View(func(tx *bolt.Tx) error {
-		coll, err := QueryWithTx(tx).Collection(coll)
+		coll, err := stodb.Read(tx).Collection(coll)
 		if err != nil {
 			return fmt.Errorf("collection not found: %v", err)
 		}
@@ -304,7 +306,7 @@ func (d *dbbma) QueryBlobMetadata(ref varastotypes.BlobRef) (*stodiskaccess.Blob
 	}
 	defer tx.Rollback()
 
-	blob, err := QueryWithTx(tx).Blob(ref)
+	blob, err := stodb.Read(tx).Blob(ref)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			return nil, os.ErrNotExist
@@ -313,7 +315,7 @@ func (d *dbbma) QueryBlobMetadata(ref varastotypes.BlobRef) (*stodiskaccess.Blob
 		return nil, err
 	}
 
-	coll, err := QueryWithTx(tx).Collection(blob.Coll)
+	coll, err := stodb.Read(tx).Collection(blob.Coll)
 	if err != nil {
 		return nil, fmt.Errorf("collection %s not found: %v", blob.Coll, err)
 	}
@@ -336,7 +338,7 @@ func (d *dbbma) WriteBlobReplicated(meta *stodiskaccess.BlobMeta, volumeId int) 
 	}
 	defer tx.Rollback()
 
-	blobToUpdate, err := QueryWithTx(tx).Blob(meta.Ref)
+	blobToUpdate, err := stodb.Read(tx).Blob(meta.Ref)
 	if err != nil {
 		return err
 	}
@@ -394,11 +396,11 @@ func (d *dbbma) writeBlobReplicatedInternal(blob *varastotypes.Blob, volumeId in
 		return volId != volumeId
 	})
 
-	if err := BlobRepository.Update(blob, tx); err != nil {
+	if err := stodb.BlobRepository.Update(blob, tx); err != nil {
 		return err
 	}
 
-	volume, err := QueryWithTx(tx).Volume(volumeId)
+	volume, err := stodb.Read(tx).Volume(volumeId)
 	if err != nil {
 		return err
 	}
@@ -406,7 +408,7 @@ func (d *dbbma) writeBlobReplicatedInternal(blob *varastotypes.Blob, volumeId in
 	volume.BlobCount++
 	volume.BlobSizeTotal += size
 
-	if err := VolumeRepository.Update(volume, tx); err != nil {
+	if err := stodb.VolumeRepository.Update(volume, tx); err != nil {
 		return err
 	}
 

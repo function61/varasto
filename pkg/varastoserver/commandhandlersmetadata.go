@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/function61/varasto/pkg/themoviedbapi"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"go.etcd.io/bbolt"
 	"strconv"
@@ -21,7 +22,7 @@ func (c *cHandlers) CollectionPullMetadata(cmd *CollectionPullMetadata, ctx *com
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		collection, err := QueryWithTx(tx).Collection(cmd.Collection)
+		collection, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
 		}
@@ -60,7 +61,7 @@ func (c *cHandlers) CollectionPullMetadata(cmd *CollectionPullMetadata, ctx *com
 			collection.Metadata[MetadataReleaseDate] = info.ReleaseDate
 		}
 
-		return CollectionRepository.Update(collection, tx)
+		return stodb.CollectionRepository.Update(collection, tx)
 	})
 }
 
@@ -77,7 +78,7 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *DirectoryPullMetadata, ctx *comma
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		dir, err := QueryWithTx(tx).Directory(cmd.Directory)
+		dir, err := stodb.Read(tx).Directory(cmd.Directory)
 		if err != nil {
 			return err
 		}
@@ -100,7 +101,7 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *DirectoryPullMetadata, ctx *comma
 			dir.Metadata[MetadataImdbId] = tv.ExternalIds.ImdbId
 		}
 
-		return DirectoryRepository.Update(dir, tx)
+		return stodb.DirectoryRepository.Update(dir, tx)
 	})
 }
 
@@ -110,12 +111,12 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 		// Collection is validated as non-empty
 		collIds := strings.Split(cmd.Collection, ",")
 
-		firstColl, err := QueryWithTx(tx).Collection(collIds[0])
+		firstColl, err := stodb.Read(tx).Collection(collIds[0])
 		if err != nil {
 			return err
 		}
 
-		firstCollDirectory, err := QueryWithTx(tx).Directory(firstColl.Directory)
+		firstCollDirectory, err := stodb.Read(tx).Directory(firstColl.Directory)
 		if err != nil {
 			return err
 		}
@@ -159,7 +160,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 		}
 
 		for _, collId := range collIds {
-			coll, err := QueryWithTx(tx).Collection(collId)
+			coll, err := stodb.Read(tx).Collection(collId)
 			if err != nil {
 				return err
 			}
@@ -229,7 +230,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 					coll.Metadata[MetadataThumbnail] = themoviedbapi.ImagePath(ep.StillPath, "original")
 				}
 
-				if err := CollectionRepository.Update(coll, tx); err != nil {
+				if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
 					return err
 				}
 			}

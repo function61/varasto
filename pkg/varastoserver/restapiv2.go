@@ -15,6 +15,7 @@ import (
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
@@ -71,7 +72,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	panicIfError(err)
 	defer tx.Rollback()
 
-	dir, err := QueryWithTx(tx).Directory(dirId)
+	dir, err := stodb.Read(tx).Directory(dirId)
 	panicIfError(err)
 
 	parentDirs, err := getParentDirs(*dir, tx)
@@ -83,7 +84,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
 	}
 
-	dbColls, err := QueryWithTx(tx).CollectionsByDirectory(dir.ID)
+	dbColls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
 	panicIfError(err)
 
 	colls := []CollectionSubset{}
@@ -92,7 +93,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 	sort.Slice(colls, func(i, j int) bool { return colls[i].Name < colls[j].Name })
 
-	dbSubDirs, err := QueryWithTx(tx).SubDirectories(dir.ID)
+	dbSubDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
 	panicIfError(err)
 
 	subDirs := []Directory{}
@@ -121,7 +122,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 	panicIfError(err)
 	defer tx.Rollback()
 
-	coll, err := QueryWithTx(tx).Collection(collectionId)
+	coll, err := stodb.Read(tx).Collection(collectionId)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			http.Error(w, "not found", http.StatusNotFound)
@@ -199,7 +200,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 	defer tx.Rollback()
 
-	coll, err := QueryWithTx(tx).Collection(collectionId)
+	coll, err := stodb.Read(tx).Collection(collectionId)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			http.Error(w, "collection not found", http.StatusNotFound)
@@ -236,7 +237,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 			return
 		}
 
-		blob, err := QueryWithTx(tx).Blob(*ref)
+		blob, err := stodb.Read(tx).Blob(*ref)
 		if err != nil {
 			if err == blorm.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -288,7 +289,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 	defer tx.Rollback()
 
 	dbObjects := []varastotypes.Volume{}
-	panicIfError(VolumeRepository.Each(volumeAppender(&dbObjects), tx))
+	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, Volume{
@@ -313,7 +314,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	defer tx.Rollback()
 
 	dbObjects := []varastotypes.VolumeMount{}
-	panicIfError(VolumeMountRepository.Each(volumeMountAppender(&dbObjects), tx))
+	panicIfError(stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, VolumeMount{
@@ -374,7 +375,7 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 	panicIfError(errTxBegin)
 	defer tx.Rollback()
 
-	coll, err := QueryWithTx(tx).Collection(collectionId)
+	coll, err := stodb.Read(tx).Collection(collectionId)
 	panicIfError(err)
 
 	if collectionHasChangesetId(changeset.ID, coll) {
@@ -402,7 +403,7 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 				panic(err)
 			}
 
-			blob, err := QueryWithTx(tx).Blob(*ref)
+			blob, err := stodb.Read(tx).Blob(*ref)
 			if err != nil {
 				http.Error(w, fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
 				return nil
@@ -415,14 +416,14 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 				blob.Volumes,
 				coll.DesiredVolumes)
 
-			panicIfError(BlobRepository.Update(blob, tx))
+			panicIfError(stodb.BlobRepository.Update(blob, tx))
 		}
 	}
 
 	// update head pointer & calc Created timestamp
 	appendChangeset(changeset, coll)
 
-	panicIfError(CollectionRepository.Update(coll, tx))
+	panicIfError(stodb.CollectionRepository.Update(coll, tx))
 	panicIfError(tx.Commit())
 
 	return coll
@@ -436,7 +437,7 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 	defer tx.Rollback()
 
 	dbObjects := []varastotypes.ReplicationPolicy{}
-	panicIfError(ReplicationPolicyRepository.Each(replicationPolicyAppender(&dbObjects), tx))
+	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, ReplicationPolicy{
@@ -457,7 +458,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	defer tx.Rollback()
 
 	dbObjects := []varastotypes.Node{}
-	panicIfError(NodeRepository.Each(nodeAppender(&dbObjects), tx))
+	panicIfError(stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, Node{
@@ -478,7 +479,7 @@ func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWrit
 	defer tx.Rollback()
 
 	dbObjects := []varastotypes.Client{}
-	panicIfError(ClientRepository.Each(clientAppender(&dbObjects), tx))
+	panicIfError(stodb.ClientRepository.Each(stodb.ClientAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, Client{
@@ -502,7 +503,7 @@ func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.R
 		fmt.Fprintf(w, "%s %s\n", file.Sha256, file.Path)
 	}
 
-	panicIfError(CollectionRepository.Each(func(record interface{}) error {
+	panicIfError(stodb.CollectionRepository.Each(func(record interface{}) error {
 		coll := record.(*varastotypes.Collection)
 
 		for _, changeset := range coll.Changesets {
@@ -542,7 +543,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 
 	var volumeId int
 	if err := h.db.View(func(tx *bolt.Tx) error {
-		coll, err := QueryWithTx(tx).Collection(collectionId)
+		coll, err := stodb.Read(tx).Collection(collectionId)
 		if err != nil {
 			return err
 		}
@@ -612,7 +613,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 	defer tx.Rollback()
 
 	dbObjects := []varastotypes.IntegrityVerificationJob{}
-	panicIfError(IntegrityVerificationJobRepository.Each(integrityVerificationJobAppender(&dbObjects), tx))
+	panicIfError(stodb.IntegrityVerificationJobRepository.Each(stodb.IntegrityVerificationJobAppender(&dbObjects), tx))
 
 	sort.Slice(dbObjects, func(i, j int) bool { return !dbObjects[i].Started.Before(dbObjects[j].Started) })
 
@@ -708,7 +709,7 @@ func getParentDirs(of varastotypes.Directory, tx *bolt.Tx) ([]varastotypes.Direc
 	var err error
 
 	for current.Parent != "" {
-		current, err = QueryWithTx(tx).Directory(current.Parent)
+		current, err = stodb.Read(tx).Directory(current.Parent)
 		if err != nil {
 			return nil, err
 		}

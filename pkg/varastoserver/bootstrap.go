@@ -2,6 +2,7 @@ package varastoserver
 
 import (
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"go.etcd.io/bbolt"
@@ -35,9 +36,9 @@ func bootstrap(db *bolt.DB, logger *log.Logger) error {
 	logl.Info.Printf("generated nodeId: %s", newNode.ID)
 
 	results := []error{
-		NodeRepository.Update(newNode, tx),
-		DirectoryRepository.Update(varastotypes.NewDirectory("root", "", "root"), tx),
-		ReplicationPolicyRepository.Update(&varastotypes.ReplicationPolicy{
+		stodb.NodeRepository.Update(newNode, tx),
+		stodb.DirectoryRepository.Update(varastotypes.NewDirectory("root", "", "root"), tx),
+		stodb.ReplicationPolicyRepository.Update(&varastotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
 			DesiredVolumes: []int{1, 2}, // FIXME: this assumes 1 and 2 will be created soon..

@@ -8,6 +8,7 @@ import (
 	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"go.etcd.io/bbolt"
 	"io"
 	"strings"
@@ -128,15 +129,15 @@ var msgpackCodec codec.MarshalUnmarshaler = msgpack.Codec
 
 // key is heading in export file under which all JSON records are dumped
 var repoByRecordType = map[string]blorm.Repository{
-	"Blob":                     BlobRepository,
-	"Client":                   ClientRepository,
-	"Collection":               CollectionRepository,
-	"Directory":                DirectoryRepository,
-	"IntegrityVerificationJob": IntegrityVerificationJobRepository,
-	"Node":                     NodeRepository,
-	"ReplicationPolicy":        ReplicationPolicyRepository,
-	"Volume":                   VolumeRepository,
-	"VolumeMount":              VolumeMountRepository,
+	"Blob":                     stodb.BlobRepository,
+	"Client":                   stodb.ClientRepository,
+	"Collection":               stodb.CollectionRepository,
+	"Directory":                stodb.DirectoryRepository,
+	"IntegrityVerificationJob": stodb.IntegrityVerificationJobRepository,
+	"Node":                     stodb.NodeRepository,
+	"ReplicationPolicy":        stodb.ReplicationPolicyRepository,
+	"Volume":                   stodb.VolumeRepository,
+	"VolumeMount":              stodb.VolumeMountRepository,
 }
 
 func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error) error) error {

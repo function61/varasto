@@ -1,4 +1,4 @@
-package varastoserver
+package stodb
 
 import (
 	"github.com/function61/varasto/pkg/varastotypes"
@@ -9,7 +9,7 @@ type dbQueries struct {
 	tx *bolt.Tx
 }
 
-func QueryWithTx(tx *bolt.Tx) *dbQueries {
+func Read(tx *bolt.Tx) *dbQueries {
 	return &dbQueries{tx}
 }
 

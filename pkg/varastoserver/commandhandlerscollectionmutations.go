@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
 	"go.etcd.io/bbolt"
@@ -24,12 +25,12 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMove
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		collSrc, err := QueryWithTx(tx).Collection(cmd.Source)
+		collSrc, err := stodb.Read(tx).Collection(cmd.Source)
 		if err != nil {
 			return err
 		}
 
-		collDst, err := QueryWithTx(tx).Collection(cmd.Destination)
+		collDst, err := stodb.Read(tx).Collection(cmd.Destination)
 		if err != nil {
 			return err
 		}
@@ -80,11 +81,11 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMove
 		appendChangeset(srcChangeset, collSrc)
 		appendChangeset(dstChangeset, collDst)
 
-		if err := CollectionRepository.Update(collSrc, tx); err != nil {
+		if err := stodb.CollectionRepository.Update(collSrc, tx); err != nil {
 			return err
 		}
 
-		if err := CollectionRepository.Update(collDst, tx); err != nil {
+		if err := stodb.CollectionRepository.Update(collDst, tx); err != nil {
 			return err
 		}
 

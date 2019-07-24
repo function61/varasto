@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
@@ -46,7 +47,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		panicIfError(err)
 		defer tx.Rollback()
 
-		coll, err := QueryWithTx(tx).Collection(mux.Vars(r)["collectionId"])
+		coll, err := stodb.Read(tx).Collection(mux.Vars(r)["collectionId"])
 		if err != nil {
 			if err == blorm.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -105,7 +106,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 
 		var volumeId int
 		if err := db.View(func(tx *bolt.Tx) error {
-			coll, err := QueryWithTx(tx).Collection(collectionId)
+			coll, err := stodb.Read(tx).Collection(collectionId)
 			if err != nil {
 				return err
 			}
@@ -137,7 +138,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		panicIfError(err)
 		defer tx.Rollback()
 
-		blobMetadata, err := QueryWithTx(tx).Blob(*blobRef)
+		blobMetadata, err := stodb.Read(tx).Blob(*blobRef)
 		if err != nil {
 			if err == blorm.ErrNotFound {
 				http.Error(w, err.Error(), http.StatusNotFound)
@@ -213,7 +214,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 }
 
 func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*varastotypes.Collection, error) {
-	if _, err := QueryWithTx(tx).Directory(parentDirectoryId); err != nil {
+	if _, err := stodb.Read(tx).Directory(parentDirectoryId); err != nil {
 		if err == blorm.ErrNotFound {
 			return nil, errors.New("parent directory not found")
 		} else {
@@ -222,7 +223,7 @@ func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*var
 	}
 
 	// TODO: resolve this from closest parent that has policy defined?
-	replicationPolicy, err := QueryWithTx(tx).ReplicationPolicy("default")
+	replicationPolicy, err := stodb.Read(tx).ReplicationPolicy("default")
 	if err != nil {
 		return nil, err
 	}
@@ -245,9 +246,9 @@ func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*var
 	}
 
 	// highly unlikely
-	if _, err := QueryWithTx(tx).Collection(collection.ID); err != blorm.ErrNotFound {
+	if _, err := stodb.Read(tx).Collection(collection.ID); err != blorm.ErrNotFound {
 		return nil, errors.New("accidentally generated duplicate collection ID")
 	}
 
-	return collection, CollectionRepository.Update(collection, tx)
+	return collection, stodb.CollectionRepository.Update(collection, tx)
 }

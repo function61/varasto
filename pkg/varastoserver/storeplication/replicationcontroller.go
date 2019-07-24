@@ -1,8 +1,10 @@
-package varastoserver
+package storeplication
 
 import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
+	"github.com/function61/varasto/pkg/varastoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"go.etcd.io/bbolt"
 	"log"
@@ -16,7 +18,7 @@ type replicationJob struct {
 	ToVolumeId   int
 }
 
-func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger *log.Logger, stop *stopper.Stopper) {
+func StartReplicationController(db *bolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) {
 	logl := logex.Levels(logger)
 
 	defer stop.Done()
@@ -36,7 +38,7 @@ func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger 
 		case <-stop.Signal:
 			return
 		case <-fiveSeconds.C:
-			if err := discoverAndRunReplicationJobs(db, logl, serverConfig, stop); err != nil {
+			if err := discoverAndRunReplicationJobs(db, logl, diskAccess, stop); err != nil {
 				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
@@ -47,10 +49,10 @@ func StartReplicationController(db *bolt.DB, serverConfig *ServerConfig, logger 
 func discoverAndRunReplicationJobs(
 	db *bolt.DB,
 	logl *logex.Leveled,
-	serverConfig *ServerConfig,
+	diskAccess *stodiskaccess.Controller,
 	stop *stopper.Stopper,
 ) error {
-	jobs, err := discoverReplicationJobs(db, logl, serverConfig)
+	jobs, err := discoverReplicationJobs(db, logl, diskAccess)
 	if err != nil {
 		return err
 	}
@@ -70,7 +72,7 @@ func discoverAndRunReplicationJobs(
 				job.FromVolumeId,
 				job.ToVolumeId)
 
-			if err := replicateJob(job, db, serverConfig); err != nil {
+			if err := replicateJob(job, db, diskAccess); err != nil {
 				logl.Error.Printf("replicating blob %s: %v", job.Ref.AsHex(), err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
@@ -101,21 +103,21 @@ func discoverAndRunReplicationJobs(
 	return nil
 }
 
-func replicateJob(job *replicationJob, db *bolt.DB, serverConfig *ServerConfig) error {
-	return serverConfig.DiskAccess.Replicate(
+func replicateJob(job *replicationJob, db *bolt.DB, diskAccess *stodiskaccess.Controller) error {
+	return diskAccess.Replicate(
 		job.FromVolumeId,
 		job.ToVolumeId,
 		job.Ref)
 }
 
-func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfig *ServerConfig) ([]*replicationJob, error) {
+func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, diskAccess *stodiskaccess.Controller) ([]*replicationJob, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
 	defer tx.Rollback()
 
-	blobsPendingReplication := BlobsPendingReplicationIndex.Bucket(tx)
+	blobsPendingReplication := stodb.BlobsPendingReplicationIndex.Bucket(tx)
 
 	batchLimit := 100
 
@@ -132,13 +134,13 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfig *Ser
 
 		ref := varastotypes.BlobRef(key)
 
-		blob, err := QueryWithTx(tx).Blob(ref)
+		blob, err := stodb.Read(tx).Blob(ref)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, toVolumeId := range blob.VolumesPendingReplication {
-			bestVolume, err := serverConfig.DiskAccess.BestVolumeId(blob.Volumes)
+			bestVolume, err := diskAccess.BestVolumeId(blob.Volumes)
 			if err != nil {
 				return nil, err
 			}

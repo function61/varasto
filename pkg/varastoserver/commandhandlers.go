@@ -11,6 +11,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/varastofuse/varastofuseclient"
+	"github.com/function61/varasto/pkg/varastoserver/stodb"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"github.com/function61/varasto/pkg/varastoutils"
@@ -32,7 +33,7 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 		max := 0
 
 		allVolumes := []varastotypes.Volume{}
-		if err := VolumeRepository.Each(volumeAppender(&allVolumes), tx); err != nil {
+		if err := stodb.VolumeRepository.Each(stodb.VolumeAppender(&allVolumes), tx); err != nil {
 			return err
 		}
 
@@ -42,7 +43,7 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 			}
 		}
 
-		return VolumeRepository.Update(&varastotypes.Volume{
+		return stodb.VolumeRepository.Update(&varastotypes.Volume{
 			ID:    max + 1,
 			UUID:  varastoutils.NewVolumeUuid(),
 			Label: cmd.Name,
@@ -53,34 +54,34 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 
 func (c *cHandlers) VolumeChangeQuota(cmd *VolumeChangeQuota, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		vol, err := QueryWithTx(tx).Volume(cmd.Id)
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		vol.Quota = mebibytesToBytes(cmd.Quota)
 
-		return VolumeRepository.Update(vol, tx)
+		return stodb.VolumeRepository.Update(vol, tx)
 	})
 }
 
 func (c *cHandlers) VolumeChangeDescription(cmd *VolumeChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		vol, err := QueryWithTx(tx).Volume(cmd.Id)
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		vol.Description = cmd.Description
 
-		return VolumeRepository.Update(vol, tx)
+		return stodb.VolumeRepository.Update(vol, tx)
 	})
 }
 
 // FIXME: name ends in 2 because conflicts with types.VolumeMount
 func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		vol, err := QueryWithTx(tx).Volume(cmd.Id)
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
 		}
@@ -103,18 +104,18 @@ func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 			return err
 		}
 
-		return VolumeMountRepository.Update(mountSpec, tx)
+		return stodb.VolumeMountRepository.Update(mountSpec, tx)
 	})
 }
 
 func (c *cHandlers) VolumeUnmount(cmd *VolumeUnmount, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		mount, err := QueryWithTx(tx).VolumeMount(cmd.Id)
+		mount, err := stodb.Read(tx).VolumeMount(cmd.Id)
 		if err != nil {
 			return err
 		}
 
-		return VolumeMountRepository.Delete(mount, tx)
+		return stodb.VolumeMountRepository.Delete(mount, tx)
 	})
 }
 
@@ -126,13 +127,13 @@ func (c *cHandlers) VolumeVerifyIntegrity(cmd *VolumeVerifyIntegrity, ctx *comma
 			VolumeId: cmd.Id,
 		}
 
-		return IntegrityVerificationJobRepository.Update(job, tx)
+		return stodb.IntegrityVerificationJobRepository.Update(job, tx)
 	})
 }
 
 func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		return DirectoryRepository.Update(
+		return stodb.DirectoryRepository.Update(
 			varastotypes.NewDirectory(
 				varastoutils.NewDirectoryId(),
 				cmd.Parent,
@@ -143,17 +144,17 @@ func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) erro
 
 func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		dir, err := QueryWithTx(tx).Directory(cmd.Id)
+		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
 		}
 
-		collections, err := QueryWithTx(tx).CollectionsByDirectory(dir.ID)
+		collections, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
 		if err != nil {
 			return err
 		}
 
-		subDirs, err := QueryWithTx(tx).SubDirectories(dir.ID)
+		subDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
 		if err != nil {
 			return err
 		}
@@ -166,33 +167,33 @@ func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) erro
 			return fmt.Errorf("Cannot delete directory because it has %d directory(s)", len(subDirs))
 		}
 
-		return DirectoryRepository.Delete(dir, tx)
+		return stodb.DirectoryRepository.Delete(dir, tx)
 	})
 }
 
 func (c *cHandlers) DirectoryRename(cmd *DirectoryRename, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		dir, err := QueryWithTx(tx).Directory(cmd.Id)
+		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		dir.Name = cmd.Name
 
-		return DirectoryRepository.Update(dir, tx)
+		return stodb.DirectoryRepository.Update(dir, tx)
 	})
 }
 
 func (c *cHandlers) DirectoryChangeDescription(cmd *DirectoryChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		dir, err := QueryWithTx(tx).Directory(cmd.Id)
+		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		dir.Description = cmd.Description
 
-		return DirectoryRepository.Update(dir, tx)
+		return stodb.DirectoryRepository.Update(dir, tx)
 	})
 }
 
@@ -202,26 +203,26 @@ func (c *cHandlers) DirectoryChangeSensitivity(cmd *DirectoryChangeSensitivity, 
 			return err
 		}
 
-		dir, err := QueryWithTx(tx).Directory(cmd.Id)
+		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		dir.Sensitivity = cmd.Sensitivity
 
-		return DirectoryRepository.Update(dir, tx)
+		return stodb.DirectoryRepository.Update(dir, tx)
 	})
 }
 
 func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		dirToMove, err := QueryWithTx(tx).Directory(cmd.Id)
+		dirToMove, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		// verify that new parent exists
-		newParent, err := QueryWithTx(tx).Directory(cmd.Directory)
+		newParent, err := stodb.Read(tx).Directory(cmd.Directory)
 		if err != nil {
 			return err
 		}
@@ -232,7 +233,7 @@ func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
 
 		dirToMove.Parent = newParent.ID
 
-		return DirectoryRepository.Update(dirToMove, tx)
+		return stodb.DirectoryRepository.Update(dirToMove, tx)
 	})
 }
 
@@ -249,21 +250,21 @@ func (c *cHandlers) CollectionChangeSensitivity(cmd *CollectionChangeSensitivity
 			return err
 		}
 
-		coll, err := QueryWithTx(tx).Collection(cmd.Id)
+		coll, err := stodb.Read(tx).Collection(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		coll.Sensitivity = cmd.Sensitivity
 
-		return CollectionRepository.Update(coll, tx)
+		return stodb.CollectionRepository.Update(coll, tx)
 	})
 }
 
 func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		// check for existence
-		if _, err := QueryWithTx(tx).Directory(cmd.Directory); err != nil {
+		if _, err := stodb.Read(tx).Directory(cmd.Directory); err != nil {
 			return err
 		}
 
@@ -271,14 +272,14 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 		collIds := strings.Split(cmd.Collection, ",")
 
 		for _, collId := range collIds {
-			coll, err := QueryWithTx(tx).Collection(collId)
+			coll, err := stodb.Read(tx).Collection(collId)
 			if err != nil {
 				return err
 			}
 
 			coll.Directory = cmd.Directory
 
-			if err := CollectionRepository.Update(coll, tx); err != nil {
+			if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
 				return err
 			}
 		}
@@ -289,27 +290,27 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 
 func (c *cHandlers) CollectionChangeDescription(cmd *CollectionChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		coll, err := QueryWithTx(tx).Collection(cmd.Collection)
+		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
 		}
 
 		coll.Description = cmd.Description
 
-		return CollectionRepository.Update(coll, tx)
+		return stodb.CollectionRepository.Update(coll, tx)
 	})
 }
 
 func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		coll, err := QueryWithTx(tx).Collection(cmd.Collection)
+		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
 		}
 
 		coll.Name = cmd.Name
 
-		return CollectionRepository.Update(coll, tx)
+		return stodb.CollectionRepository.Update(coll, tx)
 	})
 }
 
@@ -327,7 +328,7 @@ func (c *cHandlers) CollectionFuseMount(cmd *CollectionFuseMount, ctx *command.C
 
 func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		coll, err := QueryWithTx(tx).Collection(cmd.Collection)
+		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
 		}
@@ -336,13 +337,13 @@ func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) er
 			return fmt.Errorf("repeated name incorrect, expecting %s", coll.Name)
 		}
 
-		return CollectionRepository.Delete(coll, tx)
+		return stodb.CollectionRepository.Delete(coll, tx)
 	})
 }
 
 func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		return ClientRepository.Update(&varastotypes.Client{
+		return stodb.ClientRepository.Update(&varastotypes.Client{
 			ID:        varastoutils.NewClientId(),
 			Name:      cmd.Name,
 			AuthToken: cryptorandombytes.Base64Url(32),
@@ -352,7 +353,7 @@ func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
 
 func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		return ClientRepository.Delete(&varastotypes.Client{
+		return stodb.ClientRepository.Delete(&varastotypes.Client{
 			ID: cmd.Id,
 		}, tx)
 	})
@@ -383,19 +384,19 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *Replicationpolicy
 
 		// verify that each volume exists
 		for _, desiredVolume := range desiredVolumes {
-			if _, err := QueryWithTx(tx).Volume(desiredVolume); err != nil {
+			if _, err := stodb.Read(tx).Volume(desiredVolume); err != nil {
 				return fmt.Errorf("desiredVolume %d: %v", desiredVolume, err)
 			}
 		}
 
-		policy, err := QueryWithTx(tx).ReplicationPolicy(cmd.Id)
+		policy, err := stodb.Read(tx).ReplicationPolicy(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		policy.DesiredVolumes = desiredVolumes
 
-		return ReplicationPolicyRepository.Update(policy, tx)
+		return stodb.ReplicationPolicyRepository.Update(policy, tx)
 	})
 }
 
