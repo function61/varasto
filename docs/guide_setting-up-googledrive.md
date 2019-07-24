@@ -1,8 +1,8 @@
 Setting up Google Drive
 =======================
 
-1) Create volume
-----------------
+Create volume
+-------------
 
 Create volume in Varasto. For quota specify how much storage you want to allocate for
 Varasto in Google Drive.
@@ -12,8 +12,8 @@ If you have unlimited storage in Google Drive
 just set an arbitrary limit.
 
 
-2) Create folder in Drive
--------------------------
+Create folder in Drive
+----------------------
 
 Varasto stores all your blobs in Drive inside one folder (Drive has no limit of files per
 folder and it is not a performance issue), so we need to create a folder.
@@ -30,8 +30,8 @@ In my case my ID was `1znjU234YCcLW96u6_WrZtms2vFvGy55e`. You'll need this when 
 the volume in Varasto.
 
 
-3) Mount Drive as volume in Varasto
------------------------------------
+Mount Drive as volume in Varasto
+--------------------------------
 
 Now mount the volume you created in Varasto, specifying `googledrive` as the blob driver type.
 
