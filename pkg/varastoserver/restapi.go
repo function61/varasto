@@ -186,7 +186,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		if err != nil {
 			if os.IsNotExist(err) {
 				// should not happen, because metadata said that we should have this blob
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, err.Error(), http.StatusNotFound)
 				return
 			}
 
