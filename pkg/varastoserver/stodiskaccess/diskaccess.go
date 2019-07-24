@@ -66,7 +66,7 @@ func (d *Controller) Replicate(fromVolumeId int, toVolumeId int, ref varastotype
 		return fmt.Errorf("Replicate() QueryBlobMetadata: %v", err)
 	}
 
-	meta, err = d.storeInternal(toVolumeId, meta.Optional.EncryptionKeyOfColl, ref, stream)
+	meta, err = d.storeInternal(toVolumeId, meta.EncryptionKeyOfColl, ref, stream)
 	if err != nil {
 		return err
 	}
@@ -124,15 +124,13 @@ func (d *Controller) storeInternal(volumeId int, collId string, ref varastotypes
 
 	mkBlobMeta := func() *BlobMeta {
 		return &BlobMeta{
-			Ref:      ref,
-			RealSize: int32(readCounter.BytesWritten()),
-			Optional: &BlobMetaOptional{
-				SizeOnDisk:          int32(len(blobEncrypted.CiphertextMaybeCompressed)),
-				IsCompressed:        blobEncrypted.Compressed,
-				EncryptionKeyOfColl: collId,
-				EncryptionKey:       encryptionKey,
-				ExpectedCrc32:       blobEncrypted.Crc32,
-			},
+			Ref:                 ref,
+			RealSize:            int32(readCounter.BytesWritten()),
+			SizeOnDisk:          int32(len(blobEncrypted.CiphertextMaybeCompressed)),
+			IsCompressed:        blobEncrypted.Compressed,
+			EncryptionKeyOfColl: collId,
+			EncryptionKey:       encryptionKey,
+			ExpectedCrc32:       blobEncrypted.Crc32,
 		}
 	}
 
@@ -180,9 +178,9 @@ func (d *Controller) Fetch(ref varastotypes.BlobRef, volumeId int) (io.ReadClose
 	// body.Close() will be called by readCloseWrapper
 
 	// reads crc32-verified ciphertext which contains maybe_gzipped(plaintext)
-	crc32VerifiedCiphertextReader := hashverifyreader.New(body, crc32.NewIEEE(), meta.Optional.ExpectedCrc32)
+	crc32VerifiedCiphertextReader := hashverifyreader.New(body, crc32.NewIEEE(), meta.ExpectedCrc32)
 
-	aesDecrypter, err := aes.NewCipher(meta.Optional.EncryptionKey)
+	aesDecrypter, err := aes.NewCipher(meta.EncryptionKey)
 	if err != nil {
 		return nil, fmt.Errorf("Fetch() AES cipher: %v", err)
 	}
@@ -192,7 +190,7 @@ func (d *Controller) Fetch(ref varastotypes.BlobRef, volumeId int) (io.ReadClose
 	// assume no compression ..
 	uncompressedReader := io.Reader(decrypted)
 
-	if meta.Optional.IsCompressed { // .. but decompress here if assumption incorrect
+	if meta.IsCompressed { // .. but decompress here if assumption incorrect
 		gzipReader, err := gzip.NewReader(decrypted)
 		if err != nil {
 			return nil, fmt.Errorf("Fetch() gzip: %v", err)
@@ -251,7 +249,7 @@ func (d *Controller) Scrub(ref varastotypes.BlobRef, volumeId int) (int64, error
 	}
 	defer body.Close()
 
-	verifiedReader := hashverifyreader.New(body, crc32.NewIEEE(), meta.Optional.ExpectedCrc32)
+	verifiedReader := hashverifyreader.New(body, crc32.NewIEEE(), meta.ExpectedCrc32)
 
 	bytesRead, err := io.Copy(ioutil.Discard, verifiedReader)
 	return bytesRead, err
@@ -284,6 +282,13 @@ func encrypt(key []byte, plaintext io.Reader, br varastotypes.BlobRef) ([]byte, 
 	}
 
 	return cipherText.Bytes(), nil
+}
+
+// used for encryptAndCompressBlob()
+type blobResult struct {
+	CiphertextMaybeCompressed []byte
+	Compressed                bool
+	Crc32                     []byte
 }
 
 // does encrypt(maybe_compress(plaintext))

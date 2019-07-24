@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"errors"
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/varastotypes"
 	"io"
@@ -167,9 +166,9 @@ func TestCompression(t *testing.T) {
 	assert.Assert(t, err == nil)
 
 	// this does not compress well
-	assert.Assert(t, !meta.Optional.IsCompressed)
+	assert.Assert(t, !meta.IsCompressed)
 	assert.Assert(t, meta.RealSize == 43)
-	assert.Assert(t, meta.Optional.SizeOnDisk == 43)
+	assert.Assert(t, meta.SizeOnDisk == 43)
 
 	ref2, _ := varastotypes.BlobRefFromHex(sha256Hex([]byte(text4x)))
 
@@ -178,9 +177,9 @@ func TestCompression(t *testing.T) {
 	meta, err = test.testDbAccess.QueryBlobMetadata(*ref2)
 	assert.Assert(t, err == nil)
 
-	assert.Assert(t, meta.Optional.IsCompressed)
+	assert.Assert(t, meta.IsCompressed)
 	assert.Assert(t, meta.RealSize == 4*43)
-	assert.Assert(t, meta.Optional.SizeOnDisk == 70)
+	assert.Assert(t, meta.SizeOnDisk == 70)
 
 	reader, err := test.diskAccess.Fetch(*ref2, 1)
 	assert.Assert(t, err == nil)

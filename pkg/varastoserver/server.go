@@ -319,15 +319,13 @@ func (d *dbbma) QueryBlobMetadata(ref varastotypes.BlobRef) (*stodiskaccess.Blob
 	}
 
 	return &stodiskaccess.BlobMeta{
-		Ref:      ref,
-		RealSize: blob.Size,
-		Optional: &stodiskaccess.BlobMetaOptional{
-			SizeOnDisk:          blob.SizeOnDisk,
-			IsCompressed:        blob.IsCompressed,
-			EncryptionKey:       coll.EncryptionKey[:],
-			EncryptionKeyOfColl: blob.Coll,
-			ExpectedCrc32:       blob.Crc32,
-		},
+		Ref:                 ref,
+		RealSize:            blob.Size,
+		SizeOnDisk:          blob.SizeOnDisk,
+		IsCompressed:        blob.IsCompressed,
+		EncryptionKey:       coll.EncryptionKey[:],
+		EncryptionKeyOfColl: blob.Coll,
+		ExpectedCrc32:       blob.Crc32,
 	}, nil
 }
 
@@ -349,7 +347,7 @@ func (d *dbbma) WriteBlobReplicated(meta *stodiskaccess.BlobMeta, volumeId int) 
 	}
 
 	// saves Blob and Volume
-	if err := d.writeBlobReplicatedInternal(blobToUpdate, volumeId, int64(meta.Optional.SizeOnDisk), tx); err != nil {
+	if err := d.writeBlobReplicatedInternal(blobToUpdate, volumeId, int64(meta.SizeOnDisk), tx); err != nil {
 		return err
 	}
 
@@ -372,7 +370,7 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 	updateBlobFromMeta(meta, newBlob)
 
 	// writes Volumes & VolumesPendingReplication
-	if err := d.writeBlobReplicatedInternal(newBlob, volumeId, int64(meta.Optional.SizeOnDisk), tx); err != nil {
+	if err := d.writeBlobReplicatedInternal(newBlob, volumeId, int64(meta.SizeOnDisk), tx); err != nil {
 		return err
 	}
 
@@ -416,9 +414,9 @@ func (d *dbbma) writeBlobReplicatedInternal(blob *varastotypes.Blob, volumeId in
 }
 
 func updateBlobFromMeta(meta *stodiskaccess.BlobMeta, blob *varastotypes.Blob) {
-	blob.Coll = meta.Optional.EncryptionKeyOfColl
-	blob.IsCompressed = meta.Optional.IsCompressed
+	blob.Coll = meta.EncryptionKeyOfColl
+	blob.IsCompressed = meta.IsCompressed
 	blob.Size = meta.RealSize
-	blob.SizeOnDisk = meta.Optional.SizeOnDisk
-	blob.Crc32 = meta.Optional.ExpectedCrc32
+	blob.SizeOnDisk = meta.SizeOnDisk
+	blob.Crc32 = meta.ExpectedCrc32
 }

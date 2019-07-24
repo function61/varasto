@@ -6,24 +6,13 @@ import (
 )
 
 type BlobMeta struct {
-	Ref      varastotypes.BlobRef
-	RealSize int32
-	Optional *BlobMetaOptional // TODO: shouldn't be optional for long
-}
-
-type BlobMetaOptional struct {
+	Ref                 varastotypes.BlobRef
+	RealSize            int32
 	SizeOnDisk          int32 // after optional compression
 	IsCompressed        bool
 	EncryptionKeyOfColl string
 	EncryptionKey       []byte // this is set when read from QueryBlobMetadata(), but not when given to WriteBlobCreated()
 	ExpectedCrc32       []byte
-}
-
-// used for encryptAndCompressBlob()
-type blobResult struct {
-	CiphertextMaybeCompressed []byte
-	Compressed                bool
-	Crc32                     []byte
 }
 
 type MetadataStore interface {
