@@ -14,7 +14,7 @@ import (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:     os.Args[0],
-		Short:   "Your friendly distributed NAS",
+		Short:   `Varasto CLI: sto ("storage without the rage")`,
 		Version: dynversion.Version,
 	}
 
