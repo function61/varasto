@@ -129,23 +129,8 @@ func stEntrypoint() *cobra.Command {
 	}
 }
 
-func mkEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "mk [parentDirectoryId] [collectionName]",
-		Short: "Creates a new collection",
-		Args:  cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
-			cwd, err := os.Getwd()
-			panicIfError(err)
-
-			panicIfError(mk(cwd, args[0], args[1]))
-		},
-	}
-}
-
 func Entrypoints() []*cobra.Command {
 	return []*cobra.Command{
-		mkEntrypoint(),
 		adoptEntrypoint(),
 		stEntrypoint(),
 		rmEntrypoint(),
