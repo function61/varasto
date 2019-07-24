@@ -1,0 +1,18 @@
+# Security Policy
+
+## Supported Versions
+
+Currently, we don't support old versions of this project - security updates will only be made
+against the master branch (= latest version). So to stay secure, always use the latest
+version of this project.
+
+
+## Reporting a Vulnerability
+
+If you think you've found a vulnerability, please responsibly disclose it to us.
+Instructions are found from our company-wide policy.
+
+
+## Company-wide policy
+
+More details available via our company-wide policy at https://function61.com/security/
