@@ -46,5 +46,6 @@ type CreateCollectionRequest struct {
 type VolumeDriverKind string
 
 const (
-	VolumeDriverKindLocalFs VolumeDriverKind = "local-fs"
+	VolumeDriverKindLocalFs     VolumeDriverKind = "local-fs"
+	VolumeDriverKindGoogleDrive                  = "googledrive"
 )

@@ -28,7 +28,7 @@ type Volume struct {
 	Label         string
 	Description   string
 	Quota         int64
-	BlobSizeTotal int64
+	BlobSizeTotal int64 // @ compressed & deduplicated
 	BlobCount     int64
 }
 
@@ -87,9 +87,14 @@ type File struct {
 
 type Blob struct {
 	Ref                       BlobRef
+	Coll                      string // collection that owns (& encrypts) this. many collections can refer to this same blob
 	Volumes                   []int
 	VolumesPendingReplication []int
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
+	IsCompressed              bool
+	Size                      int32
+	SizeOnDisk                int32 // after optional compression
+	Crc32                     []byte
 }
 
 type IntegrityVerificationJob struct {

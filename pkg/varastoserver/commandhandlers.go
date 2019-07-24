@@ -9,7 +9,7 @@ import (
 	"github.com/function61/eventkit/httpcommand"
 	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
-	"github.com/function61/varasto/pkg/blobdriver"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/varastofuse/varastofuseclient"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
@@ -85,18 +85,21 @@ func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 			return err
 		}
 
-		// TODO: grab driver instance by this spec?
 		mountSpec := &varastotypes.VolumeMount{
 			ID:         varastoutils.NewVolumeMountId(),
 			Volume:     vol.ID,
 			Node:       c.conf.SelfNode.ID,
-			Driver:     varastotypes.VolumeDriverKindLocalFs,
+			Driver:     varastotypes.VolumeDriverKind(cmd.Kind),
 			DriverOpts: cmd.DriverOpts,
 		}
 
 		// try mounting the volume
-		mount := blobdriver.NewLocalFs(vol.UUID, mountSpec.DriverOpts, nil)
-		if err := mount.Mountable(); err != nil {
+		driver, err := getDriver(*vol, *mountSpec, logex.Discard)
+		if err != nil {
+			return err
+		}
+
+		if err := driver.Mountable(); err != nil {
 			return err
 		}
 

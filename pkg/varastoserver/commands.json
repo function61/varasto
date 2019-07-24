@@ -50,6 +50,7 @@
 		"title": "Mount volume",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Kind" },
 			{ "key": "DriverOpts", "help": "Example: /mnt/hdd1/varasto-UalPLodNjrA/" }
 		]
 	},

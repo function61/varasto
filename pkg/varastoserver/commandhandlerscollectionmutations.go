@@ -12,6 +12,10 @@ import (
 )
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
+	if true {
+		return errors.New("cannot use before changing blobs' owners and taking encryption keys into account")
+	}
+
 	// keep indexed map of filenames to move. they are removed on-the-fly, so in the end
 	// we can check for len() == 0 to see that we saw them all
 	hashesToMove := map[string]bool{}

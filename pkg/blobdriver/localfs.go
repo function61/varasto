@@ -26,33 +26,32 @@ type localFs struct {
 	log  *logex.Leveled
 }
 
-func (l *localFs) Store(ref varastotypes.BlobRef, content io.Reader) (int64, error) {
+func (l *localFs) RawStore(ref varastotypes.BlobRef, content io.Reader) error {
 	filename := l.getPath(ref)
 
 	// does not error if already exists
 	if err := os.MkdirAll(filepath.Dir(filename), 0755); err != nil {
-		return 0, err
+		return err
 	}
 
+	// TODO: this exists check is not strictly necessary, since the file
+	// is written in atomic manner
 	chunkExists, err := fileexists.Exists(filename)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
 	if chunkExists {
-		return 0, varastotypes.ErrChunkAlreadyExists
+		return varastotypes.ErrChunkAlreadyExists
 	}
 
-	bytesWritten := int64(0)
-	err = atomicfilewrite.Write(filename, func(writer io.Writer) error {
-		bytesWritten, err = io.Copy(writer, content)
+	return atomicfilewrite.Write(filename, func(writer io.Writer) error {
+		_, err := io.Copy(writer, content)
 		return err
 	})
-
-	return bytesWritten, err
 }
 
-func (l *localFs) Fetch(ref varastotypes.BlobRef) (io.ReadCloser, error) {
+func (l *localFs) RawFetch(ref varastotypes.BlobRef) (io.ReadCloser, error) {
 	return os.Open(l.getPath(ref))
 }
 

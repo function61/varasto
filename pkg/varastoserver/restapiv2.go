@@ -247,9 +247,9 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 			}
 		}
 
-		volumeId, found := volumeManagerBestVolumeIdForBlob(blob.Volumes, h.conf)
-		if !found {
-			http.Error(w, varastotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+		volumeId, err := h.conf.DiskAccess.BestVolumeId(blob.Volumes)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
@@ -265,8 +265,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
 
 	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
-		chunkStream, err := h.conf.VolumeDrivers[refAndVolumeId.VolumeId].Fetch(
-			refAndVolumeId.Ref)
+		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeId.Ref, refAndVolumeId.VolumeId)
 		if err != nil {
 			return err
 		}
@@ -317,11 +316,9 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	panicIfError(VolumeMountRepository.Each(volumeMountAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		_, online := h.conf.VolumeDrivers[dbObject.Volume]
-
 		ret = append(ret, VolumeMount{
 			Id:         dbObject.ID,
-			Online:     online,
+			Online:     h.conf.DiskAccess.IsMounted(dbObject.Volume),
 			Volume:     dbObject.Volume,
 			Node:       dbObject.Node,
 			Driver:     string(dbObject.Driver), // FIXME: string enum to frontend
@@ -543,6 +540,21 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 	// TODO: reuse the logic found in the client package?
 	wholeFileHash := sha256.New()
 
+	var volumeId int
+	if err := h.db.View(func(tx *bolt.Tx) error {
+		coll, err := QueryWithTx(tx).Collection(collectionId)
+		if err != nil {
+			return err
+		}
+
+		volumeId = coll.DesiredVolumes[0]
+
+		return nil
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
 	file := &File{
 		Path:     r.URL.Query().Get("filename"),
 		Sha256:   "",
@@ -579,7 +591,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 			return nil
 		}
 
-		if err := storeBlob(collectionId, *blobRef, bytes.NewBuffer(chunk), h.conf, h.db); err != nil {
+		if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, bytes.NewBuffer(chunk)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return nil
 		}

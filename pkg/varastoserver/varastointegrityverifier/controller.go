@@ -8,13 +8,10 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
-	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/varastoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/varastotypes"
-	"github.com/function61/varasto/pkg/varastoutils"
 	"go.etcd.io/bbolt"
-	"io"
-	"io/ioutil"
 	"log"
 	"time"
 )
@@ -24,7 +21,7 @@ const errorReportMaxLength = 20 * 1024
 type Controller struct {
 	db                  *bolt.DB
 	runningJobIds       map[string]*stopper.Stopper
-	driverByVolumeId    map[int]blobdriver.Driver
+	diskAccess          *stodiskaccess.Controller
 	ivJobRepository     blorm.Repository
 	blobRepository      blorm.Repository
 	resume              chan string
@@ -52,7 +49,7 @@ func NewController(
 	db *bolt.DB,
 	ivJobRepository blorm.Repository,
 	blobRepository blorm.Repository,
-	driverByVolumeId map[int]blobdriver.Driver,
+	diskAccess *stodiskaccess.Controller,
 	logger *log.Logger,
 	stop *stopper.Stopper,
 ) *Controller {
@@ -61,7 +58,7 @@ func NewController(
 		ivJobRepository:     ivJobRepository,
 		blobRepository:      blobRepository,
 		runningJobIds:       map[string]*stopper.Stopper{},
-		driverByVolumeId:    driverByVolumeId,
+		diskAccess:          diskAccess,
 		resume:              make(chan string, 1),
 		stop:                make(chan string, 1),
 		opListRunningJobIds: make(chan chan []string),
@@ -118,17 +115,12 @@ func (s *Controller) resumeJob(jobId string, db *bolt.DB, stop *stopper.Stopper)
 		return err
 	}
 
-	volumeDriver, exists := s.driverByVolumeId[job.VolumeId]
-	if !exists {
-		return errors.New("volume not found")
-	}
-
 	s.runningJobIds[jobId] = stop
 
 	go func() {
 		defer stop.Done()
 
-		if err := s.resumeJobWorker(job, volumeDriver, stop); err != nil {
+		if err := s.resumeJobWorker(job, stop); err != nil {
 			s.logl.Error.Printf("resumeJobWorker: %v", err)
 		}
 
@@ -160,7 +152,6 @@ func (s *Controller) nextBlobsForJob(lastCompletedBlobRef varastotypes.BlobRef, 
 
 func (s *Controller) resumeJobWorker(
 	job *varastotypes.IntegrityVerificationJob,
-	volumeDriver blobdriver.Driver,
 	stop *stopper.Stopper,
 ) error {
 	lastStatusUpdate := time.Now()
@@ -195,7 +186,7 @@ func (s *Controller) resumeJobWorker(
 
 			s.logl.Debug.Printf("verifying %s", blob.Ref.AsHex())
 
-			bytesScanned, err := verifyOneBlob(blob.Ref, volumeDriver)
+			bytesScanned, err := s.diskAccess.Scrub(blob.Ref, job.VolumeId)
 			if err != nil {
 				job.ErrorsFound++
 				job.Report += fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
@@ -250,22 +241,4 @@ func (s *Controller) loadJob(jobId string) (*varastotypes.IntegrityVerificationJ
 	}
 
 	return job, nil
-}
-
-func verifyOneBlob(ref varastotypes.BlobRef, volumeDriver blobdriver.Driver) (int64, error) {
-	blobContent, err := volumeDriver.Fetch(ref)
-	if err != nil {
-		return 0, err
-	}
-
-	blobVerifiedContent := varastoutils.BlobHashVerifier(blobContent, ref)
-
-	// even though we ignore content, BlobHashVerifier middleware will yield us error
-	// if hash is not correct
-	bytesScanned, err := io.Copy(ioutil.Discard, blobVerifiedContent)
-	if err != nil {
-		return bytesScanned, err
-	}
-
-	return bytesScanned, nil
 }

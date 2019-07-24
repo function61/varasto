@@ -1,13 +1,9 @@
 package varastoserver
 
 import (
-	"errors"
-	"fmt"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/varastotypes"
-	"github.com/function61/varasto/pkg/varastoutils"
 	"go.etcd.io/bbolt"
 	"log"
 	"sync"
@@ -70,7 +66,7 @@ func discoverAndRunReplicationJobs(
 		for job := range jobQueue {
 			logl.Debug.Printf(
 				"repl %s from %d -> %d",
-				job.Ref.AsHex()[0:7],
+				job.Ref.AsHex(),
 				job.FromVolumeId,
 				job.ToVolumeId)
 
@@ -106,62 +102,13 @@ func discoverAndRunReplicationJobs(
 }
 
 func replicateJob(job *replicationJob, db *bolt.DB, serverConfig *ServerConfig) error {
-	from, ok := serverConfig.VolumeDrivers[job.FromVolumeId]
-	if !ok {
-		return errors.New("from volume not found from volume drivers")
-	}
-	to, ok := serverConfig.VolumeDrivers[job.ToVolumeId]
-	if !ok {
-		return errors.New("to volume not found from volume drivers")
-	}
-
-	stream, err := from.Fetch(job.Ref)
-	if err != nil {
-		return err
-	}
-
-	blobSizeBytes, err := to.Store(job.Ref, varastoutils.BlobHashVerifier(stream, job.Ref))
-	if err != nil {
-		return err
-	}
-
-	tx, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	blobRecord, err := QueryWithTx(tx).Blob(job.Ref)
-	if err != nil {
-		return err
-	}
-
-	if sliceutil.ContainsInt(blobRecord.Volumes, job.ToVolumeId) {
-		return fmt.Errorf(
-			"race condition: someone already replicated %s to %d",
-			job.Ref.AsHex(),
-			job.ToVolumeId)
-	}
-
-	blobRecord.Volumes = append(blobRecord.Volumes, job.ToVolumeId)
-
-	// remove succesfully replicated volume from pending list
-	blobRecord.VolumesPendingReplication = sliceutil.FilterInt(blobRecord.VolumesPendingReplication, func(volId int) bool {
-		return volId != job.ToVolumeId
-	})
-
-	if err := volumeManagerIncreaseBlobCount(tx, job.ToVolumeId, blobSizeBytes); err != nil {
-		return err
-	}
-
-	if err := BlobRepository.Update(blobRecord, tx); err != nil {
-		return err
-	}
-
-	return tx.Commit()
+	return serverConfig.DiskAccess.Replicate(
+		job.FromVolumeId,
+		job.ToVolumeId,
+		job.Ref)
 }
 
-func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled) ([]*replicationJob, error) {
+func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, serverConfig *ServerConfig) ([]*replicationJob, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
@@ -191,16 +138,14 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled) ([]*replicationJo
 		}
 
 		for _, toVolumeId := range blob.VolumesPendingReplication {
-			if len(blob.Volumes) == 0 { // should not happen
-				panic("blob does not exist at any volume")
+			bestVolume, err := serverConfig.DiskAccess.BestVolumeId(blob.Volumes)
+			if err != nil {
+				return nil, err
 			}
-
-			// FIXME: find first thisnode-mounted volume
-			firstVolume := blob.Volumes[0]
 
 			jobs = append(jobs, &replicationJob{
 				Ref:          blob.Ref,
-				FromVolumeId: firstVolume,
+				FromVolumeId: bestVolume,
 				ToVolumeId:   toVolumeId,
 			})
 		}

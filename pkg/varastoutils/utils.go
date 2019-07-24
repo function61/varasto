@@ -8,6 +8,7 @@ import (
 	"io"
 )
 
+// this should not be called from anywhere other than DiskAccessManager and varastoclient
 func BlobHashVerifier(reader io.Reader, br varastotypes.BlobRef) io.Reader {
 	return hashverifyreader.New(reader, sha256.New(), br.AsSha256Sum())
 }

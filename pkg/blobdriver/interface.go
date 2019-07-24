@@ -6,10 +6,14 @@ import (
 )
 
 type Driver interface {
-	Store(ref varastotypes.BlobRef, rd io.Reader) (int64, error)
+	// backing store must be idempotent, i.e. writing same blob again must not change outcome.
+	// write also must be atomic. Fetch() must not return anything before store is completed succesfully.
+	RawStore(ref varastotypes.BlobRef, content io.Reader) error
 
-	// if chunk is not found, error must report os.IsNotExist(err) == true
-	Fetch(ref varastotypes.BlobRef) (io.ReadCloser, error)
+	// raw = driver doesn't do any encryption/compression/integrity verifications,
+	//       they are done at a higher level.
+	// if blob is not found, error must report os.IsNotExist(err) == true
+	RawFetch(ref varastotypes.BlobRef) (io.ReadCloser, error)
 
 	Mountable() error
 }

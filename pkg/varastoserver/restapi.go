@@ -6,7 +6,6 @@ import (
 	"errors"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
-	"github.com/function61/varasto/pkg/blobdriver"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/varastoserver/varastointegrityverifier"
 	"github.com/function61/varasto/pkg/varastotypes"
@@ -104,7 +103,22 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 			return
 		}
 
-		if err := storeBlob(collectionId, *blobRef, r.Body, conf, db); err != nil {
+		var volumeId int
+		if err := db.View(func(tx *bolt.Tx) error {
+			coll, err := QueryWithTx(tx).Collection(collectionId)
+			if err != nil {
+				return err
+			}
+
+			volumeId = coll.DesiredVolumes[0]
+
+			return nil
+		}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, r.Body); err != nil {
 			// FIXME: some could be StatusBadRequest
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -162,22 +176,13 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 			return // error was handled in common method
 		}
 
-		// try to find the first local volume that has this blob
-		var foundDriver blobdriver.Driver
-		for _, volumeId := range blobMetadata.Volumes {
-			if driver, found := conf.VolumeDrivers[volumeId]; found {
-				foundDriver = driver
-				break
-			}
-		}
-
-		// TODO: issue HTTP redirect to correct node?
-		if foundDriver == nil {
+		bestVolumeId, err := conf.DiskAccess.BestVolumeId(blobMetadata.Volumes)
+		if err != nil {
 			http.Error(w, varastotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		file, err := foundDriver.Fetch(*blobRef)
+		file, err := conf.DiskAccess.Fetch(*blobRef, bestVolumeId)
 		if err != nil {
 			if os.IsNotExist(err) {
 				// should not happen, because metadata said that we should have this blob
@@ -190,7 +195,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		}
 		defer file.Close()
 
-		if _, err := io.Copy(w, varastoutils.BlobHashVerifier(file, *blobRef)); err != nil {
+		if _, err := io.Copy(w, file); err != nil {
 			// FIXME: shouldn't try to write headers if even one write went to ResponseWriter
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -245,49 +250,4 @@ func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*var
 	}
 
 	return collection, CollectionRepository.Update(collection, tx)
-}
-
-func storeBlob(collectionId string, blobRef varastotypes.BlobRef, content io.Reader, conf *ServerConfig, db *bolt.DB) error {
-	tx, errTxBegin := db.Begin(true)
-	if errTxBegin != nil {
-		return errTxBegin
-	}
-	defer tx.Rollback()
-
-	if _, err := QueryWithTx(tx).Blob(blobRef); err != blorm.ErrNotFound {
-		return errors.New("blob already exists!")
-	}
-
-	coll, err := QueryWithTx(tx).Collection(collectionId)
-	if err != nil {
-		return err
-	}
-
-	volumeId := coll.DesiredVolumes[0]
-
-	volumeDriver, driverFound := conf.VolumeDrivers[volumeId]
-	if !driverFound {
-		return errors.New("volume driver not found")
-	}
-
-	blobSizeBytes, err := volumeDriver.Store(blobRef, varastoutils.BlobHashVerifier(content, blobRef))
-	if err != nil {
-		return err
-	}
-
-	log.Printf("wrote blob %s", blobRef.AsHex())
-
-	if err := volumeManagerIncreaseBlobCount(tx, volumeId, blobSizeBytes); err != nil {
-		return err
-	}
-
-	if err := BlobRepository.Update(&varastotypes.Blob{
-		Ref:        blobRef,
-		Volumes:    []int{volumeId},
-		Referenced: false,
-	}, tx); err != nil {
-		return err
-	}
-
-	return tx.Commit()
 }
