@@ -5,6 +5,7 @@ import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
+import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { jsxChildType } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
@@ -195,7 +196,9 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 					</td>
 					<td>{nodeName}</td>
 					<td>{obj.Driver}</td>
-					<td>{obj.DriverOpts}</td>
+					<td>
+						<SecretReveal secret={obj.DriverOpts} />
+					</td>
 					<td>
 						<CommandIcon command={VolumeUnmount(obj.Id)} />
 					</td>
