@@ -149,13 +149,13 @@ func makeThumbForFile(file varastotypes.File, config varastoclient.ClientConfig)
 
 	origBounds := orig.Bounds()
 
-	// - NearestNeighbor is fast but usually looks worst.
-	// - CatmullRom is slow but usually looks best.
-	// - ApproxBiLinear has reasonable speed and quality.
 	thumbWidth, thumbHeight := resizedDimensions(origBounds.Max.X, origBounds.Max.Y, 300, 533)
 
 	thumb := image.NewRGBA(image.Rect(0, 0, thumbWidth, thumbHeight))
 
+	// - NearestNeighbor is fast but usually looks worst.
+	// - CatmullRom is slow but usually looks best.
+	// - ApproxBiLinear has reasonable speed and quality.
 	draw.ApproxBiLinear.Scale(thumb, thumb.Bounds(), orig, origBounds, draw.Over, nil)
 
 	return atomicfilewrite.Write(thumbPath, func(writer io.Writer) error {
