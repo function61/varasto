@@ -4,34 +4,41 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 )
+
+func rm(path string) error {
+	dir, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
+
+	// will error out if not a workdir
+	wd, err := NewWorkdirLocation(dir)
+	if err != nil {
+		return err
+	}
+
+	ch, err := computeChangeset(wd)
+	if err != nil {
+		return err
+	}
+
+	if ch.AnyChanges() {
+		fmt.Println("Refusing to delete workdir because it has changes")
+		os.Exit(1)
+	}
+
+	return os.RemoveAll(dir)
+}
 
 func rmEntrypoint() *cobra.Command {
 	return &cobra.Command{
-		Use:   "rm",
-		Short: "Removes a working directory, but only if remote has full state",
-		Args:  cobra.NoArgs,
+		Use:   "rm <path>",
+		Short: "Removes a local clone of collection, but only if remote has full state",
+		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			dir, err := os.Getwd()
-			panicIfError(err)
-
-			wd, err := NewWorkdirLocation(dir)
-			panicIfError(err)
-
-			ch, err := computeChangeset(wd)
-			panicIfError(err)
-
-			if ch.AnyChanges() {
-				fmt.Println("Refusing to delete workdir because it has changes")
-				os.Exit(1)
-			}
-
-			// switch away from the dir we are removing
-			userDir, err := os.UserHomeDir()
-			panicIfError(err)
-			panicIfError(os.Chdir(userDir))
-
-			panicIfError(os.RemoveAll(dir))
+			panicIfError(rm(args[0]))
 		},
 	}
 }
