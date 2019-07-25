@@ -592,9 +592,18 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 			return nil
 		}
 
-		if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, bytes.NewBuffer(chunk)); err != nil {
+		blobExists, err := doesBlobExist(*blobRef, h.db)
+		if err != nil {			
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return nil
+		}
+
+		if !blobExists {		
+			if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, bytes.NewBuffer(chunk)); err != nil {
+				log.Printf("UploadFile: %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return nil
+			}
 		}
 
 		file.BlobRefs = append(file.BlobRefs, blobRef.AsHex())
@@ -731,4 +740,22 @@ func metadataMapToKvList(kvmap map[string]string) []MetadataKv {
 	}
 
 	return kvList
+}
+
+func doesBlobExist(ref varastotypes.BlobRef, db *bolt.DB) (bool, error) {
+	tx, err := db.Begin(false)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	_, err = stodb.Read(tx).Blob(ref)
+	if err == nil {
+		return true, nil
+	}
+	if err == blorm.ErrNotFound {
+		return false, nil
+	}
+
+	return false, err // unknown error
 }

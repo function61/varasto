@@ -1,6 +1,6 @@
 package blorm
 
-// Bolt Light ORM, doesn't do much else than persist structs into Bolt..
+// "Bolt Light ORM", doesn't do much else than persist structs into Bolt..
 
 import (
 	"errors"
