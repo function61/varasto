@@ -3,7 +3,7 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink } from 'f61ui/component/navigation';
 import { DefaultLayout } from 'f61ui/layout/defaultlayout';
 import { jsxChildType } from 'f61ui/types';
-import { RootFolderId } from 'generated/varastoserver_types';
+import { RootFolderId } from 'generated/stoserver_types';
 import { version } from 'generated/version';
 import * as React from 'react';
 import {

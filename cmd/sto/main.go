@@ -3,10 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/function61/gokit/dynversion"
-	"github.com/function61/varasto/pkg/varastoclient"
-	"github.com/function61/varasto/pkg/varastofuse"
-	"github.com/function61/varasto/pkg/varastoserver"
-	"github.com/function61/varasto/pkg/varastothumb"
+	"github.com/function61/varasto/pkg/stoclient"
+	"github.com/function61/varasto/pkg/stofuse"
+	"github.com/function61/varasto/pkg/stoserver"
+	"github.com/function61/varasto/pkg/stothumb"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -18,13 +18,13 @@ func main() {
 		Version: dynversion.Version,
 	}
 
-	for _, entrypoint := range varastoclient.Entrypoints() {
+	for _, entrypoint := range stoclient.Entrypoints() {
 		rootCmd.AddCommand(entrypoint)
 	}
 
-	rootCmd.AddCommand(varastoserver.Entrypoint())
-	rootCmd.AddCommand(varastofuse.Entrypoint())
-	rootCmd.AddCommand(varastothumb.Entrypoint())
+	rootCmd.AddCommand(stoserver.Entrypoint())
+	rootCmd.AddCommand(stofuse.Entrypoint())
+	rootCmd.AddCommand(stothumb.Entrypoint())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)

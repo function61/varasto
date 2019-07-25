@@ -2,24 +2,24 @@ package stateresolver
 
 import (
 	"github.com/function61/gokit/sliceutil"
-	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/stotypes"
 	"path"
 	"strings"
 )
 
 type DirPeekResult struct {
 	Path       string
-	Files      []varastotypes.File
+	Files      []stotypes.File
 	ParentDirs []string // doesn't include root
 	SubDirs    []string
 }
 
 // given a bunch of files with paths, we can create a directory model that lets us look
 // at one directory at a time, listing its sub- and parent dirs
-func DirPeek(files []varastotypes.File, dirToPeek string) *DirPeekResult {
+func DirPeek(files []stotypes.File, dirToPeek string) *DirPeekResult {
 	res := &DirPeekResult{
 		Path:       dirToPeek,
-		Files:      []varastotypes.File{},
+		Files:      []stotypes.File{},
 		ParentDirs: parents(dirToPeek),
 		SubDirs:    []string{},
 	}

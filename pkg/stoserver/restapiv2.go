@@ -1,0 +1,761 @@
+package stoserver
+
+import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
+	"github.com/function61/eventkit/event"
+	"github.com/function61/eventkit/eventlog"
+	"github.com/function61/gokit/appuptime"
+	"github.com/function61/gokit/dynversion"
+	"github.com/function61/gokit/httpauth"
+	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
+	"github.com/gorilla/mux"
+	"go.etcd.io/bbolt"
+	"io"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"runtime"
+	"sort"
+	"strconv"
+	"time"
+)
+
+type handlers struct {
+	db           *bolt.DB
+	conf         *ServerConfig
+	ivController *stointegrityverifier.Controller
+	logger       *log.Logger
+}
+
+func convertDir(dir stotypes.Directory) Directory {
+	return Directory{
+		Id:          dir.ID,
+		Parent:      dir.Parent,
+		Name:        dir.Name,
+		Description: dir.Description,
+		Metadata:    metadataMapToKvList(dir.Metadata),
+		Sensitivity: dir.Sensitivity,
+	}
+}
+
+func convertDbCollection(coll stotypes.Collection, changesets []ChangesetSubset) CollectionSubset {
+	return CollectionSubset{
+		Id:             coll.ID,
+		Head:           coll.Head,
+		Created:        coll.Created,
+		Directory:      coll.Directory,
+		Name:           coll.Name,
+		Description:    coll.Description,
+		DesiredVolumes: coll.DesiredVolumes,
+		Sensitivity:    coll.Sensitivity,
+		Metadata:       metadataMapToKvList(coll.Metadata),
+		Changesets:     changesets,
+	}
+}
+
+func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *DirectoryOutput {
+	dirId := mux.Vars(r)["id"]
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dir, err := stodb.Read(tx).Directory(dirId)
+	panicIfError(err)
+
+	parentDirs, err := getParentDirs(*dir, tx)
+	panicIfError(err)
+
+	parentDirsConverted := []Directory{}
+
+	for _, parentDir := range parentDirs {
+		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
+	}
+
+	dbColls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
+	panicIfError(err)
+
+	colls := []CollectionSubset{}
+	for _, dbColl := range dbColls {
+		colls = append(colls, convertDbCollection(dbColl, nil)) // FIXME: nil ok?
+	}
+	sort.Slice(colls, func(i, j int) bool { return colls[i].Name < colls[j].Name })
+
+	dbSubDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
+	panicIfError(err)
+
+	subDirs := []Directory{}
+	for _, dbSubDir := range dbSubDirs {
+		subDirs = append(subDirs, convertDir(dbSubDir))
+	}
+	sort.Slice(subDirs, func(i, j int) bool { return subDirs[i].Name < subDirs[j].Name })
+
+	return &DirectoryOutput{
+		Directory:   convertDir(*dir),
+		Parents:     parentDirsConverted,
+		Directories: subDirs,
+		Collections: colls,
+	}
+}
+
+func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *CollectionOutput {
+	collectionId := mux.Vars(r)["id"]
+	changesetId := mux.Vars(r)["rev"]
+	pathBytes, err := base64.StdEncoding.DecodeString(mux.Vars(r)["path"])
+	if err != nil {
+		panic(err)
+	}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	coll, err := stodb.Read(tx).Collection(collectionId)
+	if err != nil {
+		if err == blorm.ErrNotFound {
+			http.Error(w, "not found", http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return nil
+	}
+
+	if changesetId == HeadRevisionId {
+		changesetId = coll.Head
+	}
+
+	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
+	panicIfError(err)
+
+	allFilesInRevision := state.FileList()
+
+	// peek brings a subset of allFilesInRevision
+	peekResult := stateresolver.DirPeek(allFilesInRevision, string(pathBytes))
+
+	totalSize := int64(0)
+	convertedFiles := []File{}
+
+	for _, file := range allFilesInRevision {
+		totalSize += file.Size
+	}
+
+	for _, file := range peekResult.Files {
+		convertedFiles = append(convertedFiles, File{
+			Path:     file.Path,
+			Sha256:   file.Sha256,
+			Created:  file.Created,
+			Modified: file.Modified,
+			Size:     int(file.Size), // FIXME
+			BlobRefs: file.BlobRefs,
+		})
+	}
+
+	changesetsConverted := []ChangesetSubset{}
+
+	for _, changeset := range coll.Changesets {
+		changesetsConverted = append(changesetsConverted, ChangesetSubset{
+			Id:      changeset.ID,
+			Parent:  changeset.Parent,
+			Created: changeset.Created,
+		})
+	}
+
+	return &CollectionOutput{
+		TotalSize: int(totalSize), // FIXME
+		SelectedPathContents: SelectedPathContents{
+			Path:       peekResult.Path,
+			Files:      convertedFiles,
+			ParentDirs: peekResult.ParentDirs,
+			SubDirs:    peekResult.SubDirs,
+		},
+		FileCount:   len(allFilesInRevision),
+		ChangesetId: changesetId,
+		Collection:  convertDbCollection(*coll, changesetsConverted),
+	}
+}
+
+// TODO: URL parameter comes via a hack in frontend
+func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	collectionId := mux.Vars(r)["id"]
+	changesetId := mux.Vars(r)["rev"]
+
+	fileKey := r.URL.Query().Get("file")
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	coll, err := stodb.Read(tx).Collection(collectionId)
+	if err != nil {
+		if err == blorm.ErrNotFound {
+			http.Error(w, "collection not found", http.StatusNotFound)
+			return
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+
+	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	files := state.Files()
+	file, found := files[fileKey]
+	if !found {
+		http.Error(w, "file not found", http.StatusNotFound)
+		return
+	}
+
+	type RefAndVolumeId struct {
+		Ref      stotypes.BlobRef
+		VolumeId int
+	}
+
+	refAndVolumeIds := []RefAndVolumeId{}
+	for _, refSerialized := range file.BlobRefs {
+		ref, err := stotypes.BlobRefFromHex(refSerialized)
+		if err != nil { // should not happen
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		blob, err := stodb.Read(tx).Blob(*ref)
+		if err != nil {
+			if err == blorm.ErrNotFound {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			} else {
+				http.Error(w, "blob pointed to by file metadata not found", http.StatusInternalServerError)
+				return
+			}
+		}
+
+		volumeId, err := h.conf.DiskAccess.BestVolumeId(blob.Volumes)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		refAndVolumeIds = append(refAndVolumeIds, RefAndVolumeId{
+			Ref:      *ref,
+			VolumeId: volumeId,
+		})
+	}
+
+	tx.Rollback() // eagerly b/c the below operation is slow
+
+	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
+
+	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
+		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeId.Ref, refAndVolumeId.VolumeId)
+		if err != nil {
+			return err
+		}
+		defer chunkStream.Close()
+
+		_, err = io.Copy(w, chunkStream)
+		return err
+	}
+
+	for _, refAndVolumeId := range refAndVolumeIds {
+		panicIfError(sendBlob(refAndVolumeId))
+	}
+}
+
+func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Volume {
+	ret := []Volume{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.Volume{}
+	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
+
+	for _, dbObject := range dbObjects {
+		ret = append(ret, Volume{
+			Id:            dbObject.ID,
+			Uuid:          dbObject.UUID,
+			Label:         dbObject.Label,
+			Description:   dbObject.Description,
+			Quota:         int(dbObject.Quota), // FIXME: lossy conversions here
+			BlobSizeTotal: int(dbObject.BlobSizeTotal),
+			BlobCount:     int(dbObject.BlobCount),
+		})
+	}
+
+	return &ret
+}
+
+func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]VolumeMount {
+	ret := []VolumeMount{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.VolumeMount{}
+	panicIfError(stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&dbObjects), tx))
+
+	for _, dbObject := range dbObjects {
+		ret = append(ret, VolumeMount{
+			Id:         dbObject.ID,
+			Online:     h.conf.DiskAccess.IsMounted(dbObject.Volume),
+			Volume:     dbObject.Volume,
+			Node:       dbObject.Node,
+			Driver:     string(dbObject.Driver), // FIXME: string enum to frontend
+			DriverOpts: dbObject.DriverOpts,
+		})
+	}
+
+	return &ret
+}
+
+func toDbFiles(files []File) []stotypes.File {
+	ret := []stotypes.File{}
+
+	for _, file := range files {
+		ret = append(ret, stotypes.File{
+			Path:     file.Path,
+			Sha256:   file.Sha256,
+			Created:  file.Created,
+			Modified: file.Modified,
+			Size:     int64(file.Size),
+			BlobRefs: file.BlobRefs,
+		})
+	}
+
+	return ret
+}
+
+func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset Changeset, w http.ResponseWriter, r *http.Request) {
+	coll := commitChangesetInternal(
+		w,
+		r,
+		mux.Vars(r)["id"],
+		stotypes.NewChangeset(
+			changeset.ID,
+			changeset.Parent,
+			changeset.Created,
+			toDbFiles(changeset.FilesCreated),
+			toDbFiles(changeset.FilesUpdated),
+			changeset.FilesDeleted),
+		h.db)
+
+	// FIXME: add "produces" to here because commitChangesetInternal responds with updated collection
+	if coll != nil {
+		// logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
+		log.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
+
+		outJson(w, coll)
+	}
+}
+
+func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionId string, changeset stotypes.CollectionChangeset, db *bolt.DB) *stotypes.Collection {
+	tx, errTxBegin := db.Begin(true)
+	panicIfError(errTxBegin)
+	defer tx.Rollback()
+
+	coll, err := stodb.Read(tx).Collection(collectionId)
+	panicIfError(err)
+
+	if collectionHasChangesetId(changeset.ID, coll) {
+		http.Error(w, "changeset ID already in collection", http.StatusBadRequest)
+		return nil
+	}
+
+	if changeset.Parent != stotypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
+		http.Error(w, "parent changeset not found", http.StatusBadRequest)
+		return nil
+	}
+
+	if changeset.Parent != coll.Head {
+		// TODO: force push or rebase support?
+		http.Error(w, "commit does not target current head. would result in dangling heads!", http.StatusBadRequest)
+		return nil
+	}
+
+	createdAndUpdated := append(changeset.FilesCreated, changeset.FilesUpdated...)
+
+	for _, file := range createdAndUpdated {
+		for _, refHex := range file.BlobRefs {
+			ref, err := stotypes.BlobRefFromHex(refHex)
+			if err != nil {
+				panic(err)
+			}
+
+			blob, err := stodb.Read(tx).Blob(*ref)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
+				return nil
+			}
+
+			// FIXME: if same changeset mentions same blob many times, we update the old blob
+			// metadata many times due to the transaction reads not seeing uncommitted writes
+			blob.Referenced = true
+			blob.VolumesPendingReplication = missingFromLeftHandSide(
+				blob.Volumes,
+				coll.DesiredVolumes)
+
+			panicIfError(stodb.BlobRepository.Update(blob, tx))
+		}
+	}
+
+	// update head pointer & calc Created timestamp
+	appendChangeset(changeset, coll)
+
+	panicIfError(stodb.CollectionRepository.Update(coll, tx))
+	panicIfError(tx.Commit())
+
+	return coll
+}
+
+func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]ReplicationPolicy {
+	ret := []ReplicationPolicy{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.ReplicationPolicy{}
+	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
+
+	for _, dbObject := range dbObjects {
+		ret = append(ret, ReplicationPolicy{
+			Id:             dbObject.ID,
+			Name:           dbObject.Name,
+			DesiredVolumes: dbObject.DesiredVolumes,
+		})
+	}
+
+	return &ret
+}
+
+func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Node {
+	ret := []Node{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.Node{}
+	panicIfError(stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx))
+
+	for _, dbObject := range dbObjects {
+		ret = append(ret, Node{
+			Id:   dbObject.ID,
+			Addr: dbObject.Addr,
+			Name: dbObject.Name,
+		})
+	}
+
+	return &ret
+}
+
+func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Client {
+	ret := []Client{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.Client{}
+	panicIfError(stodb.ClientRepository.Each(stodb.ClientAppender(&dbObjects), tx))
+
+	for _, dbObject := range dbObjects {
+		ret = append(ret, Client{
+			Id:        dbObject.ID,
+			Name:      dbObject.Name,
+			AuthToken: dbObject.AuthToken,
+		})
+	}
+
+	return &ret
+}
+
+func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	w.Header().Set("Content-Type", "text/plain")
+
+	processFile := func(file *stotypes.File) {
+		fmt.Fprintf(w, "%s %s\n", file.Sha256, file.Path)
+	}
+
+	panicIfError(stodb.CollectionRepository.Each(func(record interface{}) error {
+		coll := record.(*stotypes.Collection)
+
+		for _, changeset := range coll.Changesets {
+			for _, file := range changeset.FilesCreated {
+				processFile(&file)
+			}
+
+			for _, file := range changeset.FilesUpdated {
+				processFile(&file)
+			}
+		}
+
+		return nil
+	}, tx))
+}
+
+func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	panicIfError(exportDb(tx, w))
+}
+
+func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *File {
+	collectionId := mux.Vars(r)["id"]
+	mtimeUnixMillis, err := strconv.Atoi(r.URL.Query().Get("mtime"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil
+	}
+
+	mtime := time.Unix(int64(mtimeUnixMillis/1000), 0)
+
+	// TODO: reuse the logic found in the client package?
+	wholeFileHash := sha256.New()
+
+	var volumeId int
+	if err := h.db.View(func(tx *bolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(collectionId)
+		if err != nil {
+			return err
+		}
+
+		volumeId = coll.DesiredVolumes[0]
+
+		return nil
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	file := &File{
+		Path:     r.URL.Query().Get("filename"),
+		Sha256:   "",
+		Created:  mtime,
+		Modified: mtime,
+		Size:     0,
+		BlobRefs: []string{},
+	}
+
+	for {
+		chunk, errRead := ioutil.ReadAll(io.LimitReader(r.Body, stotypes.BlobSize))
+		if errRead != nil {
+			http.Error(w, errRead.Error(), http.StatusBadRequest)
+			return nil
+		}
+
+		if len(chunk) == 0 {
+			// should only happen if file size is exact multiple of blobSize
+			break
+		}
+
+		file.Size += len(chunk)
+
+		if _, err := wholeFileHash.Write(chunk); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
+
+		chunkSha256Bytes := sha256.Sum256(chunk)
+
+		blobRef, err := stotypes.BlobRefFromHex(hex.EncodeToString(chunkSha256Bytes[:]))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return nil
+		}
+
+		blobExists, err := doesBlobExist(*blobRef, h.db)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
+
+		if !blobExists {
+			if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, bytes.NewBuffer(chunk)); err != nil {
+				log.Printf("UploadFile: %v", err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return nil
+			}
+		}
+
+		file.BlobRefs = append(file.BlobRefs, blobRef.AsHex())
+	}
+
+	file.Sha256 = fmt.Sprintf("%x", wholeFileHash.Sum(nil))
+
+	return file
+}
+
+func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]IntegrityVerificationJob {
+	ret := []IntegrityVerificationJob{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.IntegrityVerificationJob{}
+	panicIfError(stodb.IntegrityVerificationJobRepository.Each(stodb.IntegrityVerificationJobAppender(&dbObjects), tx))
+
+	sort.Slice(dbObjects, func(i, j int) bool { return !dbObjects[i].Started.Before(dbObjects[j].Started) })
+
+	runningIds := h.ivController.ListRunningJobs()
+
+	for _, dbObject := range dbObjects {
+		completed := dbObject.Completed
+
+		completedPtr := &completed
+		if completed.IsZero() {
+			completedPtr = nil
+		}
+
+		ret = append(ret, IntegrityVerificationJob{
+			Id:                   dbObject.ID,
+			Running:              sliceutil.ContainsString(runningIds, dbObject.ID),
+			Created:              dbObject.Started,
+			Completed:            completedPtr,
+			VolumeId:             dbObject.VolumeId,
+			LastCompletedBlobRef: dbObject.LastCompletedBlobRef.AsHex(),
+			BytesScanned:         int(dbObject.BytesScanned),
+			ErrorsFound:          dbObject.ErrorsFound,
+			Report:               dbObject.Report,
+		})
+	}
+
+	return &ret
+}
+
+func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *ServerInfo {
+	dbFileInfo, err := os.Stat(h.conf.File.DbLocation)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	ms := &runtime.MemStats{}
+	runtime.ReadMemStats(ms)
+
+	return &ServerInfo{
+		AppVersion:   dynversion.Version,
+		AppUptime:    appuptime.Elapsed().String(),
+		DatabaseSize: int(dbFileInfo.Size()),
+		HeapBytes:    int(ms.HeapAlloc),
+		GoVersion:    runtime.Version(),
+		Goroutines:   runtime.NumGoroutine(),
+		ServerOs:     runtime.GOOS,
+		ServerArch:   runtime.GOARCH,
+	}
+}
+
+func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *GeneratedIds {
+	return &GeneratedIds{
+		Changeset: stoutils.NewCollectionChangesetId(),
+	}
+}
+
+// func createNonPersistingEventLog(listeners domain.EventListener) (eventlog.Log, error) {
+func createNonPersistingEventLog() (eventlog.Log, error) {
+	return eventlog.NewSimpleLogFile(
+		bytes.NewReader(nil),
+		ioutil.Discard,
+		func(e event.Event) error {
+			return nil
+			// return domain.DispatchEvent(e, listeners)
+		},
+		func(serialized string) (event.Event, error) {
+			return nil, nil
+			// return event.Deserialize(serialized, domain.Allocators)
+		},
+		logex.Discard)
+}
+
+func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {
+	return httpauth.MiddlewareChainMap{
+		"public": func(w http.ResponseWriter, r *http.Request) *httpauth.RequestContext {
+			return &httpauth.RequestContext{}
+		},
+		"authenticated": func(w http.ResponseWriter, r *http.Request) *httpauth.RequestContext {
+			if !authenticate(conf, w, r) {
+				return nil
+			}
+
+			return &httpauth.RequestContext{}
+		},
+	}
+}
+
+func getParentDirs(of stotypes.Directory, tx *bolt.Tx) ([]stotypes.Directory, error) {
+	parentDirs := []stotypes.Directory{}
+
+	current := &of
+	var err error
+
+	for current.Parent != "" {
+		current, err = stodb.Read(tx).Directory(current.Parent)
+		if err != nil {
+			return nil, err
+		}
+
+		// reverse order
+		parentDirs = append([]stotypes.Directory{*current}, parentDirs...)
+	}
+
+	return parentDirs, nil
+}
+
+func metadataMapToKvList(kvmap map[string]string) []MetadataKv {
+	kvList := []MetadataKv{}
+	for key, value := range kvmap {
+		kvList = append(kvList, MetadataKv{
+			Key:   key,
+			Value: value,
+		})
+	}
+
+	return kvList
+}
+
+func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
+	tx, err := db.Begin(false)
+	if err != nil {
+		return false, err
+	}
+	defer tx.Rollback()
+
+	_, err = stodb.Read(tx).Blob(ref)
+	if err == nil {
+		return true, nil
+	}
+	if err == blorm.ErrNotFound {
+		return false, nil
+	}
+
+	return false, err // unknown error
+}

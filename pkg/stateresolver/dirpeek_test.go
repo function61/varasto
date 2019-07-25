@@ -2,14 +2,14 @@ package stateresolver
 
 import (
 	"github.com/function61/gokit/assert"
-	"github.com/function61/varasto/pkg/varastotypes"
+	"github.com/function61/varasto/pkg/stotypes"
 	"strings"
 	"testing"
 )
 
 func TestDirPeek(t *testing.T) {
-	f := func(path string) varastotypes.File {
-		return varastotypes.File{
+	f := func(path string) stotypes.File {
+		return stotypes.File{
 			Path: path,
 		}
 	}
@@ -18,7 +18,7 @@ func TestDirPeek(t *testing.T) {
 		return strings.Join(sl, ",")
 	}
 
-	dirStructure := []varastotypes.File{
+	dirStructure := []stotypes.File{
 		f("foo.txt"),
 		f("bar.txt"),
 		f("sub/baz.txt"),

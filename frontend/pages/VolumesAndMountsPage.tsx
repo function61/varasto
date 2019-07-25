@@ -18,14 +18,14 @@ import {
 	VolumeMount2,
 	VolumeUnmount,
 	VolumeVerifyIntegrity,
-} from 'generated/varastoserver_commands';
+} from 'generated/stoserver_commands';
 import {
 	getIntegrityVerificationJobs,
 	getNodes,
 	getVolumeMounts,
 	getVolumes,
-} from 'generated/varastoserver_endpoints';
-import { IntegrityVerificationJob, Node, Volume, VolumeMount } from 'generated/varastoserver_types';
+} from 'generated/stoserver_endpoints';
+import { IntegrityVerificationJob, Node, Volume, VolumeMount } from 'generated/stoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

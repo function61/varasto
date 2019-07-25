@@ -27,8 +27,8 @@ import {
 	DirectoryMove,
 	DirectoryPullMetadata,
 	DirectoryRename,
-} from 'generated/varastoserver_commands';
-import { getDirectory } from 'generated/varastoserver_endpoints';
+} from 'generated/stoserver_commands';
+import { getDirectory } from 'generated/stoserver_endpoints';
 import {
 	CollectionSubset,
 	Directory,
@@ -40,7 +40,7 @@ import {
 	MetadataThumbnail,
 	MetadataTitle,
 	RootPathDotBase64FIXME,
-} from 'generated/varastoserver_types';
+} from 'generated/stoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';

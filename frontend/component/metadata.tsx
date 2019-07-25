@@ -14,7 +14,7 @@ import {
 	MetadataThumbnail,
 	MetadataVideoRevenueDollars,
 	MetadataVideoRuntimeMins,
-} from 'generated/varastoserver_types';
+} from 'generated/stoserver_types';
 import * as React from 'react';
 
 interface MetadataKeyValue {

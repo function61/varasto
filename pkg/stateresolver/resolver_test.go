@@ -3,8 +3,8 @@ package stateresolver
 import (
 	"fmt"
 	"github.com/function61/gokit/assert"
-	"github.com/function61/varasto/pkg/varastotypes"
-	"github.com/function61/varasto/pkg/varastoutils"
+	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
 	"sort"
 	"strings"
 	"testing"
@@ -13,16 +13,16 @@ import (
 
 func TestComputeStateAt(t *testing.T) {
 	// new empty collection
-	coll := varastotypes.Collection{
-		Head:       varastotypes.NoParentId,
-		Changesets: []varastotypes.CollectionChangeset{},
+	coll := stotypes.Collection{
+		Head:       stotypes.NoParentId,
+		Changesets: []stotypes.CollectionChangeset{},
 	}
 
 	assert.Assert(t, len(coll.Changesets) == 0)
 	assert.EqualString(t, dumpState(coll, coll.Head), `
 `)
 
-	coll = pushChangeset(coll, varastotypes.NoParentId, creates("a.txt", 11), creates("b.txt", 22))
+	coll = pushChangeset(coll, stotypes.NoParentId, creates("a.txt", 11), creates("b.txt", 22))
 
 	assert.Assert(t, len(coll.Changesets) == 1)
 	assert.EqualString(t, dumpState(coll, coll.Head), `a.txt (size 11)
@@ -53,9 +53,9 @@ c.txt (size 33)
 
 // test helpers
 
-func pushChangeset(coll varastotypes.Collection, parentId string, mutations ...chMutFn) varastotypes.Collection {
-	changeset := varastotypes.NewChangeset(
-		varastoutils.NewCollectionChangesetId(),
+func pushChangeset(coll stotypes.Collection, parentId string, mutations ...chMutFn) stotypes.Collection {
+	changeset := stotypes.NewChangeset(
+		stoutils.NewCollectionChangesetId(),
 		parentId,
 		time.Now(),
 		nil,
@@ -72,7 +72,7 @@ func pushChangeset(coll varastotypes.Collection, parentId string, mutations ...c
 	return coll
 }
 
-func dumpState(coll varastotypes.Collection, revId string) string {
+func dumpState(coll stotypes.Collection, revId string) string {
 	state, err := ComputeStateAt(coll, revId)
 	if err != nil {
 		panic(err)
@@ -89,11 +89,11 @@ func dumpState(coll varastotypes.Collection, revId string) string {
 	return strings.Join(asList, "\n") + "\n"
 }
 
-type chMutFn func(ch *varastotypes.CollectionChangeset)
+type chMutFn func(ch *stotypes.CollectionChangeset)
 
 func creates(name string, size int64) chMutFn {
-	return func(ch *varastotypes.CollectionChangeset) {
-		ch.FilesCreated = append(ch.FilesCreated, varastotypes.File{
+	return func(ch *stotypes.CollectionChangeset) {
+		ch.FilesCreated = append(ch.FilesCreated, stotypes.File{
 			Path: name,
 			Size: size,
 		})
@@ -101,8 +101,8 @@ func creates(name string, size int64) chMutFn {
 }
 
 func updates(name string, size int64) chMutFn {
-	return func(ch *varastotypes.CollectionChangeset) {
-		ch.FilesUpdated = append(ch.FilesUpdated, varastotypes.File{
+	return func(ch *stotypes.CollectionChangeset) {
+		ch.FilesUpdated = append(ch.FilesUpdated, stotypes.File{
 			Path: name,
 			Size: size,
 		})
@@ -110,7 +110,7 @@ func updates(name string, size int64) chMutFn {
 }
 
 func deletes(name string) chMutFn {
-	return func(ch *varastotypes.CollectionChangeset) {
+	return func(ch *stotypes.CollectionChangeset) {
 		ch.FilesDeleted = append(ch.FilesDeleted, name)
 	}
 }

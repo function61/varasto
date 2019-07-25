@@ -10,7 +10,7 @@ import (
 //go:generate go run codegenerate.go
 
 // FIXME: this is a dirty hack for fixing non-compiling generated code
-//go:generate rm ../frontend/generated/varastofuse/vstofusetypes_endpoints.ts
+//go:generate rm ../frontend/generated/stofuse/stofusetypes_endpoints.ts
 
 func main() {
 	if err := mainInternal(); err != nil {
@@ -25,8 +25,8 @@ func mainInternal() error {
 	}
 
 	modules := []*codegen.Module{
-		codegen.NewModule("varastoserver", "pkg/varastoserver/types.json", "", "pkg/varastoserver/commands.json"),
-		codegen.NewModule("varastofuse/vstofusetypes", "pkg/varastofuse/vstofusetypes/types.json", "", ""),
+		codegen.NewModule("stoserver", "pkg/stoserver/types.json", "", "pkg/stoserver/commands.json"),
+		codegen.NewModule("stofuse/stofusetypes", "pkg/stofuse/stofusetypes/types.json", "", ""),
 	}
 
 	opts := codegen.Opts{

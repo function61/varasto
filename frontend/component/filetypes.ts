@@ -1,5 +1,5 @@
 import { unrecognizedValue } from 'f61ui/utils';
-import { File } from 'generated/varastoserver_types';
+import { File } from 'generated/stoserver_types';
 
 export enum Filetype {
 	Word,

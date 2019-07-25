@@ -16,7 +16,7 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { CollectionMoveFilesIntoAnotherCollection } from 'generated/varastoserver_commands';
+import { CollectionMoveFilesIntoAnotherCollection } from 'generated/stoserver_commands';
 import {
 	commitChangeset,
 	downloadFileUrl,
@@ -24,7 +24,7 @@ import {
 	getCollectiotAtRev,
 	getDirectory,
 	uploadFileUrl,
-} from 'generated/varastoserver_endpoints';
+} from 'generated/stoserver_endpoints';
 import {
 	ChangesetSubset,
 	CollectionOutput,
@@ -32,7 +32,7 @@ import {
 	DirectoryOutput,
 	File as File2, // conflicts with HTML's "File" interface
 	RootPathDotBase64FIXME,
-} from 'generated/varastoserver_types';
+} from 'generated/stoserver_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';

@@ -8,8 +8,8 @@ import {
 	CollectionMove,
 	CollectionPullMetadata,
 	CollectionRename,
-} from 'generated/varastoserver_commands';
-import { CollectionSubset } from 'generated/varastoserver_types';
+} from 'generated/stoserver_commands';
+import { CollectionSubset } from 'generated/stoserver_types';
 import * as React from 'react';
 
 export function collectionDropdown(coll: CollectionSubset) {
