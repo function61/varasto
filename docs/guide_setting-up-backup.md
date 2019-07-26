@@ -17,7 +17,11 @@ Setting up
 ----------
 
 Since this is so important, we've made it easy to back it up - Varasto has
-[µbackup](https://github.com/function61/ubackup) built-in.
+[µbackup](https://github.com/function61/ubackup) built-in. The backup files are encrypted
+so your backup hosting provider can't look at your metadata.
+
+µbackup writes a copy of your metadata database in AWS S3. You'll want to back up in a remote
+location to protect from fires or power surge events that could destroy your hardware.
 
 NOTE: this process is for advanced users. Maybe in the future we'll have an easier UI for this.
 
@@ -47,9 +51,12 @@ Taking a backup
 In Varasto's UI (on "Server info" page) there's a "Backup database" button. It'll start
 the backup, but currently you'll only see its progress from the logs.
 
+It's fine to use Varasto during backing up, since the underlying database uses
+[MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control).
 
-Restoring from backup, motivation
----------------------------------
+
+Restoring from backup, motivation for testing
+---------------------------------------------
 
 > "Nobody wants backup, they only want restore."
 
