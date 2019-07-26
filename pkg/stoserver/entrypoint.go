@@ -15,7 +15,7 @@ func Entrypoint() *cobra.Command {
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			rootLogger := log.New(os.Stderr, "", log.LstdFlags)
+			rootLogger := logex.StandardLogger()
 
 			workers := stopper.NewManager()
 			go func(logger *log.Logger) {
