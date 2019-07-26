@@ -125,7 +125,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		go storeplication.StartReplicationController(
 			db,
 			serverConfig.DiskAccess,
-			logex.Prefix("replicationcontroller", logger),
+			logex.Prefix("replctrl", logger),
 			workers.Stopper())
 	}
 
