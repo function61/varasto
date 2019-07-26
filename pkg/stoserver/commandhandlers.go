@@ -17,6 +17,7 @@ import (
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
+	"log"
 	"net/http"
 	"strings"
 )
@@ -26,6 +27,7 @@ type cHandlers struct {
 	db           *bolt.DB
 	conf         *ServerConfig
 	ivController *stointegrityverifier.Controller
+	logger       *log.Logger
 }
 
 func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {

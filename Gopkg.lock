@@ -33,6 +33,51 @@
   version = "v2.1.2"
 
 [[projects]]
+  digest = "1:395a7c7f9a938fbf33c046b6fc32601233d84d5d9260a51ef06a39cf5df5db15"
+  name = "github.com/aws/aws-sdk-go"
+  packages = [
+    "aws",
+    "aws/awserr",
+    "aws/awsutil",
+    "aws/client",
+    "aws/client/metadata",
+    "aws/corehandlers",
+    "aws/credentials",
+    "aws/credentials/ec2rolecreds",
+    "aws/credentials/endpointcreds",
+    "aws/credentials/processcreds",
+    "aws/credentials/stscreds",
+    "aws/csm",
+    "aws/defaults",
+    "aws/ec2metadata",
+    "aws/endpoints",
+    "aws/request",
+    "aws/session",
+    "aws/signer/v4",
+    "internal/ini",
+    "internal/s3err",
+    "internal/sdkio",
+    "internal/sdkrand",
+    "internal/sdkuri",
+    "internal/shareddefaults",
+    "private/protocol",
+    "private/protocol/eventstream",
+    "private/protocol/eventstream/eventstreamapi",
+    "private/protocol/json/jsonutil",
+    "private/protocol/query",
+    "private/protocol/query/queryutil",
+    "private/protocol/rest",
+    "private/protocol/restxml",
+    "private/protocol/xml/xmlutil",
+    "service/s3",
+    "service/sts",
+    "service/sts/stsiface",
+  ]
+  pruneopts = "UT"
+  revision = "77b6968988559d355ab953b6436eafe6a76e4a92"
+  version = "v1.21.4"
+
+[[projects]]
   digest = "1:76dc72490af7174349349838f2fe118996381b31ea83243812a97e5a0fd5ed55"
   name = "github.com/dgrijalva/jwt-go"
   packages = ["."]
@@ -81,18 +126,20 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:0204aacb3d6d91ae1360418a67807eb32d1c08674a201eaff4609cb7887884dc"
+  digest = "1:415ca75b1a2ad46873cd65d33162388b34cc1499e691662330f7fef0b9f6a3cd"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
     "assert",
     "atomicfilewrite",
+    "aws/s3facade",
     "backoff",
     "cryptorandombytes",
     "cryptoutil",
     "csrf",
     "dynversion",
     "dynversion/precompilationversion",
+    "envvar",
     "ezhttp",
     "fileexists",
     "hashverifyreader",
@@ -118,6 +165,20 @@
   ]
   pruneopts = "UT"
   revision = "5dc20d261fd1286e039f435cc8b631227a038505"
+
+[[projects]]
+  branch = "master"
+  digest = "1:1ada8852273b620bb13b81194d58f716072c017071f156855c6e0c1f43a5b3e0"
+  name = "github.com/function61/ubackup"
+  packages = [
+    "pkg/backupfile",
+    "pkg/ubbackup",
+    "pkg/ubconfig",
+    "pkg/ubstorage",
+    "pkg/ubtypes",
+  ]
+  pruneopts = "UT"
+  revision = "c7fe3a91081ee8ad31f26e671016df56e8233129"
 
 [[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
@@ -164,6 +225,13 @@
   pruneopts = "UT"
   revision = "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
   version = "v1.0"
+
+[[projects]]
+  digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
+  name = "github.com/jmespath/go-jmespath"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c2b33e84"
 
 [[projects]]
   branch = "master"
@@ -416,7 +484,6 @@
     "github.com/function61/gokit/assert",
     "github.com/function61/gokit/atomicfilewrite",
     "github.com/function61/gokit/cryptorandombytes",
-    "github.com/function61/gokit/cryptoutil",
     "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/dynversion/precompilationversion",
     "github.com/function61/gokit/ezhttp",
@@ -426,19 +493,20 @@
     "github.com/function61/gokit/jsonfile",
     "github.com/function61/gokit/logex",
     "github.com/function61/gokit/ossignal",
-    "github.com/function61/gokit/pkencryptedstream",
     "github.com/function61/gokit/retry",
     "github.com/function61/gokit/sliceutil",
     "github.com/function61/gokit/stopper",
     "github.com/function61/pi-security-module/pkg/f61ui",
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
+    "github.com/function61/ubackup/pkg/ubbackup",
+    "github.com/function61/ubackup/pkg/ubconfig",
+    "github.com/function61/ubackup/pkg/ubtypes",
     "github.com/gorilla/mux",
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
     "go.etcd.io/bbolt",
     "golang.org/x/image/bmp",
     "golang.org/x/image/draw",
-    "golang.org/x/net/context",
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
     "google.golang.org/api/drive/v3",

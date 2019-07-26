@@ -7,7 +7,10 @@ emphasis on integrity and encryption.
 
 See [screenshots](docs/screenshots.md) to get a better picture.
 
-Status: currently *under heavy development*. Works so robustly (blobs currently cannot be
+Status
+------
+
+Currently *under heavy development*. Works so robustly (blobs currently cannot be
 deleted so if metadata DB is properly backed up, you can't lose data) that I'm already
 moving *all my files in*, but I wouldn't yet recommend this for anybody else. Also proper
 access controls are nowhere to be found.
@@ -17,6 +20,7 @@ Docs
 ----
 
 - [(storage) Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+- [Setting up backup](docs/guide_setting-up-backup.md)
 - [Security policy](https://github.com/function61/varasto/security/policy)
 
 
