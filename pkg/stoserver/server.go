@@ -167,14 +167,9 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}
 	defer tx.Rollback()
 
-	configBucket := tx.Bucket(configBucketKey)
-	if configBucket == nil {
-		return nil, blorm.ErrNotFound
-	}
-
-	nodeId := string(configBucket.Get(configBucketNodeKey))
-	if nodeId == "" {
-		return nil, errors.New("config bucket node ID not found")
+	nodeId, err := getSelfNodeId(tx)
+	if err != nil {
+		return nil, err
 	}
 
 	selfNode, err := stodb.Read(tx).Node(nodeId)

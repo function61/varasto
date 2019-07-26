@@ -3,6 +3,7 @@ package stoserver
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/asdine/storm/codec"
 	"github.com/asdine/storm/codec/msgpack"
@@ -11,6 +12,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"go.etcd.io/bbolt"
 	"io"
+	"regexp"
 	"strings"
 )
 
@@ -23,6 +25,15 @@ import (
 func exportDb(tx *bolt.Tx, output io.Writer) error {
 	outputBuffered := bufio.NewWriterSize(output, 1024*100)
 	defer outputBuffered.Flush()
+
+	nodeId, err := getSelfNodeId(tx)
+	if err != nil {
+		return err
+	}
+
+	if _, err := outputBuffered.Write([]byte(makeBackupHeader(nodeId) + "\n")); err != nil {
+		return err
+	}
 
 	jsonEncoderOutput := json.NewEncoder(outputBuffered)
 
@@ -46,7 +57,7 @@ func exportDb(tx *bolt.Tx, output io.Writer) error {
 	return nil
 }
 
-func importDb(content io.Reader, nodeId string) error {
+func importDb(content io.Reader) error {
 	scf, err := readServerConfigFile()
 	if err != nil {
 		return err
@@ -116,12 +127,6 @@ func importDb(content io.Reader, nodeId string) error {
 		return err
 	}
 
-	if err := withTx(func(tx *bolt.Tx) error {
-		return bootstrapSetNodeId(nodeId, tx)
-	}); err != nil {
-		return err
-	}
-
 	return commitOpenTx()
 }
 
@@ -148,6 +153,15 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 	scanner.Buffer(buf, cap(buf))
 
 	var repo blorm.Repository
+
+	// get first line so we can parse the header
+	if !scanner.Scan() {
+		return fmt.Errorf("file seems empty: %v", scanner.Err())
+	}
+	nodeId, err := parseBackupHeader(scanner.Text())
+	if err != nil {
+		return err
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -183,5 +197,26 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 		return err
 	}
 
+	if err := withTx(func(tx *bolt.Tx) error {
+		return bootstrapSetNodeId(nodeId, tx)
+	}); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func makeBackupHeader(nodeId string) string {
+	return fmt.Sprintf("# Varasto-backup-v1(nodeId=%s)", nodeId)
+}
+
+var backupHeaderRe = regexp.MustCompile("# Varasto-backup-v1\\(nodeId=([^\\)]+)\\)")
+
+// returns nodeId
+func parseBackupHeader(backupHeader string) (string, error) {
+	matches := backupHeaderRe.FindStringSubmatch(backupHeader)
+	if matches == nil {
+		return "", errors.New("failed to recognize backup header. did you remember to decrypt the backup file?")
+	}
+	return matches[1], nil
 }

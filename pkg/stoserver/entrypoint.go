@@ -31,11 +31,11 @@ func Entrypoint() *cobra.Command {
 	}
 
 	cmd.AddCommand(&cobra.Command{
-		Use:   "dbimport [nodeId]",
+		Use:   "dbimport",
 		Short: "Imports database",
-		Args:  cobra.ExactArgs(1),
+		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := importDb(os.Stdin, args[0]); err != nil {
+			if err := importDb(os.Stdin); err != nil {
 				panic(err)
 			}
 		},

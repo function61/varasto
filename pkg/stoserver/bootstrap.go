@@ -1,7 +1,9 @@
 package stoserver
 
 import (
+	"errors"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -61,6 +63,20 @@ func bootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
 	}
 
 	return configBucket.Put(configBucketNodeKey, []byte(nodeId))
+}
+
+func getSelfNodeId(tx *bolt.Tx) (string, error) {
+	configBucket := tx.Bucket(configBucketKey)
+	if configBucket == nil {
+		return "", blorm.ErrNotFound
+	}
+
+	nodeId := string(configBucket.Get(configBucketNodeKey))
+	if nodeId == "" {
+		return "", errors.New("config bucket node ID not found")
+	}
+
+	return nodeId, nil
 }
 
 func bootstrapRepos(db *bolt.DB) error {
