@@ -1,3 +1,4 @@
+// diskaccess ties together DB metadata read/write in addition to writing to disk
 package stodiskaccess
 
 import (
@@ -18,7 +19,6 @@ import (
 	"os"
 )
 
-// diskaccess ties together DB metadata read/write in addition to writing to disk
 type Controller struct {
 	metadataStore   MetadataStore
 	mountedDrivers  map[int]blobstore.Driver // only mounted drivers
