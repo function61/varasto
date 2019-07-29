@@ -1,7 +1,7 @@
 Architecture
 ------------
 
-![](docs/architecture.png)
+![](architecture.png)
 
 
 Inspired by & alternative software
