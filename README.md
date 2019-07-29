@@ -19,8 +19,18 @@ access controls are nowhere to be found.
 Docs
 ----
 
-- [(storage) Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+Design:
+
+- [Terminology](docs/design_terminology.md)
+- [Architecture / inspired by / comparison to similar software](docs/design_architecture-inspired-by-comparison-to-similar-software.md)
+
+Operating:
+
+- [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
+
+Misc:
+
 - [Security policy](https://github.com/function61/varasto/security/policy)
 
 
@@ -68,25 +78,6 @@ Ideas / goals
   system to reach the desired goals of integrity and availability. If your hard drive ever
   crashes, would you like to try the recovery with striped RAID / parity bits on a
   specialized filesystem, or just a regular NTFS or EXT4?
-
-
-Architecture
-------------
-
-![](docs/architecture.png)
-
-
-Inspired by & alternative software
-----------------------------------
-
-- [Syncthing](https://syncthing.net/)
-- [Duplicati](https://www.duplicati.com/)
-- [restic](https://restic.net/)
-- [bup](https://github.com/bup/bup)
-- [Perkeep](https://perkeep.org/doc/overview)
-- [upspin](https://upspin.io/doc/arch.md)
-- [Bazil](https://bazil.org/)
-- [MezzFS](https://medium.com/netflix-techblog/mezzfs-mounting-object-storage-in-netflixs-media-processing-platform-cda01c446ba)
 
 
 Philosophy
