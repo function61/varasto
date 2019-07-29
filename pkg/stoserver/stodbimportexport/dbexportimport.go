@@ -1,3 +1,4 @@
+// logic for importing/exporting the metadata database into a file
 package stodbimportexport
 
 import (
@@ -13,12 +14,6 @@ import (
 	"regexp"
 	"strings"
 )
-
-// I have confidence on the robustness of the blobdriver interface, but not yet on the
-// robustness of the metadata database. that's why we have this export endpoint - to get
-// backups. more confidence will come when this whole system is hooked up to Event Horizon.
-// Run this with:
-// 	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" http://localhost:8066/api/db/export
 
 func Export(tx *bolt.Tx, output io.Writer) error {
 	outputBuffered := bufio.NewWriterSize(output, 1024*100)
