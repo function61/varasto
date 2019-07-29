@@ -108,3 +108,16 @@ func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob
 		return nil
 	}
 }
+
+// key is heading in export file under which all JSON records are dumped
+var RepoByRecordType = map[string]blorm.Repository{
+	"Blob":                     BlobRepository,
+	"Client":                   ClientRepository,
+	"Collection":               CollectionRepository,
+	"Directory":                DirectoryRepository,
+	"IntegrityVerificationJob": IntegrityVerificationJobRepository,
+	"Node":                     NodeRepository,
+	"ReplicationPolicy":        ReplicationPolicyRepository,
+	"Volume":                   VolumeRepository,
+	"VolumeMount":              VolumeMountRepository,
+}

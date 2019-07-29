@@ -1,10 +1,9 @@
-package stoserver
+package stodb
 
 import (
 	"errors"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/blorm"
-	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
@@ -16,10 +15,15 @@ var (
 	configBucketNodeKey = []byte("nodeId")
 )
 
-func bootstrap(db *bolt.DB, logger *log.Logger) error {
+// opens BoltDB database
+func Open(dbLocation string) (*bolt.DB, error) {
+	return bolt.Open(dbLocation, 0700, nil)
+}
+
+func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
-	if err := bootstrapRepos(db); err != nil {
+	if err := BootstrapRepos(db); err != nil {
 		return err
 	}
 
@@ -38,14 +42,14 @@ func bootstrap(db *bolt.DB, logger *log.Logger) error {
 	logl.Info.Printf("generated nodeId: %s", newNode.ID)
 
 	results := []error{
-		stodb.NodeRepository.Update(newNode, tx),
-		stodb.DirectoryRepository.Update(stotypes.NewDirectory("root", "", "root"), tx),
-		stodb.ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
+		NodeRepository.Update(newNode, tx),
+		DirectoryRepository.Update(stotypes.NewDirectory("root", "", "root"), tx),
+		ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
 			DesiredVolumes: []int{1, 2}, // FIXME: this assumes 1 and 2 will be created soon..
 		}, tx),
-		bootstrapSetNodeId(newNode.ID, tx),
+		BootstrapSetNodeId(newNode.ID, tx),
 	}
 
 	if err := allOk(results); err != nil {
@@ -55,7 +59,7 @@ func bootstrap(db *bolt.DB, logger *log.Logger) error {
 	return tx.Commit()
 }
 
-func bootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
+func BootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
 	// errors if already exists
 	configBucket, err := tx.CreateBucket(configBucketKey)
 	if err != nil {
@@ -65,7 +69,7 @@ func bootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
 	return configBucket.Put(configBucketNodeKey, []byte(nodeId))
 }
 
-func getSelfNodeId(tx *bolt.Tx) (string, error) {
+func GetSelfNodeId(tx *bolt.Tx) (string, error) {
 	configBucket := tx.Bucket(configBucketKey)
 	if configBucket == nil {
 		return "", blorm.ErrNotFound
@@ -79,18 +83,27 @@ func getSelfNodeId(tx *bolt.Tx) (string, error) {
 	return nodeId, nil
 }
 
-func bootstrapRepos(db *bolt.DB) error {
+func BootstrapRepos(db *bolt.DB) error {
 	tx, err := db.Begin(true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	for _, repo := range repoByRecordType {
+	for _, repo := range RepoByRecordType {
 		if err := repo.Bootstrap(tx); err != nil {
 			return err
 		}
 	}
 
 	return tx.Commit()
+}
+
+func allOk(errs []error) error {
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

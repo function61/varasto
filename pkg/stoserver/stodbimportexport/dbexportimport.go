@@ -1,12 +1,10 @@
-package stoserver
+package stodbimportexport
 
 import (
 	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/asdine/storm/codec"
-	"github.com/asdine/storm/codec/msgpack"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -22,11 +20,11 @@ import (
 // Run this with:
 // 	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" http://localhost:8066/api/db/export
 
-func exportDb(tx *bolt.Tx, output io.Writer) error {
+func Export(tx *bolt.Tx, output io.Writer) error {
 	outputBuffered := bufio.NewWriterSize(output, 1024*100)
 	defer outputBuffered.Flush()
 
-	nodeId, err := getSelfNodeId(tx)
+	nodeId, err := stodb.GetSelfNodeId(tx)
 	if err != nil {
 		return err
 	}
@@ -37,7 +35,7 @@ func exportDb(tx *bolt.Tx, output io.Writer) error {
 
 	jsonEncoderOutput := json.NewEncoder(outputBuffered)
 
-	for heading, repo := range repoByRecordType {
+	for heading, repo := range stodb.RepoByRecordType {
 		// print heading
 		if _, err := outputBuffered.Write([]byte("\n# " + heading + "\n")); err != nil {
 			return err
@@ -57,24 +55,22 @@ func exportDb(tx *bolt.Tx, output io.Writer) error {
 	return nil
 }
 
-func importDb(content io.Reader) error {
-	scf, err := readServerConfigFile()
-	if err != nil {
-		return err
-	}
-
-	exists, err := fileexists.Exists(scf.DbLocation)
+func Import(content io.Reader, dbLocation string) error {
+	exists, err := fileexists.Exists(dbLocation)
 	if exists || err != nil {
-		return fmt.Errorf("bailing out for safety because database already exists in %s", scf.DbLocation)
+		return fmt.Errorf(
+			"bailing out for safety because database already exists in %s\npro-tip: rename previous DB to %s.backup to start with a fresh import-able database",
+			dbLocation,
+			dbLocation)
 	}
 
-	db, err := boltOpen(scf)
+	db, err := stodb.Open(dbLocation)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	if err := bootstrapRepos(db); err != nil {
+	if err := stodb.BootstrapRepos(db); err != nil {
 		return err
 	}
 
@@ -130,21 +126,6 @@ func importDb(content io.Reader) error {
 	return commitOpenTx()
 }
 
-var msgpackCodec codec.MarshalUnmarshaler = msgpack.Codec
-
-// key is heading in export file under which all JSON records are dumped
-var repoByRecordType = map[string]blorm.Repository{
-	"Blob":                     stodb.BlobRepository,
-	"Client":                   stodb.ClientRepository,
-	"Collection":               stodb.CollectionRepository,
-	"Directory":                stodb.DirectoryRepository,
-	"IntegrityVerificationJob": stodb.IntegrityVerificationJobRepository,
-	"Node":                     stodb.NodeRepository,
-	"ReplicationPolicy":        stodb.ReplicationPolicyRepository,
-	"Volume":                   stodb.VolumeRepository,
-	"VolumeMount":              stodb.VolumeMountRepository,
-}
-
 func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error) error) error {
 	scanner := bufio.NewScanner(content)
 
@@ -174,7 +155,7 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 			recordType := line[2:]
 
 			var found bool
-			repo, found = repoByRecordType[recordType]
+			repo, found = stodb.RepoByRecordType[recordType]
 			if !found {
 				return fmt.Errorf("unsupported record type: %s", recordType)
 			}
@@ -198,7 +179,7 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 	}
 
 	if err := withTx(func(tx *bolt.Tx) error {
-		return bootstrapSetNodeId(nodeId, tx)
+		return stodb.BootstrapSetNodeId(nodeId, tx)
 	}); err != nil {
 		return err
 	}

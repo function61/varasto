@@ -16,6 +16,7 @@ import (
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -525,7 +526,7 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	panicIfError(err)
 	defer tx.Rollback()
 
-	panicIfError(exportDb(tx, w))
+	panicIfError(stodbimportexport.Export(tx, w))
 }
 
 func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *File {

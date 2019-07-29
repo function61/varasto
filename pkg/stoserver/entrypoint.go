@@ -4,6 +4,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -35,7 +36,12 @@ func Entrypoint() *cobra.Command {
 		Short: "Imports database",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := importDb(os.Stdin); err != nil {
+			scf, err := readServerConfigFile()
+			if err != nil {
+				panic(err)
+			}
+
+			if err := stodbimportexport.Import(os.Stdin, scf.DbLocation); err != nil {
 				panic(err)
 			}
 		},

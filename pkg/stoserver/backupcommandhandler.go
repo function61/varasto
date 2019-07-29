@@ -8,6 +8,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubtypes"
+	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"io"
 	"os"
 )
@@ -36,7 +37,7 @@ func (c *cHandlers) DatabaseBackup(cmd *DatabaseBackup, ctx *command.Ctx) error 
 			}
 			defer tx.Rollback()
 
-			return exportDb(tx, sink)
+			return stodbimportexport.Export(tx, sink)
 		}, log); err != nil {
 			logl.Error.Printf("failed: %v", err)
 		} else {

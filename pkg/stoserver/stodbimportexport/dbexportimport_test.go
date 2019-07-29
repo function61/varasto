@@ -1,4 +1,4 @@
-package stoserver
+package stodbimportexport
 
 import (
 	"github.com/function61/gokit/assert"

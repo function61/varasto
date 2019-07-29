@@ -42,7 +42,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		return err
 	}
 
-	db, err := boltOpen(scf)
+	db, err := stodb.Open(scf.DbLocation)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 		}
 
 		// was not found error => run bootstrap
-		if err := bootstrap(db, logex.Prefix("bootstrap", logger)); err != nil {
+		if err := stodb.Bootstrap(db, logex.Prefix("bootstrap", logger)); err != nil {
 			return err
 		}
 
@@ -167,7 +167,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}
 	defer tx.Rollback()
 
-	nodeId, err := getSelfNodeId(tx)
+	nodeId, err := stodb.GetSelfNodeId(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -262,10 +262,6 @@ func readServerConfigFile() (*ServerConfigFile, error) {
 	}
 
 	return scf, nil
-}
-
-func boltOpen(scf *ServerConfigFile) (*bolt.DB, error) {
-	return bolt.Open(scf.DbLocation, 0700, nil)
 }
 
 type dbbma struct {
