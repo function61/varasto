@@ -9,9 +9,12 @@ import (
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
+	"github.com/function61/varasto/pkg/stoserver/stohealth"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
+	"go.etcd.io/bbolt"
 	"io"
 	"os"
+	"time"
 )
 
 func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *command.Ctx) error {
@@ -31,7 +34,9 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 
 		logl.Info.Println("starting")
 
-		if err := ubbackup.BackupAndStore(context.TODO(), target, *c.conf.File.BackupConfig, func(sink io.Writer) error {
+		backup := ubtypes.BackupForTarget(target)
+
+		if err := ubbackup.BackupAndStore(context.TODO(), backup, *c.conf.File.BackupConfig, func(sink io.Writer) error {
 			tx, err := c.db.Begin(false)
 			if err != nil {
 				return err
@@ -43,8 +48,26 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 			logl.Error.Printf("failed: %v", err)
 		} else {
 			logl.Info.Println("success")
+
+			if err := markBackupComplete(backup.Started, c.db); err != nil {
+				logl.Error.Printf("markBackupComplete: %v", err)
+			}
 		}
 	}()
+
+	return nil
+}
+
+func markBackupComplete(timestamp time.Time, db *bolt.DB) error {
+	tx, err := db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := stohealth.UpdateMetadatabackupLastSuccess(timestamp, tx); err != nil {
+		return err
+	}
 
 	return nil
 }

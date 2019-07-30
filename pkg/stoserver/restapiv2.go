@@ -17,6 +17,7 @@ import (
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
+	"github.com/function61/varasto/pkg/stoserver/stohealth"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -659,6 +660,18 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 	return &ret
 }
 
+func (h *handlers) GetHealth(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.Health {
+	healthRoot := getHealthCheckerGraph(h.db)
+
+	graph, err := healthRoot.CheckHealth()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	return graph
+}
+
 func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ServerInfo {
 	dbFileInfo, err := os.Stat(h.conf.File.DbLocation)
 	if err != nil {
@@ -765,4 +778,15 @@ func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
 	}
 
 	return false, err // unknown error
+}
+
+func getHealthCheckerGraph(db *bolt.DB) stohealth.HealthChecker {
+	return stohealth.NewHealthFolder(
+		"Varasto",
+		stohealth.NewLastSuccessfullBackup(db),
+		stohealth.NewLastIntegrityVerificationJob(db),
+		stohealth.NewHealthFolder(
+			"SMART",
+			stohealth.NewSmartChecker("Dummy 1"),
+			stohealth.NewSmartChecker("Dummy 2")))
 }

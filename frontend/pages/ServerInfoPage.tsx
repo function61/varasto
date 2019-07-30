@@ -8,15 +8,16 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
 import { DatabaseBackup } from 'generated/stoserver/stoservertypes_commands';
 import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
-import { ServerInfo } from 'generated/stoserver/stoservertypes_types';
+import { Health, HealthStatus, ServerInfo } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 
 interface ServerInfoPageState {
 	serverInfo?: ServerInfo;
+	health?: Health;
 	currSens: Sensitivity;
 }
 
@@ -35,6 +36,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		return (
 			<AppDefaultLayout title="Server info" breadcrumbs={[]}>
 				<Panel heading="Server info">{this.renderInfo()}</Panel>
+				<Panel heading="Health">{this.renderHealth()}</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
 			</AppDefaultLayout>
 		);
@@ -113,9 +115,73 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		);
 	}
 
-	private async fetchData() {
-		const serverInfo = await getServerInfo();
+	private renderHealth() {
+		const health = this.state.health;
 
-		this.setState({ serverInfo });
+		if (!health) {
+			return <Loading />;
+		}
+
+		const rows: JSX.Element[] = [];
+
+		const pushHealthNodeAsRow = (node: Health, indentLevel: number) => {
+			rows.push(
+				<tr>
+					<td>{healthStatusToIcon(node.Health)}</td>
+					<td style={{ paddingLeft: indentLevel * 32 + 'px' }}>{node.Title}</td>
+					<td>{node.Details}</td>
+				</tr>,
+			);
+
+			node.Children.forEach((childHealth) => {
+				pushHealthNodeAsRow(childHealth, indentLevel + 1);
+			});
+		};
+
+		pushHealthNodeAsRow(health, 0);
+
+		return (
+			<table className="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th />
+						<th>Title</th>
+						<th>Details</th>
+					</tr>
+				</thead>
+				<tbody>{rows}</tbody>
+			</table>
+		);
+	}
+
+	private async fetchData() {
+		const [serverInfo, health] = await Promise.all([getServerInfo(), getHealth()]);
+
+		this.setState({ serverInfo, health });
+	}
+}
+
+function healthStatusToIcon(input: HealthStatus): JSX.Element {
+	switch (input) {
+		case HealthStatus.Fail:
+			return (
+				<span className="alert alert-danger">
+					<span className="glyphicon glyphicon-fire" />
+				</span>
+			);
+		case HealthStatus.Warn:
+			return (
+				<span className="alert alert-warning">
+					<span className="glyphicon glyphicon-warning-sign" />
+				</span>
+			);
+		case HealthStatus.Pass:
+			return (
+				<span className="alert alert-success">
+					<span className="glyphicon glyphicon-ok" />
+				</span>
+			);
+		default:
+			throw unrecognizedValue(input);
 	}
 }

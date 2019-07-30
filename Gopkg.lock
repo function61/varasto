@@ -165,7 +165,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ada8852273b620bb13b81194d58f716072c017071f156855c6e0c1f43a5b3e0"
+  digest = "1:381431cd9827b73ad7f65d4952f0949411ec5117a2a1f602cc8e83e6a068db05"
   name = "github.com/function61/ubackup"
   packages = [
     "pkg/backupfile",
@@ -175,7 +175,7 @@
     "pkg/ubtypes",
   ]
   pruneopts = "UT"
-  revision = "c7fe3a91081ee8ad31f26e671016df56e8233129"
+  revision = "1eaca09844628479122f5637958bbbc22506f9ca"
 
 [[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"

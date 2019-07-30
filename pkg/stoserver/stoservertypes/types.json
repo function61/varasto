@@ -14,6 +14,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/clients", "produces": {"_": "list", "of": {"_": "Client"}}, "name": "getClients" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
@@ -34,6 +35,17 @@
 		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },
 		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
 		{ "key": "HeadRevisionId", "value": "head" }
+	],
+	"enums": [
+		{
+			"name": "HealthStatus",
+			"type": "string",
+			"stringMembers": [
+				"pass",
+				"warn",
+				"fail"
+			]
+		}
 	],
 	"types": [
 		{
@@ -197,6 +209,15 @@
 				"BytesScanned": {"_": "integer"},
 				"ErrorsFound": {"_": "integer"},
 				"Report": {"_": "string"}
+			}}
+		},
+		{
+			"name": "Health",
+			"type": {"_": "object", "fields": {
+				"Title": {"_": "string"},
+				"Health": {"_": "HealthStatus"},
+				"Details": {"_": "string"},
+				"Children": {"_": "list", "of": {"_": "Health"}}
 			}}
 		},
 		{
