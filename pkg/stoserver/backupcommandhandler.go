@@ -9,11 +9,12 @@ import (
 	"github.com/function61/ubackup/pkg/ubbackup"
 	"github.com/function61/ubackup/pkg/ubtypes"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"io"
 	"os"
 )
 
-func (c *cHandlers) DatabaseBackup(cmd *DatabaseBackup, ctx *command.Ctx) error {
+func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *command.Ctx) error {
 	if c.conf.File.BackupConfig == nil {
 		return errors.New("backups not configured")
 	}

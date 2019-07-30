@@ -9,6 +9,7 @@ import (
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
@@ -28,10 +29,10 @@ func defineRestApi(
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
 ) error {
-	var han HttpHandlers = &handlers{db, conf, ivController, logger}
+	var han stoservertypes.HttpHandlers = &handlers{db, conf, ivController, logger}
 
 	// v2 endpoints
-	RegisterRoutes(han, mwares, muxregistrator.New(router))
+	stoservertypes.RegisterRoutes(han, mwares, muxregistrator.New(router))
 
 	// legacy (TODO: move these to v2)
 	return defineLegacyRestApi(router, conf, db)

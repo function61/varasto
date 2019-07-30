@@ -8,8 +8,8 @@ import {
 	CollectionMove,
 	CollectionPullMetadata,
 	CollectionRename,
-} from 'generated/stoserver_commands';
-import { CollectionSubset } from 'generated/stoserver_types';
+} from 'generated/stoserver/stoservertypes_commands';
+import { CollectionSubset } from 'generated/stoserver/stoservertypes_types';
 import * as React from 'react';
 
 export function collectionDropdown(coll: CollectionSubset) {

@@ -22,12 +22,9 @@
   version = "v0.37.2"
 
 [[projects]]
-  digest = "1:6f07cfe7608f55ba2b6b6698da627c38ff44457ea555abe69d1531323730bbdc"
+  digest = "1:133c221d6b40ae83b192206c74a8deeae4a8bc7953890dfad4b3baea93adefa9"
   name = "github.com/asdine/storm"
-  packages = [
-    "codec",
-    "codec/msgpack",
-  ]
+  packages = ["codec/msgpack"]
   pruneopts = "UT"
   revision = "5a6fe65e3993f63951c8e3f64c812536c9e23595"
   version = "v2.1.2"
@@ -111,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:00f6784ee8e71db85fd59d7e35ddfe24939c595a70a43858f8ab855f142cdb17"
+  digest = "1:d7eba7b1a3d8c656aabf6542dc655527e652b2442d351a01cff4bf73f040df63"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -122,7 +119,7 @@
     "httpcommand",
   ]
   pruneopts = "UT"
-  revision = "1606a4e33feab7e1aa812558c6be19e1cadb6522"
+  revision = "fdcd0cbb5069b3bc6b465e16fef8b1e485535c24"
 
 [[projects]]
   branch = "master"
@@ -470,7 +467,6 @@
   input-imports = [
     "bazil.org/fuse",
     "bazil.org/fuse/fs",
-    "github.com/asdine/storm/codec",
     "github.com/asdine/storm/codec/msgpack",
     "github.com/disintegration/imageorient",
     "github.com/djherbis/times",

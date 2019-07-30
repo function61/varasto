@@ -18,6 +18,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
@@ -40,8 +41,8 @@ type handlers struct {
 	logger       *log.Logger
 }
 
-func convertDir(dir stotypes.Directory) Directory {
-	return Directory{
+func convertDir(dir stotypes.Directory) stoservertypes.Directory {
+	return stoservertypes.Directory{
 		Id:          dir.ID,
 		Parent:      dir.Parent,
 		Name:        dir.Name,
@@ -51,8 +52,8 @@ func convertDir(dir stotypes.Directory) Directory {
 	}
 }
 
-func convertDbCollection(coll stotypes.Collection, changesets []ChangesetSubset) CollectionSubset {
-	return CollectionSubset{
+func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.ChangesetSubset) stoservertypes.CollectionSubset {
+	return stoservertypes.CollectionSubset{
 		Id:             coll.ID,
 		Head:           coll.Head,
 		Created:        coll.Created,
@@ -66,7 +67,7 @@ func convertDbCollection(coll stotypes.Collection, changesets []ChangesetSubset)
 	}
 }
 
-func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *DirectoryOutput {
+func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.DirectoryOutput {
 	dirId := mux.Vars(r)["id"]
 
 	tx, err := h.db.Begin(false)
@@ -79,7 +80,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	parentDirs, err := getParentDirs(*dir, tx)
 	panicIfError(err)
 
-	parentDirsConverted := []Directory{}
+	parentDirsConverted := []stoservertypes.Directory{}
 
 	for _, parentDir := range parentDirs {
 		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
@@ -88,7 +89,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	dbColls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
 	panicIfError(err)
 
-	colls := []CollectionSubset{}
+	colls := []stoservertypes.CollectionSubset{}
 	for _, dbColl := range dbColls {
 		colls = append(colls, convertDbCollection(dbColl, nil)) // FIXME: nil ok?
 	}
@@ -97,13 +98,13 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	dbSubDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
 	panicIfError(err)
 
-	subDirs := []Directory{}
+	subDirs := []stoservertypes.Directory{}
 	for _, dbSubDir := range dbSubDirs {
 		subDirs = append(subDirs, convertDir(dbSubDir))
 	}
 	sort.Slice(subDirs, func(i, j int) bool { return subDirs[i].Name < subDirs[j].Name })
 
-	return &DirectoryOutput{
+	return &stoservertypes.DirectoryOutput{
 		Directory:   convertDir(*dir),
 		Parents:     parentDirsConverted,
 		Directories: subDirs,
@@ -111,7 +112,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 }
 
-func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *CollectionOutput {
+func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.CollectionOutput {
 	collectionId := mux.Vars(r)["id"]
 	changesetId := mux.Vars(r)["rev"]
 	pathBytes, err := base64.StdEncoding.DecodeString(mux.Vars(r)["path"])
@@ -133,7 +134,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		return nil
 	}
 
-	if changesetId == HeadRevisionId {
+	if changesetId == stoservertypes.HeadRevisionId {
 		changesetId = coll.Head
 	}
 
@@ -146,14 +147,14 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 	peekResult := stateresolver.DirPeek(allFilesInRevision, string(pathBytes))
 
 	totalSize := int64(0)
-	convertedFiles := []File{}
+	convertedFiles := []stoservertypes.File{}
 
 	for _, file := range allFilesInRevision {
 		totalSize += file.Size
 	}
 
 	for _, file := range peekResult.Files {
-		convertedFiles = append(convertedFiles, File{
+		convertedFiles = append(convertedFiles, stoservertypes.File{
 			Path:     file.Path,
 			Sha256:   file.Sha256,
 			Created:  file.Created,
@@ -163,19 +164,19 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		})
 	}
 
-	changesetsConverted := []ChangesetSubset{}
+	changesetsConverted := []stoservertypes.ChangesetSubset{}
 
 	for _, changeset := range coll.Changesets {
-		changesetsConverted = append(changesetsConverted, ChangesetSubset{
+		changesetsConverted = append(changesetsConverted, stoservertypes.ChangesetSubset{
 			Id:      changeset.ID,
 			Parent:  changeset.Parent,
 			Created: changeset.Created,
 		})
 	}
 
-	return &CollectionOutput{
+	return &stoservertypes.CollectionOutput{
 		TotalSize: int(totalSize), // FIXME
-		SelectedPathContents: SelectedPathContents{
+		SelectedPathContents: stoservertypes.SelectedPathContents{
 			Path:       peekResult.Path,
 			Files:      convertedFiles,
 			ParentDirs: peekResult.ParentDirs,
@@ -282,8 +283,8 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 }
 
-func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Volume {
-	ret := []Volume{}
+func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Volume {
+	ret := []stoservertypes.Volume{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -293,7 +294,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, Volume{
+		ret = append(ret, stoservertypes.Volume{
 			Id:            dbObject.ID,
 			Uuid:          dbObject.UUID,
 			Label:         dbObject.Label,
@@ -307,8 +308,8 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 	return &ret
 }
 
-func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]VolumeMount {
-	ret := []VolumeMount{}
+func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.VolumeMount {
+	ret := []stoservertypes.VolumeMount{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -318,7 +319,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	panicIfError(stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, VolumeMount{
+		ret = append(ret, stoservertypes.VolumeMount{
 			Id:         dbObject.ID,
 			Online:     h.conf.DiskAccess.IsMounted(dbObject.Volume),
 			Volume:     dbObject.Volume,
@@ -331,7 +332,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	return &ret
 }
 
-func toDbFiles(files []File) []stotypes.File {
+func toDbFiles(files []stoservertypes.File) []stotypes.File {
 	ret := []stotypes.File{}
 
 	for _, file := range files {
@@ -348,7 +349,7 @@ func toDbFiles(files []File) []stotypes.File {
 	return ret
 }
 
-func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset Changeset, w http.ResponseWriter, r *http.Request) {
+func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stoservertypes.Changeset, w http.ResponseWriter, r *http.Request) {
 	coll := commitChangesetInternal(
 		w,
 		r,
@@ -430,8 +431,8 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 	return coll
 }
 
-func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]ReplicationPolicy {
-	ret := []ReplicationPolicy{}
+func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationPolicy {
+	ret := []stoservertypes.ReplicationPolicy{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -441,7 +442,7 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, ReplicationPolicy{
+		ret = append(ret, stoservertypes.ReplicationPolicy{
 			Id:             dbObject.ID,
 			Name:           dbObject.Name,
 			DesiredVolumes: dbObject.DesiredVolumes,
@@ -451,8 +452,8 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 	return &ret
 }
 
-func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Node {
-	ret := []Node{}
+func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Node {
+	ret := []stoservertypes.Node{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -462,7 +463,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	panicIfError(stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, Node{
+		ret = append(ret, stoservertypes.Node{
 			Id:   dbObject.ID,
 			Addr: dbObject.Addr,
 			Name: dbObject.Name,
@@ -472,8 +473,8 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	return &ret
 }
 
-func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]Client {
-	ret := []Client{}
+func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Client {
+	ret := []stoservertypes.Client{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -483,7 +484,7 @@ func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWrit
 	panicIfError(stodb.ClientRepository.Each(stodb.ClientAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, Client{
+		ret = append(ret, stoservertypes.Client{
 			Id:        dbObject.ID,
 			Name:      dbObject.Name,
 			AuthToken: dbObject.AuthToken,
@@ -534,7 +535,7 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	panicIfError(stodbimportexport.Export(tx, w))
 }
 
-func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *File {
+func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.File {
 	collectionId := mux.Vars(r)["id"]
 	mtimeUnixMillis, err := strconv.Atoi(r.URL.Query().Get("mtime"))
 	if err != nil {
@@ -562,7 +563,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 		return nil
 	}
 
-	file := &File{
+	file := &stoservertypes.File{
 		Path:     r.URL.Query().Get("filename"),
 		Sha256:   "",
 		Created:  mtime,
@@ -620,8 +621,8 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 	return file
 }
 
-func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]IntegrityVerificationJob {
-	ret := []IntegrityVerificationJob{}
+func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.IntegrityVerificationJob {
+	ret := []stoservertypes.IntegrityVerificationJob{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -642,7 +643,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 			completedPtr = nil
 		}
 
-		ret = append(ret, IntegrityVerificationJob{
+		ret = append(ret, stoservertypes.IntegrityVerificationJob{
 			Id:                   dbObject.ID,
 			Running:              sliceutil.ContainsString(runningIds, dbObject.ID),
 			Created:              dbObject.Started,
@@ -658,7 +659,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 	return &ret
 }
 
-func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *ServerInfo {
+func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ServerInfo {
 	dbFileInfo, err := os.Stat(h.conf.File.DbLocation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -668,7 +669,7 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 	ms := &runtime.MemStats{}
 	runtime.ReadMemStats(ms)
 
-	return &ServerInfo{
+	return &stoservertypes.ServerInfo{
 		AppVersion:   dynversion.Version,
 		AppUptime:    appuptime.Elapsed().String(),
 		DatabaseSize: int(dbFileInfo.Size()),
@@ -680,8 +681,8 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 	}
 }
 
-func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *GeneratedIds {
-	return &GeneratedIds{
+func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.GeneratedIds {
+	return &stoservertypes.GeneratedIds{
 		Changeset: stoutils.NewCollectionChangesetId(),
 	}
 }
@@ -736,10 +737,10 @@ func getParentDirs(of stotypes.Directory, tx *bolt.Tx) ([]stotypes.Directory, er
 	return parentDirs, nil
 }
 
-func metadataMapToKvList(kvmap map[string]string) []MetadataKv {
-	kvList := []MetadataKv{}
+func metadataMapToKvList(kvmap map[string]string) []stoservertypes.MetadataKv {
+	kvList := []stoservertypes.MetadataKv{}
 	for key, value := range kvmap {
-		kvList = append(kvList, MetadataKv{
+		kvList = append(kvList, stoservertypes.MetadataKv{
 			Key:   key,
 			Value: value,
 		})

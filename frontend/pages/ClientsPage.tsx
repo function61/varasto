@@ -2,9 +2,9 @@ import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { ClientCreate, ClientRemove } from 'generated/stoserver_commands';
-import { getClients } from 'generated/stoserver_endpoints';
-import { Client } from 'generated/stoserver_types';
+import { ClientCreate, ClientRemove } from 'generated/stoserver/stoservertypes_commands';
+import { getClients } from 'generated/stoserver/stoservertypes_endpoints';
+import { Client } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

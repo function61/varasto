@@ -2,9 +2,9 @@ import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { ReplicationpolicyChangeDesiredVolumes } from 'generated/stoserver_commands';
-import { getReplicationPolicies } from 'generated/stoserver_endpoints';
-import { ReplicationPolicy } from 'generated/stoserver_types';
+import { ReplicationpolicyChangeDesiredVolumes } from 'generated/stoserver/stoservertypes_commands';
+import { getReplicationPolicies } from 'generated/stoserver/stoservertypes_endpoints';
+import { ReplicationPolicy } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

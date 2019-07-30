@@ -13,6 +13,7 @@ import (
 	"github.com/function61/varasto/pkg/stofuse/stofuseclient"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
@@ -30,7 +31,7 @@ type cHandlers struct {
 	logger       *log.Logger
 }
 
-func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		max := 0
 
@@ -54,7 +55,7 @@ func (c *cHandlers) VolumeCreate(cmd *VolumeCreate, ctx *command.Ctx) error {
 	})
 }
 
-func (c *cHandlers) VolumeChangeQuota(cmd *VolumeChangeQuota, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeChangeQuota(cmd *stoservertypes.VolumeChangeQuota, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
@@ -67,7 +68,7 @@ func (c *cHandlers) VolumeChangeQuota(cmd *VolumeChangeQuota, ctx *command.Ctx) 
 	})
 }
 
-func (c *cHandlers) VolumeChangeDescription(cmd *VolumeChangeDescription, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
@@ -81,7 +82,7 @@ func (c *cHandlers) VolumeChangeDescription(cmd *VolumeChangeDescription, ctx *c
 }
 
 // FIXME: name ends in 2 because conflicts with types.VolumeMount
-func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
@@ -110,7 +111,7 @@ func (c *cHandlers) VolumeMount2(cmd *VolumeMount2, ctx *command.Ctx) error {
 	})
 }
 
-func (c *cHandlers) VolumeUnmount(cmd *VolumeUnmount, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeUnmount(cmd *stoservertypes.VolumeUnmount, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		mount, err := stodb.Read(tx).VolumeMount(cmd.Id)
 		if err != nil {
@@ -121,7 +122,7 @@ func (c *cHandlers) VolumeUnmount(cmd *VolumeUnmount, ctx *command.Ctx) error {
 	})
 }
 
-func (c *cHandlers) VolumeVerifyIntegrity(cmd *VolumeVerifyIntegrity, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegrity, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		job := &stotypes.IntegrityVerificationJob{
 			ID:       stoutils.NewIntegrityVerificationJobId(),
@@ -133,7 +134,7 @@ func (c *cHandlers) VolumeVerifyIntegrity(cmd *VolumeVerifyIntegrity, ctx *comma
 	})
 }
 
-func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.DirectoryRepository.Update(
 			stotypes.NewDirectory(
@@ -144,7 +145,7 @@ func (c *cHandlers) DirectoryCreate(cmd *DirectoryCreate, ctx *command.Ctx) erro
 	})
 }
 
-func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryDelete(cmd *stoservertypes.DirectoryDelete, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
@@ -173,7 +174,7 @@ func (c *cHandlers) DirectoryDelete(cmd *DirectoryDelete, ctx *command.Ctx) erro
 	})
 }
 
-func (c *cHandlers) DirectoryRename(cmd *DirectoryRename, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryRename(cmd *stoservertypes.DirectoryRename, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
@@ -186,7 +187,7 @@ func (c *cHandlers) DirectoryRename(cmd *DirectoryRename, ctx *command.Ctx) erro
 	})
 }
 
-func (c *cHandlers) DirectoryChangeDescription(cmd *DirectoryChangeDescription, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
@@ -199,7 +200,7 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *DirectoryChangeDescription, 
 	})
 }
 
-func (c *cHandlers) DirectoryChangeSensitivity(cmd *DirectoryChangeSensitivity, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryChangeSensitivity(cmd *stoservertypes.DirectoryChangeSensitivity, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		if err := validateSensitivity(cmd.Sensitivity); err != nil {
 			return err
@@ -216,7 +217,7 @@ func (c *cHandlers) DirectoryChangeSensitivity(cmd *DirectoryChangeSensitivity, 
 	})
 }
 
-func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryMove(cmd *stoservertypes.DirectoryMove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		dirToMove, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
@@ -239,14 +240,14 @@ func (c *cHandlers) DirectoryMove(cmd *DirectoryMove, ctx *command.Ctx) error {
 	})
 }
 
-func (c *cHandlers) CollectionCreate(cmd *CollectionCreate, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		_, err := saveNewCollection(cmd.ParentDir, cmd.Name, tx)
 		return err
 	})
 }
 
-func (c *cHandlers) CollectionChangeSensitivity(cmd *CollectionChangeSensitivity, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionChangeSensitivity(cmd *stoservertypes.CollectionChangeSensitivity, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		if err := validateSensitivity(cmd.Sensitivity); err != nil {
 			return err
@@ -263,7 +264,7 @@ func (c *cHandlers) CollectionChangeSensitivity(cmd *CollectionChangeSensitivity
 	})
 }
 
-func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		// check for existence
 		if _, err := stodb.Read(tx).Directory(cmd.Directory); err != nil {
@@ -290,7 +291,7 @@ func (c *cHandlers) CollectionMove(cmd *CollectionMove, ctx *command.Ctx) error 
 	})
 }
 
-func (c *cHandlers) CollectionChangeDescription(cmd *CollectionChangeDescription, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionChangeDescription(cmd *stoservertypes.CollectionChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
@@ -303,7 +304,7 @@ func (c *cHandlers) CollectionChangeDescription(cmd *CollectionChangeDescription
 	})
 }
 
-func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
@@ -316,7 +317,7 @@ func (c *cHandlers) CollectionRename(cmd *CollectionRename, ctx *command.Ctx) er
 	})
 }
 
-func (c *cHandlers) CollectionFuseMount(cmd *CollectionFuseMount, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount, ctx *command.Ctx) error {
 	vstofuse := stofuseclient.New()
 
 	if cmd.UnmountOthers {
@@ -328,7 +329,7 @@ func (c *cHandlers) CollectionFuseMount(cmd *CollectionFuseMount, ctx *command.C
 	return vstofuse.Mount(cmd.Collection)
 }
 
-func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
@@ -343,7 +344,7 @@ func (c *cHandlers) CollectionDelete(cmd *CollectionDelete, ctx *command.Ctx) er
 	})
 }
 
-func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
+func (c *cHandlers) ClientCreate(cmd *stoservertypes.ClientCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),
@@ -353,7 +354,7 @@ func (c *cHandlers) ClientCreate(cmd *ClientCreate, ctx *command.Ctx) error {
 	})
 }
 
-func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
+func (c *cHandlers) ClientRemove(cmd *stoservertypes.ClientRemove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Delete(&stotypes.Client{
 			ID: cmd.Id,
@@ -361,19 +362,19 @@ func (c *cHandlers) ClientRemove(cmd *ClientRemove, ctx *command.Ctx) error {
 	})
 }
 
-func (c *cHandlers) IntegrityverificationjobResume(cmd *IntegrityverificationjobResume, ctx *command.Ctx) error {
+func (c *cHandlers) IntegrityverificationjobResume(cmd *stoservertypes.IntegrityverificationjobResume, ctx *command.Ctx) error {
 	c.ivController.Resume(cmd.JobId)
 
 	return nil
 }
 
-func (c *cHandlers) IntegrityverificationjobStop(cmd *IntegrityverificationjobStop, ctx *command.Ctx) error {
+func (c *cHandlers) IntegrityverificationjobStop(cmd *stoservertypes.IntegrityverificationjobStop, ctx *command.Ctx) error {
 	c.ivController.Stop(cmd.JobId)
 
 	return nil
 }
 
-func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {
+func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		desiredVolumes := []int{}
 		if err := json.Unmarshal([]byte(cmd.DesiredVolumes), &desiredVolumes); err != nil {
@@ -405,7 +406,7 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *Replicationpolicy
 func registerCommandEndpoints(
 	router *mux.Router,
 	eventLog eventlog.Log,
-	cmdHandlers CommandHandlers,
+	cmdHandlers stoservertypes.CommandHandlers,
 	mwares httpauth.MiddlewareChainMap,
 ) {
 	router.HandleFunc("/command/{commandName}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -416,7 +417,7 @@ func registerCommandEndpoints(
 			r,
 			mwares,
 			commandName,
-			Allocators,
+			stoservertypes.Allocators,
 			cmdHandlers,
 			eventLog)
 		if httpErr != nil {

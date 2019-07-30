@@ -27,8 +27,8 @@ import {
 	DirectoryMove,
 	DirectoryPullMetadata,
 	DirectoryRename,
-} from 'generated/stoserver_commands';
-import { getDirectory } from 'generated/stoserver_endpoints';
+} from 'generated/stoserver/stoservertypes_commands';
+import { getDirectory } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CollectionSubset,
 	Directory,
@@ -40,7 +40,7 @@ import {
 	MetadataThumbnail,
 	MetadataTitle,
 	RootPathDotBase64FIXME,
-} from 'generated/stoserver_types';
+} from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';

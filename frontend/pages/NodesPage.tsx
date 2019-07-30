@@ -1,7 +1,7 @@
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { getNodes } from 'generated/stoserver_endpoints';
-import { Node } from 'generated/stoserver_types';
+import { getNodes } from 'generated/stoserver/stoservertypes_endpoints';
+import { Node } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

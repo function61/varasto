@@ -5,6 +5,7 @@ import (
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
@@ -12,7 +13,7 @@ import (
 	"time"
 )
 
-func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes.CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
 	if true {
 		return errors.New("cannot use before changing blobs' owners and taking encryption keys into account")
 	}

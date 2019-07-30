@@ -18,14 +18,19 @@ import {
 	VolumeMount2,
 	VolumeUnmount,
 	VolumeVerifyIntegrity,
-} from 'generated/stoserver_commands';
+} from 'generated/stoserver/stoservertypes_commands';
 import {
 	getIntegrityVerificationJobs,
 	getNodes,
 	getVolumeMounts,
 	getVolumes,
-} from 'generated/stoserver_endpoints';
-import { IntegrityVerificationJob, Node, Volume, VolumeMount } from 'generated/stoserver_types';
+} from 'generated/stoserver/stoservertypes_endpoints';
+import {
+	IntegrityVerificationJob,
+	Node,
+	Volume,
+	VolumeMount,
+} from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 

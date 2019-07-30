@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/themoviedbapi"
 	"go.etcd.io/bbolt"
@@ -15,7 +16,7 @@ import (
 )
 
 // this is for movies
-func (c *cHandlers) CollectionPullMetadata(cmd *CollectionPullMetadata, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMetadata, ctx *command.Ctx) error {
 	tmdb, err := c.themoviedbapiClient()
 	if err != nil {
 		return err
@@ -41,24 +42,24 @@ func (c *cHandlers) CollectionPullMetadata(cmd *CollectionPullMetadata, ctx *com
 			collection.Name = info.OriginalTitle
 		}
 
-		collection.Metadata[MetadataTheMovieDbMovieId] = strconv.Itoa(int(info.Id))
+		collection.Metadata[stoservertypes.MetadataTheMovieDbMovieId] = strconv.Itoa(int(info.Id))
 		if info.ExternalIds.ImdbId != "" {
-			collection.Metadata[MetadataImdbId] = info.ExternalIds.ImdbId
+			collection.Metadata[stoservertypes.MetadataImdbId] = info.ExternalIds.ImdbId
 		}
 		if info.Overview != "" {
-			collection.Metadata[MetadataOverview] = info.Overview
+			collection.Metadata[stoservertypes.MetadataOverview] = info.Overview
 		}
 		if info.RuntimeMinutes != 0 {
-			collection.Metadata[MetadataVideoRuntimeMins] = strconv.Itoa(info.RuntimeMinutes)
+			collection.Metadata[stoservertypes.MetadataVideoRuntimeMins] = strconv.Itoa(info.RuntimeMinutes)
 		}
 		if info.RevenueDollars != 0 {
-			collection.Metadata[MetadataVideoRevenueDollars] = strconv.Itoa(int(info.RevenueDollars))
+			collection.Metadata[stoservertypes.MetadataVideoRevenueDollars] = strconv.Itoa(int(info.RevenueDollars))
 		}
 		if info.BackdropPath != "" {
-			collection.Metadata[MetadataBackdrop] = themoviedbapi.ImagePath(info.BackdropPath, "original")
+			collection.Metadata[stoservertypes.MetadataBackdrop] = themoviedbapi.ImagePath(info.BackdropPath, "original")
 		}
 		if info.ReleaseDate != "" {
-			collection.Metadata[MetadataReleaseDate] = info.ReleaseDate
+			collection.Metadata[stoservertypes.MetadataReleaseDate] = info.ReleaseDate
 		}
 
 		return stodb.CollectionRepository.Update(collection, tx)
@@ -66,7 +67,7 @@ func (c *cHandlers) CollectionPullMetadata(cmd *CollectionPullMetadata, ctx *com
 }
 
 // directory holds a bunch of series
-func (c *cHandlers) DirectoryPullMetadata(cmd *DirectoryPullMetadata, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryPullMetadata(cmd *stoservertypes.DirectoryPullMetadata, ctx *command.Ctx) error {
 	tmdb, err := c.themoviedbapiClient()
 	if err != nil {
 		return err
@@ -83,22 +84,22 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *DirectoryPullMetadata, ctx *comma
 			return err
 		}
 
-		dir.Metadata[MetadataTheMovieDbTvId] = fmt.Sprintf("%d", tv.Id)
+		dir.Metadata[stoservertypes.MetadataTheMovieDbTvId] = fmt.Sprintf("%d", tv.Id)
 
 		if tv.BackdropPath != "" {
-			dir.Metadata[MetadataBackdrop] = themoviedbapi.ImagePath(tv.BackdropPath, "original")
+			dir.Metadata[stoservertypes.MetadataBackdrop] = themoviedbapi.ImagePath(tv.BackdropPath, "original")
 		}
 
 		if tv.Overview != "" {
-			dir.Metadata[MetadataOverview] = tv.Overview
+			dir.Metadata[stoservertypes.MetadataOverview] = tv.Overview
 		}
 
 		if tv.Homepage != "" {
-			dir.Metadata[MetadataHomepage] = tv.Homepage
+			dir.Metadata[stoservertypes.MetadataHomepage] = tv.Homepage
 		}
 
 		if tv.ExternalIds.ImdbId != "" {
-			dir.Metadata[MetadataImdbId] = tv.ExternalIds.ImdbId
+			dir.Metadata[stoservertypes.MetadataImdbId] = tv.ExternalIds.ImdbId
 		}
 
 		return stodb.DirectoryRepository.Update(dir, tx)
@@ -106,7 +107,7 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *DirectoryPullMetadata, ctx *comma
 }
 
 // this is for serie episodes
-func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefreshMetadataAutomatically, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.CollectionRefreshMetadataAutomatically, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		// Collection is validated as non-empty
 		collIds := strings.Split(cmd.Collection, ",")
@@ -128,16 +129,16 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 
 		theTvDbSeriesId := ""
 		for _, parentDir := range parentDirs {
-			theTvDbSeriesId = parentDir.Metadata[MetadataTheMovieDbTvId]
+			theTvDbSeriesId = parentDir.Metadata[stoservertypes.MetadataTheMovieDbTvId]
 			if theTvDbSeriesId != "" {
 				break
 			}
 		}
 		if theTvDbSeriesId == "" {
-			theTvDbSeriesId = firstCollDirectory.Metadata[MetadataTheMovieDbTvId] // one last try
+			theTvDbSeriesId = firstCollDirectory.Metadata[stoservertypes.MetadataTheMovieDbTvId] // one last try
 		}
 		if theTvDbSeriesId == "" {
-			return fmt.Errorf("could not resolve %s for collection", MetadataTheMovieDbTvId)
+			return fmt.Errorf("could not resolve %s for collection", stoservertypes.MetadataTheMovieDbTvId)
 		}
 
 		uniqueSeasonNumbers := []int{}
@@ -214,20 +215,20 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *CollectionRefres
 					panic("should not be after migration")
 				}
 
-				coll.Metadata[MetadataTheMovieDbTvId] = theTvDbSeriesId
-				coll.Metadata[MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.Id)
+				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = theTvDbSeriesId
+				coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.Id)
 
 				if ep.Name != "" {
-					coll.Metadata[MetadataTitle] = ep.Name
+					coll.Metadata[stoservertypes.MetadataTitle] = ep.Name
 				}
 				if ep.AirDate != "" {
-					coll.Metadata[MetadataReleaseDate] = ep.AirDate
+					coll.Metadata[stoservertypes.MetadataReleaseDate] = ep.AirDate
 				}
 				if ep.Overview != "" {
-					coll.Metadata[MetadataOverview] = ep.Overview
+					coll.Metadata[stoservertypes.MetadataOverview] = ep.Overview
 				}
 				if ep.StillPath != "" {
-					coll.Metadata[MetadataThumbnail] = themoviedbapi.ImagePath(ep.StillPath, "original")
+					coll.Metadata[stoservertypes.MetadataThumbnail] = themoviedbapi.ImagePath(ep.StillPath, "original")
 				}
 
 				if err := stodb.CollectionRepository.Update(coll, tx); err != nil {

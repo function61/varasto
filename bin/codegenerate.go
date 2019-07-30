@@ -25,7 +25,7 @@ func mainInternal() error {
 	}
 
 	modules := []*codegen.Module{
-		codegen.NewModule("stoserver", "pkg/stoserver/types.json", "", "pkg/stoserver/commands.json"),
+		codegen.NewModule("stoserver/stoservertypes", "pkg/stoserver/stoservertypes/types.json", "", "pkg/stoserver/stoservertypes/commands.json"),
 		codegen.NewModule("stofuse/stofusetypes", "pkg/stofuse/stofusetypes/types.json", "", ""),
 	}
 

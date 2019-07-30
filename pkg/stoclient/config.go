@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
-	"github.com/function61/varasto/pkg/stoserver"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
 	"io"
 	"os"
@@ -24,8 +24,8 @@ func (c *ClientConfig) ApiPath(path string) string {
 	return c.ServerAddr + path
 }
 
-func (c *ClientConfig) UrlBuilder() *stoserver.RestClientUrlBuilder {
-	return stoserver.NewRestClientUrlBuilder(c.ServerAddr)
+func (c *ClientConfig) UrlBuilder() *stoservertypes.RestClientUrlBuilder {
+	return stoservertypes.NewRestClientUrlBuilder(c.ServerAddr)
 }
 
 func writeConfig(conf *ClientConfig) error {

@@ -9,9 +9,9 @@ import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { DatabaseBackup } from 'generated/stoserver_commands';
-import { getServerInfo } from 'generated/stoserver_endpoints';
-import { ServerInfo } from 'generated/stoserver_types';
+import { DatabaseBackup } from 'generated/stoserver/stoservertypes_commands';
+import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
+import { ServerInfo } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 
