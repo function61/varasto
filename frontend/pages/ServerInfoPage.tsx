@@ -34,12 +34,13 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 	render() {
 		return (
 			<AppDefaultLayout title="Server info" breadcrumbs={[]}>
-				{this.renderData()}
+				<Panel heading="Server info">{this.renderInfo()}</Panel>
+				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
 			</AppDefaultLayout>
 		);
 	}
 
-	private renderData() {
+	private renderInfo() {
 		const serverInfo = this.state.serverInfo;
 
 		if (!serverInfo) {
@@ -62,28 +63,23 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		];
 
 		return (
-			<div>
-				<Panel heading="Server info">
-					<table className="table table-striped table-hover">
-						<tbody>
-							{items.map((item) => (
-								<tr>
-									<th>{item.h}</th>
-									<td>{item.t}</td>
-								</tr>
-							))}
-						</tbody>
-						<tfoot>
-							<tr>
-								<td colSpan={99}>
-									<CommandButton command={DatabaseBackup()} />
-								</td>
-							</tr>
-						</tfoot>
-					</table>
-				</Panel>
-				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
-			</div>
+			<table className="table table-striped table-hover">
+				<tbody>
+					{items.map((item) => (
+						<tr>
+							<th>{item.h}</th>
+							<td>{item.t}</td>
+						</tr>
+					))}
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>
+							<CommandButton command={DatabaseBackup()} />
+						</td>
+					</tr>
+				</tfoot>
+			</table>
 		);
 	}
 
