@@ -1,9 +1,7 @@
 package stodb
 
 import (
-	"errors"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
@@ -11,8 +9,8 @@ import (
 )
 
 var (
-	configBucketKey     = []byte("config")
-	configBucketNodeKey = []byte("nodeId")
+	configBucketKey = []byte("config")
+	CfgNodeId       = ConfigAccessor("nodeId")
 )
 
 // opens BoltDB database
@@ -60,27 +58,15 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 }
 
 func BootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
-	// errors if already exists
+	// errors if already exists (this is important)
 	configBucket, err := tx.CreateBucket(configBucketKey)
 	if err != nil {
 		return err
 	}
 
-	return configBucket.Put(configBucketNodeKey, []byte(nodeId))
-}
-
-func GetSelfNodeId(tx *bolt.Tx) (string, error) {
-	configBucket := tx.Bucket(configBucketKey)
-	if configBucket == nil {
-		return "", blorm.ErrNotFound
-	}
-
-	nodeId := string(configBucket.Get(configBucketNodeKey))
-	if nodeId == "" {
-		return "", errors.New("config bucket node ID not found")
-	}
-
-	return nodeId, nil
+	return configBucket.Put(CfgNodeId.key, []byte(nodeId))
+	// TODO: use (but verify that tx.Bucket(foo) after CreateBucket(foo) works)
+	// return CfgNodeId.Set(nodeId, tx)
 }
 
 func BootstrapRepos(db *bolt.DB) error {

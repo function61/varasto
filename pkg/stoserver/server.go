@@ -159,7 +159,7 @@ type ServerConfig struct {
 	ClientsAuthTokens map[string]bool
 }
 
-// returns ErrNotFound if bootstrap needed
+// returns blorm.ErrNotFound if bootstrap needed
 func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logger) (*ServerConfig, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
@@ -167,7 +167,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}
 	defer tx.Rollback()
 
-	nodeId, err := stodb.GetSelfNodeId(tx)
+	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
 	if err != nil {
 		return nil, err
 	}

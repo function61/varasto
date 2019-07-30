@@ -19,7 +19,7 @@ func Export(tx *bolt.Tx, output io.Writer) error {
 	outputBuffered := bufio.NewWriterSize(output, 1024*100)
 	defer outputBuffered.Flush()
 
-	nodeId, err := stodb.GetSelfNodeId(tx)
+	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
 	if err != nil {
 		return err
 	}
