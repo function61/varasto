@@ -31,7 +31,7 @@ import {
 	Volume,
 	VolumeMount,
 } from 'generated/stoserver/stoservertypes_types';
-import { AppDefaultLayout } from 'layout/appdefaultlayout';
+import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface VolumesAndMountsPageState {
@@ -63,13 +63,13 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 		);
 
 		return (
-			<AppDefaultLayout title="Volumes &amp; mounts" breadcrumbs={[]}>
+			<SettingsLayout title="Volumes &amp; mounts" breadcrumbs={[]}>
 				<Panel heading={volumesHeading}>{this.renderVolumes()}</Panel>
 
 				<Panel heading="Mounts">{this.renderMounts()}</Panel>
 
 				<Panel heading="Data integrity verification jobs">{this.renderIvJobs()}</Panel>
-			</AppDefaultLayout>
+			</SettingsLayout>
 		);
 	}
 

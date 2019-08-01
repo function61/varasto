@@ -6,14 +6,7 @@ import { jsxChildType } from 'f61ui/types';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
-import {
-	browseRoute,
-	clientsRoute,
-	nodesRoute,
-	replicationPoliciesRoute,
-	serverInfoRoute,
-	volumesAndMountsRoute,
-} from 'routes';
+import { browseRoute, serverInfoRoute } from 'routes';
 
 interface AppDefaultLayoutProps {
 	title: string;
@@ -33,27 +26,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 				active: browseRoute.matchUrl(hash) !== null,
 			},
 			{
-				title: 'Volumes & mounts',
-				url: volumesAndMountsRoute.buildUrl({}),
-				active: volumesAndMountsRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Nodes',
-				url: nodesRoute.buildUrl({}),
-				active: nodesRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Clients',
-				url: clientsRoute.buildUrl({}),
-				active: clientsRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Replication policies',
-				url: replicationPoliciesRoute.buildUrl({}),
-				active: replicationPoliciesRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Server info',
+				title: 'Settings',
 				url: serverInfoRoute.buildUrl({}),
 				active: serverInfoRoute.matchUrl(hash) !== null,
 			},

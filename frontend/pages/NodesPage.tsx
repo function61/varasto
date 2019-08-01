@@ -2,7 +2,7 @@ import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { getNodes } from 'generated/stoserver/stoservertypes_endpoints';
 import { Node } from 'generated/stoserver/stoservertypes_types';
-import { AppDefaultLayout } from 'layout/appdefaultlayout';
+import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface NodesPageState {
@@ -22,9 +22,9 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 
 	render() {
 		return (
-			<AppDefaultLayout title="Nodes" breadcrumbs={[]}>
+			<SettingsLayout title="Nodes" breadcrumbs={[]}>
 				{this.renderData()}
-			</AppDefaultLayout>
+			</SettingsLayout>
 		);
 	}
 

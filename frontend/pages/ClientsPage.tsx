@@ -5,7 +5,7 @@ import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { ClientCreate, ClientRemove } from 'generated/stoserver/stoservertypes_commands';
 import { getClients } from 'generated/stoserver/stoservertypes_endpoints';
 import { Client } from 'generated/stoserver/stoservertypes_types';
-import { AppDefaultLayout } from 'layout/appdefaultlayout';
+import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ClientsPageState {
@@ -25,9 +25,9 @@ export default class ClientsPage extends React.Component<{}, ClientsPageState> {
 
 	render() {
 		return (
-			<AppDefaultLayout title="Clients" breadcrumbs={[]}>
+			<SettingsLayout title="Clients" breadcrumbs={[]}>
 				{this.renderData()}
-			</AppDefaultLayout>
+			</SettingsLayout>
 		);
 	}
 

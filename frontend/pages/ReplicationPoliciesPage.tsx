@@ -5,7 +5,7 @@ import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { ReplicationpolicyChangeDesiredVolumes } from 'generated/stoserver/stoservertypes_commands';
 import { getReplicationPolicies } from 'generated/stoserver/stoservertypes_endpoints';
 import { ReplicationPolicy } from 'generated/stoserver/stoservertypes_types';
-import { AppDefaultLayout } from 'layout/appdefaultlayout';
+import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ReplicationPoliciesPageState {
@@ -28,9 +28,9 @@ export default class ReplicationPoliciesPage extends React.Component<
 
 	render() {
 		return (
-			<AppDefaultLayout title="Replication policies" breadcrumbs={[]}>
+			<SettingsLayout title="Replication policies" breadcrumbs={[]}>
 				{this.renderData()}
-			</AppDefaultLayout>
+			</SettingsLayout>
 		);
 	}
 

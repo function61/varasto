@@ -6,11 +6,17 @@ export const clientsRoute = makeRoute('clients', {});
 
 export const nodesRoute = makeRoute('nodes', {});
 
+export const usersRoute = makeRoute('users', {});
+
 export const serverInfoRoute = makeRoute('serverInfo', {});
 
 export const volumesAndMountsRoute = makeRoute('volumesmounts', {});
 
 export const replicationPoliciesRoute = makeRoute('replicationpolicies', {});
+
+export const healthRoute = makeRoute('health', {});
+
+export const encryptionKeysRoute = makeRoute('encryptionKeys', {});
 
 export const collectionRoute = makeRoute('collection', {
 	id: 'string',
