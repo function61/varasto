@@ -13,11 +13,10 @@ This will become the primary installation method, but it's not finished yet.
 Linux
 -----
 
-Download suitable binary from the Bintray link (in README).
+Download suitable binary from the Bintray link (in README). Don't worry about `public.tar.gz`
+(it's downloaded+extracted automatically if it's missing).
 
 Rename `sto_linux-amd64` -> `sto` and `chmod +x` it.
-
-Download & extract `public.tar.gz` to the same directory as you're running the binary from.
 
 Make `config.json` in the same directory with content:
 
