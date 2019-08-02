@@ -16,6 +16,37 @@ moving *all my files in*, but I wouldn't yet recommend this for anybody else. Al
 access controls are nowhere to be found.
 
 
+Features
+--------
+
+| Status | Feature                     | Details                               |
+|--------|-----------------------------|---------------------------------------|
+| ✓      | Supported OSs               | Linux, Windows (Mac might come later) |
+| ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
+| ✓      | Integrated backups          | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3 |
+| ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compressed well) & transparently |
+| ✓      | Metadata support            | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. |
+| ✓      | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! |
+| ✓      | Thumbnails for photos       | Automatic thumbnailing of photos/pictures |
+| TODO   | Thumbnails for videos       | Automatic thumbnailing of videos |
+| TODO   | Video & audio transcoding   | Got movie in 4K resolution but your FullHD resolution phone doesn't have the power or bandwidth to watch it? |
+| TODO   | Atomic snapshots            | Uses LVM on Linux and shadow copies on Windows to grab consistent copies of files |
+| ✓      | Data integrity              | Sha256 hashes verified on file write/read - detects bit rot immediately |
+| ✓      | Data privacy                | All data is encrypted - each collection with a separate key compromise of one collection does not compromise other data |
+| ✓      | Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login if you want to show only family-friendly content |
+| ✓      | Data durability             | Transparently replicates your data to multiple disks / to offsite storage |
+| ✓      | Per-collection durability   | To save money, we support storing important files with higher redundancy than less important files |
+| ✓      | Transactional               | File or group of files are successfully committed or none at all. Practically no other filesystem does this |
+| ✓      | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
+| TODO   | Ransomware protection       | Run Varasto on a separate device to protect from ransomware, or configure replication to S3 versioned bucket |
+| ✓      | Where is data stored        | Local disks or cloud storage |
+| TODO   | Integrated SMART monitoring | Detect disk failures early |
+| TODO   | Tiered storage              | Use SSD for super fast data ingestion, and transfer it in background to a spinning disk |
+| TODO   | Multi-user                  | Have separate file hierarchies for your friends & family |
+| TODO   | File sharing                | Share your own files to friends |
+| TODO   | Offline drives              | We support use cases where you plug in a particular hard drive occasionally. Queued writes/deletes are applied when volume becomes available |
+
+
 Docs
 ----
 
