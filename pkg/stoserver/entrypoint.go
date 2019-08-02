@@ -1,9 +1,11 @@
 package stoserver
 
 import (
+	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/spf13/cobra"
 	"log"
@@ -43,6 +45,24 @@ func Entrypoint() *cobra.Command {
 
 			if err := stodbimportexport.Import(os.Stdin, scf.DbLocation); err != nil {
 				panic(err)
+			}
+		},
+	})
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "install",
+		Short: "Installs systemd unit file to make Varasto start on system boot",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			hints, err := systemdinstaller.InstallSystemdServiceFile(
+				"varasto",
+				[]string{"server"},
+				"Varasto server")
+
+			if err != nil {
+				panic(err)
+			} else {
+				fmt.Println(hints)
 			}
 		},
 	})

@@ -123,7 +123,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:415ca75b1a2ad46873cd65d33162388b34cc1499e691662330f7fef0b9f6a3cd"
+  digest = "1:52ab19c65487b294e0c4d00d59fde829e57064ff97d22c3e51a63c85701e2158"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
@@ -148,6 +148,7 @@
     "retry",
     "sliceutil",
     "stopper",
+    "systemdinstaller",
   ]
   pruneopts = "UT"
   revision = "e62489286be257ac90a4bb2c6c696d6c4ebcb94a"
@@ -492,6 +493,7 @@
     "github.com/function61/gokit/retry",
     "github.com/function61/gokit/sliceutil",
     "github.com/function61/gokit/stopper",
+    "github.com/function61/gokit/systemdinstaller",
     "github.com/function61/pi-security-module/pkg/f61ui",
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
     "github.com/function61/ubackup/pkg/ubbackup",
