@@ -26,6 +26,7 @@ Design:
 
 Operating:
 
+- [How to install](docs/guide_how-to-install.md)
 - [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 
