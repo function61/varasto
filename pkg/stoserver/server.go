@@ -7,6 +7,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/pi-security-module/pkg/extractpublicfiles"
 	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
@@ -35,6 +36,14 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	defer stop.Done()
 
 	logl := logex.Levels(logger)
+
+	// if public.tar.gz is not present in our working directory, try to download & extract it automatically
+	if err := extractpublicfiles.Run(extractpublicfiles.BintrayDownloadUrl(
+		"function61",
+		"dl",
+		"varasto/"+dynversion.Version+"/"+extractpublicfiles.PublicFilesArchiveFilename), extractpublicfiles.PublicFilesArchiveFilename, logger); err != nil {
+		return err
+	}
 
 	scf, err := readServerConfigFile()
 	if err != nil {

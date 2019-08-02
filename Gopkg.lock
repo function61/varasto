@@ -155,11 +155,13 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2b236421589a3cee6b654c131693861f9d9c4840e6a19b6000c1b48431462e37"
+  digest = "1:1887355ce233c55981cd2bb9ff4fcc9a1c862463c6f0d5a6c82a4b519698b20d"
   name = "github.com/function61/pi-security-module"
   packages = [
+    "pkg/extractpublicfiles",
     "pkg/f61ui",
     "pkg/httpserver/muxregistrator",
+    "pkg/tarextract",
   ]
   pruneopts = "UT"
   revision = "5dc20d261fd1286e039f435cc8b631227a038505"
@@ -494,6 +496,7 @@
     "github.com/function61/gokit/sliceutil",
     "github.com/function61/gokit/stopper",
     "github.com/function61/gokit/systemdinstaller",
+    "github.com/function61/pi-security-module/pkg/extractpublicfiles",
     "github.com/function61/pi-security-module/pkg/f61ui",
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
     "github.com/function61/ubackup/pkg/ubbackup",
