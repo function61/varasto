@@ -18,6 +18,8 @@ export const healthRoute = makeRoute('health', {});
 
 export const encryptionKeysRoute = makeRoute('encryptionKeys', {});
 
+export const contentMetadataRoute = makeRoute('contentMetadata', {});
+
 export const collectionRoute = makeRoute('collection', {
 	id: 'string',
 	rev: 'string',

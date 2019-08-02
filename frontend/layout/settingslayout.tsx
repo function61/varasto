@@ -7,6 +7,7 @@ import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import {
 	clientsRoute,
+	contentMetadataRoute,
 	encryptionKeysRoute,
 	healthRoute,
 	nodesRoute,
@@ -66,6 +67,11 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				title: 'Replication policies',
 				url: replicationPoliciesRoute.buildUrl({}),
 				active: replicationPoliciesRoute.matchUrl(hash) !== null,
+			},
+			{
+				title: 'Content metadata',
+				url: contentMetadataRoute.buildUrl({}),
+				active: contentMetadataRoute.matchUrl(hash) !== null,
 			},
 		];
 

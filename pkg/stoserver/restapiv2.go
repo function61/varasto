@@ -672,6 +672,35 @@ func (h *handlers) GetHealth(rctx *httpauth.RequestContext, w http.ResponseWrite
 	return graph
 }
 
+func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ConfigValue {
+	key := mux.Vars(r)["id"]
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+	defer tx.Rollback()
+
+	var val string
+	switch key {
+	case stoservertypes.CfgTheMovieDbApikey:
+		val, err = stodb.CfgTheMovieDbApikey.GetOptional(tx)
+	default:
+		http.Error(w, fmt.Sprintf("unknown key: %s", key), http.StatusNotFound)
+		return nil
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	return &stoservertypes.ConfigValue{
+		Key:   key,
+		Value: val,
+	}
+}
+
 func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ServerInfo {
 	dbFileInfo, err := os.Stat(h.conf.File.DbLocation)
 	if err != nil {

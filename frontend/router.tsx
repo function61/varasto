@@ -2,6 +2,7 @@ import { makeRouter } from 'f61ui/typescript-safe-router/saferouter';
 import BrowsePage from 'pages/BrowsePage';
 import ClientsPage from 'pages/ClientsPage';
 import CollectionPage from 'pages/CollectionPage';
+import ContentMetadataPage from 'pages/ContentMetadataPage';
 import EncryptionKeysPage from 'pages/EncryptionKeysPage';
 import HealthPage from 'pages/HealthPage';
 import NodesPage from 'pages/NodesPage';
@@ -14,6 +15,7 @@ import {
 	browseRoute,
 	clientsRoute,
 	collectionRoute,
+	contentMetadataRoute,
 	encryptionKeysRoute,
 	healthRoute,
 	nodesRoute,
@@ -33,6 +35,7 @@ export const router = makeRouter(browseRoute, (opts) => (
 	.registerRoute(healthRoute, () => <HealthPage />)
 	.registerRoute(usersRoute, () => <UsersPage />)
 	.registerRoute(encryptionKeysRoute, () => <EncryptionKeysPage />)
+	.registerRoute(contentMetadataRoute, () => <ContentMetadataPage />)
 	.registerRoute(collectionRoute, (opts) => (
 		<CollectionPage
 			id={opts.id}

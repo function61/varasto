@@ -10,7 +10,6 @@ import (
 
 var (
 	configBucketKey = []byte("config")
-	CfgNodeId       = ConfigAccessor("nodeId")
 )
 
 // opens BoltDB database

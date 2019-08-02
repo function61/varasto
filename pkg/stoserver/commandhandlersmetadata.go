@@ -241,10 +241,32 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 	})
 }
 
+func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMovieDbApikey, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		if cmd.Apikey != "" { // allow clearing this without testing
+			// validate the API key by trying to use the API
+			client := themoviedbapi.New(cmd.Apikey)
+			_, err := client.OpenMovieByImdbId("tt1226229") // one of my fav underrated movies :)
+			if err != nil {
+				return fmt.Errorf("failed validating API key: %v", err)
+			}
+		}
+
+		return stodb.CfgTheMovieDbApikey.Set(cmd.Apikey, tx)
+	})
+}
+
 func (c *cHandlers) themoviedbapiClient() (*themoviedbapi.Client, error) {
-	if c.conf.File.TheMovieDbApiKey == "" {
-		return nil, errors.New("TheMovieDbApiKey not defined")
+	tx, err := c.db.Begin(false)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	apikey, err := stodb.CfgTheMovieDbApikey.GetRequired(tx)
+	if err != nil {
+		return nil, err
 	}
 
-	return themoviedbapi.New(c.conf.File.TheMovieDbApiKey), nil
+	return themoviedbapi.New(apikey), nil
 }

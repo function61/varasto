@@ -28,7 +28,6 @@ type ServerConfigFile struct {
 	DbLocation                   string           `json:"db_location"`
 	AllowBootstrap               bool             `json:"allow_bootstrap"`
 	DisableReplicationController bool             `json:"disable_replication_controller"`
-	TheMovieDbApiKey             string           `json:"themoviedb_apikey"`
 	BackupConfig                 *ubconfig.Config `json:"backup_config"`
 }
 

@@ -15,6 +15,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/config/{id}", "produces": {"_": "ConfigValue"}, "name": "getConfig" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
@@ -34,6 +35,7 @@
 		{ "key": "MetadataTitle", "value": "title" },
 		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },
 		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
+		{ "key": "CfgTheMovieDbApikey", "value": "themoviedb_apikey" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [
@@ -218,6 +220,13 @@
 				"Health": {"_": "HealthStatus"},
 				"Details": {"_": "string"},
 				"Children": {"_": "list", "of": {"_": "Health"}}
+			}}
+		},
+		{
+			"name": "ConfigValue",
+			"type": {"_": "object", "fields": {
+				"Key": {"_": "string"},
+				"Value": {"_": "string"}
 			}}
 		},
 		{

@@ -292,6 +292,16 @@
 		]
 	},
 	{
+		"command": "config.SetTheMovieDbApikey",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "update",
+		"title": "Set https://themoviedb.org API key",
+		"fields": [
+			{ "key": "Apikey", "optional": true }
+		]
+	},
+	{
 		"command": "client.Create",
 		"chain": "public",
 		"ctor": [],
