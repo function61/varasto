@@ -78,7 +78,10 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 		return (
 			<AppDefaultLayout
 				title={this.props.title}
-				breadcrumbs={this.props.breadcrumbs}
+				breadcrumbs={this.props.breadcrumbs.concat({
+					url: serverInfoRoute.buildUrl({}),
+					title: 'Settings',
+				})}
 				children={
 					<div className="row">
 						<div className="col-md-3">
