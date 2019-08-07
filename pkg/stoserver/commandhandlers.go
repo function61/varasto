@@ -83,6 +83,10 @@ func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDesc
 
 // FIXME: name ends in 2 because conflicts with types.VolumeMount
 func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.Ctx) error {
+	sameVolumeOnSameNode := func(a, b *stotypes.VolumeMount) bool {
+		return a.Volume == b.Volume && a.Node == b.Node
+	}
+
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
@@ -95,6 +99,17 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 			Node:       c.conf.SelfNode.ID,
 			Driver:     stotypes.VolumeDriverKind(cmd.Kind),
 			DriverOpts: cmd.DriverOpts,
+		}
+
+		allMounts := []stotypes.VolumeMount{}
+		if err := stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&allMounts), tx); err != nil {
+			return err
+		}
+
+		for _, otherMount := range allMounts {
+			if sameVolumeOnSameNode(mountSpec, &otherMount) {
+				return fmt.Errorf("same volume is already mounted at specified node. mount id: %s", otherMount.ID)
+			}
 		}
 
 		// try mounting the volume
