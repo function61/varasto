@@ -48,4 +48,5 @@ type VolumeDriverKind string
 const (
 	VolumeDriverKindLocalFs     VolumeDriverKind = "local-fs"
 	VolumeDriverKindGoogleDrive                  = "googledrive"
+	VolumeDriverKindAmazonS3                     = "aws-s3"
 )

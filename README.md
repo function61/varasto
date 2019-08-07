@@ -58,6 +58,7 @@ Design:
 Operating:
 
 - [How to install](docs/guide_how-to-install.md)
+- [Setting up AWS S3](docs/guide_setting-up-s3.md)
 - [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 

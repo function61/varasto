@@ -13,6 +13,7 @@ import (
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
+	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
@@ -255,6 +256,10 @@ func getDriver(volume stotypes.Volume, mount stotypes.VolumeMount, logger *log.L
 			volume.UUID,
 			mount.DriverOpts,
 			logex.Prefix("blobdriver/localfs", logger)), nil
+	case stotypes.VolumeDriverKindAmazonS3:
+		return s3blobstore.New(
+			mount.DriverOpts,
+			logex.Prefix("blobdriver/s3", logger))
 	case stotypes.VolumeDriverKindGoogleDrive:
 		return googledriveblobstore.New(
 			mount.DriverOpts,
