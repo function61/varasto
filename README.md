@@ -23,8 +23,8 @@ Features
 |--------|-----------------------------|---------------------------------------|
 | ✓      | Supported OSs               | Linux, Windows (Mac might come later) |
 | ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
-| ✓      | Integrated backups          | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3 |
-| ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compressed well) & transparently |
+| ✓      | Integrated backups          | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
+| ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compresses well) & transparently |
 | ✓      | Metadata support            | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. |
 | ✓      | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! |
 | ✓      | Thumbnails for photos       | Automatic thumbnailing of photos/pictures |
@@ -32,7 +32,7 @@ Features
 | TODO   | Video & audio transcoding   | Got movie in 4K resolution but your FullHD resolution phone doesn't have the power or bandwidth to watch it? |
 | TODO   | Atomic snapshots            | Uses LVM on Linux and shadow copies on Windows to grab consistent copies of files |
 | ✓      | Data integrity              | Sha256 hashes verified on file write/read - detects bit rot immediately |
-| ✓      | Data privacy                | All data is encrypted - each collection with a separate key compromise of one collection does not compromise other data |
+| ✓      | Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data |
 | ✓      | Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login if you want to show only family-friendly content |
 | ✓      | Data durability             | Transparently replicates your data to multiple disks / to offsite storage |
 | ✓      | Per-collection durability   | To save money, we support storing important files with higher redundancy than less important files |
