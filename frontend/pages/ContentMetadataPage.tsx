@@ -41,7 +41,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 							<Info text="For fetching metadata (plot descriptions, poster images etc.) for movies and TV series. This is not required, but if given you can get richer metadata." />
 						</div>
 					}>
-					{this.renderInternal()}
+					{this.renderApikeyForm()}
 					<Well>
 						More info about getting an API key{' '}
 						<a href="https://www.themoviedb.org/faq/api" target="_blank">
@@ -54,7 +54,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 		);
 	}
 
-	private renderInternal() {
+	private renderApikeyForm() {
 		const apikey = this.state.apikey;
 
 		if (!apikey) {
