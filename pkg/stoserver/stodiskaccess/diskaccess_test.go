@@ -2,6 +2,7 @@ package stodiskaccess
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
@@ -307,11 +308,11 @@ func newTestingBlobStorage() *testingBlobStorage {
 	}
 }
 
-func (t *testingBlobStorage) Mountable() error {
+func (t *testingBlobStorage) Mountable(_ context.Context) error {
 	return nil
 }
 
-func (t *testingBlobStorage) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, error) {
+func (t *testingBlobStorage) RawFetch(_ context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	buf, exists := t.files[ref.AsHex()]
 	if !exists {
 		return nil, os.ErrNotExist
@@ -320,7 +321,7 @@ func (t *testingBlobStorage) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, erro
 	return ioutil.NopCloser(bytes.NewReader(buf)), nil
 }
 
-func (t *testingBlobStorage) RawStore(ref stotypes.BlobRef, content io.Reader) error {
+func (t *testingBlobStorage) RawStore(_ context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	buf, err := ioutil.ReadAll(content)
 	if err != nil {
 		return err
