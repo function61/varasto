@@ -4,6 +4,7 @@ package stodiskaccess
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/binary"
@@ -135,14 +136,14 @@ func (d *Controller) storeInternal(volumeId int, collId string, ref stotypes.Blo
 	}
 
 	if isLegacy {
-		if err := driver.RawStore(ref, verifiedContentCopyForLegacy); err != nil {
+		if err := driver.RawStore(context.TODO(), ref, verifiedContentCopyForLegacy); err != nil {
 			return nil, err
 		}
 
 		return mkBlobMeta(), nil
 	}
 
-	if err := driver.RawStore(ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
+	if err := driver.RawStore(context.TODO(), ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
 		return nil, fmt.Errorf("storing blob into volume %d failed: %v", volumeId, err)
 	}
 
@@ -158,7 +159,7 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, e
 	}
 
 	if isLegacy {
-		body, err := driver.RawFetch(ref)
+		body, err := driver.RawFetch(context.TODO(), ref)
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +172,7 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, e
 		return nil, err
 	}
 
-	body, err := driver.RawFetch(meta.Ref)
+	body, err := driver.RawFetch(context.TODO(), meta.Ref)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +229,7 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
 	}
 
 	if isLegacy {
-		stream, err := driver.RawFetch(ref)
+		stream, err := driver.RawFetch(context.TODO(), ref)
 		if err != nil {
 			return 0, err
 		}
@@ -243,7 +244,7 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
 		return 0, err
 	}
 
-	body, err := driver.RawFetch(meta.Ref)
+	body, err := driver.RawFetch(context.TODO(), meta.Ref)
 	if err != nil {
 		return 0, err
 	}

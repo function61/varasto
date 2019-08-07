@@ -36,7 +36,7 @@ func New(varastoDirectoryId string, logger *log.Logger) (*googledrive, error) {
 	}, nil
 }
 
-func (g *googledrive) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, error) {
+func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	// https://twitter.com/joonas_fi/status/1108008997238595590
 	exactFilenameInExactFolderQuery := fmt.Sprintf(
 		"name = '%s' and '%s' in parents",
@@ -48,6 +48,7 @@ func (g *googledrive) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, error) {
 	listFilesResponse, err := g.srv.Files.List().PageSize(2).
 		Fields("files(id, name)").
 		Q(exactFilenameInExactFolderQuery).
+		Context(ctx).
 		Do()
 	if err != nil {
 		return nil, fmt.Errorf("List call failed: %v", err)
@@ -56,7 +57,7 @@ func (g *googledrive) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, error) {
 		return nil, os.ErrNotExist
 	}
 
-	res, err := g.srv.Files.Get(listFilesResponse.Files[0].Id).Download()
+	res, err := g.srv.Files.Get(listFilesResponse.Files[0].Id).Context(ctx).Download()
 	if err != nil {
 		return nil, err
 	}
@@ -64,19 +65,19 @@ func (g *googledrive) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, error) {
 	return res.Body, nil
 }
 
-func (g *googledrive) RawStore(ref stotypes.BlobRef, content io.Reader) error {
+func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	if _, err := g.srv.Files.Create(&drive.File{
 		Name:     toGoogleDriveName(ref),
 		Parents:  []string{g.varastoDirectoryId},
 		MimeType: "application/vnd.varasto.blob",
-	}).Media(content).Do(); err != nil {
+	}).Media(content).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("gdrive Create: %v", err)
 	}
 
 	return nil
 }
 
-func (g *googledrive) Mountable() error {
+func (g *googledrive) Mountable(ctx context.Context) error {
 	anyFilesInFolderQuery := fmt.Sprintf("'%s' in parents", g.varastoDirectoryId)
 
 	// just try if a folder query works. it'll 404 if the id is invalid (there seems to
@@ -85,6 +86,7 @@ func (g *googledrive) Mountable() error {
 	_, err := g.srv.Files.List().PageSize(2).
 		Fields("files(id, name)").
 		Q(anyFilesInFolderQuery).
+		Context(ctx).
 		Do()
 	if err != nil {
 		return fmt.Errorf("List call failed: %v", err)

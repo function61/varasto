@@ -1,6 +1,7 @@
 package localfsblobstore
 
 import (
+	"context"
 	"fmt"
 	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
@@ -26,7 +27,7 @@ type localFs struct {
 	log  *logex.Leveled
 }
 
-func (l *localFs) RawStore(ref stotypes.BlobRef, content io.Reader) error {
+func (l *localFs) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	filename := l.getPath(ref)
 
 	// does not error if already exists
@@ -51,11 +52,11 @@ func (l *localFs) RawStore(ref stotypes.BlobRef, content io.Reader) error {
 	})
 }
 
-func (l *localFs) RawFetch(ref stotypes.BlobRef) (io.ReadCloser, error) {
+func (l *localFs) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	return os.Open(l.getPath(ref))
 }
 
-func (l *localFs) Mountable() error {
+func (l *localFs) Mountable(ctx context.Context) error {
 	// to ensure that we mounted correct volume, there must be a flag file in the root.
 	// without this check, we could accidentally mount the wrong volume and that would be bad.
 	flagFilename := "varasto-" + l.uuid + ".json"

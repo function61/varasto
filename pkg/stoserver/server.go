@@ -1,6 +1,7 @@
 package stoserver
 
 import (
+	"context"
 	"fmt"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
@@ -227,7 +228,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 
 		// for safety. if on Windows we're using external USB disks, their drive letters
 		// could get mixed up and we could mount the wrong volume and that would not be great.
-		if err := driver.Mountable(); err != nil {
+		if err := driver.Mountable(context.TODO()); err != nil {
 			logex.Levels(logger).Error.Printf("Volume %s not mountable: %v", volume.UUID, err)
 		} else {
 			if mountedVolume.ID == "xQbd" { // FIXME

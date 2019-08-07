@@ -1,6 +1,7 @@
 package stoserver
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -118,7 +119,7 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 			return err
 		}
 
-		if err := driver.Mountable(); err != nil {
+		if err := driver.Mountable(context.TODO()); err != nil {
 			return err
 		}
 
