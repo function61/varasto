@@ -48,6 +48,7 @@
 		"ctor": ["Id"],
 		"crudNature": "create",
 		"title": "Mount volume",
+		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "Kind" },
