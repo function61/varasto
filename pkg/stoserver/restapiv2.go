@@ -713,7 +713,7 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 
 	return &stoservertypes.ServerInfo{
 		AppVersion:   dynversion.Version,
-		AppUptime:    appuptime.Elapsed().String(),
+		StartedAt:    appuptime.Started(),
 		DatabaseSize: int(dbFileInfo.Size()),
 		HeapBytes:    int(ms.HeapAlloc),
 		GoVersion:    runtime.Version(),

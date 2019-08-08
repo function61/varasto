@@ -184,7 +184,7 @@
 			"name": "ServerInfo",
 			"type": {"_": "object", "fields": {
 				"AppVersion": {"_": "string"},
-				"AppUptime": {"_": "string"},
+				"StartedAt": {"_": "datetime"},
 				"DatabaseSize": {"_": "integer"},
 				"GoVersion": {"_": "string"},
 				"Goroutines": {"_": "integer"},

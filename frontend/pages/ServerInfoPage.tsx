@@ -8,6 +8,8 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
+import { Timestamp } from 'f61ui/component/timestamp';
+import { jsxChildType } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { DatabaseBackup } from 'generated/stoserver/stoservertypes_commands';
 import { getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
@@ -49,12 +51,12 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 		interface Item {
 			h: string;
-			t: string;
+			t: jsxChildType;
 		}
 
 		const items: Item[] = [
 			{ h: 'Varasto version', t: serverInfo.AppVersion },
-			{ h: 'Varasto uptime', t: serverInfo.AppUptime },
+			{ h: 'Varasto uptime', t: <Timestamp ts={serverInfo.StartedAt} /> },
 			{ h: 'Database size', t: bytesToHumanReadable(serverInfo.DatabaseSize) },
 			{ h: 'Go version', t: serverInfo.GoVersion },
 			{ h: 'Server OS / arch', t: `${serverInfo.ServerOs} / ${serverInfo.ServerArch}` },
@@ -66,7 +68,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 			<table className="table table-striped table-hover">
 				<tbody>
 					{items.map((item) => (
-						<tr>
+						<tr key={item.h}>
 							<th>{item.h}</th>
 							<td>{item.t}</td>
 						</tr>
