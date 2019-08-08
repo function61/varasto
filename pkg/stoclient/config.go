@@ -17,8 +17,9 @@ const (
 )
 
 type ClientConfig struct {
-	ServerAddr string `json:"server_addr"`
-	AuthToken  string `json:"auth_token"`
+	ServerAddr    string `json:"server_addr"`
+	AuthToken     string `json:"auth_token"`
+	FuseMountPath string `json:"fuse_mount_path"`
 }
 
 func (c *ClientConfig) ApiPath(path string) string {

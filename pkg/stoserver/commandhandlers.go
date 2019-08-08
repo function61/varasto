@@ -374,7 +374,18 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 }
 
 func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount, ctx *command.Ctx) error {
-	vstofuse := stofuseclient.New()
+	tx, err := c.db.Begin(false)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	baseUrl, err := stodb.CfgFuseServerBaseUrl.GetRequired(tx)
+	if err != nil {
+		return err
+	}
+
+	vstofuse := stofuseclient.New(baseUrl)
 
 	if cmd.UnmountOthers {
 		if err := vstofuse.UnmountAll(); err != nil {
@@ -456,6 +467,12 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 		policy.DesiredVolumes = desiredVolumes
 
 		return stodb.ReplicationPolicyRepository.Update(policy, tx)
+	})
+}
+
+func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuseServerBaseurl, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		return stodb.CfgFuseServerBaseUrl.Set(cmd.Baseurl, tx)
 	})
 }
 

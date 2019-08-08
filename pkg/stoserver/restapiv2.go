@@ -684,6 +684,8 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 
 	var val string
 	switch key {
+	case stoservertypes.CfgFuseServerBaseUrl:
+		val, err = stodb.CfgFuseServerBaseUrl.GetOptional(tx)
 	case stoservertypes.CfgTheMovieDbApikey:
 		val, err = stodb.CfgTheMovieDbApikey.GetOptional(tx)
 	default:

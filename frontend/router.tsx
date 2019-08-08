@@ -4,6 +4,7 @@ import ClientsPage from 'pages/ClientsPage';
 import CollectionPage from 'pages/CollectionPage';
 import ContentMetadataPage from 'pages/ContentMetadataPage';
 import EncryptionKeysPage from 'pages/EncryptionKeysPage';
+import FuseServerPage from 'pages/FuseServerPage';
 import HealthPage from 'pages/HealthPage';
 import NodesPage from 'pages/NodesPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
@@ -17,6 +18,7 @@ import {
 	collectionRoute,
 	contentMetadataRoute,
 	encryptionKeysRoute,
+	fuseServerRoute,
 	healthRoute,
 	nodesRoute,
 	replicationPoliciesRoute,
@@ -30,6 +32,7 @@ export const router = makeRouter(browseRoute, (opts) => (
 ))
 	.registerRoute(clientsRoute, () => <ClientsPage />)
 	.registerRoute(nodesRoute, () => <NodesPage />)
+	.registerRoute(fuseServerRoute, () => <FuseServerPage />)
 	.registerRoute(serverInfoRoute, () => <ServerInfoPage />)
 	.registerRoute(volumesAndMountsRoute, () => <VolumesAndMountsPage />)
 	.registerRoute(healthRoute, () => <HealthPage />)

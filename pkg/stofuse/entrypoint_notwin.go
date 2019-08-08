@@ -5,6 +5,7 @@ package stofuse
 import (
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/spf13/cobra"
 	"log"
 )
@@ -31,7 +32,14 @@ func Entrypoint() *cobra.Command {
 
 			go rpcServe(sigs, workers.Stopper())
 
-			if err := fuseServe(sigs, "/samba/joonas/varasto", workers.Stopper()); err != nil {
+			if err := func() error {
+				conf, err := stoclient.ReadConfig()
+				if err != nil {
+					return err
+				}
+
+				return fuseServe(sigs, *conf, workers.Stopper())
+			}(); err != nil {
 				panic(err)
 			}
 

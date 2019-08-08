@@ -6,6 +6,7 @@ import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"context"
+	"errors"
 	"github.com/function61/gokit/retry"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/stateresolver"
@@ -32,15 +33,14 @@ func newSigs() *sigFabric {
 	}
 }
 
-func fuseServe(sigs *sigFabric, mountPath string, stop *stopper.Stopper) error {
+func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, stop *stopper.Stopper) error {
 	defer stop.Done()
 
-	conf, err := stoclient.ReadConfig()
-	if err != nil {
-		return err
+	if conf.FuseMountPath == "" {
+		return errors.New("FuseMountPath not set")
 	}
 
-	NewFsServer(*conf)
+	NewFsServer(conf)
 
 	varastoFs, err := NewVarastoFS(sigs)
 	if err != nil {
@@ -49,7 +49,7 @@ func fuseServe(sigs *sigFabric, mountPath string, stop *stopper.Stopper) error {
 
 	// AllowOther() needed to get our Samba use case working
 	fuseConn, err := fuse.Mount(
-		mountPath,
+		conf.FuseMountPath,
 		// fuse.ReadOnly(),
 		fuse.FSName("varasto"),
 		fuse.Subtype("varasto1fs"),
@@ -123,7 +123,7 @@ func fuseServe(sigs *sigFabric, mountPath string, stop *stopper.Stopper) error {
 			// "Instead of sending a SIGINT to the process, you should unmount the filesystem
 			// That will cause the serve loop to exit, and your process can exit that way."
 			// https://github.com/bazil/fuse/issues/6
-			return fuse.Unmount(mountPath)
+			return fuse.Unmount(conf.FuseMountPath)
 		}
 
 		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)

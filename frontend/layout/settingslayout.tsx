@@ -9,6 +9,7 @@ import {
 	clientsRoute,
 	contentMetadataRoute,
 	encryptionKeysRoute,
+	fuseServerRoute,
 	healthRoute,
 	nodesRoute,
 	replicationPoliciesRoute,
@@ -72,6 +73,11 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				title: 'Content metadata',
 				url: contentMetadataRoute.buildUrl({}),
 				active: contentMetadataRoute.matchUrl(hash) !== null,
+			},
+			{
+				title: 'FUSE server',
+				url: fuseServerRoute.buildUrl({}),
+				active: fuseServerRoute.matchUrl(hash) !== null,
 			},
 		];
 

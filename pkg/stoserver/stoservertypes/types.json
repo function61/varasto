@@ -36,6 +36,7 @@
 		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },
 		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
 		{ "key": "CfgTheMovieDbApikey", "value": "themoviedb_apikey" },
+		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [

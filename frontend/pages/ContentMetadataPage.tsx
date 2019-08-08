@@ -66,7 +66,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 				<div className="form-group">
 					<label className="col-sm-2 control-label">
 						API key
-						<CommandIcon command={ConfigSetTheMovieDbApikey()} />
+						<CommandIcon command={ConfigSetTheMovieDbApikey(apikey.Value)} />
 					</label>
 					<div className="col-sm-10">
 						{apikey.Value !== '' ? (

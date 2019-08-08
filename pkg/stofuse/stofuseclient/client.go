@@ -10,9 +10,8 @@ type Client struct {
 	urls *stofusetypes.RestClientUrlBuilder
 }
 
-func New() *Client {
-	// TODO
-	return &Client{stofusetypes.NewRestClientUrlBuilder("http://192.168.1.103:8689")}
+func New(baseUrl string) *Client {
+	return &Client{stofusetypes.NewRestClientUrlBuilder(baseUrl)}
 }
 
 func (v *Client) Mount(collectionId string) error {

@@ -295,11 +295,21 @@
 	{
 		"command": "config.SetTheMovieDbApikey",
 		"chain": "public",
-		"ctor": [],
+		"ctor": ["Apikey"],
 		"crudNature": "update",
 		"title": "Set https://themoviedb.org API key",
 		"fields": [
 			{ "key": "Apikey", "optional": true }
+		]
+	},
+	{
+		"command": "config.SetFuseServerBaseurl",
+		"chain": "public",
+		"ctor": ["Baseurl"],
+		"crudNature": "update",
+		"title": "Set FUSE server baseurl",
+		"fields": [
+			{ "key": "Baseurl", "optional": true, "help": "Looks like http://192.168.1.103:8689" }
 		]
 	},
 	{
