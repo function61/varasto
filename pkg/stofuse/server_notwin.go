@@ -128,7 +128,7 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, stop *stopper.Stopp
 			return fuse.Unmount(conf.FuseMountPath)
 		}
 
-		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.TODO(), 45*time.Second)
 		defer cancel()
 
 		// retrying because unmount will fail if any process is accessing the mount
