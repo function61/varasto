@@ -3,7 +3,7 @@ package stoclient
 import (
 	"context"
 	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
 	"log"
 	"os"
@@ -19,18 +19,16 @@ func adopt(wd string, parentDirectoryId string) error {
 		return err
 	}
 
-	collection := stotypes.Collection{}
+	// TODO: maybe the struct ctor should be codegen'd?
+	collectionId, err := clientConfig.CommandClient().ExecExpectingCreatedRecordId(ctx, &stoservertypes.CollectionCreate{
+		ParentDir: parentDirectoryId,
+		Name:      filepath.Base(wd),
+	})
+	if err != nil {
+		return err
+	}
 
-	_, err = ezhttp.Post(
-		ctx,
-		clientConfig.ApiPath("/api/collections"),
-		ezhttp.AuthBearer(clientConfig.AuthToken),
-		ezhttp.SendJson(&stotypes.CreateCollectionRequest{
-			Name:              filepath.Base(wd),
-			ParentDirectoryId: parentDirectoryId,
-		}),
-		ezhttp.RespondsJson(&collection, false))
-
+	collection, err := FetchCollectionMetadata(*clientConfig, collectionId)
 	if err != nil {
 		return err
 	}
@@ -39,7 +37,7 @@ func adopt(wd string, parentDirectoryId string) error {
 
 	// since we created an empty collection, there's actually nothing to download,
 	// but this does other important housekeeping
-	return cloneCollectionExistingDir(wd, "", &collection)
+	return cloneCollectionExistingDir(wd, "", collection)
 }
 
 func adoptEntrypoint() *cobra.Command {

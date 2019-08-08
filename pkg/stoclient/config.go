@@ -2,6 +2,7 @@ package stoclient
 
 import (
 	"fmt"
+	"github.com/function61/eventkit/httpcommandclient"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
@@ -22,6 +23,10 @@ type ClientConfig struct {
 
 func (c *ClientConfig) ApiPath(path string) string {
 	return c.ServerAddr + path
+}
+
+func (c *ClientConfig) CommandClient() *httpcommandclient.Client {
+	return httpcommandclient.New(c.ApiPath("/command/"), c.AuthToken)
 }
 
 func (c *ClientConfig) UrlBuilder() *stoservertypes.RestClientUrlBuilder {

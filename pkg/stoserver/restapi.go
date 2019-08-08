@@ -1,9 +1,6 @@
 package stoserver
 
 import (
-	"crypto/rand"
-	"encoding/json"
-	"errors"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
@@ -11,14 +8,12 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
-	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"time"
 )
 
 func defineRestApi(
@@ -59,35 +54,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		}
 
 		outJson(w, coll)
-	}
-
-	newCollection := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		tx, err := db.Begin(true)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		defer tx.Rollback()
-
-		req := &stotypes.CreateCollectionRequest{}
-		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		collection, err := saveNewCollection(req.ParentDirectoryId, req.Name, tx)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
-		panicIfError(tx.Commit())
-
-		outJson(w, collection)
 	}
 
 	uploadBlob := func(w http.ResponseWriter, r *http.Request) {
@@ -208,48 +174,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 	router.HandleFunc("/api/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
 	router.HandleFunc("/api/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
 
-	router.HandleFunc("/api/collections", newCollection).Methods(http.MethodPost)
 	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)
 
 	return nil
-}
-
-func saveNewCollection(parentDirectoryId string, name string, tx *bolt.Tx) (*stotypes.Collection, error) {
-	if _, err := stodb.Read(tx).Directory(parentDirectoryId); err != nil {
-		if err == blorm.ErrNotFound {
-			return nil, errors.New("parent directory not found")
-		} else {
-			return nil, err
-		}
-	}
-
-	// TODO: resolve this from closest parent that has policy defined?
-	replicationPolicy, err := stodb.Read(tx).ReplicationPolicy("default")
-	if err != nil {
-		return nil, err
-	}
-
-	encryptionKey := [32]byte{}
-	if _, err := rand.Read(encryptionKey[:]); err != nil {
-		return nil, err
-	}
-
-	collection := &stotypes.Collection{
-		ID:             stoutils.NewCollectionId(),
-		Created:        time.Now(),
-		Directory:      parentDirectoryId,
-		Name:           name,
-		DesiredVolumes: replicationPolicy.DesiredVolumes,
-		Head:           stotypes.NoParentId,
-		EncryptionKey:  encryptionKey,
-		Changesets:     []stotypes.CollectionChangeset{},
-		Metadata:       map[string]string{},
-	}
-
-	// highly unlikely
-	if _, err := stodb.Read(tx).Collection(collection.ID); err != blorm.ErrNotFound {
-		return nil, errors.New("accidentally generated duplicate collection ID")
-	}
-
-	return collection, stodb.CollectionRepository.Update(collection, tx)
 }

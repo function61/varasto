@@ -108,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:d7eba7b1a3d8c656aabf6542dc655527e652b2442d351a01cff4bf73f040df63"
+  digest = "1:623f527f2ed9f0406ca0bc279ddda9b6f3b745de879a8b2f74ea36e3124ac70c"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -117,9 +117,10 @@
     "event",
     "eventlog",
     "httpcommand",
+    "httpcommandclient",
   ]
   pruneopts = "UT"
-  revision = "fdcd0cbb5069b3bc6b465e16fef8b1e485535c24"
+  revision = "209b187fb4f5bb9fdd1bed5fa4760a3f0de7826e"
 
 [[projects]]
   branch = "master"
@@ -481,9 +482,11 @@
     "github.com/function61/eventkit/event",
     "github.com/function61/eventkit/eventlog",
     "github.com/function61/eventkit/httpcommand",
+    "github.com/function61/eventkit/httpcommandclient",
     "github.com/function61/gokit/appuptime",
     "github.com/function61/gokit/assert",
     "github.com/function61/gokit/atomicfilewrite",
+    "github.com/function61/gokit/aws/s3facade",
     "github.com/function61/gokit/cryptorandombytes",
     "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/dynversion/precompilationversion",

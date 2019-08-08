@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stofuse/stofuseclient"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
@@ -22,6 +24,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // we are currently using the command pattern very wrong!
@@ -258,8 +261,45 @@ func (c *cHandlers) DirectoryMove(cmd *stoservertypes.DirectoryMove, ctx *comman
 
 func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
-		_, err := saveNewCollection(cmd.ParentDir, cmd.Name, tx)
-		return err
+		if _, err := stodb.Read(tx).Directory(cmd.ParentDir); err != nil {
+			if err == blorm.ErrNotFound {
+				return errors.New("parent directory not found")
+			} else {
+				return err
+			}
+		}
+
+		// TODO: resolve this from closest parent that has policy defined?
+		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy("default")
+		if err != nil {
+			return err
+		}
+
+		encryptionKey := [32]byte{}
+		if _, err := rand.Read(encryptionKey[:]); err != nil {
+			return err
+		}
+
+		collection := &stotypes.Collection{
+			ID:             stoutils.NewCollectionId(),
+			Created:        time.Now(),
+			Directory:      cmd.ParentDir,
+			Name:           cmd.Name,
+			DesiredVolumes: replicationPolicy.DesiredVolumes,
+			Head:           stotypes.NoParentId,
+			EncryptionKey:  encryptionKey,
+			Changesets:     []stotypes.CollectionChangeset{},
+			Metadata:       map[string]string{},
+		}
+
+		// highly unlikely
+		if _, err := stodb.Read(tx).Collection(collection.ID); err != blorm.ErrNotFound {
+			return errors.New("accidentally generated duplicate collection ID")
+		}
+
+		ctx.CreatedRecordId(collection.ID)
+
+		return stodb.CollectionRepository.Update(collection, tx)
 	})
 }
 
