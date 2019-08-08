@@ -77,3 +77,18 @@ To restore a database, run:
 ```
 $ sto server dbimport < backupfile
 ```
+
+
+Using external backup program
+-----------------------------
+
+If you don't want to use the built-in µbackup, there's an interface for other backup programs.
+
+You can get a consistent metadata DB backup from the following REST endpoint:
+
+```
+$ curl -H 'Authorization: Bearer ...' http://localhost:8066/api_v2/database/export > export.log
+```
+
+You can get a bearer token by visiting `Settings > Clients` and creating a new client.
+`Backup program` would be a descriptive name.
