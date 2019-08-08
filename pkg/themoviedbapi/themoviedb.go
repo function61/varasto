@@ -1,3 +1,4 @@
+// themoviedb.org ("TMDb") REST API client
 package themoviedbapi
 
 import (

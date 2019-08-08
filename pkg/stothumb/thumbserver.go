@@ -1,3 +1,4 @@
+// Thumbnailer server
 package stothumb
 
 import (

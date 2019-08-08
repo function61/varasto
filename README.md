@@ -24,7 +24,7 @@ Features
 | ✓      | Supported OSs               | Linux, Windows (Mac might come later) |
 | ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
 | ✓      | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive) |
-| ✓      | Integrated backups          | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
+| ✓      | [Integrated backups](docs/guide_setting-up-backup.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
 | ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compresses well) & transparently |
 | ✓      | Metadata support            | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. |
 | ✓      | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! |
@@ -62,6 +62,10 @@ Operating:
 - [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 - [Setting up ransomware protection](docs/guide_ransomware-protection.md)
+
+Developers:
+
+- [Code documentation on GoDoc.org](https://godoc.org/github.com/function61/varasto)
 
 Misc:
 

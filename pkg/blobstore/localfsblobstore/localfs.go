@@ -1,3 +1,4 @@
+// Stores your blobs on local FS-accessible paths
 package localfsblobstore
 
 import (
