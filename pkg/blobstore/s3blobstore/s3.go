@@ -45,7 +45,7 @@ func New(opts string, logger *log.Logger) (*s3blobstore, error) {
 func (g *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	res, err := g.client.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: &g.bucket,
-		Key:    aws.String(tos3blobstoreName(ref)),
+		Key:    aws.String(toS3BlobstoreName(ref)),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("s3 GetObject: %v", err)
@@ -64,7 +64,7 @@ func (g *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 
 	if _, err := g.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket: &g.bucket,
-		Key:    aws.String(tos3blobstoreName(ref)),
+		Key:    aws.String(toS3BlobstoreName(ref)),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
 		return fmt.Errorf("s3 PutObject: %v", err)
@@ -81,7 +81,7 @@ func (g *s3blobstore) Mountable(ctx context.Context) error {
 	return err
 }
 
-func tos3blobstoreName(ref stotypes.BlobRef) string {
+func toS3BlobstoreName(ref stotypes.BlobRef) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(ref))
 }
 
