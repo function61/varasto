@@ -101,14 +101,16 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, stop *stopper.Stopp
 			case <-stop.Signal:
 				break
 			case collectionId := <-sigs.mount:
-				log.Printf("mount: %s", collectionId)
 				if err := mountAdd(collectionId); err != nil {
-					panic(err)
+					log.Printf("ERROR: mountAdd: %v", err)
+				} else {
+					log.Printf("mount: %s", collectionId)
 				}
 			case collectionId := <-sigs.unmount:
-				log.Printf("unmount: %s", collectionId)
 				if err := mountRemove(collectionId); err != nil {
-					panic(err)
+					log.Printf("ERROR: mountRemove: %v", err)
+				} else {
+					log.Printf("unmount: %s", collectionId)
 				}
 			case <-sigs.unmountAll:
 				varastoFs.root.subdirs = []*Dir{}
