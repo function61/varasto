@@ -31,6 +31,7 @@ Features
 | ✓      | Thumbnails for photos       | Automatic thumbnailing of photos/pictures |
 | TODO   | Thumbnails for videos       | Automatic thumbnailing of videos |
 | TODO   | Video & audio transcoding   | Got movie in 4K resolution but your FullHD resolution phone doesn't have the power or bandwidth to watch it? |
+| ✓      | Data access methods         | 1) Clone collection to your computer 2) Open/stream files from web UI 3) Access files via network share 4) Access via Linux FUSE interface |
 | TODO   | Atomic snapshots            | Uses LVM on Linux and shadow copies on Windows to grab consistent copies of files |
 | ✓      | Data integrity              | Sha256 hashes verified on file write/read - detects bit rot immediately |
 | ✓      | Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data |
