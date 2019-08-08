@@ -23,6 +23,7 @@ Features
 |--------|-----------------------------|---------------------------------------|
 | ✓      | Supported OSs               | Linux, Windows (Mac might come later) |
 | ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
+| ✓      | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive) |
 | ✓      | Integrated backups          | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
 | ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compresses well) & transparently |
 | ✓      | Metadata support            | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. |
@@ -38,8 +39,7 @@ Features
 | ✓      | Per-collection durability   | To save money, we support storing important files with higher redundancy than less important files |
 | ✓      | Transactional               | File or group of files are successfully committed or none at all. Practically no other filesystem does this |
 | ✓      | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
-| TODO   | Ransomware protection       | Run Varasto on a separate device to protect from ransomware, or configure replication to S3 versioned bucket |
-| ✓      | Where is data stored        | Local disks or cloud storage |
+| ✓   | [Ransomware protection](docs/guide_ransomware-protection.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
 | TODO   | Integrated SMART monitoring | Detect disk failures early |
 | TODO   | Tiered storage              | Use SSD for super fast data ingestion, and transfer it in background to a spinning disk |
 | TODO   | Multi-user                  | Have separate file hierarchies for your friends & family |
@@ -61,6 +61,7 @@ Operating:
 - [Setting up AWS S3](docs/guide_setting-up-s3.md)
 - [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
+- [Setting up ransomware protection](docs/guide_ransomware-protection.md)
 
 Misc:
 

@@ -79,3 +79,20 @@ If your details were these:
 - `secret = wXQJhB...`
 
 Then your driver options would be `function61-varasto-test:eu-central-1:AKIAUZHTE3U35WCD5EHB:wXQJhB...`
+
+
+Bonus reading: ransomware protection
+------------------------------------
+
+Please read about [Ransomware protection](guide_ransomware-protection.md) first.
+
+S3 enables us to have file overwrite protection by restricting our access keys to not being
+able to delete data. Our policy in this guide doesn't allow for data deletion.
+
+Ransomware cannot delete data, but theoretically ransomware could overwrite data since AWS
+S3 doesn't differentiate between creating new file and updating old file in its `PutObject`
+operation. This is where file versioning steps in - if you enable
+[versioning](https://docs.aws.amazon.com/AmazonS3/latest/dev/Versioning.html) for the bucket,
+any file overwrites just create a new version, and the un-infected version of data can be
+recovered by accessing the old versions of the data once a ransomware infection is
+identified.
