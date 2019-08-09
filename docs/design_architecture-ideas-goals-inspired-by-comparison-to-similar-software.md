@@ -3,6 +3,10 @@ Architecture
 
 ![](architecture.png)
 
+Varasto is backed by a
+[Content-Addressable Storage](https://en.wikipedia.org/wiki/Content-addressable_storage)
+(CAS), which provides quite a few tricks like automatic integrity protection.
+
 
 Ideas / goals
 -------------
