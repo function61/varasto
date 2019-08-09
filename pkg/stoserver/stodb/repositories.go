@@ -1,3 +1,4 @@
+// Module for encapsulating access to the metadata database
 package stodb
 
 import (

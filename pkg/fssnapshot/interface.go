@@ -1,3 +1,4 @@
+// Cross-platform filesystem snapshotting library
 package fssnapshot
 
 type Snapshot struct {
