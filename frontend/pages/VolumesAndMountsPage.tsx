@@ -113,7 +113,9 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 					<td>
 						<Dropdown>
 							<CommandLink command={VolumeMount2(obj.Id)} />
-							<CommandLink command={VolumeChangeQuota(obj.Id, obj.Quota)} />
+							<CommandLink
+								command={VolumeChangeQuota(obj.Id, obj.Quota / 1024 / 1024)}
+							/>
 							<CommandLink command={VolumeVerifyIntegrity(obj.Id)} />
 							<CommandLink
 								command={VolumeChangeDescription(obj.Id, obj.Description)}
