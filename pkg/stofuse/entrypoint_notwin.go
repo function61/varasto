@@ -16,7 +16,9 @@ func Entrypoint() *cobra.Command {
 		Short: "Varasto-FUSE integration",
 	}
 
-	cmd.AddCommand(&cobra.Command{
+	unmountFirst := false
+
+	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Mounts a FUSE-based FS to serve collections from Varasto",
 		Args:  cobra.NoArgs,
@@ -38,14 +40,18 @@ func Entrypoint() *cobra.Command {
 					return err
 				}
 
-				return fuseServe(sigs, *conf, workers.Stopper())
+				return fuseServe(sigs, *conf, unmountFirst, workers.Stopper())
 			}(); err != nil {
 				panic(err)
 			}
 
 			log.Printf("Stopped successfully")
 		},
-	})
+	}
+
+	serveCmd.Flags().BoolVarP(&unmountFirst, "unmount-first", "u", unmountFirst, "Umount the mount-path first (maybe unclean shutdown previously)")
+
+	cmd.AddCommand(serveCmd)
 
 	return cmd
 }

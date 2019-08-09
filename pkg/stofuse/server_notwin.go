@@ -33,7 +33,7 @@ func newSigs() *sigFabric {
 	}
 }
 
-func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, stop *stopper.Stopper) error {
+func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, stop *stopper.Stopper) error {
 	defer stop.Done()
 
 	if conf.FuseMountPath == "" {
@@ -45,6 +45,15 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, stop *stopper.Stopp
 	varastoFs, err := NewVarastoFS(sigs)
 	if err != nil {
 		return err
+	}
+
+	// we can't do this without the branch because if path is not mounted, it yields an error
+	// and I would feel uncomfortable trying to detect "not mounted" error vs "any other error"
+	if unmountFirst {
+		// if previous process dies before successfull unmount, this will unmount it without root privileges
+		if err := fuse.Unmount(conf.FuseMountPath); err != nil {
+			return err
+		}
 	}
 
 	// AllowOther() needed to get our Samba use case working
