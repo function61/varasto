@@ -29,10 +29,10 @@ Features
 | ✓      | Metadata support            | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. |
 | ✓      | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! |
 | ✓      | Thumbnails for photos       | Automatic thumbnailing of photos/pictures |
-| TODO   | Thumbnails for videos       | Automatic thumbnailing of videos |
-| TODO   | Video & audio transcoding   | Got movie in 4K resolution but your FullHD resolution phone doesn't have the power or bandwidth to watch it? |
+| [TODO](https://github.com/function61/varasto/issues/40) | Thumbnails for videos       | Automatic thumbnailing of videos |
+| [TODO](https://github.com/function61/varasto/issues/60) | Video & audio transcoding   | Got movie in 4K resolution but your FullHD resolution phone doesn't have the power or bandwidth to watch it? |
 | ✓      | Data access methods         | 1) Clone collection to your computer 2) Open/stream files from web UI 3) Access files via network share 4) Access via Linux FUSE interface |
-| TODO   | Atomic snapshots            | Uses LVM on Linux and shadow copies on Windows to grab consistent copies of files |
+| [TODO](https://github.com/function61/varasto/issues/75) | Atomic snapshots            | Uses LVM on Linux and shadow copies on Windows to grab consistent copies of files |
 | ✓      | Data integrity              | Sha256 hashes verified on file write/read - detects bit rot immediately |
 | ✓      | Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data |
 | ✓      | Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login if you want to show only family-friendly content |
@@ -41,9 +41,9 @@ Features
 | ✓      | Transactional               | File or group of files are successfully committed or none at all. Practically no other filesystem does this |
 | ✓      | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
 | ✓   | [Ransomware protection](docs/guide_ransomware-protection.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
-| TODO   | Integrated SMART monitoring | Detect disk failures early |
-| TODO   | Tiered storage              | Use SSD for super fast data ingestion, and transfer it in background to a spinning disk |
-| TODO   | Multi-user                  | Have separate file hierarchies for your friends & family |
+| [TODO](https://github.com/function61/varasto/issues/18) | Integrated SMART monitoring | Detect disk failures early |
+| [TODO](https://github.com/function61/varasto/issues/53) | Tiered storage              | Use SSD for super fast data ingestion, and transfer it in background to a spinning disk |
+| [TODO](https://github.com/function61/varasto/issues/39) | Multi-user                  | Have separate file hierarchies for your friends & family |
 | TODO   | File sharing                | Share your own files to friends |
 | TODO   | Offline drives              | We support use cases where you plug in a particular hard drive occasionally. Queued writes/deletes are applied when volume becomes available |
 
