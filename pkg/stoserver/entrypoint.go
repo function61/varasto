@@ -61,15 +61,16 @@ func Entrypoint() *cobra.Command {
 		Short: "Installs systemd unit file to make Varasto start on system boot",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			hints, err := systemdinstaller.InstallSystemdServiceFile(
+			serviceFile := systemdinstaller.SystemdServiceFile(
 				"varasto",
-				[]string{"server"},
-				"Varasto server")
+				"Varasto server",
+				systemdinstaller.Args("server"),
+				systemdinstaller.RequireNetworkOnline)
 
-			if err != nil {
+			if err := systemdinstaller.Install(serviceFile); err != nil {
 				panic(err)
 			} else {
-				fmt.Println(hints)
+				fmt.Println(systemdinstaller.GetHints(serviceFile))
 			}
 		},
 	})
