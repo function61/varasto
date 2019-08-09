@@ -536,6 +536,11 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	panicIfError(stodbimportexport.Export(tx, w))
 }
 
+func (h *handlers) GetLogs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]string {
+	lines := h.conf.LogTail.Snapshot()
+	return &lines
+}
+
 func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.File {
 	collectionId := mux.Vars(r)["id"]
 	mtimeUnixMillis, err := strconv.Atoi(r.URL.Query().Get("mtime"))

@@ -16,6 +16,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/config/{id}", "produces": {"_": "ConfigValue"}, "name": "getConfig" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/logs", "produces": {"_": "list", "of": {"_": "string"}}, "name": "getLogs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [

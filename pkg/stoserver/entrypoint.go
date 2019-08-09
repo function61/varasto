@@ -6,6 +6,7 @@ import (
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/gokit/systemdinstaller"
+	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/spf13/cobra"
 	"log"
@@ -18,7 +19,13 @@ func Entrypoint() *cobra.Command {
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			rootLogger := logex.StandardLogger()
+			logTail := logtee.NewStringTail(20)
+
+			// writes to upstream all end up in the sink, but logTail.Snapshot() only
+			// returns the last "capacity" lines
+			rootLogger := logex.StandardLoggerTo(logtee.NewLineSplitterTee(os.Stderr, func(line string) {
+				logTail.Write(line)
+			}))
 
 			workers := stopper.NewManager()
 			go func(logger *log.Logger) {
@@ -29,7 +36,7 @@ func Entrypoint() *cobra.Command {
 				workers.StopAllWorkersAndWait()
 			}(logex.Prefix("main", rootLogger))
 
-			panicIfError(runServer(rootLogger, workers.Stopper()))
+			panicIfError(runServer(rootLogger, logTail, workers.Stopper()))
 		},
 	}
 

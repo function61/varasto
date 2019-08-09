@@ -15,6 +15,7 @@ import (
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
 	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
@@ -34,7 +35,7 @@ type ServerConfigFile struct {
 	BackupConfig                 *ubconfig.Config `json:"backup_config"`
 }
 
-func runServer(logger *log.Logger, stop *stopper.Stopper) error {
+func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Stopper) error {
 	defer stop.Done()
 
 	logl := logex.Levels(logger)
@@ -58,7 +59,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 	}
 	defer db.Close()
 
-	serverConfig, err := readConfigFromDatabase(db, scf, logger)
+	serverConfig, err := readConfigFromDatabase(db, scf, logger, logTail)
 	if err != nil { // maybe need bootstrap?
 		// totally unexpected error?
 		if err != blorm.ErrNotFound {
@@ -74,7 +75,7 @@ func runServer(logger *log.Logger, stop *stopper.Stopper) error {
 			return err
 		}
 
-		serverConfig, err = readConfigFromDatabase(db, scf, logger)
+		serverConfig, err = readConfigFromDatabase(db, scf, logger, logTail)
 		if err != nil {
 			return err
 		}
@@ -167,10 +168,11 @@ type ServerConfig struct {
 	ClusterWideMounts map[int]stotypes.VolumeMount
 	DiskAccess        *stodiskaccess.Controller // only for mounts on self node
 	ClientsAuthTokens map[string]bool
+	LogTail           *logtee.StringTail
 }
 
 // returns blorm.ErrNotFound if bootstrap needed
-func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logger) (*ServerConfig, error) {
+func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logger, logTail *logtee.StringTail) (*ServerConfig, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
@@ -246,6 +248,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		ClusterWideMounts: clusterWideMountsMapped,
 		DiskAccess:        dam,
 		ClientsAuthTokens: authTokens,
+		LogTail:           logTail,
 	}, nil
 }
 

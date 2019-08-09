@@ -124,7 +124,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:66fe101cde4763f941dce24b07f16da2019c9a0fe9505ca123608eefea2f6b3e"
+  digest = "1:29166b8116e88e8fabb5e4d432251444297090b564b70d2316f73f914e805dfc"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
@@ -152,7 +152,7 @@
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "bdcc4a2902c319e31c1bca621f4e532d045a6868"
+  revision = "26b976c9616cb027fd8d4b66fe47a1b300a4a129"
 
 [[projects]]
   branch = "master"

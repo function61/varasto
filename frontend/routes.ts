@@ -16,6 +16,8 @@ export const replicationPoliciesRoute = makeRoute('replicationpolicies', {});
 
 export const healthRoute = makeRoute('health', {});
 
+export const logsRoute = makeRoute('logs', {});
+
 export const encryptionKeysRoute = makeRoute('encryptionKeys', {});
 
 export const contentMetadataRoute = makeRoute('contentMetadata', {});

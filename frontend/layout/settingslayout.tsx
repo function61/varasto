@@ -11,6 +11,7 @@ import {
 	encryptionKeysRoute,
 	fuseServerRoute,
 	healthRoute,
+	logsRoute,
 	nodesRoute,
 	replicationPoliciesRoute,
 	serverInfoRoute,
@@ -38,6 +39,11 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				title: 'Health',
 				url: healthRoute.buildUrl({}),
 				active: healthRoute.matchUrl(hash) !== null,
+			},
+			{
+				title: 'Logs',
+				url: logsRoute.buildUrl({}),
+				active: logsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Volumes & mounts',
