@@ -1,3 +1,5 @@
+// Plumbing for teeing/tailing log messages. Plop this between your root logger and stderr
+// and you'll be tailing log messages efficiently and programmatically for e.g. your GUI
 package logtee
 
 import (

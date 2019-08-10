@@ -1,3 +1,4 @@
+// The server component main package for Varasto
 package stoserver
 
 import (

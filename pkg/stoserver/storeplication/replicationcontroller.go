@@ -1,3 +1,4 @@
+// Controls replication of data between volumes
 package storeplication
 
 import (

@@ -1,3 +1,4 @@
+// Client for FUSE server's API
 package stofuseclient
 
 import (

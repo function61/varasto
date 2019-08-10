@@ -1,3 +1,4 @@
+// Interface for writing blob store adapters to Varasto
 package blobstore
 
 import (

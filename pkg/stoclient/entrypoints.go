@@ -1,3 +1,4 @@
+// Client for accessing Varasto server
 package stoclient
 
 import (

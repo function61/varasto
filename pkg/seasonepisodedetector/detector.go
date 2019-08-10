@@ -1,3 +1,4 @@
+// Extracts season & episode numbers for TV show filenames
 package seasonepisodedetector
 
 import (
