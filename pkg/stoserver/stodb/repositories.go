@@ -13,7 +13,8 @@ var BlobRepository = blorm.NewSimpleRepo(
 	func(record interface{}) []byte { return record.(*stotypes.Blob).Ref })
 
 var BlobsPendingReplicationIndex = BlobRepository.DefineSetIndex("pending_replication", func(record interface{}) bool {
-	return len(record.(*stotypes.Blob).VolumesPendingReplication) > 0
+	blob := record.(*stotypes.Blob)
+	return len(blob.VolumesPendingReplication) > 0
 })
 
 var NodeRepository = blorm.NewSimpleRepo(
