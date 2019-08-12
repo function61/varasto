@@ -3,6 +3,7 @@ package stodb
 
 import (
 	"encoding/binary"
+	"fmt"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -18,10 +19,12 @@ var BlobRepository = blorm.NewSimpleRepo(
 	func() interface{} { return &stotypes.Blob{} },
 	func(record interface{}) []byte { return record.(*stotypes.Blob).Ref })
 
-var BlobsPendingReplicationIndex = blorm.NewSetIndex("pending_replication", BlobRepository, func(record interface{}) bool {
+var BlobsPendingReplicationByVolumeIndex = blorm.NewValueIndex("repl_pend", BlobRepository, func(record interface{}, index func(val []byte)) {
 	blob := record.(*stotypes.Blob)
 
-	return len(blob.VolumesPendingReplication) > 0
+	for _, volId := range blob.VolumesPendingReplication {
+		index([]byte(fmt.Sprintf("%d", volId)))
+	}
 })
 
 var NodeRepository = blorm.NewSimpleRepo(

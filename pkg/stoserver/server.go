@@ -130,13 +130,18 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 		Handler: router,
 	}
 
-	// one might disable this during times of massive data ingestion to lessen the read
-	// pressure from the initial disk the blobs land on
-	if !scf.DisableReplicationController {
+	for _, mount := range serverConfig.ClusterWideMounts {
+		// one might disable this during times of massive data ingestion to lessen the read
+		// pressure from the initial disk the blobs land on
+		if scf.DisableReplicationController {
+			continue
+		}
+
 		go storeplication.StartReplicationController(
+			mount.Volume,
 			db,
 			serverConfig.DiskAccess,
-			logex.Prefix("replctrl", logger),
+			logex.Prefix(fmt.Sprintf("replctrl/%d", mount.Volume), logger),
 			workers.Stopper())
 	}
 

@@ -2,7 +2,9 @@
 package storeplication
 
 import (
+	"fmt"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
@@ -16,16 +18,31 @@ import (
 type replicationJob struct {
 	Ref          stotypes.BlobRef
 	FromVolumeId int
-	ToVolumeId   int
 }
 
-func StartReplicationController(db *bolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) {
+type controller struct {
+	toVolumeId int
+	stop       *stopper.Stopper
+	logl       *logex.Leveled
+	db         *bolt.DB
+	diskAccess *stodiskaccess.Controller
+}
+
+func StartReplicationController(toVolumeId int, db *bolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) {
 	logl := logex.Levels(logger)
 
 	defer stop.Done()
 	defer logl.Info.Println("stopped")
 
 	fiveSeconds := time.NewTicker(5 * time.Second)
+
+	c := &controller{
+		toVolumeId: toVolumeId,
+		stop:       stop,
+		logl:       logl,
+		db:         db,
+		diskAccess: diskAccess,
+	}
 
 	for {
 		// give priority to stop signal
@@ -39,7 +56,7 @@ func StartReplicationController(db *bolt.DB, diskAccess *stodiskaccess.Controlle
 		case <-stop.Signal:
 			return
 		case <-fiveSeconds.C:
-			if err := discoverAndRunReplicationJobs(db, logl, diskAccess, stop); err != nil {
+			if err := c.discoverAndRunReplicationJobs(); err != nil {
 				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
@@ -47,13 +64,8 @@ func StartReplicationController(db *bolt.DB, diskAccess *stodiskaccess.Controlle
 	}
 }
 
-func discoverAndRunReplicationJobs(
-	db *bolt.DB,
-	logl *logex.Leveled,
-	diskAccess *stodiskaccess.Controller,
-	stop *stopper.Stopper,
-) error {
-	jobs, err := discoverReplicationJobs(db, logl, diskAccess)
+func (c *controller) discoverAndRunReplicationJobs() error {
+	jobs, err := c.discoverReplicationJobs()
 	if err != nil {
 		return err
 	}
@@ -67,14 +79,13 @@ func discoverAndRunReplicationJobs(
 		defer jobRunnersDone.Done()
 
 		for job := range jobQueue {
-			logl.Debug.Printf(
-				"repl %s from %d -> %d",
+			c.logl.Debug.Printf(
+				"repl %s from %d",
 				job.Ref.AsHex(),
-				job.FromVolumeId,
-				job.ToVolumeId)
+				job.FromVolumeId)
 
-			if err := replicateJob(job, db, diskAccess); err != nil {
-				logl.Error.Printf("replicating blob %s: %v", job.Ref.AsHex(), err)
+			if err := c.replicateJob(job); err != nil {
+				c.logl.Error.Printf("replicating blob %s: %v", job.Ref.AsHex(), err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
 		}
@@ -93,7 +104,7 @@ func discoverAndRunReplicationJobs(
 
 	for _, job := range jobs {
 		select {
-		case <-stop.Signal:
+		case <-c.stop.Signal:
 			return nil
 		default:
 		}
@@ -104,15 +115,15 @@ func discoverAndRunReplicationJobs(
 	return nil
 }
 
-func replicateJob(job *replicationJob, db *bolt.DB, diskAccess *stodiskaccess.Controller) error {
-	return diskAccess.Replicate(
+func (c *controller) replicateJob(job *replicationJob) error {
+	return c.diskAccess.Replicate(
 		job.FromVolumeId,
-		job.ToVolumeId,
+		c.toVolumeId,
 		job.Ref)
 }
 
-func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, diskAccess *stodiskaccess.Controller) ([]*replicationJob, error) {
-	tx, err := db.Begin(false)
+func (c *controller) discoverReplicationJobs() ([]*replicationJob, error) {
+	tx, err := c.db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
@@ -122,9 +133,11 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, diskAccess *stodi
 
 	jobs := []*replicationJob{}
 
-	return jobs, stodb.BlobsPendingReplicationIndex.Query(stodb.StartFromFirst, func(id []byte) error {
+	toVolBytes := []byte(fmt.Sprintf("%d", c.toVolumeId))
+
+	return jobs, stodb.BlobsPendingReplicationByVolumeIndex.Query(toVolBytes, stodb.StartFromFirst, func(id []byte) error {
 		if len(jobs) == batchLimit {
-			logl.Info.Printf(
+			c.logl.Info.Printf(
 				"operating @ batchLimit (%d)",
 				batchLimit)
 			return stodb.StopIteration
@@ -137,18 +150,22 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, diskAccess *stodi
 			return err
 		}
 
-		for _, toVolumeId := range blob.VolumesPendingReplication {
-			bestVolume, err := diskAccess.BestVolumeId(blob.Volumes)
-			if err != nil {
-				return err
-			}
-
-			jobs = append(jobs, &replicationJob{
-				Ref:          blob.Ref,
-				FromVolumeId: bestVolume,
-				ToVolumeId:   toVolumeId,
-			})
+		if !sliceutil.ContainsInt(blob.VolumesPendingReplication, c.toVolumeId) {
+			return fmt.Errorf(
+				"blob %s volume %d not pending replication (but found from index query)",
+				ref.AsHex(),
+				c.toVolumeId)
 		}
+
+		bestFromVolume, err := c.diskAccess.BestVolumeId(blob.Volumes)
+		if err != nil {
+			return err
+		}
+
+		jobs = append(jobs, &replicationJob{
+			Ref:          blob.Ref,
+			FromVolumeId: bestFromVolume,
+		})
 
 		return nil
 	}, tx)
