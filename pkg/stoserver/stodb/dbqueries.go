@@ -34,19 +34,16 @@ func (d *dbQueries) Collection(id string) (*stotypes.Collection, error) {
 func (d *dbQueries) CollectionsByDirectory(dirId string) ([]stotypes.Collection, error) {
 	collections := []stotypes.Collection{}
 
-	// TODO: might need to index this later for better perf..
-	if err := CollectionRepository.Each(func(record interface{}) error {
-		coll := record.(*stotypes.Collection)
-		if coll.Directory == dirId {
-			collections = append(collections, *coll)
+	return collections, CollectionsByDirectoryIndex.Query([]byte(dirId), StartFromFirst, func(id []byte) error {
+		coll, err := d.Collection(string(id))
+		if err != nil {
+			return err
 		}
 
-		return nil
-	}, d.tx); err != nil {
-		return nil, err
-	}
+		collections = append(collections, *coll)
 
-	return collections, nil
+		return nil
+	}, d.tx)
 }
 
 func (d *dbQueries) Directory(id string) (*stotypes.Directory, error) {
@@ -61,19 +58,16 @@ func (d *dbQueries) Directory(id string) (*stotypes.Directory, error) {
 func (d *dbQueries) SubDirectories(of string) ([]stotypes.Directory, error) {
 	subDirs := []stotypes.Directory{}
 
-	// TODO: might need to index this later for better perf..
-	if err := DirectoryRepository.Each(func(record interface{}) error {
-		dir := record.(*stotypes.Directory)
-		if dir.Parent == of {
-			subDirs = append(subDirs, *dir)
+	return subDirs, SubdirectoriesIndex.Query([]byte(of), StartFromFirst, func(id []byte) error {
+		dir, err := d.Directory(string(id))
+		if err != nil {
+			return err
 		}
 
-		return nil
-	}, d.tx); err != nil {
-		return nil, err
-	}
+		subDirs = append(subDirs, *dir)
 
-	return subDirs, nil
+		return nil
+	}, d.tx)
 }
 
 func (d *dbQueries) Volume(id int) (*stotypes.Volume, error) {

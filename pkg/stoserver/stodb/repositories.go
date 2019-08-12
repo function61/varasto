@@ -7,13 +7,20 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
+// re-export so not all stodb-importing packages have to import blorm
+var (
+	StartFromFirst = blorm.StartFromFirst
+	StopIteration  = blorm.StopIteration
+)
+
 var BlobRepository = blorm.NewSimpleRepo(
 	"blobs",
 	func() interface{} { return &stotypes.Blob{} },
 	func(record interface{}) []byte { return record.(*stotypes.Blob).Ref })
 
-var BlobsPendingReplicationIndex = BlobRepository.DefineSetIndex("pending_replication", func(record interface{}) bool {
+var BlobsPendingReplicationIndex = blorm.NewSetIndex("pending_replication", BlobRepository, func(record interface{}) bool {
 	blob := record.(*stotypes.Blob)
+
 	return len(blob.VolumesPendingReplication) > 0
 })
 
@@ -49,10 +56,24 @@ var DirectoryRepository = blorm.NewSimpleRepo(
 	func() interface{} { return &stotypes.Directory{} },
 	func(record interface{}) []byte { return []byte(record.(*stotypes.Directory).ID) })
 
+var SubdirectoriesIndex = blorm.NewValueIndex("parent", DirectoryRepository, func(record interface{}, index func(val []byte)) {
+	dir := record.(*stotypes.Directory)
+
+	if dir.Parent != "" {
+		index([]byte(dir.Parent))
+	}
+})
+
 var CollectionRepository = blorm.NewSimpleRepo(
 	"collections",
 	func() interface{} { return &stotypes.Collection{} },
 	func(record interface{}) []byte { return []byte(record.(*stotypes.Collection).ID) })
+
+var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRepository, func(record interface{}, index func(val []byte)) {
+	coll := record.(*stotypes.Collection)
+
+	index([]byte(coll.Directory))
+})
 
 var IntegrityVerificationJobRepository = blorm.NewSimpleRepo(
 	"ivjobs",

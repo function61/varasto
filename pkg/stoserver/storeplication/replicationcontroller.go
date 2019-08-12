@@ -118,32 +118,29 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, diskAccess *stodi
 	}
 	defer tx.Rollback()
 
-	blobsPendingReplication := stodb.BlobsPendingReplicationIndex.Bucket(tx)
-
 	batchLimit := 100
 
 	jobs := []*replicationJob{}
 
-	all := blobsPendingReplication.Cursor()
-	for key, _ := all.First(); key != nil; key, _ = all.Next() {
+	return jobs, stodb.BlobsPendingReplicationIndex.Query(stodb.StartFromFirst, func(id []byte) error {
 		if len(jobs) == batchLimit {
 			logl.Info.Printf(
 				"operating @ batchLimit (%d)",
 				batchLimit)
-			break
+			return stodb.StopIteration
 		}
 
-		ref := stotypes.BlobRef(key)
+		ref := stotypes.BlobRef(id)
 
 		blob, err := stodb.Read(tx).Blob(ref)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		for _, toVolumeId := range blob.VolumesPendingReplication {
 			bestVolume, err := diskAccess.BestVolumeId(blob.Volumes)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			jobs = append(jobs, &replicationJob{
@@ -152,7 +149,7 @@ func discoverReplicationJobs(db *bolt.DB, logl *logex.Leveled, diskAccess *stodi
 				ToVolumeId:   toVolumeId,
 			})
 		}
-	}
 
-	return jobs, nil
+		return nil
+	}, tx)
 }
