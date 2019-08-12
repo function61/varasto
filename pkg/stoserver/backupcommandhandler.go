@@ -69,5 +69,5 @@ func markBackupComplete(timestamp time.Time, db *bolt.DB) error {
 		return err
 	}
 
-	return nil
+	return tx.Commit()
 }
