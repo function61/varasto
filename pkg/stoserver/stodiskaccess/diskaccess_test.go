@@ -215,7 +215,7 @@ func TestReplicationLegacyToModern(t *testing.T) {
 	assert.Assert(t, len(modernStore.files[sha256OfQuickBrownFox]) == len(legacyStore.files[sha256OfQuickBrownFox]))
 
 	// since modern volume has it encrypted, it should not be same as plaintext
-	assert.Assert(t, bytes.Compare(modernStore.files[sha256OfQuickBrownFox], legacyStore.files[sha256OfQuickBrownFox]) != 0)
+	assert.Assert(t, !bytes.Equal(modernStore.files[sha256OfQuickBrownFox], legacyStore.files[sha256OfQuickBrownFox]))
 }
 
 func TestReplicationModernToLegacy(t *testing.T) {
@@ -240,7 +240,7 @@ func TestReplicationModernToLegacy(t *testing.T) {
 	assert.Assert(t, len(modernStore.files[sha256OfQuickBrownFox]) == len(legacyStore.files[sha256OfQuickBrownFox]))
 
 	// since modern volume has it encrypted, it should not be same as plaintext
-	assert.Assert(t, bytes.Compare(modernStore.files[sha256OfQuickBrownFox], legacyStore.files[sha256OfQuickBrownFox]) != 0)
+	assert.Assert(t, !bytes.Equal(modernStore.files[sha256OfQuickBrownFox], legacyStore.files[sha256OfQuickBrownFox]))
 }
 
 func TestReplicationModernToModern(t *testing.T) {
@@ -268,7 +268,7 @@ func TestReplicationModernToModern(t *testing.T) {
 
 	assert.Assert(
 		t,
-		bytes.Compare(firstStore.files[sha256OfQuickBrownFox], secondBlobStore.files[sha256OfQuickBrownFox]) == 0)
+		bytes.Equal(firstStore.files[sha256OfQuickBrownFox], secondBlobStore.files[sha256OfQuickBrownFox]))
 }
 
 func TestScrubbing(t *testing.T) {
@@ -350,5 +350,5 @@ func TestXorSlices(t *testing.T) {
 	a := []byte{0x01, 0x00}
 	b := []byte{0x11, 0x01}
 
-	assert.Assert(t, bytes.Compare(xorSlices(a, b), []byte{0x10, 0x01}) == 0)
+	assert.Assert(t, bytes.Equal(xorSlices(a, b), []byte{0x10, 0x01}))
 }
