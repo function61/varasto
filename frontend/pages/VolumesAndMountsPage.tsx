@@ -15,6 +15,7 @@ import {
 	VolumeChangeDescription,
 	VolumeChangeQuota,
 	VolumeCreate,
+	VolumeMigrateData,
 	VolumeMount2,
 	VolumeUnmount,
 	VolumeVerifyIntegrity,
@@ -120,6 +121,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 							<CommandLink
 								command={VolumeChangeDescription(obj.Id, obj.Description)}
 							/>
+							<CommandLink command={VolumeMigrateData(obj.Id)} />
 						</Dropdown>
 					</td>
 				</tr>

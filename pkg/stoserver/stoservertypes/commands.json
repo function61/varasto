@@ -66,6 +66,17 @@
 		]
 	},
 	{
+		"command": "volume.MigrateData",
+		"chain": "public",
+		"ctor": ["From"],
+		"crudNature": "update",
+		"title": "Migrate data to another volume",
+		"fields": [
+			{ "key": "From", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "To", "type": "integer" }
+		]
+	},
+	{
 		"command": "directory.Create",
 		"chain": "public",
 		"ctor": ["Parent"],

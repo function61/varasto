@@ -12,6 +12,7 @@ import (
 	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stofuse/stofuseclient"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -138,6 +139,37 @@ func (c *cHandlers) VolumeUnmount(cmd *stoservertypes.VolumeUnmount, ctx *comman
 		}
 
 		return stodb.VolumeMountRepository.Delete(mount, tx)
+	})
+}
+
+// "copy any blobs that were on this volume, to another volume"
+func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		from, err := stodb.Read(tx).Volume(cmd.From)
+		if err != nil {
+			return err
+		}
+
+		to, err := stodb.Read(tx).Volume(cmd.To)
+		if err != nil {
+			return err
+		}
+
+		return stodb.BlobRepository.Each(func(record interface{}) error {
+			blob := record.(*stotypes.Blob)
+
+			if !sliceutil.ContainsInt(blob.Volumes, from.ID) { // doesn't fit our criteria
+				return nil
+			}
+
+			if sliceutil.ContainsInt(blob.Volumes, to.ID) { // is already in target volume
+				return nil
+			}
+
+			blob.VolumesPendingReplication = append(blob.VolumesPendingReplication, to.ID)
+
+			return stodb.BlobRepository.Update(blob, tx)
+		}, tx)
 	})
 }
 
