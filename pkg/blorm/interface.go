@@ -1,4 +1,5 @@
 // "Bolt Light ORM", doesn't do much else than persist structs into Bolt..
+// this was born because: https://github.com/asdine/storm/issues/222#issuecomment-472791001
 package blorm
 
 import (
@@ -9,11 +10,11 @@ import (
 var (
 	ErrNotFound   = errors.New("database: record not found")
 	StopIteration = errors.New("blorm: stop iteration")
+	errNoBucket   = errors.New("no bucket")
 )
 
 type Repository interface {
 	Bootstrap(tx *bolt.Tx) error
-	DefineSetIndex(name string, memberEvaluator setIndexMemberEvaluator) SetIndexApi
 	OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error
 	Update(record interface{}, tx *bolt.Tx) error
 	Delete(record interface{}, tx *bolt.Tx) error
