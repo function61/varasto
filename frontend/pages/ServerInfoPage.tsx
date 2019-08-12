@@ -60,6 +60,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 			{ h: 'Database size', t: bytesToHumanReadable(serverInfo.DatabaseSize) },
 			{ h: 'Go version', t: serverInfo.GoVersion },
 			{ h: 'Server OS / arch', t: `${serverInfo.ServerOs} / ${serverInfo.ServerArch}` },
+			{ h: 'CPU count', t: serverInfo.CpuCount.toString() },
 			{ h: 'Goroutines', t: serverInfo.Goroutines.toString() },
 			{ h: 'Heap memory', t: bytesToHumanReadable(serverInfo.HeapBytes) },
 		];

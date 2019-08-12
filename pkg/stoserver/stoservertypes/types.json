@@ -188,6 +188,7 @@
 				"AppVersion": {"_": "string"},
 				"StartedAt": {"_": "datetime"},
 				"DatabaseSize": {"_": "integer"},
+				"CpuCount": {"_": "integer"},
 				"GoVersion": {"_": "string"},
 				"Goroutines": {"_": "integer"},
 				"HeapBytes": {"_": "integer"},
