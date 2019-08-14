@@ -294,7 +294,7 @@ export default class CollectionPage extends React.Component<
 										<th>Clone command</th>
 										<td>
 											<ClipboardButton
-												text={`varasto clone ${collOutput.Collection.Id}`}
+												text={`sto clone ${collOutput.Collection.Id}`}
 											/>
 										</td>
 									</tr>
