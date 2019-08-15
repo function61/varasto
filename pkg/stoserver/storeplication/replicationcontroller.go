@@ -71,7 +71,10 @@ func (c *controller) discoverAndRunReplicationJobs() error {
 	}
 
 	// cap is the amount of runners we'll spawn
-	jobQueue := make(chan *replicationJob, 3)
+	// on lower end hardware the replication can be CPU bound, so let's use concurrency
+	// n=3 => 43.19 GB/h
+	// n=6 => 47.26 GB/h
+	jobQueue := make(chan *replicationJob, 4)
 
 	jobRunnersDone := sync.WaitGroup{}
 
