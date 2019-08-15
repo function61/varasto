@@ -129,7 +129,7 @@ func (c *controller) discoverReplicationJobs() ([]*replicationJob, error) {
 	}
 	defer tx.Rollback()
 
-	batchLimit := 100
+	batchLimit := 500
 
 	jobs := []*replicationJob{}
 
