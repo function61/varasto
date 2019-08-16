@@ -44,6 +44,8 @@ func StartReplicationController(toVolumeId int, db *bolt.DB, diskAccess *stodisk
 		diskAccess: diskAccess,
 	}
 
+	continueToken := stodb.StartFromFirst
+
 	for {
 		// give priority to stop signal
 		select {
@@ -56,18 +58,21 @@ func StartReplicationController(toVolumeId int, db *bolt.DB, diskAccess *stodisk
 		case <-stop.Signal:
 			return
 		case <-fiveSeconds.C:
-			if err := c.discoverAndRunReplicationJobs(); err != nil {
+			nextContinueToken, err := c.discoverAndRunReplicationJobs(continueToken)
+			if err != nil {
 				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
 			}
+
+			continueToken = nextContinueToken
 		}
 	}
 }
 
-func (c *controller) discoverAndRunReplicationJobs() error {
-	jobs, err := c.discoverReplicationJobs()
+func (c *controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte, error) {
+	jobs, nextContinueToken, err := c.discoverReplicationJobs(continueToken)
 	if err != nil {
-		return err
+		return nextContinueToken, err
 	}
 
 	// cap is the amount of runners we'll spawn
@@ -108,14 +113,14 @@ func (c *controller) discoverAndRunReplicationJobs() error {
 	for _, job := range jobs {
 		select {
 		case <-c.stop.Signal:
-			return nil
+			return nextContinueToken, nil
 		default:
 		}
 
 		jobQueue <- job
 	}
 
-	return nil
+	return nextContinueToken, nil
 }
 
 func (c *controller) replicateJob(job *replicationJob) error {
@@ -125,10 +130,10 @@ func (c *controller) replicateJob(job *replicationJob) error {
 		job.Ref)
 }
 
-func (c *controller) discoverReplicationJobs() ([]*replicationJob, error) {
+func (c *controller) discoverReplicationJobs(continueToken []byte) ([]*replicationJob, []byte, error) {
 	tx, err := c.db.Begin(false)
 	if err != nil {
-		return nil, err
+		return nil, continueToken, err
 	}
 	defer tx.Rollback()
 
@@ -138,8 +143,12 @@ func (c *controller) discoverReplicationJobs() ([]*replicationJob, error) {
 
 	toVolBytes := []byte(fmt.Sprintf("%d", c.toVolumeId))
 
-	return jobs, stodb.BlobsPendingReplicationByVolumeIndex.Query(toVolBytes, stodb.StartFromFirst, func(id []byte) error {
+	nextContinueToken := stodb.StartFromFirst
+
+	return jobs, nextContinueToken, stodb.BlobsPendingReplicationByVolumeIndex.Query(toVolBytes, continueToken, func(id []byte) error {
 		if len(jobs) == batchLimit {
+			nextContinueToken = id
+
 			c.logl.Info.Printf(
 				"operating @ batchLimit (%d)",
 				batchLimit)
