@@ -239,11 +239,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		if err := driver.Mountable(context.TODO()); err != nil {
 			logex.Levels(logger).Error.Printf("Volume %s not mountable: %v", volume.UUID, err)
 		} else {
-			if mountedVolume.ID == "xQbd" { // FIXME
-				dam.Define(volume.ID, driver, false)
-			} else {
-				dam.Define(volume.ID, driver, true)
-			}
+			dam.Define(volume.ID, driver)
 		}
 	}
 
@@ -345,25 +341,20 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef) (*stodiskaccess.BlobMeta
 	}, nil
 }
 
-func (d *dbbma) WriteBlobReplicated(meta *stodiskaccess.BlobMeta, volumeId int) error {
+func (d *dbbma) WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error {
 	tx, err := d.db.Begin(true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
-	blobToUpdate, err := stodb.Read(tx).Blob(meta.Ref)
+	blobToUpdate, err := stodb.Read(tx).Blob(ref)
 	if err != nil {
 		return err
 	}
 
-	// FIXME: this is temporary to fix my own data
-	if len(blobToUpdate.Crc32) == 0 {
-		updateBlobFromMeta(meta, blobToUpdate)
-	}
-
 	// saves Blob and Volume
-	if err := d.writeBlobReplicatedInternal(blobToUpdate, volumeId, int64(meta.SizeOnDisk), tx); err != nil {
+	if err := d.writeBlobReplicatedInternal(blobToUpdate, volumeId, int64(blobToUpdate.SizeOnDisk), tx); err != nil {
 		return err
 	}
 
@@ -378,12 +369,15 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 	defer tx.Rollback()
 
 	newBlob := &stotypes.Blob{
-		Ref:        meta.Ref,
-		Volumes:    []int{},
-		Referenced: false, // this will be set to true on commit
+		Ref:          meta.Ref,
+		Volumes:      []int{}, // writeBlobReplicatedInternal() adds this
+		Referenced:   false,   // this will be set to true on commit
+		Coll:         meta.EncryptionKeyOfColl,
+		IsCompressed: meta.IsCompressed,
+		Size:         meta.RealSize,
+		SizeOnDisk:   meta.SizeOnDisk,
+		Crc32:        meta.ExpectedCrc32,
 	}
-
-	updateBlobFromMeta(meta, newBlob)
 
 	// writes Volumes & VolumesPendingReplication
 	if err := d.writeBlobReplicatedInternal(newBlob, volumeId, int64(meta.SizeOnDisk), tx); err != nil {
@@ -427,12 +421,4 @@ func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeId int, s
 	}
 
 	return nil
-}
-
-func updateBlobFromMeta(meta *stodiskaccess.BlobMeta, blob *stotypes.Blob) {
-	blob.Coll = meta.EncryptionKeyOfColl
-	blob.IsCompressed = meta.IsCompressed
-	blob.Size = meta.RealSize
-	blob.SizeOnDisk = meta.SizeOnDisk
-	blob.Crc32 = meta.ExpectedCrc32
 }

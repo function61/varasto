@@ -20,7 +20,7 @@ type MetadataStore interface {
 	QueryBlobMetadata(ref stotypes.BlobRef) (*BlobMeta, error)
 	QueryCollectionEncryptionKey(collId string) ([]byte, error)
 	WriteBlobCreated(meta *BlobMeta, volumeId int) error
-	WriteBlobReplicated(meta *BlobMeta, volumeId int) error
+	WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error
 }
 
 type readCloseWrapper struct {

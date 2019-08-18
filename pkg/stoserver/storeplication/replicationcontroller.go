@@ -2,6 +2,7 @@
 package storeplication
 
 import (
+	"context"
 	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -125,6 +126,7 @@ func (c *controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte
 
 func (c *controller) replicateJob(job *replicationJob) error {
 	return c.diskAccess.Replicate(
+		context.TODO(),
 		job.FromVolumeId,
 		c.toVolumeId,
 		job.Ref)

@@ -10,7 +10,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/function61/gokit/hashverifyreader"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -21,30 +20,24 @@ import (
 )
 
 type Controller struct {
-	metadataStore   MetadataStore
-	mountedDrivers  map[int]blobstore.Driver // only mounted drivers
-	legacyDriverIds []int
+	metadataStore  MetadataStore
+	mountedDrivers map[int]blobstore.Driver // only mounted drivers
 }
 
 func New(metadataStore MetadataStore) *Controller {
 	return &Controller{
 		metadataStore,
 		map[int]blobstore.Driver{},
-		[]int{},
 	}
 }
 
 // call only during server boot (these are not threadsafe)
-func (d *Controller) Define(volumeId int, driver blobstore.Driver, legacy bool) {
+func (d *Controller) Define(volumeId int, driver blobstore.Driver) {
 	if _, exists := d.mountedDrivers[volumeId]; exists {
 		panic("driver for volumeId already defined")
 	}
 
 	d.mountedDrivers[volumeId] = driver
-
-	if legacy {
-		d.legacyDriverIds = append(d.legacyDriverIds, volumeId)
-	}
 }
 
 func (d *Controller) IsMounted(volumeId int) bool {
@@ -54,25 +47,35 @@ func (d *Controller) IsMounted(volumeId int) bool {
 
 // in theory we wouldn't need to do this since we could do a Fetch()-followed by Store(),
 // but we can optimize by just transferring the raw on-disk format
-func (d *Controller) Replicate(fromVolumeId int, toVolumeId int, ref stotypes.BlobRef) error {
-	// TODO: use lower-level APIs so we don't have to decrypt-and-encrypt
-	stream, err := d.Fetch(ref, fromVolumeId)
+func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId int, ref stotypes.BlobRef) error {
+	fromDriver, err := d.driverFor(fromVolumeId)
 	if err != nil {
 		return err
 	}
-	defer stream.Close()
+
+	toDriver, err := d.driverFor(toVolumeId)
+	if err != nil {
+		return err
+	}
 
 	meta, err := d.metadataStore.QueryBlobMetadata(ref)
 	if err != nil { // expecting this
 		return fmt.Errorf("Replicate() QueryBlobMetadata: %v", err)
 	}
 
-	meta, err = d.storeInternal(toVolumeId, meta.EncryptionKeyOfColl, ref, stream)
+	rawContent, err := fromDriver.RawFetch(ctx, ref)
 	if err != nil {
 		return err
 	}
+	defer rawContent.Close()
 
-	return d.metadataStore.WriteBlobReplicated(meta, toVolumeId)
+	crc32VerifiedReader := hashverifyreader.New(rawContent, crc32.NewIEEE(), meta.ExpectedCrc32)
+
+	if err := toDriver.RawStore(ctx, ref, crc32VerifiedReader); err != nil {
+		return err
+	}
+
+	return d.metadataStore.WriteBlobReplicated(ref, toVolumeId)
 }
 
 func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef, content io.Reader) error {
@@ -88,9 +91,37 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 
 	// this is going to take relatively long time, so we can't keep
 	// a transaction open
-	meta, err := d.storeInternal(volumeId, collId, ref, content)
+
+	driver, err := d.driverFor(volumeId)
 	if err != nil {
 		return err
+	}
+
+	readCounter := writeCounter{}
+	verifiedContent := readCounter.Tee(stoutils.BlobHashVerifier(content, ref))
+
+	encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKey(collId)
+	if err != nil {
+		return err
+	}
+
+	blobEncrypted, err := encryptAndCompressBlob(verifiedContent, encryptionKey, ref)
+	if err != nil {
+		return err
+	}
+
+	if err := driver.RawStore(context.TODO(), ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
+		return fmt.Errorf("storing blob into volume %d failed: %v", volumeId, err)
+	}
+
+	meta := &BlobMeta{
+		Ref:                 ref,
+		RealSize:            int32(readCounter.BytesWritten()),
+		SizeOnDisk:          int32(len(blobEncrypted.CiphertextMaybeCompressed)),
+		IsCompressed:        blobEncrypted.Compressed,
+		EncryptionKeyOfColl: collId,
+		EncryptionKey:       encryptionKey,
+		ExpectedCrc32:       blobEncrypted.Crc32,
 	}
 
 	if err := d.metadataStore.WriteBlobCreated(meta, volumeId); err != nil {
@@ -100,71 +131,12 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 	return nil
 }
 
-// does everything about storing except for the database write
-func (d *Controller) storeInternal(volumeId int, collId string, ref stotypes.BlobRef, content io.Reader) (*BlobMeta, error) {
-	driver, isLegacy, err := d.driverFor(volumeId)
-	if err != nil {
-		return nil, err
-	}
-
-	readCounter := writeCounter{}
-	verifiedContent := readCounter.Tee(stoutils.BlobHashVerifier(content, ref))
-
-	encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKey(collId)
-	if err != nil {
-		return nil, err
-	}
-
-	// need copy of verifiedContent here for use of legacy driver
-	verifiedContentCopyForLegacy := &bytes.Buffer{}
-
-	blobEncrypted, err := encryptAndCompressBlob(io.TeeReader(verifiedContent, verifiedContentCopyForLegacy), encryptionKey, ref)
-	if err != nil {
-		return nil, err
-	}
-
-	mkBlobMeta := func() *BlobMeta {
-		return &BlobMeta{
-			Ref:                 ref,
-			RealSize:            int32(readCounter.BytesWritten()),
-			SizeOnDisk:          int32(len(blobEncrypted.CiphertextMaybeCompressed)),
-			IsCompressed:        blobEncrypted.Compressed,
-			EncryptionKeyOfColl: collId,
-			EncryptionKey:       encryptionKey,
-			ExpectedCrc32:       blobEncrypted.Crc32,
-		}
-	}
-
-	if isLegacy {
-		if err := driver.RawStore(context.TODO(), ref, verifiedContentCopyForLegacy); err != nil {
-			return nil, err
-		}
-
-		return mkBlobMeta(), nil
-	}
-
-	if err := driver.RawStore(context.TODO(), ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
-		return nil, fmt.Errorf("storing blob into volume %d failed: %v", volumeId, err)
-	}
-
-	return mkBlobMeta(), nil
-}
-
 // does decrypt(optional_decompress(blobOnDisk))
 // verifies blob integrity for you!
 func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, error) {
-	driver, isLegacy, err := d.driverFor(volumeId)
+	driver, err := d.driverFor(volumeId)
 	if err != nil {
 		return nil, err
-	}
-
-	if isLegacy {
-		body, err := driver.RawFetch(context.TODO(), ref)
-		if err != nil {
-			return nil, err
-		}
-
-		return ioutil.NopCloser(stoutils.BlobHashVerifier(body, ref)), nil
 	}
 
 	meta, err := d.metadataStore.QueryBlobMetadata(ref)
@@ -191,7 +163,7 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, e
 	// assume no compression ..
 	uncompressedReader := io.Reader(decrypted)
 
-	if meta.IsCompressed { // .. but decompress here if assumption incorrect
+	if meta.IsCompressed { // .. but patch in decompression step if assumption incorrect
 		gzipReader, err := gzip.NewReader(decrypted)
 		if err != nil {
 			return nil, fmt.Errorf("Fetch() gzip: %v", err)
@@ -223,20 +195,9 @@ func (d *Controller) BestVolumeId(volumeIds []int) (int, error) {
 // we could actually just do a Fetch() but that would require access to the encryption keys.
 // this way we can verify on-disk integrity without encryption keys.
 func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
-	driver, isLegacy, err := d.driverFor(volumeId)
+	driver, err := d.driverFor(volumeId)
 	if err != nil {
 		return 0, err
-	}
-
-	if isLegacy {
-		stream, err := driver.RawFetch(context.TODO(), ref)
-		if err != nil {
-			return 0, err
-		}
-		defer stream.Close()
-
-		bytesRead, err := io.Copy(ioutil.Discard, stoutils.BlobHashVerifier(stream, ref))
-		return bytesRead, err
 	}
 
 	meta, err := d.metadataStore.QueryBlobMetadata(ref)
@@ -256,13 +217,13 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
 	return bytesRead, err
 }
 
-func (d *Controller) driverFor(volumeId int) (blobstore.Driver, bool, error) {
+func (d *Controller) driverFor(volumeId int) (blobstore.Driver, error) {
 	driver, found := d.mountedDrivers[volumeId]
 	if !found {
-		return nil, false, fmt.Errorf("volume %d not found", volumeId)
+		return nil, fmt.Errorf("volume %d not found", volumeId)
 	}
 
-	return driver, sliceutil.ContainsInt(d.legacyDriverIds, volumeId), nil
+	return driver, nil
 }
 
 func encrypt(key []byte, plaintext io.Reader, br stotypes.BlobRef) ([]byte, error) {

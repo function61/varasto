@@ -41,7 +41,7 @@ func (t *testDbAccess) QueryBlobMetadata(ref stotypes.BlobRef) (*BlobMeta, error
 	return nil, os.ErrNotExist
 }
 
-func (t *testDbAccess) WriteBlobReplicated(meta *BlobMeta, volumeId int) error {
+func (t *testDbAccess) WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error {
 	return nil
 }
 
@@ -57,10 +57,10 @@ type testSaga struct {
 }
 
 func setupDefault() *testSaga {
-	return setup(rootEncryptionKeyA, false)
+	return setup(rootEncryptionKeyA)
 }
 
-func setup(encKey []byte, legacy bool) *testSaga {
+func setup(encKey []byte) *testSaga {
 	blobStorage := newTestingBlobStorage()
 
 	tda := &testDbAccess{
@@ -69,7 +69,7 @@ func setup(encKey []byte, legacy bool) *testSaga {
 
 	diskAccess := New(tda)
 
-	diskAccess.Define(1, blobStorage, legacy)
+	diskAccess.Define(1, blobStorage)
 
 	return &testSaga{blobStorage, tda, diskAccess}
 }
@@ -124,8 +124,8 @@ func TestWriteAndRead(t *testing.T) {
 func TestWriteSameFileWithTwoDifferentEncryptionKeys(t *testing.T) {
 	contentToStore := "The quick brown fox jumps over the lazy dog"
 
-	encryptedWithA := setup(rootEncryptionKeyA, false)
-	encryptedWithB := setup(rootEncryptionKeyB, false)
+	encryptedWithA := setup(rootEncryptionKeyA)
+	encryptedWithB := setup(rootEncryptionKeyB)
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
@@ -193,62 +193,12 @@ func TestCompression(t *testing.T) {
 	assert.EqualString(t, string(content), text4x)
 }
 
-func TestReplicationLegacyToModern(t *testing.T) {
-	test := setup(rootEncryptionKeyA, true)
-	legacyStore := test.blobStorage
-
-	modernStore := newTestingBlobStorage()
-	test.diskAccess.Define(2, modernStore, false)
-
-	contentToStore := "The quick brown fox jumps over the lazy dog"
-
-	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
-
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
-
-	assert.Assert(t, test.diskAccess.Replicate(1, 2, *ref) == nil)
-
-	// content on legacy volume should be in plaintext
-	assert.EqualString(t, string(legacyStore.files[sha256OfQuickBrownFox]), contentToStore)
-
-	// lengths should be equal
-	assert.Assert(t, len(modernStore.files[sha256OfQuickBrownFox]) == len(legacyStore.files[sha256OfQuickBrownFox]))
-
-	// since modern volume has it encrypted, it should not be same as plaintext
-	assert.Assert(t, !bytes.Equal(modernStore.files[sha256OfQuickBrownFox], legacyStore.files[sha256OfQuickBrownFox]))
-}
-
-func TestReplicationModernToLegacy(t *testing.T) {
-	test := setupDefault()
-	modernStore := test.blobStorage
-
-	legacyStore := newTestingBlobStorage()
-	test.diskAccess.Define(2, legacyStore, true)
-
-	contentToStore := "The quick brown fox jumps over the lazy dog"
-
-	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
-
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
-
-	assert.Assert(t, test.diskAccess.Replicate(1, 2, *ref) == nil)
-
-	// content on legacy volume should be in plaintext
-	assert.EqualString(t, string(legacyStore.files[sha256OfQuickBrownFox]), contentToStore)
-
-	// lengths should be equal
-	assert.Assert(t, len(modernStore.files[sha256OfQuickBrownFox]) == len(legacyStore.files[sha256OfQuickBrownFox]))
-
-	// since modern volume has it encrypted, it should not be same as plaintext
-	assert.Assert(t, !bytes.Equal(modernStore.files[sha256OfQuickBrownFox], legacyStore.files[sha256OfQuickBrownFox]))
-}
-
-func TestReplicationModernToModern(t *testing.T) {
+func TestReplication(t *testing.T) {
 	test := setupDefault()
 	firstStore := test.blobStorage
 
 	secondBlobStore := newTestingBlobStorage()
-	test.diskAccess.Define(2, secondBlobStore, false)
+	test.diskAccess.Define(2, secondBlobStore)
 
 	contentToStore := "The quick brown fox jumps over the lazy dog"
 
@@ -260,7 +210,7 @@ func TestReplicationModernToModern(t *testing.T) {
 
 	assert.Assert(t, !secondHasIt)
 
-	assert.Assert(t, test.diskAccess.Replicate(1, 2, *ref) == nil)
+	assert.Assert(t, test.diskAccess.Replicate(context.TODO(), 1, 2, *ref) == nil)
 
 	_, secondHasIt = secondBlobStore.files[sha256OfQuickBrownFox]
 
