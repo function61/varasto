@@ -3,6 +3,7 @@ package localfsblobstore
 
 import (
 	"context"
+	"encoding/base32"
 	"fmt"
 	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
@@ -12,6 +13,11 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+)
+
+var (
+	// same as base32 Extended Hex Alphabet but with lowercase chars
+	base32CustomWithoutPadding = base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding)
 )
 
 func New(uuid string, path string, logger *log.Logger) *localFs {
@@ -75,12 +81,18 @@ func (l *localFs) Mountable(ctx context.Context) error {
 }
 
 func (l *localFs) getPath(ref stotypes.BlobRef) string {
-	hexHash := ref.AsHex()
+	bsn := toBlobstoreName(ref)
 
-	// this should yield 4 096 directories as maximum (see test file for clarification)
+	// this should yield 32 768 directories as maximum (see test file for clarification)
 	return filepath.Join(
 		l.path,
-		hexHash[0:2],
-		hexHash[2:3],
-		hexHash[3:]+".chunk")
+		bsn[0:1], // 5 bits
+		bsn[1:3], // 10 bits
+		bsn[3:])
+}
+
+func toBlobstoreName(ref stotypes.BlobRef) string {
+	// windows has case insensitive filesystem (sensitivity is a recent opt-in), so lowest
+	// common denominator that's better than hex encoding is base32
+	return base32CustomWithoutPadding.EncodeToString([]byte(ref))
 }
