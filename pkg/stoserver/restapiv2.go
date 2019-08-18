@@ -134,7 +134,8 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 	changesetId := mux.Vars(r)["rev"]
 	pathBytes, err := base64.StdEncoding.DecodeString(mux.Vars(r)["path"])
 	if err != nil {
-		panic(err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil
 	}
 
 	tx, err := h.db.Begin(false)
