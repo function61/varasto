@@ -51,6 +51,18 @@ func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 }
 
 func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
+	// we've to do this, because Google Drive wouldn't give us an error because it
+	// allows >1 files with same filename in same directory
+	_, err := g.resolveFileIdByRef(ctx, ref)
+	if err == nil {
+		// would actually deserve WARN level error, but we don't have that log level
+		g.logl.Error.Printf("tried to store a blob that is already present: %s", ref.AsHex())
+		return nil // file exists already, so it is technically a success
+	}
+	if err != os.ErrNotExist {
+		return err
+	}
+
 	if _, err := g.srv.Files.Create(&drive.File{
 		Name:     toGoogleDriveName(ref),
 		Parents:  []string{g.varastoDirectoryId},
