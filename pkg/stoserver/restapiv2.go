@@ -333,6 +333,43 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	return &ret
 }
 
+func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.BlobMetadata {
+	ref, err := stotypes.BlobRefFromHex(mux.Vars(r)["ref"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil
+	}
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+	defer tx.Rollback()
+
+	blob, err := stodb.Read(tx).Blob(*ref)
+	if err != nil {
+		if err == blorm.ErrNotFound {
+			http.Error(w, "blob not found", http.StatusNotFound)
+			return nil
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
+	}
+
+	return &stoservertypes.BlobMetadata{
+		Ref:                       blob.Ref.AsHex(),
+		Coll:                      blob.Coll,
+		Size:                      int(blob.Size),
+		SizeOnDisk:                int(blob.SizeOnDisk),
+		Referenced:                blob.Referenced,
+		IsCompressed:              blob.IsCompressed,
+		Volumes:                   blob.Volumes,
+		VolumesPendingReplication: blob.VolumesPendingReplication,
+	}
+}
+
 func toDbFiles(files []stoservertypes.File) []stotypes.File {
 	ret := []stotypes.File{}
 

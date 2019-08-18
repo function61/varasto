@@ -93,7 +93,7 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		}
 	}
 
-	// shared by getBlob(), getBlobHead()
+	// used by getBlob()
 	getBlobCommon := func(blobRefSerialized string, w http.ResponseWriter) (*stotypes.BlobRef, *stotypes.Blob) {
 		blobRef, err := stotypes.BlobRefFromHex(blobRefSerialized)
 		if err != nil {
@@ -117,20 +117,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 		}
 
 		return blobRef, blobMetadata
-	}
-
-	// returns 404 if blob not found
-	getBlobHead := func(w http.ResponseWriter, r *http.Request) {
-		if !authenticate(conf, w, r) {
-			return
-		}
-
-		_, blobMetadata := getBlobCommon(mux.Vars(r)["blobRef"], w)
-		if blobMetadata == nil {
-			return // error was handled in common method
-		}
-
-		// don't return anything else
 	}
 
 	// returns 404 if blob not found
@@ -171,7 +157,6 @@ func defineLegacyRestApi(router *mux.Router, conf *ServerConfig, db *bolt.DB) er
 	}
 
 	router.HandleFunc("/api/blobs/{blobRef}", getBlob).Methods(http.MethodGet)
-	router.HandleFunc("/api/blobs/{blobRef}", getBlobHead).Methods(http.MethodHead)
 	router.HandleFunc("/api/blobs/{blobRef}", uploadBlob).Methods(http.MethodPost)
 
 	router.HandleFunc("/api/collections/{collectionId}", getCollection).Methods(http.MethodGet)

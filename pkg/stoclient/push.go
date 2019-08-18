@@ -109,9 +109,9 @@ func blobExists(blobRef stotypes.BlobRef, clientConfig ClientConfig) (bool, erro
 	defer cancel()
 
 	// do a HEAD request to see if the blob exists
-	resp, err := ezhttp.Head(
+	resp, err := ezhttp.Get(
 		ctx,
-		clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()),
+		clientConfig.ApiPath(clientConfig.UrlBuilder().GetBlobMetadata(blobRef.AsHex())),
 		ezhttp.AuthBearer(clientConfig.AuthToken))
 
 	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {

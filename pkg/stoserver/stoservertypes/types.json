@@ -8,6 +8,7 @@
 		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/changesets", "name": "commitChangeset", "consumes": {"_": "Changeset"} },
 		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/fileupload", "name": "uploadFile", "produces": {"_": "File"} },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/directories/{id}", "produces": {"_": "DirectoryOutput"}, "name": "getDirectory" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}/meta", "produces": {"_": "BlobMetadata"}, "name": "getBlobMetadata" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
@@ -230,6 +231,19 @@
 			"type": {"_": "object", "fields": {
 				"Key": {"_": "string"},
 				"Value": {"_": "string"}
+			}}
+		},
+ 		{
+			"name": "BlobMetadata",
+			"type": {"_": "object", "fields": {
+				"Ref": {"_": "string"},
+				"Coll": {"_": "string"},
+				"Referenced": {"_": "boolean"},
+				"IsCompressed": {"_": "boolean"},
+				"Size": {"_": "integer"},
+				"SizeOnDisk": {"_": "integer"},
+				"Volumes": {"_": "list", "of": {"_": "integer"}},
+				"VolumesPendingReplication": {"_": "list", "of": {"_": "integer"}}
 			}}
 		},
 		{
