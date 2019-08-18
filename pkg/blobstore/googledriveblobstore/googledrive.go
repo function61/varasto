@@ -37,27 +37,12 @@ func New(varastoDirectoryId string, logger *log.Logger) (*googledrive, error) {
 }
 
 func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
-	// https://twitter.com/joonas_fi/status/1108008997238595590
-	exactFilenameInExactFolderQuery := fmt.Sprintf(
-		"name = '%s' and '%s' in parents",
-		toGoogleDriveName(ref),
-		g.varastoDirectoryId)
-
-	// we're searching with a unique sha256 hash,
-	// so we should get exactly one result
-	listFilesResponse, err := g.srv.Files.List().PageSize(2).
-		Fields("files(id, name)").
-		Q(exactFilenameInExactFolderQuery).
-		Context(ctx).
-		Do()
+	fileId, err := g.resolveFileIdByRef(ctx, ref)
 	if err != nil {
-		return nil, fmt.Errorf("List call failed: %v", err)
-	}
-	if len(listFilesResponse.Files) == 0 {
-		return nil, os.ErrNotExist
+		return nil, err
 	}
 
-	res, err := g.srv.Files.Get(listFilesResponse.Files[0].Id).Context(ctx).Download()
+	res, err := g.srv.Files.Get(fileId).Context(ctx).Download()
 	if err != nil {
 		return nil, err
 	}
@@ -93,6 +78,30 @@ func (g *googledrive) Mountable(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobRef) (string, error) {
+	// https://twitter.com/joonas_fi/status/1108008997238595590
+	exactFilenameInExactFolderQuery := fmt.Sprintf(
+		"name = '%s' and '%s' in parents",
+		toGoogleDriveName(ref),
+		g.varastoDirectoryId)
+
+	// we're searching with a unique sha256 hash,
+	// so we should get exactly one result
+	listFilesResponse, err := g.srv.Files.List().PageSize(2).
+		Fields("files(id, name)").
+		Q(exactFilenameInExactFolderQuery).
+		Context(ctx).
+		Do()
+	if err != nil {
+		return "", fmt.Errorf("List call failed: %v", err)
+	}
+	if len(listFilesResponse.Files) == 0 {
+		return "", os.ErrNotExist
+	}
+
+	return listFilesResponse.Files[0].Id, nil
 }
 
 func toGoogleDriveName(ref stotypes.BlobRef) string {
