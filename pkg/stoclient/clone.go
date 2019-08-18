@@ -164,7 +164,7 @@ func FetchCollectionMetadata(clientConfig ClientConfig, id string) (*stotypes.Co
 	collection := &stotypes.Collection{}
 	_, err := ezhttp.Get(
 		ctx,
-		clientConfig.ApiPath("/api/collections/"+id),
+		clientConfig.ApiPath(clientConfig.UrlBuilder().GetCollection(id)),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.RespondsJson(collection, false))
 
@@ -175,7 +175,7 @@ func FetchCollectionMetadata(clientConfig ClientConfig, id string) (*stotypes.Co
 func DownloadChunk(ctx context.Context, ref stotypes.BlobRef, clientConfig ClientConfig) (io.Reader, func(), error) {
 	chunkDataRes, err := ezhttp.Get(
 		ctx,
-		clientConfig.ApiPath("/api/blobs/"+ref.AsHex()),
+		clientConfig.ApiPath(clientConfig.UrlBuilder().DownloadBlob(ref.AsHex())),
 		ezhttp.AuthBearer(clientConfig.AuthToken))
 	if err != nil {
 		return nil, func() {}, err

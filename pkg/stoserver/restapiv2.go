@@ -13,6 +13,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -40,6 +41,21 @@ type handlers struct {
 	conf         *ServerConfig
 	ivController *stointegrityverifier.Controller
 	logger       *log.Logger
+}
+
+func defineRestApi(
+	router *mux.Router,
+	conf *ServerConfig,
+	db *bolt.DB,
+	ivController *stointegrityverifier.Controller,
+	mwares httpauth.MiddlewareChainMap,
+	logger *log.Logger,
+) error {
+	var han stoservertypes.HttpHandlers = &handlers{db, conf, ivController, logger}
+
+	stoservertypes.RegisterRoutes(han, mwares, muxregistrator.New(router))
+
+	return nil
 }
 
 func convertDir(dir stotypes.Directory) stoservertypes.Directory {
@@ -766,6 +782,118 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 		ServerOs:     runtime.GOOS,
 		ServerArch:   runtime.GOARCH,
 	}
+}
+
+// returns 404 if blob not found
+func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	getBlobMetadata := func(blobRefSerialized string) (*stotypes.BlobRef, *stotypes.Blob) {
+		blobRef, err := stotypes.BlobRefFromHex(blobRefSerialized)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return nil, nil
+		}
+
+		tx, err := h.db.Begin(false)
+		panicIfError(err)
+		defer tx.Rollback()
+
+		blobMetadata, err := stodb.Read(tx).Blob(*blobRef)
+		if err != nil {
+			if err == blorm.ErrNotFound {
+				http.Error(w, err.Error(), http.StatusNotFound)
+				return nil, nil
+			} else {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return nil, nil
+			}
+		}
+
+		return blobRef, blobMetadata
+	}
+
+	blobRef, blobMetadata := getBlobMetadata(mux.Vars(r)["ref"])
+	if blobMetadata == nil {
+		return // error was handled in getBlobMetadata()
+	}
+
+	bestVolumeId, err := h.conf.DiskAccess.BestVolumeId(blobMetadata.Volumes)
+	if err != nil {
+		http.Error(w, stotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	file, err := h.conf.DiskAccess.Fetch(*blobRef, bestVolumeId)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// should not happen, because metadata said that we should have this blob
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	if _, err := io.Copy(w, file); err != nil {
+		// FIXME: shouldn't try to write headers if even one write went to ResponseWriter
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	// we need a hint from the client of what the collection is, so we can resolve a
+	// volume onto which the blob should be stored
+	collectionId := r.URL.Query().Get("collection")
+
+	blobRef, err := stotypes.BlobRefFromHex(mux.Vars(r)["ref"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var volumeId int
+	if err := h.db.View(func(tx *bolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(collectionId)
+		if err != nil {
+			return err
+		}
+
+		volumeId = coll.DesiredVolumes[0]
+
+		return nil
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, r.Body); err != nil {
+		// FIXME: some could be StatusBadRequest
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer tx.Rollback()
+
+	coll, err := stodb.Read(tx).Collection(mux.Vars(r)["id"])
+	if err != nil {
+		if err == blorm.ErrNotFound {
+			http.Error(w, err.Error(), http.StatusNotFound)
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	outJson(w, coll)
 }
 
 func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.GeneratedIds {

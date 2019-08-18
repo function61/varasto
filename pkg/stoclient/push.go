@@ -228,7 +228,7 @@ func uploadChunks(path string, bfile stotypes.File, collection stotypes.Collecti
 
 		if res, err := ezhttp.Post(
 			ctx,
-			clientConfig.ApiPath("/api/blobs/"+blobRef.AsHex()+"?collection="+collection.ID),
+			clientConfig.ApiPath(clientConfig.UrlBuilder().UploadBlob(blobRef.AsHex(), collection.ID)),
 			ezhttp.AuthBearer(clientConfig.AuthToken),
 			ezhttp.SendBody(stoutils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
 			cancel()
