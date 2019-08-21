@@ -342,6 +342,10 @@ func backslashesToForwardSlashes(in string) string {
 }
 
 func errSample(err error, response *http.Response) error {
-	sample, _ := ioutil.ReadAll(io.LimitReader(response.Body, 256))
+	sample := []byte("(no response)")
+	if response != nil {
+		sample, _ = ioutil.ReadAll(io.LimitReader(response.Body, 256))
+	}
+
 	return fmt.Errorf("%v: %s", err, sample)
 }
