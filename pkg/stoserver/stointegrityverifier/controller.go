@@ -163,6 +163,19 @@ func (s *Controller) resumeJobWorker(
 	}
 	defer updateJobStatusInDb() // to cover all following returns. ignores error
 
+	// returns error if maximum errors detected and the job should stop
+	pushErr := func(reportLine string) error {
+		job.ErrorsFound++
+		job.Report += reportLine
+
+		if len(job.Report) > errorReportMaxLength {
+			job.Report += "maximum errors detected; aborting job"
+			return errors.New("maximum errors detected")
+		}
+
+		return nil
+	}
+
 	batchLimit := 1000
 
 	for {
@@ -188,16 +201,19 @@ func (s *Controller) resumeJobWorker(
 
 			bytesScanned, err := s.diskAccess.Scrub(blob.Ref, job.VolumeId)
 			if err != nil {
-				job.ErrorsFound++
-				job.Report += fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
-
-				if len(job.Report) > errorReportMaxLength {
-					job.Report += "maximum errors detected; aborting job"
-					return errors.New("maximum errors detected")
+				descr := fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
+				if err := pushErr(descr); err != nil {
+					return err
+				}
+			}
+			if int32(bytesScanned) != blob.SizeOnDisk {
+				descr := fmt.Sprintf("blob %s size mismatch; expected=%d got=%d\n", blob.Ref.AsHex(), blob.SizeOnDisk, bytesScanned)
+				if err := pushErr(descr); err != nil {
+					return err
 				}
 			}
 
-			job.BytesScanned += uint64(bytesScanned)
+			job.BytesScanned += uint64(blob.SizeOnDisk)
 			job.LastCompletedBlobRef = blob.Ref
 
 			select {
