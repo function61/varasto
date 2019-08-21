@@ -5,6 +5,7 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stofuse"
+	"github.com/function61/varasto/pkg/stomvu"
 	"github.com/function61/varasto/pkg/stoserver"
 	"github.com/function61/varasto/pkg/stothumb"
 	"github.com/spf13/cobra"
@@ -25,6 +26,7 @@ func main() {
 	rootCmd.AddCommand(stoserver.Entrypoint())
 	rootCmd.AddCommand(stofuse.Entrypoint())
 	rootCmd.AddCommand(stothumb.Entrypoint())
+	rootCmd.AddCommand(stomvu.Entrypoint())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
