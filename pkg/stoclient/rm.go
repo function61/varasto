@@ -25,7 +25,7 @@ func rm(path string) error {
 	}
 
 	if ch.AnyChanges() {
-		fmt.Println("Refusing to delete workdir because it has changes")
+		fmt.Printf("Refusing to delete workdir '%s' because it has changes\n", path)
 		os.Exit(1)
 	}
 
