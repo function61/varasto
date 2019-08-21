@@ -190,7 +190,7 @@ func (d *Controller) BestVolumeId(volumeIds []int) (int, error) {
 	return 0, stotypes.ErrBlobNotAccessibleOnThisNode
 }
 
-// runs a scrubbing job for a blob in a given volume to detect errors
+// runs a scrub for a blob in a given volume to detect errors
 // https://en.wikipedia.org/wiki/Data_scrubbing
 // we could actually just do a Fetch() but that would require access to the encryption keys.
 // this way we can verify on-disk integrity without encryption keys.
@@ -260,25 +260,38 @@ func encryptAndCompressBlob(contentReader io.Reader, encryptionKey []byte, ref s
 		return nil, err
 	}
 
-	var compressed bytes.Buffer
-	compressedWriter := gzip.NewWriter(&compressed)
+	/*	Here are perf measurements from my year 2012 CPU
 
-	if _, err := compressedWriter.Write(content); err != nil {
-		return nil, err
-	}
-
-	if err := compressedWriter.Close(); err != nil {
-		return nil, err
-	}
-
-	compressionRatio := float64(compressed.Len()) / float64(len(content))
-
-	wellCompressible := compressionRatio < 0.9
+		concurrency=2 | by trying compression = 25.1 MB/s
+		concurrency=2 | no compression = 50.0 MB/s
+		concurrency=4 | no compression = 65.7 MB/s
+										66.3 MB/s
+	*/
+	tryCompressing := true
 
 	contentMaybeCompressed := content
+	contentIsCompressed := false
 
-	if wellCompressible {
-		contentMaybeCompressed = compressed.Bytes()
+	if tryCompressing {
+		var compressed bytes.Buffer
+		compressedWriter := gzip.NewWriter(&compressed)
+
+		if _, err := compressedWriter.Write(content); err != nil {
+			return nil, err
+		}
+
+		if err := compressedWriter.Close(); err != nil {
+			return nil, err
+		}
+
+		compressionRatio := float64(compressed.Len()) / float64(len(content))
+
+		wellCompressible := compressionRatio < 0.9
+
+		if wellCompressible {
+			contentMaybeCompressed = compressed.Bytes()
+			contentIsCompressed = true
+		}
 	}
 
 	ciphertextMaybeCompressed, err := encrypt(encryptionKey, bytes.NewReader(contentMaybeCompressed), ref)
@@ -291,7 +304,7 @@ func encryptAndCompressBlob(contentReader io.Reader, encryptionKey []byte, ref s
 
 	return &blobResult{
 		CiphertextMaybeCompressed: ciphertextMaybeCompressed,
-		Compressed:                wellCompressible,
+		Compressed:                contentIsCompressed,
 		Crc32:                     crc,
 	}, nil
 }
