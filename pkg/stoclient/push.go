@@ -111,7 +111,7 @@ func blobExists(blobRef stotypes.BlobRef, clientConfig ClientConfig) (bool, erro
 	// do a HEAD request to see if the blob exists
 	resp, err := ezhttp.Get(
 		ctx,
-		clientConfig.ApiPath(clientConfig.UrlBuilder().GetBlobMetadata(blobRef.AsHex())),
+		clientConfig.UrlBuilder().GetBlobMetadata(blobRef.AsHex()),
 		ezhttp.AuthBearer(clientConfig.AuthToken))
 
 	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {
@@ -228,7 +228,7 @@ func uploadChunks(path string, bfile stotypes.File, collection stotypes.Collecti
 
 		if res, err := ezhttp.Post(
 			ctx,
-			clientConfig.ApiPath(clientConfig.UrlBuilder().UploadBlob(blobRef.AsHex(), collection.ID)),
+			clientConfig.UrlBuilder().UploadBlob(blobRef.AsHex(), collection.ID),
 			ezhttp.AuthBearer(clientConfig.AuthToken),
 			ezhttp.SendBody(stoutils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
 			cancel()

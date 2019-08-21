@@ -22,12 +22,8 @@ type ClientConfig struct {
 	FuseMountPath string `json:"fuse_mount_path"`
 }
 
-func (c *ClientConfig) ApiPath(path string) string {
-	return c.ServerAddr + path
-}
-
 func (c *ClientConfig) CommandClient() *httpcommandclient.Client {
-	return httpcommandclient.New(c.ApiPath("/command/"), c.AuthToken)
+	return httpcommandclient.New(c.ServerAddr+"/command/", c.AuthToken)
 }
 
 func (c *ClientConfig) UrlBuilder() *stoservertypes.RestClientUrlBuilder {
