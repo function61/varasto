@@ -221,6 +221,32 @@ func TestReplication(t *testing.T) {
 		bytes.Equal(firstStore.files[sha256OfQuickBrownFox], secondBlobStore.files[sha256OfQuickBrownFox]))
 }
 
+func TestReplicateRottenData(t *testing.T) {
+	test := setupDefault()
+	firstStore := test.blobStorage
+
+	secondBlobStore := newTestingBlobStorage()
+	test.diskAccess.Define(2, secondBlobStore)
+
+	contentToStore := "The quick brown fox jumps over the lazy dog"
+
+	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
+
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
+
+	_, secondHasIt := secondBlobStore.files[sha256OfQuickBrownFox]
+
+	assert.Assert(t, !secondHasIt)
+
+	// make bits rot
+	firstStore.files[sha256OfQuickBrownFox][3] = 0xff
+
+	assert.EqualString(
+		t,
+		test.diskAccess.Replicate(context.TODO(), 1, 2, *ref).Error(),
+		"hashVerifyReader: digest mismatch")
+}
+
 func TestScrubbing(t *testing.T) {
 	test := setupDefault()
 
