@@ -22,8 +22,8 @@ func epEntrypoint() *cobra.Command {
 	doIt := false
 
 	cmd := &cobra.Command{
-		Use:   "ep",
-		Short: "Renames episodes",
+		Use:   "tv",
+		Short: "Renames TV episodes",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			plan, err := computePlan(episodeFromFilename)
