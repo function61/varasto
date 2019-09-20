@@ -3,6 +3,7 @@ package stoclient
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/stateresolver"
@@ -38,6 +39,15 @@ func cloneCollectionExistingDir(path string, revisionId string, collection *stot
 	// manage to write the statefile to disk, use normal procedure to init wd
 	halfBakedWd := &workdirLocation{
 		path: path,
+	}
+
+	manifestExists, err := fileexists.Exists(halfBakedWd.Join(localStatefile))
+	if err != nil {
+		return err
+	}
+
+	if manifestExists {
+		return fmt.Errorf("%s already exists in %s - adopting would be dangerous", localStatefile, path)
 	}
 
 	if revisionId == "" {
