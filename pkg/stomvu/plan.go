@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"sort"
 )
 
 type PlanTarget struct {
@@ -70,6 +71,10 @@ func computePlan(targetFn func(string) string) (*Plan, error) {
 			plan.InsertFile(dentry.Name(), target)
 		}
 	}
+
+	sort.Slice(plan.FileTargets, func(i, j int) bool {
+		return plan.FileTargets[i].Target < plan.FileTargets[j].Target
+	})
 
 	return &plan, nil
 }
