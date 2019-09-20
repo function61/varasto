@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/hashverifyreader"
 	"github.com/function61/varasto/pkg/blobstore"
+	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"hash/crc32"
@@ -22,12 +23,14 @@ import (
 type Controller struct {
 	metadataStore  MetadataStore
 	mountedDrivers map[int]blobstore.Driver // only mounted drivers
+	writingBlobs   *mutexmap.M
 }
 
 func New(metadataStore MetadataStore) *Controller {
 	return &Controller{
 		metadataStore,
 		map[int]blobstore.Driver{},
+		mutexmap.New(),
 	}
 }
 
@@ -79,6 +82,12 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId
 }
 
 func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef, content io.Reader) error {
+	unlock, ok := d.writingBlobs.TryLock(ref.AsHex())
+	if !ok {
+		return fmt.Errorf("Another thread is currently writing blob[%s]", ref.AsHex())
+	}
+	defer unlock()
+
 	// since we're writing a blob (and not replicating), for safety we'll check that we haven't
 	// seen this blob before
 	if _, err := d.metadataStore.QueryBlobMetadata(ref); err != os.ErrNotExist { // expecting this
