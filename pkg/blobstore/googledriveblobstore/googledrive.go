@@ -21,6 +21,7 @@ type googledrive struct {
 	varastoDirectoryId string
 	logl               *logex.Leveled
 	srv                *drive.Service
+	reqThrottle        chan interface{}
 }
 
 func New(varastoDirectoryId string, logger *log.Logger) (*googledrive, error) {
@@ -33,6 +34,9 @@ func New(varastoDirectoryId string, logger *log.Logger) (*googledrive, error) {
 		varastoDirectoryId: varastoDirectoryId,
 		logl:               logex.Levels(logger),
 		srv:                gdrive,
+		// default quota seems to be "1 000 queries per 100 seconds per user", so that makes
+		// for ten a second
+		reqThrottle: mkBurstThrottle(10, 1*time.Second),
 	}, nil
 }
 
@@ -42,6 +46,7 @@ func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 		return nil, err
 	}
 
+	<-g.reqThrottle
 	res, err := g.srv.Files.Get(fileId).Context(ctx).Download()
 	if err != nil {
 		return nil, err
@@ -63,6 +68,7 @@ func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 		return err
 	}
 
+	<-g.reqThrottle
 	if _, err := g.srv.Files.Create(&drive.File{
 		Name:     toGoogleDriveName(ref),
 		Parents:  []string{g.varastoDirectoryId},
@@ -80,6 +86,7 @@ func (g *googledrive) Mountable(ctx context.Context) error {
 	// just try if a folder query works. it'll 404 if the id is invalid (there seems to
 	// be some kind of checksum or something). unfortunately we don't get a failure for
 	// non-existing folders (at least deleted one listing succeeded)
+	<-g.reqThrottle
 	_, err := g.srv.Files.List().PageSize(2).
 		Fields("files(id, name)").
 		Q(anyFilesInFolderQuery).
@@ -101,6 +108,7 @@ func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobR
 
 	// we're searching with a unique sha256 hash,
 	// so we should get exactly one result
+	<-g.reqThrottle
 	listFilesResponse, err := g.srv.Files.List().PageSize(2).
 		Fields("files(id, name)").
 		Q(exactFilenameInExactFolderQuery).
@@ -142,4 +150,18 @@ func authDance() (*drive.Service, error) {
 	}
 
 	return srv, nil
+}
+
+// https://github.com/golang/go/wiki/RateLimiting
+func mkBurstThrottle(burst int, dur time.Duration) chan interface{} {
+	ch := make(chan interface{}, burst)
+	go func() {
+		for range time.Tick(dur) {
+			for i := 0; i < burst; i++ {
+				ch <- nil
+			}
+		}
+	}()
+
+	return ch
 }
