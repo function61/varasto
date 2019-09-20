@@ -115,7 +115,6 @@ func TestWriteAndRead(t *testing.T) {
 	defer contentReader.Close()
 
 	content, err := ioutil.ReadAll(contentReader)
-	// assert.EqualString(t, err.Error(), "!?")
 	assert.Assert(t, err == nil)
 
 	assert.EqualString(t, string(content), "The quick brown fox jumps over the lazy dog")
