@@ -62,7 +62,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	serverConfig, err := readConfigFromDatabase(db, scf, logger, logTail)
 	if err != nil { // maybe need bootstrap?
 		// totally unexpected error?
-		if err != blorm.ErrNotFound {
+		if err != blorm.ErrBucketNotFound {
 			return err
 		}
 
@@ -176,7 +176,7 @@ type ServerConfig struct {
 	LogTail           *logtee.StringTail
 }
 
-// returns blorm.ErrNotFound if bootstrap needed
+// returns blorm.ErrBucketNotFound if bootstrap needed
 func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logger, logTail *logtee.StringTail) (*ServerConfig, error) {
 	tx, err := db.Begin(false)
 	if err != nil {

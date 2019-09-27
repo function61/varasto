@@ -134,7 +134,7 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 	if !scanner.Scan() {
 		return fmt.Errorf("file seems empty: %v", scanner.Err())
 	}
-	nodeId, err := parseBackupHeader(scanner.Text())
+	_, err := parseBackupHeader(scanner.Text())
 	if err != nil {
 		return err
 	}
@@ -170,12 +170,6 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 		}
 	}
 	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	if err := withTx(func(tx *bolt.Tx) error {
-		return stodb.BootstrapSetNodeId(nodeId, tx)
-	}); err != nil {
 		return err
 	}
 

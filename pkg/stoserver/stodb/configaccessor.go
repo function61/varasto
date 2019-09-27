@@ -3,47 +3,45 @@ package stodb
 import (
 	"fmt"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
 )
 
 type configAccessor struct {
-	key []byte
+	key string
 }
 
 func ConfigAccessor(key string) *configAccessor {
-	return &configAccessor{[]byte(key)}
+	return &configAccessor{key}
 }
 
-// returns blorm.ErrNotFound if bootstrap required
+// returns blorm.ErrBucketNotFound if bootstrap required
 func (c *configAccessor) GetOptional(tx *bolt.Tx) (string, error) {
 	return c.getWithRequired(false, tx)
 }
 
-// returns blorm.ErrNotFound if bootstrap required
+// returns blorm.ErrBucketNotFound if bootstrap required
 // returns descriptive error message if value not set
 func (c *configAccessor) GetRequired(tx *bolt.Tx) (string, error) {
 	return c.getWithRequired(true, tx)
 }
 
 func (c *configAccessor) getWithRequired(required bool, tx *bolt.Tx) (string, error) {
-	configBucket := tx.Bucket(configBucketKey)
-	if configBucket == nil {
-		return "", blorm.ErrNotFound
+	conf := &stotypes.Config{}
+	if err := configRepository.OpenByPrimaryKey([]byte(c.key), conf, tx); err != nil && err != blorm.ErrNotFound {
+		return "", err
 	}
 
-	val := string(configBucket.Get(c.key))
-	if val == "" && required {
+	if conf.Value == "" && required {
 		return "", fmt.Errorf("config value %s not set", c.key)
 	}
 
-	return val, nil
+	return conf.Value, nil
 }
 
 func (c *configAccessor) Set(value string, tx *bolt.Tx) error {
-	configBucket := tx.Bucket(configBucketKey)
-	if configBucket == nil {
-		return blorm.ErrNotFound
-	}
-
-	return configBucket.Put(c.key, []byte(value))
+	return configRepository.Update(&stotypes.Config{
+		Key:   c.key,
+		Value: value,
+	}, tx)
 }

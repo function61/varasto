@@ -34,7 +34,7 @@ func (r *SimpleRepository) Alloc() interface{} {
 func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
-		return errNoBucket
+		return ErrBucketNotFound
 	}
 
 	data := bucket.Get(id)
@@ -52,7 +52,7 @@ func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *b
 func (r *SimpleRepository) Update(record interface{}, tx *bolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
-		return errNoBucket
+		return ErrBucketNotFound
 	}
 
 	id := r.idExtractor(record)
@@ -86,7 +86,7 @@ func (r *SimpleRepository) Update(record interface{}, tx *bolt.Tx) error {
 func (r *SimpleRepository) Delete(record interface{}, tx *bolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
-		return errNoBucket
+		return ErrBucketNotFound
 	}
 
 	id := r.idExtractor(record)
@@ -112,7 +112,7 @@ func (r *SimpleRepository) Each(fn func(record interface{}) error, tx *bolt.Tx) 
 func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) error, tx *bolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
-		return errNoBucket
+		return ErrBucketNotFound
 	}
 
 	all := bucket.Cursor()

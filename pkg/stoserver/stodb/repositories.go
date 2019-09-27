@@ -14,10 +14,10 @@ var (
 	StopIteration  = blorm.StopIteration
 )
 
-var BlobRepository = blorm.NewSimpleRepo(
+var BlobRepository = register("Blob", blorm.NewSimpleRepo(
 	"blobs",
 	func() interface{} { return &stotypes.Blob{} },
-	func(record interface{}) []byte { return record.(*stotypes.Blob).Ref })
+	func(record interface{}) []byte { return record.(*stotypes.Blob).Ref }))
 
 var BlobsPendingReplicationByVolumeIndex = blorm.NewValueIndex("repl_pend", BlobRepository, func(record interface{}, index func(val []byte)) {
 	blob := record.(*stotypes.Blob)
@@ -27,37 +27,37 @@ var BlobsPendingReplicationByVolumeIndex = blorm.NewValueIndex("repl_pend", Blob
 	}
 })
 
-var NodeRepository = blorm.NewSimpleRepo(
+var NodeRepository = register("Node", blorm.NewSimpleRepo(
 	"nodes",
 	func() interface{} { return &stotypes.Node{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Node).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.Node).ID) }))
 
-var ClientRepository = blorm.NewSimpleRepo(
+var ClientRepository = register("Client", blorm.NewSimpleRepo(
 	"clients",
 	func() interface{} { return &stotypes.Client{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Client).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.Client).ID) }))
 
-var ReplicationPolicyRepository = blorm.NewSimpleRepo(
+var ReplicationPolicyRepository = register("ReplicationPolicy", blorm.NewSimpleRepo(
 	"replicationpolicies",
 	func() interface{} { return &stotypes.ReplicationPolicy{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.ReplicationPolicy).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.ReplicationPolicy).ID) }))
 
-var VolumeRepository = blorm.NewSimpleRepo(
+var VolumeRepository = register("Volume", blorm.NewSimpleRepo(
 	"volumes",
 	func() interface{} { return &stotypes.Volume{} },
 	func(record interface{}) []byte {
 		return volumeIntIdToBytes(record.(*stotypes.Volume).ID)
-	})
+	}))
 
-var VolumeMountRepository = blorm.NewSimpleRepo(
+var VolumeMountRepository = register("VolumeMount", blorm.NewSimpleRepo(
 	"volumemounts",
 	func() interface{} { return &stotypes.VolumeMount{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.VolumeMount).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.VolumeMount).ID) }))
 
-var DirectoryRepository = blorm.NewSimpleRepo(
+var DirectoryRepository = register("Directory", blorm.NewSimpleRepo(
 	"directories",
 	func() interface{} { return &stotypes.Directory{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Directory).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.Directory).ID) }))
 
 var SubdirectoriesIndex = blorm.NewValueIndex("parent", DirectoryRepository, func(record interface{}, index func(val []byte)) {
 	dir := record.(*stotypes.Directory)
@@ -67,10 +67,10 @@ var SubdirectoriesIndex = blorm.NewValueIndex("parent", DirectoryRepository, fun
 	}
 })
 
-var CollectionRepository = blorm.NewSimpleRepo(
+var CollectionRepository = register("Collection", blorm.NewSimpleRepo(
 	"collections",
 	func() interface{} { return &stotypes.Collection{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Collection).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.Collection).ID) }))
 
 var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRepository, func(record interface{}, index func(val []byte)) {
 	coll := record.(*stotypes.Collection)
@@ -78,10 +78,15 @@ var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRep
 	index([]byte(coll.Directory))
 })
 
-var IntegrityVerificationJobRepository = blorm.NewSimpleRepo(
+var IntegrityVerificationJobRepository = register("IntegrityVerificationJob", blorm.NewSimpleRepo(
 	"ivjobs",
 	func() interface{} { return &stotypes.IntegrityVerificationJob{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.IntegrityVerificationJob).ID) })
+	func(record interface{}) []byte { return []byte(record.(*stotypes.IntegrityVerificationJob).ID) }))
+
+var configRepository = register("Config", blorm.NewSimpleRepo(
+	"config",
+	func() interface{} { return &stotypes.Config{} },
+	func(record interface{}) []byte { return []byte(record.(*stotypes.Config).Key) }))
 
 // helpers
 
@@ -136,14 +141,10 @@ func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob
 }
 
 // key is heading in export file under which all JSON records are dumped
-var RepoByRecordType = map[string]blorm.Repository{
-	"Blob":                     BlobRepository,
-	"Client":                   ClientRepository,
-	"Collection":               CollectionRepository,
-	"Directory":                DirectoryRepository,
-	"IntegrityVerificationJob": IntegrityVerificationJobRepository,
-	"Node":                     NodeRepository,
-	"ReplicationPolicy":        ReplicationPolicyRepository,
-	"Volume":                   VolumeRepository,
-	"VolumeMount":              VolumeMountRepository,
+var RepoByRecordType = map[string]blorm.Repository{}
+
+// register known repo for exporting
+func register(exportImportKey string, repo *blorm.SimpleRepository) *blorm.SimpleRepository {
+	RepoByRecordType[exportImportKey] = repo
+	return repo
 }

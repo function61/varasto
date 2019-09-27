@@ -8,10 +8,6 @@ import (
 	"log"
 )
 
-var (
-	configBucketKey = []byte("config")
-)
-
 // opens BoltDB database
 func Open(dbLocation string) (*bolt.DB, error) {
 	return bolt.Open(dbLocation, 0700, nil)
@@ -46,7 +42,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 			Name:           "Default replication policy",
 			DesiredVolumes: []int{1, 2}, // FIXME: this assumes 1 and 2 will be created soon..
 		}, tx),
-		BootstrapSetNodeId(newNode.ID, tx),
+		CfgNodeId.Set(newNode.ID, tx),
 	}
 
 	if err := allOk(results); err != nil {
@@ -54,18 +50,6 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	}
 
 	return tx.Commit()
-}
-
-func BootstrapSetNodeId(nodeId string, tx *bolt.Tx) error {
-	// errors if already exists (this is important)
-	configBucket, err := tx.CreateBucket(configBucketKey)
-	if err != nil {
-		return err
-	}
-
-	return configBucket.Put(CfgNodeId.key, []byte(nodeId))
-	// TODO: use (but verify that tx.Bucket(foo) after CreateBucket(foo) works)
-	// return CfgNodeId.Set(nodeId, tx)
 }
 
 func BootstrapRepos(db *bolt.DB) error {

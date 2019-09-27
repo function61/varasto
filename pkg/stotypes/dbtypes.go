@@ -108,6 +108,11 @@ type IntegrityVerificationJob struct {
 	Report               string
 }
 
+type Config struct {
+	Key   string
+	Value string
+}
+
 func NewChangeset(
 	id string,
 	parent string,
