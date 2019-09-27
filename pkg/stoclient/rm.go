@@ -19,7 +19,7 @@ func rm(path string) error {
 		return err
 	}
 
-	ch, err := computeChangeset(wd)
+	ch, err := computeChangeset(wd, NewBlobDiscoveredNoopListener())
 	if err != nil {
 		return err
 	}

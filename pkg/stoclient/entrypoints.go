@@ -112,7 +112,7 @@ func stEntrypoint() *cobra.Command {
 			wd, err := NewWorkdirLocation(cwd)
 			panicIfError(err)
 
-			ch, err := computeChangeset(wd)
+			ch, err := computeChangeset(wd, NewBlobDiscoveredNoopListener())
 			panicIfError(err)
 
 			for _, created := range ch.FilesCreated {

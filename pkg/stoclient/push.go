@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"github.com/djherbis/times"
 	"github.com/function61/gokit/ezhttp"
@@ -21,11 +22,17 @@ import (
 	"time"
 )
 
-func computeChangeset(wd *workdirLocation) (*stotypes.CollectionChangeset, error) {
+const (
+	backgroundUploaderConcurrency = 3
+)
+
+func computeChangeset(wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAt(wd.manifest.Collection, wd.manifest.Collection.Head)
 	if err != nil {
 		return nil, err
 	}
+
+	collectionId := wd.manifest.Collection.ID
 
 	// deleted during directory scan. what's left over is what are missing w.r.t. parent state
 	filesMissing := parentState.Files()
@@ -59,7 +66,7 @@ func computeChangeset(wd *workdirLocation) (*stotypes.CollectionChangeset, error
 				maybeChanged := !before.Modified.Equal(fileInfo.ModTime())
 
 				if definitelyChanged || maybeChanged {
-					fil, err := analyzeFileForChanges(wd.Join(relativePath), relativePath, fileInfo)
+					fil, err := scanFileAndDiscoverBlobs(wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
 					if err != nil {
 						return err
 					}
@@ -71,7 +78,7 @@ func computeChangeset(wd *workdirLocation) (*stotypes.CollectionChangeset, error
 					}
 				}
 			} else {
-				fil, err := analyzeFileForChanges(wd.Join(relativePath), relativePath, fileInfo)
+				fil, err := scanFileAndDiscoverBlobs(wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
 				if err != nil {
 					return err
 				}
@@ -125,7 +132,13 @@ func blobExists(blobRef stotypes.BlobRef, clientConfig ClientConfig) (bool, erro
 	return true, nil
 }
 
-func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os.FileInfo) (*stotypes.File, error) {
+func scanFileAndDiscoverBlobs(
+	absolutePath string,
+	relativePath string,
+	fileInfo os.FileInfo,
+	collectionId string,
+	bdl BlobDiscoveredListener,
+) (*stotypes.File, error) {
 	// https://unix.stackexchange.com/questions/2802/what-is-the-difference-between-modify-and-change-in-stat-command-context
 	allTimes := times.Get(fileInfo)
 
@@ -153,7 +166,15 @@ func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os
 
 	fullContentHash := sha256.New()
 
+	discoveryCancel := bdl.CancelCh()
+
 	for {
+		select {
+		case <-discoveryCancel:
+			return nil, errors.New("discovery canceled")
+		default:
+		}
+
 		if _, err := file.Seek(pos, io.SeekStart); err != nil {
 			return nil, err
 		}
@@ -183,6 +204,8 @@ func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os
 
 		bfile.BlobRefs = append(bfile.BlobRefs, blobRef.AsHex())
 
+		bdl.BlobDiscovered(NewBlobDiscoveredAttrs(*blobRef, collectionId, chunk))
+
 		if int64(len(chunk)) < stotypes.BlobSize {
 			break
 		}
@@ -193,56 +216,8 @@ func analyzeFileForChanges(absolutePath string, relativePath string, fileInfo os
 	return bfile, nil
 }
 
-func uploadChunks(path string, bfile stotypes.File, collection stotypes.Collection, clientConfig ClientConfig) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	for blobIdx, brHex := range bfile.BlobRefs {
-		blobRef, err := stotypes.BlobRefFromHex(brHex)
-		if err != nil {
-			return err
-		}
-
-		// just check if the chunk exists already
-		blobAlreadyExists, err := blobExists(*blobRef, clientConfig)
-		if err != nil {
-			return err
-		}
-
-		if blobAlreadyExists {
-			log.Printf("Deduplicated chunk %s", blobRef.AsHex())
-			continue
-		}
-
-		if _, err := file.Seek(int64(blobIdx*stotypes.BlobSize), io.SeekStart); err != nil {
-			return err
-		}
-
-		chunk := io.LimitReader(file, stotypes.BlobSize)
-
-		// 10 seconds can be too fast waiting for HDD to spin up + blob write
-		ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
-
-		if res, err := ezhttp.Post(
-			ctx,
-			clientConfig.UrlBuilder().UploadBlob(blobRef.AsHex(), collection.ID),
-			ezhttp.AuthBearer(clientConfig.AuthToken),
-			ezhttp.SendBody(stoutils.BlobHashVerifier(chunk, *blobRef), "application/octet-stream")); err != nil {
-			cancel()
-			return fmt.Errorf("error uploading chunk %s: %v", blobRef.AsHex(), errSample(err, res))
-		}
-
-		cancel()
-	}
-
-	return nil
-}
-
 func uploadChangeset(changeset stotypes.CollectionChangeset, collection stotypes.Collection, clientConfig ClientConfig) (*stotypes.Collection, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
+	ctx, cancel := context.WithTimeout(context.TODO(), 60*3*time.Second)
 	defer cancel()
 
 	updatedCollection := &stotypes.Collection{}
@@ -282,12 +257,14 @@ func pushOne(collectionId string, path string) error {
 		return err
 	}
 
-	file, err := analyzeFileForChanges(absolutePath, path, fileInfo)
+	buploader := NewBackgroundUploader(backgroundUploaderConcurrency, *clientConfig)
+
+	file, err := scanFileAndDiscoverBlobs(absolutePath, path, fileInfo, collectionId, buploader)
 	if err != nil {
 		return err
 	}
 
-	if err := uploadChunks(path, *file, *coll, *clientConfig); err != nil {
+	if err := buploader.WaitFinished(); err != nil {
 		return err
 	}
 
@@ -304,7 +281,9 @@ func pushOne(collectionId string, path string) error {
 }
 
 func push(wd *workdirLocation) error {
-	ch, err := computeChangeset(wd)
+	buploader := NewBackgroundUploader(backgroundUploaderConcurrency, wd.clientConfig)
+
+	ch, err := computeChangeset(wd, buploader)
 	if err != nil {
 		return err
 	}
@@ -314,16 +293,8 @@ func push(wd *workdirLocation) error {
 		return nil
 	}
 
-	for _, created := range ch.FilesCreated {
-		if err := uploadChunks(wd.Join(created.Path), created, wd.manifest.Collection, wd.clientConfig); err != nil {
-			return err
-		}
-	}
-
-	for _, updated := range ch.FilesUpdated {
-		if err := uploadChunks(wd.Join(updated.Path), updated, wd.manifest.Collection, wd.clientConfig); err != nil {
-			return err
-		}
+	if err := buploader.WaitFinished(); err != nil {
+		return err
 	}
 
 	updatedCollection, err := uploadChangeset(*ch, wd.manifest.Collection, wd.clientConfig)
