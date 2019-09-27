@@ -342,14 +342,20 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				metadata[MetadataThumbnail] ||
 				globalConfig().assetsDir + '/../image-not-available.png';
 
+			const badges = [];
+
+			if (MetadataReleaseDate in metadata) {
+				badges.push(
+					<span className="label label-default">📅 {metadata[MetadataReleaseDate]}</span>,
+				);
+			}
+
 			return (
 				<Panel
 					heading={
 						<div>
 							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
-							<span className="label label-default">
-								📅 {metadata[MetadataReleaseDate]}
-							</span>
+							{badges}
 						</div>
 					}>
 					<a
