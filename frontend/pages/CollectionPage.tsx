@@ -6,6 +6,7 @@ import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { reloadCurrentPage } from 'f61ui/browserutils';
+import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -202,6 +203,11 @@ export default class CollectionPage extends React.Component<
 			);
 		};
 
+		const noFilesOrSubdirs =
+			collOutput.SelectedPathContents.SubDirs.length +
+				collOutput.SelectedPathContents.Files.length ===
+			0;
+
 		return (
 			<div>
 				<SensitivityHeadsUp />
@@ -228,6 +234,12 @@ export default class CollectionPage extends React.Component<
 									{collOutput.SelectedPathContents.Files.map(fileToRow)}
 								</tbody>
 							</table>
+
+							{noFilesOrSubdirs ? (
+								<InfoAlert>Collection is currently empty.</InfoAlert>
+							) : (
+								''
+							)}
 						</Panel>
 
 						<Panel heading="Upload">
