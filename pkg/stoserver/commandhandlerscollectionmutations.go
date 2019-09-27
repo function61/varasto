@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"errors"
+	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -79,8 +80,13 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 			nil,
 			nil)
 
-		appendChangeset(srcChangeset, collSrc)
-		appendChangeset(dstChangeset, collDst)
+		if err := appendAndValidateChangeset(srcChangeset, collSrc); err != nil {
+			return err
+		}
+
+		if err := appendAndValidateChangeset(dstChangeset, collDst); err != nil {
+			return err
+		}
 
 		if err := stodb.CollectionRepository.Update(collSrc, tx); err != nil {
 			return err
@@ -94,19 +100,41 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 	})
 }
 
-func appendChangeset(changeset stotypes.CollectionChangeset, coll *stotypes.Collection) {
+func appendAndValidateChangeset(changeset stotypes.CollectionChangeset, coll *stotypes.Collection) error {
+	currentHeadState, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+	if err != nil {
+		return err
+	}
+	filesAtCurrentHead := currentHeadState.Files()
+
 	for _, file := range changeset.FilesCreated {
 		coll.Created = minDate(coll.Created, file.Created)
 		coll.Created = minDate(coll.Created, file.Modified)
+
+		if _, exists := filesAtCurrentHead[file.Path]; exists {
+			return fmt.Errorf("cannot create file %s because it already exists at revision %s", file.Path, coll.Head)
+		}
 	}
 
 	for _, file := range changeset.FilesUpdated {
 		coll.Created = minDate(coll.Created, file.Created)
 		coll.Created = minDate(coll.Created, file.Modified)
+
+		if _, exists := filesAtCurrentHead[file.Path]; !exists {
+			return fmt.Errorf("cannot update file %s because it does not exist at revision %s", file.Path, coll.Head)
+		}
+	}
+
+	for _, file := range changeset.FilesDeleted {
+		if _, exists := filesAtCurrentHead[file]; !exists {
+			return fmt.Errorf("cannot delete file %s because it does not exist at revision %s", file, coll.Head)
+		}
 	}
 
 	coll.Changesets = append(coll.Changesets, changeset)
 	coll.Head = changeset.ID
+
+	return nil
 }
 
 func minDate(a, b time.Time) time.Time {

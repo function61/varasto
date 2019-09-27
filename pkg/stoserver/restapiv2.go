@@ -429,7 +429,10 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 
 func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionId string, changeset stotypes.CollectionChangeset, db *bolt.DB) *stotypes.Collection {
 	tx, errTxBegin := db.Begin(true)
-	panicIfError(errTxBegin)
+	if errTxBegin != nil {
+		http.Error(w, errTxBegin.Error(), http.StatusInternalServerError)
+		return nil
+	}
 	defer tx.Rollback()
 
 	coll, err := stodb.Read(tx).Collection(collectionId)
@@ -478,7 +481,10 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 	}
 
 	// update head pointer & calc Created timestamp
-	appendChangeset(changeset, coll)
+	if err := appendAndValidateChangeset(changeset, coll); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil
+	}
 
 	panicIfError(stodb.CollectionRepository.Update(coll, tx))
 	panicIfError(tx.Commit())
