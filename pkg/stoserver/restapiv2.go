@@ -783,6 +783,7 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 		StartedAt:    appuptime.Started(),
 		DatabaseSize: int(dbFileInfo.Size()),
 		CpuCount:     runtime.NumCPU(),
+		ProcessId:    fmt.Sprintf("%d", os.Getpid()),
 		HeapBytes:    int(ms.HeapAlloc),
 		GoVersion:    runtime.Version(),
 		Goroutines:   runtime.NumGoroutine(),

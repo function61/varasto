@@ -193,6 +193,7 @@
 				"StartedAt": {"_": "datetime"},
 				"DatabaseSize": {"_": "integer"},
 				"CpuCount": {"_": "integer"},
+				"ProcessId": {"_": "string"},
 				"GoVersion": {"_": "string"},
 				"Goroutines": {"_": "integer"},
 				"HeapBytes": {"_": "integer"},
