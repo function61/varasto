@@ -94,8 +94,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			};
 		});
 
-		const collectionsWithMetadata = output.Collections.filter(hasMeta);
-
 		return (
 			<AppDefaultLayout title={output.Directory.Name} breadcrumbs={breadcrumbs}>
 				<SensitivityHeadsUp />
@@ -108,7 +106,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							<MetadataPanel data={metadataKvsToKv(output.Directory.Metadata)} />
 						</div>
 
-						{collectionsWithMetadata.length > 0 &&
+						{output.Collections.filter(hasMeta).length > 0 &&
 						output.Directory.Id !== moviesDirId ? (
 							<TabController
 								tabs={[
@@ -118,7 +116,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 											v: '',
 										}),
 										title: 'Metadata view',
-										content: this.richView(collectionsWithMetadata),
+										content: this.richView(output.Collections),
 									},
 									{
 										url: browseRoute.buildUrl({
