@@ -64,7 +64,7 @@ type byValueIndexApi interface {
 }
 
 type setIndex struct {
-	repo            *simpleRepository
+	repo            *SimpleRepository
 	name            string // looks like <repoBucketName>:<indexName>
 	memberEvaluator func(record interface{}) bool
 }
@@ -87,7 +87,7 @@ func (s *setIndex) Query(start []byte, fn func(id []byte) error, tx *bolt.Tx) er
 	return indexQueryShared(s.name, []byte(" "), start, fn, tx)
 }
 
-func NewSetIndex(name string, repo *simpleRepository, memberEvaluator func(record interface{}) bool) setIndexApi {
+func NewSetIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}) bool) setIndexApi {
 	idx := &setIndex{repo, string(repo.bucketName) + ":" + name, memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)
@@ -96,7 +96,7 @@ func NewSetIndex(name string, repo *simpleRepository, memberEvaluator func(recor
 }
 
 type byValueIndex struct {
-	repo            *simpleRepository
+	repo            *SimpleRepository
 	name            string // looks like <repoBucketName>:<indexName>
 	memberEvaluator func(record interface{}, push func(val []byte))
 }
@@ -147,7 +147,7 @@ func indexQueryShared(indexName string, value []byte, start []byte, fn func(id [
 	return nil
 }
 
-func NewValueIndex(name string, repo *simpleRepository, memberEvaluator func(record interface{}, push func(val []byte))) byValueIndexApi {
+func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}, push func(val []byte))) byValueIndexApi {
 	idx := &byValueIndex{repo, string(repo.bucketName) + ":" + name, memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)

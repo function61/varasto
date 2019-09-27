@@ -15,6 +15,7 @@ var (
 
 type Repository interface {
 	Bootstrap(tx *bolt.Tx) error
+	// returns ErrNotFound if record not found
 	OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error
 	Update(record interface{}, tx *bolt.Tx) error
 	Delete(record interface{}, tx *bolt.Tx) error
