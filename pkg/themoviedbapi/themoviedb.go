@@ -160,7 +160,10 @@ func (c *Client) findMovieOrTvByImdbId(imdbId string) (string, bool, error) {
 	}
 
 	if len(res.MovieResults)+len(res.TvResults) != 1 {
-		return "", false, errors.New("expecting exactly 1 result for TV or movie")
+		return "", false, fmt.Errorf(
+			"expecting exactly 1 result for TV or movie; got movies=%d tv=%d",
+			len(res.MovieResults),
+			len(res.TvResults))
 	}
 
 	if len(res.MovieResults) == 1 {
