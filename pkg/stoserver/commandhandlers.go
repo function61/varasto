@@ -187,6 +187,10 @@ func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegr
 
 func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
+		if err := validateUniqueNameWithinSiblings(cmd.Parent, cmd.Name, tx); err != nil {
+			return err
+		}
+
 		return stodb.DirectoryRepository.Update(
 			stotypes.NewDirectory(
 				stoutils.NewDirectoryId(),
@@ -233,6 +237,10 @@ func (c *cHandlers) DirectoryRename(cmd *stoservertypes.DirectoryRename, ctx *co
 		}
 
 		dir.Name = cmd.Name
+
+		if err := validateUniqueNameWithinSiblings(dir.Parent, dir.Name, tx); err != nil {
+			return err
+		}
 
 		return stodb.DirectoryRepository.Update(dir, tx)
 	})
@@ -287,6 +295,10 @@ func (c *cHandlers) DirectoryMove(cmd *stoservertypes.DirectoryMove, ctx *comman
 
 		dirToMove.Parent = newParent.ID
 
+		if err := validateUniqueNameWithinSiblings(dirToMove.Parent, dirToMove.Name, tx); err != nil {
+			return err
+		}
+
 		return stodb.DirectoryRepository.Update(dirToMove, tx)
 	})
 }
@@ -299,6 +311,10 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			} else {
 				return err
 			}
+		}
+
+		if err := validateUniqueNameWithinSiblings(cmd.ParentDir, cmd.Name, tx); err != nil {
+			return err
 		}
 
 		// TODO: resolve this from closest parent that has policy defined?
@@ -368,6 +384,10 @@ func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *comm
 				return err
 			}
 
+			if err := validateUniqueNameWithinSiblings(cmd.Directory, coll.Name, tx); err != nil {
+				return err
+			}
+
 			coll.Directory = cmd.Directory
 
 			if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
@@ -396,6 +416,10 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 	return c.db.Update(func(tx *bolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
+			return err
+		}
+
+		if err := validateUniqueNameWithinSiblings(coll.Directory, coll.Name, tx); err != nil {
 			return err
 		}
 
@@ -546,6 +570,36 @@ func mebibytesToBytes(mebibytes int) int64 {
 func validateSensitivity(in int) error {
 	if in < 0 || in > 2 {
 		return fmt.Errorf("sensitivity needs to be between 0-2; was %d", in)
+	}
+
+	return nil
+}
+
+// conflict could arise, when directory OR collection:
+// - is created as a sibling with non-unique name
+// - is renamed to non-unique name
+// - once unique-within-siblings item is moved into a directory where name already exists
+func validateUniqueNameWithinSiblings(dirId string, name string, tx *bolt.Tx) error {
+	siblingDirectories, err := stodb.Read(tx).SubDirectories(dirId)
+	if err != nil {
+		return err
+	}
+
+	siblingCollections, err := stodb.Read(tx).CollectionsByDirectory(dirId)
+	if err != nil {
+		return err
+	}
+
+	for _, siblingDirectory := range siblingDirectories {
+		if siblingDirectory.Name == name {
+			return fmt.Errorf("directory %s already exists as a sibling", name)
+		}
+	}
+
+	for _, siblingCollection := range siblingCollections {
+		if siblingCollection.Name == name {
+			return fmt.Errorf("collection %s already exists as a sibling", name)
+		}
 	}
 
 	return nil
