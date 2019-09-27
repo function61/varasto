@@ -2,14 +2,22 @@ import { Panel, Well } from 'f61ui/component/bootstrap';
 import { CommandIcon } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { ConfigSetFuseServerBaseurl } from 'generated/stoserver/stoservertypes_commands';
+import {
+	ConfigSetFuseServerBaseurl,
+	ConfigSetNetworkShareBaseUrl,
+} from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
-import { CfgFuseServerBaseUrl, ConfigValue } from 'generated/stoserver/stoservertypes_types';
+import {
+	CfgFuseServerBaseUrl,
+	CfgNetworkShareBaseUrl,
+	ConfigValue,
+} from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface FuseServerPageState {
 	baseUrl?: ConfigValue;
+	networkShareBaseUrl?: ConfigValue;
 }
 
 export default class FuseServerPage extends React.Component<{}, FuseServerPageState> {
@@ -25,7 +33,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 
 	render() {
 		return (
-			<SettingsLayout title="FUSE server" breadcrumbs={[]}>
+			<SettingsLayout title="FUSE server &amp; network folders" breadcrumbs={[]}>
 				<Panel heading="Settings">{this.renderEditForm()}</Panel>
 			</SettingsLayout>
 		);
@@ -33,8 +41,9 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 
 	private renderEditForm() {
 		const baseUrl = this.state.baseUrl;
+		const networkShareBaseUrl = this.state.networkShareBaseUrl;
 
-		if (!baseUrl) {
+		if (!baseUrl || !networkShareBaseUrl) {
 			return <Loading />;
 		}
 
@@ -42,13 +51,25 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 			<div className="form-horizontal">
 				<div className="form-group">
 					<label className="col-sm-2 control-label">
-						Base URL
+						FUSE server base URL
 						<CommandIcon command={ConfigSetFuseServerBaseurl(baseUrl.Value)} />
 					</label>
 					<div className="col-sm-10">
 						{baseUrl.Value !== ''
 							? baseUrl.Value
 							: 'Not set - unable to mount network folders'}
+					</div>
+				</div>
+
+				<div className="form-group">
+					<label className="col-sm-2 control-label">
+						Network share base URL
+						<CommandIcon
+							command={ConfigSetNetworkShareBaseUrl(networkShareBaseUrl.Value)}
+						/>
+					</label>
+					<div className="col-sm-10">
+						{networkShareBaseUrl.Value !== '' ? networkShareBaseUrl.Value : 'Not set'}
 					</div>
 				</div>
 
@@ -76,8 +97,11 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 	}
 
 	private async fetchData() {
-		const baseUrl = await getConfig(CfgFuseServerBaseUrl);
+		const [baseUrl, networkShareBaseUrl] = await Promise.all([
+			getConfig(CfgFuseServerBaseUrl),
+			getConfig(CfgNetworkShareBaseUrl),
+		]);
 
-		this.setState({ baseUrl });
+		this.setState({ baseUrl, networkShareBaseUrl });
 	}
 }

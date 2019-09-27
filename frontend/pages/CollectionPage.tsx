@@ -17,18 +17,24 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { CollectionMoveFilesIntoAnotherCollection } from 'generated/stoserver/stoservertypes_commands';
+import {
+	CollectionFuseMount,
+	CollectionMoveFilesIntoAnotherCollection,
+} from 'generated/stoserver/stoservertypes_commands';
 import {
 	commitChangeset,
 	downloadFileUrl,
 	generateIds,
 	getCollectiotAtRev,
+	getConfig,
 	getDirectory,
 	uploadFileUrl,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import {
+	CfgNetworkShareBaseUrl,
 	ChangesetSubset,
 	CollectionOutput,
+	ConfigValue,
 	Directory,
 	DirectoryOutput,
 	File as File2, // conflicts with HTML's "File" interface
@@ -47,6 +53,7 @@ interface CollectionPageProps {
 interface CollectionPageState {
 	collectionOutput?: CollectionOutput;
 	directoryOutput?: DirectoryOutput;
+	networkShareBaseUrl?: ConfigValue;
 	selectedFileHashes: string[];
 }
 
@@ -208,6 +215,10 @@ export default class CollectionPage extends React.Component<
 				collOutput.SelectedPathContents.Files.length ===
 			0;
 
+		const networkShareBaseUrl = this.state.networkShareBaseUrl
+			? this.state.networkShareBaseUrl.Value
+			: '';
+
 		return (
 			<div>
 				<SensitivityHeadsUp />
@@ -312,6 +323,17 @@ export default class CollectionPage extends React.Component<
 									</tr>
 								</tbody>
 							</table>
+						</Panel>
+						<Panel
+							heading={
+								<div>
+									FUSE &amp; network share{' '}
+									<ClipboardButton text={networkShareBaseUrl} />
+								</div>
+							}>
+							<CommandButton
+								command={CollectionFuseMount(collOutput.Collection.Id)}
+							/>
 						</Panel>
 						<Panel heading="Changesets">
 							<table className="table table-striped table-hover">
@@ -450,9 +472,12 @@ export default class CollectionPage extends React.Component<
 			this.props.pathBase64,
 		);
 
-		const directoryOutput = await getDirectory(collectionOutput.Collection.Directory);
+		const [directoryOutput, networkShareBaseUrl] = await Promise.all([
+			getDirectory(collectionOutput.Collection.Directory),
+			getConfig(CfgNetworkShareBaseUrl),
+		]);
 
-		this.setState({ collectionOutput, directoryOutput });
+		this.setState({ collectionOutput, directoryOutput, networkShareBaseUrl });
 	}
 }
 

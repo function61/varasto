@@ -42,6 +42,7 @@
 		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
 		{ "key": "CfgTheMovieDbApikey", "value": "themoviedb_apikey" },
 		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
+		{ "key": "CfgNetworkShareBaseUrl", "value": "networkshare_baseurl" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [

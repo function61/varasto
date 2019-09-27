@@ -314,6 +314,16 @@
 		]
 	},
 	{
+		"command": "config.SetNetworkShareBaseUrl",
+		"chain": "public",
+		"ctor": ["Baseurl"],
+		"crudNature": "update",
+		"title": "Set network share baseurl",
+		"fields": [
+			{ "key": "Baseurl", "optional": true, "help": "Looks like \\\\servername\\varasto" }
+		]
+	},
+	{
 		"command": "config.SetFuseServerBaseurl",
 		"chain": "public",
 		"ctor": ["Baseurl"],

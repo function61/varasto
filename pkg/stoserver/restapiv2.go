@@ -753,6 +753,8 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 		val, err = stodb.CfgFuseServerBaseUrl.GetOptional(tx)
 	case stoservertypes.CfgTheMovieDbApikey:
 		val, err = stodb.CfgTheMovieDbApikey.GetOptional(tx)
+	case stoservertypes.CfgNetworkShareBaseUrl:
+		val, err = stodb.CfgNetworkShareBaseUrl.GetOptional(tx)
 	default:
 		http.Error(w, fmt.Sprintf("unknown key: %s", key), http.StatusNotFound)
 		return nil

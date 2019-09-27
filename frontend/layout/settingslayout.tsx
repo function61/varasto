@@ -81,7 +81,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				active: contentMetadataRoute.matchUrl(hash) !== null,
 			},
 			{
-				title: 'FUSE server',
+				title: 'FUSE server & network folders',
 				url: fuseServerRoute.buildUrl({}),
 				active: fuseServerRoute.matchUrl(hash) !== null,
 			},

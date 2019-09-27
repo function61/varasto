@@ -532,6 +532,12 @@ func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuse
 	})
 }
 
+func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		return stodb.CfgNetworkShareBaseUrl.Set(cmd.Baseurl, tx)
+	})
+}
+
 func registerCommandEndpoints(
 	router *mux.Router,
 	eventLog eventlog.Log,
