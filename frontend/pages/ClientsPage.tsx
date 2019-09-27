@@ -1,3 +1,4 @@
+import { ClipboardButton } from 'component/clipboardbutton';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
@@ -38,15 +39,16 @@ export default class ClientsPage extends React.Component<{}, ClientsPageState> {
 			return <Loading />;
 		}
 
-		const toRow = (obj: Client) => (
-			<tr key={obj.Id}>
-				<td>{obj.Id}</td>
-				<td>{obj.Name}</td>
+		const toRow = (client: Client) => (
+			<tr key={client.Id}>
+				<td>{client.Id}</td>
+				<td>{client.Name}</td>
 				<td>
-					<SecretReveal secret={obj.AuthToken} />
+					<SecretReveal secret={client.AuthToken} />
+					<ClipboardButton text={client.AuthToken} />
 				</td>
 				<td>
-					<CommandIcon command={ClientRemove(obj.Id)} />
+					<CommandIcon command={ClientRemove(client.Id)} />
 				</td>
 			</tr>
 		);
