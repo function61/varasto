@@ -43,7 +43,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseRoute, collectionRoute } from 'routes';
+import { browseRoute, collectionRoute, serverInfoRoute } from 'routes';
 
 interface BrowsePageProps {
 	directoryId: string;
@@ -424,10 +424,13 @@ function mergeDirectoriesAndCollectionsSorted(output: DirectoryOutput): DirOrCol
 }
 
 const mkSensitivityBadge = (sens: Sensitivity) => (
-	<span className="badge margin-left">
-		<span className="glyphicon glyphicon-lock" />
-		&nbsp;Level: {sensitivityLabel(sens)}
-	</span>
+	// link to the page where we can upgrade sensitivity
+	<a href={serverInfoRoute.buildUrl({})}>
+		<span className="badge margin-left">
+			<span className="glyphicon glyphicon-lock" />
+			&nbsp;Level: {sensitivityLabel(sens)}
+		</span>
+	</a>
 );
 
 const directoryDropdown = (dir: Directory): jsxChildType => {
