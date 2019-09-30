@@ -78,7 +78,7 @@ func TestWriteToUnknownVolume(t *testing.T) {
 	s := setupDefault()
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	err := s.diskAccess.WriteBlob(2, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"))
+	err := s.diskAccess.WriteBlob(2, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true)
 
 	assert.EqualString(t, err.Error(), "volume 2 not found")
 }
@@ -87,7 +87,7 @@ func TestWriteDigestMismatch(t *testing.T) {
 	s := setupDefault()
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	err := s.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("xxx The quick brown fox jumps over the lazy dog"))
+	err := s.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("xxx The quick brown fox jumps over the lazy dog"), true)
 
 	assert.EqualString(t, err.Error(), "hashVerifyReader: digest mismatch")
 }
@@ -99,7 +99,7 @@ func TestWriteAndRead(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	// then let's try to read it
 
@@ -128,8 +128,8 @@ func TestWriteSameFileWithTwoDifferentEncryptionKeys(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, encryptedWithA.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
-	assert.Assert(t, encryptedWithB.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
+	assert.Assert(t, encryptedWithA.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, encryptedWithB.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	assert.EqualString(t, md5Hex(encryptedWithA.blobStorage.files[sha256OfQuickBrownFox]), "9ed295ab8a5c1a4f8e759db4408dc767")
 	assert.EqualString(t, md5Hex(encryptedWithB.blobStorage.files[sha256OfQuickBrownFox]), "b004754ff58ef8dfcb541c97cbea54c8")
@@ -142,25 +142,33 @@ func TestCannotWriteSameBlobTwice(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	assert.EqualString(t, md5Hex(test.blobStorage.files[sha256OfQuickBrownFox]), "9ed295ab8a5c1a4f8e759db4408dc767")
 
 	// cannot write same blob metadata twice
 	assert.EqualString(
 		t,
-		test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)).Error(),
+		test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true).Error(),
 		"WriteBlob() already exists: d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
 }
 
-func TestCompression(t *testing.T) {
+func TestCompressionMaybeCompressible(t *testing.T) {
+	testCompressionInternal(t, true)
+}
+
+func TestCompressionNotCompressible(t *testing.T) {
+	testCompressionInternal(t, false)
+}
+
+func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 	text := "The quick brown fox jumps over the lazy dog"
 	text4x := text + text + text + text
 	test := setupDefault()
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(text)) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(text), maybeCompressible) == nil)
 
 	meta, err := test.testDbAccess.QueryBlobMetadata(*ref)
 	assert.Assert(t, err == nil)
@@ -172,14 +180,20 @@ func TestCompression(t *testing.T) {
 
 	ref2, _ := stotypes.BlobRefFromHex(sha256Hex([]byte(text4x)))
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref2, strings.NewReader(text4x)) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref2, strings.NewReader(text4x), maybeCompressible) == nil)
 
 	meta, err = test.testDbAccess.QueryBlobMetadata(*ref2)
 	assert.Assert(t, err == nil)
 
-	assert.Assert(t, meta.IsCompressed)
-	assert.Assert(t, meta.RealSize == 4*43)
-	assert.Assert(t, meta.SizeOnDisk == 70)
+	if maybeCompressible {
+		assert.Assert(t, meta.IsCompressed)
+		assert.Assert(t, meta.RealSize == 4*43)
+		assert.Assert(t, meta.SizeOnDisk == 70)
+	} else {
+		assert.Assert(t, !meta.IsCompressed)
+		assert.Assert(t, meta.RealSize == 4*43)
+		assert.Assert(t, meta.SizeOnDisk == 4*43)
+	}
 
 	reader, err := test.diskAccess.Fetch(*ref2, 1)
 	assert.Assert(t, err == nil)
@@ -203,7 +217,7 @@ func TestReplication(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	_, secondHasIt := secondBlobStore.files[sha256OfQuickBrownFox]
 
@@ -231,7 +245,7 @@ func TestReplicateRottenData(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore)) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	_, secondHasIt := secondBlobStore.files[sha256OfQuickBrownFox]
 
@@ -251,7 +265,7 @@ func TestScrubbing(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog")) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true) == nil)
 
 	_, err := test.diskAccess.Scrub(*ref, 1)
 	assert.Assert(t, err == nil)

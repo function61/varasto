@@ -672,8 +672,13 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 		}
 
 		if !blobExists {
-			if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, bytes.NewBuffer(chunk)); err != nil {
-				log.Printf("UploadFile: %v", err)
+			if err := h.conf.DiskAccess.WriteBlob(
+				volumeId,
+				collectionId,
+				*blobRef,
+				bytes.NewBuffer(chunk),
+				stoutils.IsMaybeCompressible(file.Path),
+			); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return nil
 			}
@@ -857,6 +862,18 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 	// volume onto which the blob should be stored
 	collectionId := r.URL.Query().Get("collection")
 
+	// optimization to skip opportunistic compression if the client knows for sure the
+	// content is not well compressible (video/audio/etc.)
+	maybeCompressible := true
+	if r.URL.Query().Get("maybe_compressible") != "" {
+		var err error
+		maybeCompressible, err = parseStringBool(r.URL.Query().Get("maybe_compressible"))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
 	blobRef, err := stotypes.BlobRefFromHex(mux.Vars(r)["ref"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -878,7 +895,7 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 		return
 	}
 
-	if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, r.Body); err != nil {
+	if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, r.Body, maybeCompressible); err != nil {
 		// FIXME: some could be StatusBadRequest
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

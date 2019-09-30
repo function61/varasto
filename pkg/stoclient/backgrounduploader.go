@@ -17,18 +17,25 @@ type BlobDiscoveredListener interface {
 	CancelCh() chan interface{}
 }
 
-func NewBlobDiscoveredAttrs(ref stotypes.BlobRef, collectionId string, content []byte) blobDiscoveredAttrs {
+func NewBlobDiscoveredAttrs(
+	ref stotypes.BlobRef,
+	collectionId string,
+	content []byte,
+	maybeCompressible bool,
+) blobDiscoveredAttrs {
 	return blobDiscoveredAttrs{
-		ref:          ref,
-		collectionId: collectionId,
-		content:      content,
+		ref:               ref,
+		collectionId:      collectionId,
+		content:           content,
+		maybeCompressible: maybeCompressible,
 	}
 }
 
 type blobDiscoveredAttrs struct {
-	ref          stotypes.BlobRef
-	collectionId string
-	content      []byte
+	ref               stotypes.BlobRef
+	collectionId      string
+	content           []byte
+	maybeCompressible bool
 }
 
 type blobDiscoveredNoopListener struct{}
@@ -159,7 +166,7 @@ func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscove
 
 	if res, err := ezhttp.Post(
 		ctx,
-		b.clientConfig.UrlBuilder().UploadBlob(job.ref.AsHex(), job.collectionId),
+		b.clientConfig.UrlBuilder().UploadBlob(job.ref.AsHex(), job.collectionId, boolToStr(job.maybeCompressible)),
 		ezhttp.AuthBearer(b.clientConfig.AuthToken),
 		ezhttp.SendBody(bytes.NewBuffer(job.content), "application/octet-stream")); err != nil {
 		return fmt.Errorf("error uploading blob %s: %v", job.ref.AsHex(), errSample(err, res))

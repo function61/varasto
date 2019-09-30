@@ -6,6 +6,8 @@ import (
 	"github.com/function61/gokit/hashverifyreader"
 	"github.com/function61/varasto/pkg/stotypes"
 	"io"
+	"path"
+	"strings"
 )
 
 // this should not be called from anywhere other than DiskAccessManager and varastoclient
@@ -45,4 +47,13 @@ func randomBase64UrlWithoutLeadingDash(length int) string {
 	}
 
 	return id
+}
+
+func IsMaybeCompressible(filename string) bool {
+	switch strings.ToLower(path.Ext(filename)) {
+	case ".jpg", ".jpeg", ".gif", ".png", ".mp4", ".mkv", ".avi", ".mp3":
+		return false
+	default:
+		return true
+	}
 }

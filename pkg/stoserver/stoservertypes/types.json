@@ -10,7 +10,7 @@
 		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/fileupload", "name": "uploadFile", "produces": {"_": "File"} },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/directories/{id}", "produces": {"_": "DirectoryOutput"}, "name": "getDirectory" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}", "name": "downloadBlob", "description": "TODO: type" },
-		{ "chain": "public", "method": "POST", "path": "/api_v2/blobs/{ref}?collection={collection}", "name": "uploadBlob" },
+		{ "chain": "public", "method": "POST", "path": "/api_v2/blobs/{ref}?collection={collection}&maybe_compressible={maybeCompressible}", "name": "uploadBlob" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}/meta", "produces": {"_": "BlobMetadata"}, "name": "getBlobMetadata" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },

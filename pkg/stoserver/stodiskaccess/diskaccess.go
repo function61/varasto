@@ -81,7 +81,9 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId
 	return d.metadataStore.WriteBlobReplicated(ref, toVolumeId)
 }
 
-func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef, content io.Reader) error {
+func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef, content io.Reader, maybeCompressible bool) error {
+	// FIXME: this will lock for a really long time if the HTTP connection breaks (TODO: benchmark for how long).
+	// should we have some kind of timeoutreader?
 	unlock, ok := d.writingBlobs.TryLock(ref.AsHex())
 	if !ok {
 		return fmt.Errorf("Another thread is currently writing blob[%s]", ref.AsHex())
@@ -114,7 +116,7 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 		return err
 	}
 
-	blobEncrypted, err := encryptAndCompressBlob(verifiedContent, encryptionKey, ref)
+	blobEncrypted, err := encryptAndCompressBlob(verifiedContent, encryptionKey, ref, maybeCompressible)
 	if err != nil {
 		return err
 	}
@@ -263,11 +265,19 @@ type blobResult struct {
 }
 
 // does encrypt(maybe_compress(plaintext))
-func encryptAndCompressBlob(contentReader io.Reader, encryptionKey []byte, ref stotypes.BlobRef) (*blobResult, error) {
+func encryptAndCompressBlob(
+	contentReader io.Reader,
+	encryptionKey []byte,
+	ref stotypes.BlobRef,
+	maybeCompressible bool,
+) (*blobResult, error) {
 	content, err := ioutil.ReadAll(contentReader)
 	if err != nil {
 		return nil, err
 	}
+
+	contentMaybeCompressed := content
+	contentIsCompressed := false
 
 	/*	Here are perf measurements from my year 2012 CPU
 
@@ -276,12 +286,7 @@ func encryptAndCompressBlob(contentReader io.Reader, encryptionKey []byte, ref s
 		concurrency=4 | no compression = 65.7 MB/s
 										66.3 MB/s
 	*/
-	tryCompressing := true
-
-	contentMaybeCompressed := content
-	contentIsCompressed := false
-
-	if tryCompressing {
+	if maybeCompressible {
 		var compressed bytes.Buffer
 		compressedWriter := gzip.NewWriter(&compressed)
 

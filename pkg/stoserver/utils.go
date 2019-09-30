@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stotypes"
 	"mime"
@@ -71,4 +72,15 @@ func contentTypeForFilename(path string) string {
 	}
 
 	return contentType
+}
+
+func parseStringBool(serialized string) (bool, error) {
+	switch serialized {
+	case "true":
+		return true, nil
+	case "false":
+		return false, nil
+	default:
+		return false, fmt.Errorf(`parseStringBool: expected "true" or "false"; got "%s"`, serialized)
+	}
 }

@@ -204,7 +204,7 @@ func scanFileAndDiscoverBlobs(
 
 		bfile.BlobRefs = append(bfile.BlobRefs, blobRef.AsHex())
 
-		bdl.BlobDiscovered(NewBlobDiscoveredAttrs(*blobRef, collectionId, chunk))
+		bdl.BlobDiscovered(NewBlobDiscoveredAttrs(*blobRef, collectionId, chunk, stoutils.IsMaybeCompressible(relativePath)))
 
 		if int64(len(chunk)) < stotypes.BlobSize {
 			break
