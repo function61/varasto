@@ -66,6 +66,7 @@ func Entrypoint() *cobra.Command {
 				"varasto",
 				"Varasto server",
 				systemdinstaller.Args("server"),
+				systemdinstaller.Docs("https://github.com/function61/varasto", "https://function61.com/"),
 				systemdinstaller.RequireNetworkOnline)
 
 			if err := systemdinstaller.Install(serviceFile); err != nil {
