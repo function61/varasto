@@ -134,7 +134,7 @@ export default class CollectionPage extends React.Component<
 						/>
 					</td>
 					<td>
-						<a href={dl} target="_new">
+						<a href={dl} target="_blank">
 							{filenameFromPath(file.Path)}
 						</a>
 					</td>
