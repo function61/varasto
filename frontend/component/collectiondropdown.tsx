@@ -17,11 +17,11 @@ export function collectionDropdown(coll: CollectionSubset) {
 		<Dropdown>
 			<CommandLink command={CollectionRename(coll.Id, coll.Name)} />
 			<CommandLink command={CollectionChangeDescription(coll.Id, coll.Description)} />
-			<CommandLink command={CollectionMove(coll.Id)} />
+			<CommandLink command={CollectionMove(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)} />
 			<CommandLink command={CollectionFuseMount(coll.Id)} />
 			<CommandLink command={CollectionPullMetadata(coll.Id)} />
-			<CommandLink command={CollectionDelete(coll.Id)} />
+			<CommandLink command={CollectionDelete(coll.Id, { disambiguation: coll.Name })} />
 		</Dropdown>
 	);
 }

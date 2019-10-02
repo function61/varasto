@@ -440,8 +440,8 @@ const directoryDropdown = (dir: Directory): jsxChildType => {
 			<CommandLink command={DirectoryChangeDescription(dir.Id, dir.Description)} />
 			<CommandLink command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)} />
 			<CommandLink command={DirectoryPullMetadata(dir.Id)} />
-			<CommandLink command={DirectoryMove(dir.Id)} />
-			<CommandLink command={DirectoryDelete(dir.Id)} />
+			<CommandLink command={DirectoryMove(dir.Id, { disambiguation: dir.Name })} />
+			<CommandLink command={DirectoryDelete(dir.Id, { disambiguation: dir.Name })} />
 		</Dropdown>
 	);
 };

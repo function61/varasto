@@ -108,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:623f527f2ed9f0406ca0bc279ddda9b6f3b745de879a8b2f74ea36e3124ac70c"
+  digest = "1:ae7449d6dc58f664f2ddb6fda4609c9128dbfff3625a6ccfadb915cb16240851"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -120,11 +120,11 @@
     "httpcommandclient",
   ]
   pruneopts = "UT"
-  revision = "209b187fb4f5bb9fdd1bed5fa4760a3f0de7826e"
+  revision = "9a5f0ce4bab482169f04d59cbbc586cf28ad5d75"
 
 [[projects]]
   branch = "master"
-  digest = "1:a37af72d8f1b72110a2e3515050efb65de662ade7224f18bb8bf42351bc41a8a"
+  digest = "1:809d7a6843ae98b7e0214eb24ce94b175602868bfba569a76ac28355af16855b"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
@@ -152,7 +152,7 @@
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "9a752cc0e4ae366fe9865c393942901425d3cee4"
+  revision = "cdd0c7fe9451203a91b76a8f9981d41add224cb4"
 
 [[projects]]
   branch = "master"
