@@ -46,19 +46,9 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				active: volumesAndMountsRoute.matchUrl(hash) !== null,
 			},
 			{
-				title: 'Users',
+				title: 'User / encryption keys / API keys',
 				url: usersRoute.buildUrl({}),
 				active: usersRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Encryption keys',
-				url: encryptionKeysRoute.buildUrl({}),
-				active: encryptionKeysRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Clients',
-				url: clientsRoute.buildUrl({}),
-				active: clientsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Nodes',
