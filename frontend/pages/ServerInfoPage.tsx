@@ -10,16 +10,16 @@ import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { jsxChildType } from 'f61ui/types';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { DatabaseBackup } from 'generated/stoserver/stoservertypes_commands';
-import { getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
-import { ServerInfo } from 'generated/stoserver/stoservertypes_types';
+import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
+import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
+import { Health, HealthStatus, ServerInfo } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ServerInfoPageState {
 	serverInfo?: ServerInfo;
 	currSens: Sensitivity;
+	health?: Health;
 }
 
 export default class ServerInfoPage extends React.Component<{}, ServerInfoPageState> {
@@ -35,13 +35,13 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 	render() {
 		return (
-			<SettingsLayout title="Server info" breadcrumbs={[]}>
+			<SettingsLayout title="Server info &amp; health" breadcrumbs={[]}>
 				<Panel heading="Server info">{this.renderInfo()}</Panel>
+				<Panel heading="Health">{this.renderHealth()}</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
 			</SettingsLayout>
 		);
 	}
-
 	private renderInfo() {
 		const serverInfo = this.state.serverInfo;
 
@@ -76,13 +76,45 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 						</tr>
 					))}
 				</tbody>
-				<tfoot>
+			</table>
+		);
+	}
+
+	private renderHealth() {
+		const health = this.state.health;
+
+		if (!health) {
+			return <Loading />;
+		}
+
+		const rows: JSX.Element[] = [];
+
+		const pushHealthNodeAsRow = (node: Health, indentLevel: number) => {
+			rows.push(
+				<tr>
+					<td>{healthStatusToIcon(node.Health)}</td>
+					<td style={{ paddingLeft: indentLevel * 32 + 'px' }}>{node.Title}</td>
+					<td>{node.Details}</td>
+				</tr>,
+			);
+
+			node.Children.forEach((childHealth) => {
+				pushHealthNodeAsRow(childHealth, indentLevel + 1);
+			});
+		};
+
+		pushHealthNodeAsRow(health, 0);
+
+		return (
+			<table className="table table-striped table-hover">
+				<thead>
 					<tr>
-						<td colSpan={99}>
-							<CommandButton command={DatabaseBackup()} />
-						</td>
+						<th />
+						<th>Title</th>
+						<th>Details</th>
 					</tr>
-				</tfoot>
+				</thead>
+				<tbody>{rows}</tbody>
 			</table>
 		);
 	}
@@ -118,8 +150,33 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 	}
 
 	private async fetchData() {
-		const serverInfo = await getServerInfo();
+		const [serverInfo, health] = await Promise.all([getServerInfo(), getHealth()]);
 
-		this.setState({ serverInfo });
+		this.setState({ serverInfo, health });
+	}
+}
+
+function healthStatusToIcon(input: HealthStatus): JSX.Element {
+	switch (input) {
+		case HealthStatus.Fail:
+			return (
+				<span className="alert alert-danger">
+					<span className="glyphicon glyphicon-fire" />
+				</span>
+			);
+		case HealthStatus.Warn:
+			return (
+				<span className="alert alert-warning">
+					<span className="glyphicon glyphicon-warning-sign" />
+				</span>
+			);
+		case HealthStatus.Pass:
+			return (
+				<span className="alert alert-success">
+					<span className="glyphicon glyphicon-ok" />
+				</span>
+			);
+		default:
+			throw unrecognizedValue(input);
 	}
 }

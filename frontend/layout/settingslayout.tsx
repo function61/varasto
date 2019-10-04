@@ -31,14 +31,9 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 
 		const settingsLinks: NavLink[] = [
 			{
-				title: 'Server info',
+				title: 'Server info & health',
 				url: serverInfoRoute.buildUrl({}),
 				active: serverInfoRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Health',
-				url: healthRoute.buildUrl({}),
-				active: healthRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Logs',
