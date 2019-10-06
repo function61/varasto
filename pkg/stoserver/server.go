@@ -9,7 +9,6 @@ import (
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/pi-security-module/pkg/extractpublicfiles"
-	"github.com/function61/ubackup/pkg/ubconfig"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
@@ -29,10 +28,9 @@ import (
 )
 
 type ServerConfigFile struct {
-	DbLocation                   string           `json:"db_location"`
-	AllowBootstrap               bool             `json:"allow_bootstrap"`
-	DisableReplicationController bool             `json:"disable_replication_controller"`
-	BackupConfig                 *ubconfig.Config `json:"backup_config"`
+	DbLocation                   string `json:"db_location"`
+	AllowBootstrap               bool   `json:"allow_bootstrap"`
+	DisableReplicationController bool   `json:"disable_replication_controller"`
 }
 
 func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Stopper) error {

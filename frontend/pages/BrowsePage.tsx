@@ -1,4 +1,3 @@
-import { ClipboardButton } from 'component/clipboardbutton';
 import { collectionDropdown } from 'component/collectiondropdown';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import {
@@ -10,6 +9,7 @@ import {
 import { TabController } from 'component/tabcontroller';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
+import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';

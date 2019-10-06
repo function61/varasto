@@ -13,6 +13,23 @@ so backing it up is essential.
 > If you don't back up your metadata database, you are OK with losing your files.
 
 
+File backup vs metadata backup
+------------------------------
+
+These are two different things. Varasto itself is file backup software insofar that you
+can:
+
+- recover old versions of files
+- recover deleted files, and
+- configure how many disks you'll want to replicate each file in.
+
+In short, your files are automatically backed up provided that you've configured enough
+redundancy for your acceptable risk level.
+
+The metadata database is a different thing and is not automatically covered by redundancy -
+backing up that metadata database is what we're talking about in this document.
+
+
 Setting up
 ----------
 
@@ -20,36 +37,31 @@ Since this is so important, we've made it easy to back it up - Varasto has
 [µbackup](https://github.com/function61/ubackup) built-in. The backup files are encrypted
 so your backup hosting provider can't look at your metadata.
 
+If you don't like µbackup or you want to use another backup program,
+[that is also supported](#using-external-backup-program).
+
 µbackup writes a copy of your metadata database in AWS S3. You'll want to back up in a remote
 location to protect from fires or power surge events that could destroy your hardware.
 
-NOTE: this process is for advanced users. Maybe in the future we'll have an easier UI for this.
+To set up µbackup, you need:
 
-Look at µbackup docs for the decryption key generation, and use the `print-default-config`
-verb to get yourself a config template. You'll need to put the `"config": ...` section
-in Varasto's config so it looks like this:
+- AWS account
+- AWS S3 bucket (configuration is explained in µbackup docs)
+- AWS credentials (access key id, secret access key)
+- Public key for encryption
 
-```
-{
-	"db_location": "varasto.db",
-	...
-	"backup_config": {
-	    "bucket": "myname-backups",
-	    "bucket_region": "us-east-1",
-	    "access_key_id": "AKIA.....",
-	    "access_key_secret": "........................................",
-	    "encryption_publickey": "-----BEGIN RSA PUBLIC KEY-----\n....EAAQ==\n-----END RSA PUBLIC KEY-----\n"
-	}
-}
-
-```
+Look at µbackup docs for the public key generation (contents of file `backups.pub` in the docs).
+That's the only detail you need from µbackup docs - the `backups.key` is the private key portion
+of the public key, and you should keep the private somewhere really safe - preferably away
+from the machine that you run Varasto on. Technically, Varasto can't even open the backup
+file after the backup is created.
 
 
 Taking a backup
 ---------------
 
-In Varasto's UI (on "Server info" page) there's a "Backup database" button. It'll start
-the backup, but currently you'll only see its progress from the logs.
+In "Backups" page in Varasto's UI there's a "Backup database" button. It'll start the
+backup, but currently you'll only see its progress from the "Logs" page.
 
 It's fine to use Varasto during backing up, since the underlying database uses
 [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control).
@@ -90,5 +102,5 @@ You can get a consistent metadata DB backup from the following REST endpoint:
 $ curl -H 'Authorization: Bearer ...' http://localhost:8066/api_v2/database/export > export.log
 ```
 
-You can get a bearer token by visiting `Settings > Clients` and creating a new client.
-`Backup program` would be a descriptive name.
+You can get a bearer token by visiting `Settings > Users` and creating a new API key.
+`Backup program` would be a descriptive name for the key.

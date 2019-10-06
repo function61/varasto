@@ -1,5 +1,4 @@
 import { AssetImg } from 'component/assetimg';
-import { ClipboardButton } from 'component/clipboardbutton';
 import { collectionDropdown } from 'component/collectiondropdown';
 import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
@@ -10,6 +9,7 @@ import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Loading } from 'f61ui/component/loading';

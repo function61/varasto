@@ -284,6 +284,21 @@
 		"fields": []
 	},
 	{
+		"command": "database.BackupConfigure",
+		"chain": "public",
+		"ctor": ["Bucket", "BucketRegion", "AccessKeyId", "AccessKeySecret", "EncryptionPublicKey", "AlertmanagerBaseUrl"],
+		"crudNature": "update",
+		"title": "Configure backup",
+		"fields": [
+			{ "key": "Bucket", "title": "S3 bucket", "placeholder": "backups.example.com" },
+			{ "key": "BucketRegion", "title": "S3 bucket region", "placeholder": "us-east-1" },
+			{ "key": "AccessKeyId", "title": "Access Key ID", "placeholder": "AKIAIOSFODNN7EXAMPLE" },
+			{ "key": "AccessKeySecret", "title": "Secret Access Key", "placeholder": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" },
+			{ "key": "EncryptionPublicKey", "title": "µbackup encryption public key", "type": "multiline", "placeholder": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo6U17l0YhFiFpxxU4pTk3Lifz9R3zsIsu\n..." },
+			{ "key": "AlertmanagerBaseUrl", "title": "AlertManager API URL", "placeholder": "https://abcdefghij.execute-api.us-east-1.amazonaws.com/prod", "help": "Only used if you're using lambda-alertmanager", "optional": true }
+		]
+	},
+	{
 		"command": "integrityverificationjob.Resume",
 		"chain": "public",
 		"ctor": ["JobId"],

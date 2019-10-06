@@ -8,10 +8,6 @@ import (
 	"time"
 )
 
-var (
-	cfgMetadatabackupLastSuccess = stodb.ConfigAccessor("metadatabackupLastSuccess")
-)
-
 func NewLastSuccessfullBackup(db *bolt.DB) HealthChecker {
 	return &lastSuccessfullBackup{db}
 }
@@ -27,7 +23,7 @@ func (h *lastSuccessfullBackup) CheckHealth() (*stoservertypes.Health, error) {
 	}
 	defer tx.Rollback()
 
-	lastSuccessRaw, err := cfgMetadatabackupLastSuccess.GetOptional(tx)
+	lastSuccessRaw, err := stodb.CfgMetadataLastOk.GetOptional(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -59,5 +55,5 @@ func (h *lastSuccessfullBackup) CheckHealth() (*stoservertypes.Health, error) {
 }
 
 func UpdateMetadatabackupLastSuccess(timestamp time.Time, tx *bolt.Tx) error {
-	return cfgMetadatabackupLastSuccess.Set(timestamp.Format(time.RFC3339), tx)
+	return stodb.CfgMetadataLastOk.Set(timestamp.Format(time.RFC3339), tx)
 }

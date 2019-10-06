@@ -43,6 +43,8 @@
 		{ "key": "CfgTheMovieDbApikey", "value": "themoviedb_apikey" },
 		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
 		{ "key": "CfgNetworkShareBaseUrl", "value": "networkshare_baseurl" },
+		{ "key": "CfgUbackupConfig", "value": "ubackup_config" },
+		{ "key": "CfgMetadataLastOk", "value": "metadatabackupLastSuccess" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [
@@ -59,6 +61,7 @@
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [
+				"docs/guide_setting-up-backup.md"
 			]
 		}
 	],

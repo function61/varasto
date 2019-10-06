@@ -36,6 +36,11 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				active: serverInfoRoute.matchUrl(hash) !== null,
 			},
 			{
+				title: 'Backups',
+				url: metadataBackupRoute.buildUrl({}),
+				active: metadataBackupRoute.matchUrl(hash) !== null,
+			},
+			{
 				title: 'Logs',
 				url: logsRoute.buildUrl({}),
 				active: logsRoute.matchUrl(hash) !== null,
