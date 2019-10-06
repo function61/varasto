@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
+	"github.com/function61/eventkit/guts"
 	"github.com/function61/gokit/appuptime"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
@@ -312,11 +313,34 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
+		var topology *stoservertypes.VolumeTopology
+
+		if dbObject.Enclosure != "" {
+			topology = &stoservertypes.VolumeTopology{
+				Enclosure: dbObject.Enclosure,
+				Slot:      dbObject.EnclosureSlot,
+			}
+		}
+
+		var mfg *guts.Date
+		if !dbObject.Manufactured.IsZero() {
+			mfg = &guts.Date{Time: dbObject.Manufactured}
+		}
+
+		var we *guts.Date
+		if !dbObject.WarrantyEnds.IsZero() {
+			we = &guts.Date{Time: dbObject.WarrantyEnds}
+		}
+
 		ret = append(ret, stoservertypes.Volume{
 			Id:            dbObject.ID,
 			Uuid:          dbObject.UUID,
 			Label:         dbObject.Label,
 			Description:   dbObject.Description,
+			SerialNumber:  dbObject.SerialNumber,
+			Manufactured:  mfg,
+			WarrantyEnds:  we,
+			Topology:      topology,
 			Quota:         int(dbObject.Quota), // FIXME: lossy conversions here
 			BlobSizeTotal: int(dbObject.BlobSizeTotal),
 			BlobCount:     int(dbObject.BlobCount),

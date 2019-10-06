@@ -43,6 +43,51 @@
 		]
 	},
 	{
+		"command": "volume.SetTopology",
+		"chain": "public",
+		"ctor": ["Id", "Enclosure", "Slot"],
+		"crudNature": "update",
+		"title": "Set topology",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Enclosure", "optional": true },
+			{ "key": "Slot", "type": "integer", "optional": true }
+		]
+	},
+	{
+		"command": "volume.SetSerialNumber",
+		"chain": "public",
+		"ctor": ["Id", "SerialNumber"],
+		"crudNature": "update",
+		"title": "Set serial number",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "SerialNumber", "optional": true }
+		]
+	},
+	{
+		"command": "volume.SetManufacturingDate",
+		"chain": "public",
+		"ctor": ["Id", "ManufacturingDate"],
+		"crudNature": "update",
+		"title": "Set manufacturing date",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "ManufacturingDate", "type": "date", "optional": true }
+		]
+	},
+	{
+		"command": "volume.SetWarrantyEndDate",
+		"chain": "public",
+		"ctor": ["Id", "WarrantyEndDate"],
+		"crudNature": "update",
+		"title": "Set warranty end date",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "WarrantyEndDate", "type": "date", "optional": true }
+		]
+	},
+	{
 		"command": "volume.Mount2",
 		"chain": "public",
 		"ctor": ["Id"],

@@ -5,11 +5,11 @@ import * as React from 'react';
 export interface Tab {
 	url: string;
 	title: string;
-	content: jsxChildType;
 }
 
 interface TabControllerProps {
 	tabs: Tab[];
+	children: jsxChildType;
 }
 
 export class TabController extends React.Component<TabControllerProps, {}> {
@@ -19,7 +19,7 @@ export class TabController extends React.Component<TabControllerProps, {}> {
 
 		return (
 			<div>
-				<ul className="nav nav-tabs" role="tablist">
+				<ul className="nav nav-tabs" role="tablist" style={{ marginBottom: '16px' }}>
 					{this.props.tabs.map((tab) => (
 						<li
 							role="presentation"
@@ -30,7 +30,7 @@ export class TabController extends React.Component<TabControllerProps, {}> {
 						</li>
 					))}
 				</ul>
-				<div className="tab-content">{activeTabs[0] ? activeTabs[0].content : ''}</div>
+				<div className="tab-content">{this.props.children}</div>
 			</div>
 		);
 	}

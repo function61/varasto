@@ -35,7 +35,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 			},
 			{
 				title: 'Volumes & mounts',
-				url: r.volumesAndMountsRoute.buildUrl({}),
+				url: r.volumesAndMountsRoute.buildUrl({ view: '' }),
 				active: r.volumesAndMountsRoute.matchUrl(hash) !== null,
 			},
 			{

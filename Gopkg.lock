@@ -108,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:6496c574c02f04276041adf585af635290bf7cd6a1586bbc7beee5d513328d29"
+  digest = "1:64f0df766252d7764eec7399384dd756801897a5f2a6164eae8f6df67c08b9a5"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -116,6 +116,7 @@
     "command",
     "event",
     "eventlog",
+    "guts",
     "httpcommand",
     "httpcommandclient",
   ]
@@ -481,6 +482,7 @@
     "github.com/function61/eventkit/command",
     "github.com/function61/eventkit/event",
     "github.com/function61/eventkit/eventlog",
+    "github.com/function61/eventkit/guts",
     "github.com/function61/eventkit/httpcommand",
     "github.com/function61/eventkit/httpcommandclient",
     "github.com/function61/gokit/appuptime",

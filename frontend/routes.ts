@@ -10,7 +10,7 @@ export const usersRoute = makeRoute('users', {});
 
 export const serverInfoRoute = makeRoute('serverInfo', {});
 
-export const volumesAndMountsRoute = makeRoute('volumesmounts', {});
+export const volumesAndMountsRoute = makeRoute('volumesmounts', { view: 'string' });
 
 export const replicationPoliciesRoute = makeRoute('replicationpolicies', {});
 

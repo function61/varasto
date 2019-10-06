@@ -47,6 +47,7 @@ import { browseRoute, collectionRoute, serverInfoRoute } from 'routes';
 
 interface BrowsePageProps {
 	directoryId: string;
+	view: string;
 }
 
 interface BrowsePageState {
@@ -94,6 +95,24 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			};
 		});
 
+		const showTabController =
+			output.Collections.filter(hasMeta).length > 0 && output.Directory.Id !== moviesDirId;
+
+		const content = ((): jsxChildType => {
+			switch (this.props.view) {
+				case '': // = "auto"
+					if (showTabController) {
+						return this.richView(output.Collections);
+					} else {
+						return this.folderView(output);
+					}
+				case 'folder':
+					return this.folderView(output);
+				default:
+					throw new Error(`unknown view: ${this.props.view}`);
+			}
+		})();
+
 		return (
 			<AppDefaultLayout title={output.Directory.Name} breadcrumbs={breadcrumbs}>
 				<SensitivityHeadsUp />
@@ -106,8 +125,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							<MetadataPanel data={metadataKvsToKv(output.Directory.Metadata)} />
 						</div>
 
-						{output.Collections.filter(hasMeta).length > 0 &&
-						output.Directory.Id !== moviesDirId ? (
+						{showTabController ? (
 							<TabController
 								tabs={[
 									{
@@ -116,7 +134,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 											v: '',
 										}),
 										title: 'Metadata view',
-										content: this.richView(output.Collections),
 									},
 									{
 										url: browseRoute.buildUrl({
@@ -124,12 +141,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 											v: 'folder',
 										}),
 										title: 'Folder view',
-										content: output ? this.folderView(output) : '',
 									},
-								]}
-							/>
+								]}>
+								{content}
+							</TabController>
 						) : (
-							this.folderView(output)
+							{ content }
 						)}
 					</div>
 					<div className="col-md-3">{this.directoryPanel(output)}</div>

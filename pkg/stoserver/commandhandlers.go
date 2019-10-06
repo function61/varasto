@@ -73,6 +73,63 @@ func (c *cHandlers) VolumeChangeQuota(cmd *stoservertypes.VolumeChangeQuota, ctx
 	})
 }
 
+func (c *cHandlers) VolumeSetManufacturingDate(cmd *stoservertypes.VolumeSetManufacturingDate, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.Manufactured = cmd.ManufacturingDate.Time
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
+func (c *cHandlers) VolumeSetWarrantyEndDate(cmd *stoservertypes.VolumeSetWarrantyEndDate, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.WarrantyEnds = cmd.WarrantyEndDate.Time
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
+func (c *cHandlers) VolumeSetSerialNumber(cmd *stoservertypes.VolumeSetSerialNumber, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.SerialNumber = cmd.SerialNumber
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
+func (c *cHandlers) VolumeSetTopology(cmd *stoservertypes.VolumeSetTopology, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		if cmd.Slot == 0 && cmd.Enclosure != "" {
+			return errors.New("Slot cannot be 0 when enclosure is defined")
+		}
+
+		vol.Enclosure = cmd.Enclosure
+		vol.EnclosureSlot = cmd.Slot
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
 func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)

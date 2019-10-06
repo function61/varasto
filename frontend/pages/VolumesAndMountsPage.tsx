@@ -1,4 +1,5 @@
 import { thousandSeparate } from 'component/numberformatter';
+import { TabController } from 'component/tabcontroller';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
@@ -7,7 +8,7 @@ import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { jsxChildType } from 'f61ui/types';
+import { jsxChildType, plainDateToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	IntegrityverificationjobResume,
@@ -17,6 +18,10 @@ import {
 	VolumeCreate,
 	VolumeMigrateData,
 	VolumeMount2,
+	VolumeSetManufacturingDate,
+	VolumeSetSerialNumber,
+	VolumeSetTopology,
+	VolumeSetWarrantyEndDate,
 	VolumeUnmount,
 	VolumeVerifyIntegrity,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -34,6 +39,11 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
+import { volumesAndMountsRoute } from 'routes';
+
+interface VolumesAndMountsPageProps {
+	view: string;
+}
 
 interface VolumesAndMountsPageState {
 	volumes?: Volume[];
@@ -42,7 +52,18 @@ interface VolumesAndMountsPageState {
 	nodes?: Node[];
 }
 
-export default class VolumesAndMountsPage extends React.Component<{}, VolumesAndMountsPageState> {
+interface Enclosure {
+	name: string;
+	bays: Array<{
+		slot: number;
+		volume: Volume | null;
+	}>;
+}
+
+export default class VolumesAndMountsPage extends React.Component<
+	VolumesAndMountsPageProps,
+	VolumesAndMountsPageState
+> {
 	state: VolumesAndMountsPageState = {};
 
 	componentDidMount() {
@@ -54,7 +75,7 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 	}
 
 	render() {
-		const volumesHeading = (
+		const volumesHeading = () => (
 			<div>
 				Volumes &nbsp;
 				<Dropdown>
@@ -63,14 +84,230 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 			</div>
 		);
 
+		const content = ((): jsxChildType => {
+			switch (this.props.view) {
+				case 'integrity':
+					return (
+						<div>
+							<Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>
+
+							<Panel heading="Data integrity verification jobs">
+								{this.renderIvJobs()}
+							</Panel>
+						</div>
+					);
+				case 'topology':
+					return <Panel heading="Topology view">{this.renderTopologyView()}</Panel>;
+				case 'service':
+					return <Panel heading="Service view">{this.renderServiceView()}</Panel>;
+				case 'smart':
+					return <Panel heading="SMART">TODO</Panel>;
+				case '':
+					return (
+						<div>
+							<Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>
+
+							<Panel heading="Mounts">{this.renderMounts()}</Panel>
+						</div>
+					);
+				default:
+					throw new Error('unknown view');
+			}
+		})();
+
 		return (
 			<SettingsLayout title="Volumes &amp; mounts" breadcrumbs={[]}>
-				<Panel heading={volumesHeading}>{this.renderVolumes()}</Panel>
-
-				<Panel heading="Mounts">{this.renderMounts()}</Panel>
-
-				<Panel heading="Data integrity verification jobs">{this.renderIvJobs()}</Panel>
+				<TabController
+					tabs={[
+						{
+							url: volumesAndMountsRoute.buildUrl({
+								view: '',
+							}),
+							title: 'Volumes & mounts',
+						},
+						{
+							url: volumesAndMountsRoute.buildUrl({
+								view: 'topology',
+							}),
+							title: 'Topology',
+						},
+						{
+							url: volumesAndMountsRoute.buildUrl({
+								view: 'service',
+							}),
+							title: 'Service',
+						},
+						{
+							url: volumesAndMountsRoute.buildUrl({
+								view: 'smart',
+							}),
+							title: 'SMART',
+						},
+						{
+							url: volumesAndMountsRoute.buildUrl({
+								view: 'integrity',
+							}),
+							title: 'Integrity',
+						},
+					]}>
+					{content}
+				</TabController>
 			</SettingsLayout>
+		);
+	}
+
+	private renderServiceView() {
+		const volumes = this.state.volumes;
+
+		if (!volumes) {
+			return <Loading />;
+		}
+
+		return (
+			<table className="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th>Label</th>
+						<th>Description</th>
+						<th>Serial number</th>
+						<th>Manufactured</th>
+						<th>Warranty ends</th>
+					</tr>
+				</thead>
+				<tbody>
+					{volumes.map((vol) => {
+						const manufactured = vol.Manufactured;
+						const warrantyEnds = vol.WarrantyEnds;
+
+						return (
+							<tr key={vol.Id}>
+								<td>{vol.Label}</td>
+								<td>{vol.Description}</td>
+								<td>
+									{vol.SerialNumber}{' '}
+									<CommandIcon
+										command={VolumeSetSerialNumber(vol.Id, vol.SerialNumber)}
+									/>
+								</td>
+								<td>
+									{manufactured ? (
+										<Timestamp ts={plainDateToDateTime(manufactured)} />
+									) : (
+										'-'
+									)}{' '}
+									<CommandIcon
+										command={VolumeSetManufacturingDate(
+											vol.Id,
+											manufactured ? manufactured : ('' as any),
+										)}
+									/>
+								</td>
+								<td>
+									{warrantyEnds ? (
+										<Timestamp ts={plainDateToDateTime(warrantyEnds)} />
+									) : (
+										'-'
+									)}{' '}
+									<CommandIcon
+										command={VolumeSetWarrantyEndDate(
+											vol.Id,
+											warrantyEnds ? warrantyEnds : ('' as any),
+										)}
+									/>
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		);
+	}
+
+	private renderTopologyView() {
+		const volumes = this.state.volumes;
+
+		if (!volumes) {
+			return <Loading />;
+		}
+
+		const enclosures: Enclosure[] = [];
+
+		const addEnclosure = (name: string) => {
+			const enc = {
+				name,
+				bays: [],
+			};
+			enclosures.push(enc);
+			return enc;
+		};
+
+		volumes.forEach((volume) => {
+			const enclosureName = volume.Topology ? volume.Topology.Enclosure : '(No enclosure)';
+
+			const matches = enclosures.filter((enc) => enc.name === enclosureName);
+
+			const enclosure = matches.length === 1 ? matches[0] : addEnclosure(enclosureName);
+
+			enclosure.bays.push({
+				slot: volume.Topology ? volume.Topology.Slot : 0,
+				volume,
+			});
+		});
+
+		enclosures.forEach((enclosure) => {
+			const maxSlot = enclosure.bays.reduce((acc, curr) => Math.max(acc, curr.slot), 0);
+
+			for (let i = 1; i < maxSlot; i++) {
+				if (enclosure.bays.filter((bay) => bay.slot === i).length === 0) {
+					enclosure.bays.push({ slot: i, volume: null }); // unpopulated slot
+				}
+			}
+
+			enclosure.bays.sort((a, b) => (a.slot < b.slot ? -1 : 1));
+		});
+
+		enclosures.sort((a, b) => (a.name < b.name ? -1 : 1));
+
+		return (
+			<div className="row">
+				{enclosures.map((enclosure) => (
+					<div className="col-md-4">
+						<table className="table table-bordered table-striped table-hover">
+							<thead>
+								<tr>
+									<th />
+									<th>{enclosure.name}</th>
+								</tr>
+							</thead>
+							<tbody>
+								{enclosure.bays.map((bay) => (
+									<tr>
+										<td>{bay.slot}</td>
+										<td>
+											{bay.volume ? bay.volume.Label : ''}
+											{bay.volume ? (
+												<CommandIcon
+													command={VolumeSetTopology(
+														bay.volume.Id,
+														bay.volume.Topology
+															? bay.volume.Topology.Enclosure
+															: '',
+														bay.volume.Topology
+															? bay.volume.Topology.Slot
+															: 0,
+													)}
+												/>
+											) : (
+												''
+											)}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				))}
+			</div>
 		);
 	}
 
@@ -142,7 +379,11 @@ export default class VolumesAndMountsPage extends React.Component<{}, VolumesAnd
 				Description: '',
 				Label: '',
 				Uuid: '',
+				SerialNumber: '',
 				Id: 0,
+				Manufactured: null,
+				WarrantyEnds: null,
+				Topology: null,
 			},
 		);
 

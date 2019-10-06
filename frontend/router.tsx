@@ -14,12 +14,12 @@ import * as React from 'react';
 import * as r from 'routes';
 
 export const router = makeRouter(r.browseRoute, (opts) => (
-	<BrowsePage directoryId={opts.dir} key={opts.dir} />
+	<BrowsePage directoryId={opts.dir} view={opts.v} key={opts.dir} />
 ))
 	.registerRoute(r.nodesRoute, () => <NodesPage />)
 	.registerRoute(r.fuseServerRoute, () => <FuseServerPage />)
 	.registerRoute(r.serverInfoRoute, () => <ServerInfoPage />)
-	.registerRoute(r.volumesAndMountsRoute, () => <VolumesAndMountsPage />)
+	.registerRoute(r.volumesAndMountsRoute, (opts) => <VolumesAndMountsPage view={opts.view} />)
 	.registerRoute(r.usersRoute, () => <UsersPage />)
 	.registerRoute(r.logsRoute, () => <LogsPage />)
 	.registerRoute(r.metadataBackupRoute, () => <MetadataBackupPage />)

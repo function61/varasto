@@ -27,6 +27,11 @@ type Volume struct {
 	UUID          string
 	Label         string
 	Description   string
+	SerialNumber  string
+	Enclosure     string
+	EnclosureSlot int // 0 = not defined
+	Manufactured  time.Time
+	WarrantyEnds  time.Time
 	Quota         int64
 	BlobSizeTotal int64 // @ compressed & deduplicated
 	BlobCount     int64

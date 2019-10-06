@@ -172,9 +172,20 @@
 				"Uuid": {"_": "string"},
 				"Description": {"_": "string"},
 				"Label": {"_": "string"},
+				"SerialNumber": {"_": "string"},
+				"Manufactured": {"_": "date", "nullable": true},
+				"WarrantyEnds": {"_": "date", "nullable": true},
+				"Topology": {"_": "VolumeTopology", "nullable": true},
 				"Quota": {"_": "integer"},
 				"BlobSizeTotal": {"_": "integer"},
 				"BlobCount": {"_": "integer"}
+			}}
+		},
+		{
+			"name": "VolumeTopology",
+			"type": {"_": "object", "fields": {
+				"Enclosure": {"_": "string"},
+				"Slot": {"_": "integer"}
 			}}
 		},
 		{
