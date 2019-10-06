@@ -5,19 +5,7 @@ import { NavLink } from 'f61ui/component/navigation';
 import { jsxChildType } from 'f61ui/types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import {
-	clientsRoute,
-	contentMetadataRoute,
-	encryptionKeysRoute,
-	fuseServerRoute,
-	healthRoute,
-	logsRoute,
-	nodesRoute,
-	replicationPoliciesRoute,
-	serverInfoRoute,
-	usersRoute,
-	volumesAndMountsRoute,
-} from 'routes';
+import * as r from 'routes';
 
 interface SettingsLayoutProps {
 	title: string;
@@ -32,48 +20,48 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 		const settingsLinks: NavLink[] = [
 			{
 				title: 'Server info & health',
-				url: serverInfoRoute.buildUrl({}),
-				active: serverInfoRoute.matchUrl(hash) !== null,
+				url: r.serverInfoRoute.buildUrl({}),
+				active: r.serverInfoRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Backups',
-				url: metadataBackupRoute.buildUrl({}),
-				active: metadataBackupRoute.matchUrl(hash) !== null,
+				url: r.metadataBackupRoute.buildUrl({}),
+				active: r.metadataBackupRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Logs',
-				url: logsRoute.buildUrl({}),
-				active: logsRoute.matchUrl(hash) !== null,
+				url: r.logsRoute.buildUrl({}),
+				active: r.logsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Volumes & mounts',
-				url: volumesAndMountsRoute.buildUrl({}),
-				active: volumesAndMountsRoute.matchUrl(hash) !== null,
+				url: r.volumesAndMountsRoute.buildUrl({}),
+				active: r.volumesAndMountsRoute.matchUrl(hash) !== null,
 			},
 			{
-				title: 'User / encryption keys / API keys',
-				url: usersRoute.buildUrl({}),
-				active: usersRoute.matchUrl(hash) !== null,
+				title: 'Users',
+				url: r.usersRoute.buildUrl({}),
+				active: r.usersRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Nodes',
-				url: nodesRoute.buildUrl({}),
-				active: nodesRoute.matchUrl(hash) !== null,
+				url: r.nodesRoute.buildUrl({}),
+				active: r.nodesRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Replication policies',
-				url: replicationPoliciesRoute.buildUrl({}),
-				active: replicationPoliciesRoute.matchUrl(hash) !== null,
+				url: r.replicationPoliciesRoute.buildUrl({}),
+				active: r.replicationPoliciesRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Content metadata',
-				url: contentMetadataRoute.buildUrl({}),
-				active: contentMetadataRoute.matchUrl(hash) !== null,
+				url: r.contentMetadataRoute.buildUrl({}),
+				active: r.contentMetadataRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'FUSE server & network folders',
-				url: fuseServerRoute.buildUrl({}),
-				active: fuseServerRoute.matchUrl(hash) !== null,
+				url: r.fuseServerRoute.buildUrl({}),
+				active: r.fuseServerRoute.matchUrl(hash) !== null,
 			},
 		];
 
@@ -81,7 +69,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 			<AppDefaultLayout
 				title={this.props.title}
 				breadcrumbs={this.props.breadcrumbs.concat({
-					url: serverInfoRoute.buildUrl({}),
+					url: r.serverInfoRoute.buildUrl({}),
 					title: 'Settings',
 				})}
 				children={
