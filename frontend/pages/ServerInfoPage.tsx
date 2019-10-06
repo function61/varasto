@@ -6,7 +6,6 @@ import {
 } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandButton } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { jsxChildType } from 'f61ui/types';
