@@ -20,7 +20,7 @@ func Entrypoint() *cobra.Command {
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			logTail := logtee.NewStringTail(20)
+			logTail := logtee.NewStringTail(50)
 
 			// writes to upstream all end up in the sink, but logTail.Snapshot() only
 			// returns the last "capacity" lines
