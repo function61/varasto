@@ -54,6 +54,12 @@
 				"warn",
 				"fail"
 			]
+		},
+		{
+			"name": "DocRef",
+			"type": "string",
+			"stringMembers": [
+			]
 		}
 	],
 	"types": [
