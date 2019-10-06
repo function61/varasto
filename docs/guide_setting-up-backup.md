@@ -51,10 +51,10 @@ To set up µbackup, you need:
 - Public key for encryption
 
 Look at µbackup docs for the public key generation (contents of file `backups.pub` in the docs).
-That's the only detail you need from µbackup docs - the `backups.key` is the private key portion
-of the public key, and you should keep the private somewhere really safe - preferably away
-from the machine that you run Varasto on. Technically, Varasto can't even open the backup
-file after the backup is created.
+That's the only detail you need from µbackup docs - the `backups.key` is the private key
+portion of the public key, and you should keep the private key somewhere really safe -
+preferably away from the machine that you run Varasto on. Technically, Varasto can't even
+open the backup file after the backup is created.
 
 
 Taking a backup
@@ -94,7 +94,19 @@ $ sto server dbimport < backupfile
 Using external backup program
 -----------------------------
 
-If you don't want to use the built-in µbackup, there's an interface for other backup programs.
+If you don't want to use the built-in µbackup, here's instructions on what you can do.
+
+The entire metadata database is in file `varasto.db`. You could back that file up, but
+you would need to use OS-level filesystem snapshotting to even get a crash-consistent backup.
+Crash-consistency means that it's similar to what would happen if a power went off from the
+computer at that exact timestamp.
+
+Databases generally can properly recover from crashes because they're designed to do their
+best not to lose data. Varasto internally uses BoltDB which uses journaling so you're
+probably OK with crash-consistent backups.
+
+But for getting a totally consistent export of the metadata DB, we have an interface for
+external backup programs as well.
 
 You can get a consistent metadata DB backup from the following REST endpoint:
 
@@ -104,3 +116,11 @@ $ curl -H 'Authorization: Bearer ...' http://localhost:8066/api_v2/database/expo
 
 You can get a bearer token by visiting `Settings > Users` and creating a new API key.
 `Backup program` would be a descriptive name for the key.
+
+Summary of your options:
+
+| Option                                            | Description           |
+|---------------------------------------------------|-----------------------|
+| Just copy `varasto.db`                            | Dangerous             |
+| Filesystem-level snapshot, then copy `varasto.db` | You'll probably be OK |
+| Consistent snapshot from API                      | Safest option         |
