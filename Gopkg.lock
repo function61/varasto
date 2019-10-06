@@ -108,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:3a2b489acebc0a2dda7a5f6d1626003f93654b64ad17505fc8f0a57b20fef63c"
+  digest = "1:7f3dfbfdc736a544259711c92e23656a6c11270bc7ad410c2c5bb46b4f1f8d4a"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -120,7 +120,7 @@
     "httpcommandclient",
   ]
   pruneopts = "UT"
-  revision = "6759ce92957a304f99b846111bb263f4740217fe"
+  revision = "e7f5ad72df38a75ad1702f31827ce9c8dbd1e0e3"
 
 [[projects]]
   branch = "master"
@@ -169,7 +169,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:381431cd9827b73ad7f65d4952f0949411ec5117a2a1f602cc8e83e6a068db05"
+  digest = "1:9aaebca604a99e71a47871ef7c740d7668f9fbd57abec94aa4c87b701ec67810"
   name = "github.com/function61/ubackup"
   packages = [
     "pkg/backupfile",
@@ -179,7 +179,7 @@
     "pkg/ubtypes",
   ]
   pruneopts = "UT"
-  revision = "1eaca09844628479122f5637958bbbc22506f9ca"
+  revision = "ed32ab7475fcfb3cace25f4217df9447aeeb8ed2"
 
 [[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
