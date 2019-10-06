@@ -40,7 +40,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 		ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
-			DesiredVolumes: []int{1, 2}, // FIXME: this assumes 1 and 2 will be created soon..
+			DesiredVolumes: []int{},
 		}, tx),
 		CfgNodeId.Set(newNode.ID, tx),
 	}

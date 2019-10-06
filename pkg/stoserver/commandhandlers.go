@@ -323,6 +323,10 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			return err
 		}
 
+		if len(replicationPolicy.DesiredVolumes) == 0 {
+			return errors.New("replicationPolicy doesn't specify any volumes")
+		}
+
 		encryptionKey := [32]byte{}
 		if _, err := rand.Read(encryptionKey[:]); err != nil {
 			return err
@@ -502,10 +506,6 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 		desiredVolumes := []int{}
 		if err := json.Unmarshal([]byte(cmd.DesiredVolumes), &desiredVolumes); err != nil {
 			return err
-		}
-
-		if len(desiredVolumes) < 1 {
-			return errors.New("need at least 1 volume")
 		}
 
 		// verify that each volume exists
