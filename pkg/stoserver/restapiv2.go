@@ -558,8 +558,8 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	return &ret
 }
 
-func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Client {
-	ret := []stoservertypes.Client{}
+func (h *handlers) GetApiKeys(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ApiKey {
+	ret := []stoservertypes.ApiKey{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -569,7 +569,7 @@ func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWrit
 	panicIfError(stodb.ClientRepository.Each(stodb.ClientAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, stoservertypes.Client{
+		ret = append(ret, stoservertypes.ApiKey{
 			Id:        dbObject.ID,
 			Created:   dbObject.Created,
 			Name:      dbObject.Name,

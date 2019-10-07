@@ -394,7 +394,7 @@
 		]
 	},
 	{
-		"command": "client.Create",
+		"command": "apikey.Create",
 		"chain": "public",
 		"ctor": [],
 		"crudNature": "create",
@@ -404,7 +404,7 @@
 		]
 	},
 	{
-		"command": "client.Remove",
+		"command": "apikey.Remove",
 		"chain": "public",
 		"ctor": ["Id"],
 		"crudNature": "delete",

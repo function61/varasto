@@ -15,7 +15,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
-		{ "chain": "public", "method": "GET", "path": "/api_v2/clients", "produces": {"_": "list", "of": {"_": "Client"}}, "name": "getClients" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getApiKeys" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
@@ -200,7 +200,7 @@
 			}}
 		},
 		{
-			"name": "Client",
+			"name": "ApiKey",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
 				"Created": {"_": "datetime"},

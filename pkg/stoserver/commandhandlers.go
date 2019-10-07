@@ -528,7 +528,7 @@ func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *
 	})
 }
 
-func (c *cHandlers) ClientCreate(cmd *stoservertypes.ClientCreate, ctx *command.Ctx) error {
+func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),
@@ -539,7 +539,7 @@ func (c *cHandlers) ClientCreate(cmd *stoservertypes.ClientCreate, ctx *command.
 	})
 }
 
-func (c *cHandlers) ClientRemove(cmd *stoservertypes.ClientRemove, ctx *command.Ctx) error {
+func (c *cHandlers) ApikeyRemove(cmd *stoservertypes.ApikeyRemove, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Delete(&stotypes.Client{
 			ID: cmd.Id,

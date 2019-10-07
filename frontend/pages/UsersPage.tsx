@@ -4,14 +4,14 @@ import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { ClientCreate, ClientRemove } from 'generated/stoserver/stoservertypes_commands';
-import { getClients } from 'generated/stoserver/stoservertypes_endpoints';
-import { Client } from 'generated/stoserver/stoservertypes_types';
+import { ApikeyCreate, ApikeyRemove } from 'generated/stoserver/stoservertypes_commands'; // FIXME
+import { getApiKeys } from 'generated/stoserver/stoservertypes_endpoints';
+import { ApiKey } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface UsersPageState {
-	clients?: Client[];
+	apiKeys?: ApiKey[];
 }
 
 export default class UsersPage extends React.Component<{}, UsersPageState> {
@@ -42,13 +42,13 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 	}
 
 	private renderApiKeys() {
-		const clients = this.state.clients;
+		const apiKeys = this.state.apiKeys;
 
-		if (!clients) {
+		if (!apiKeys) {
 			return <Loading />;
 		}
 
-		const toRow = (apiKey: Client) => (
+		const toRow = (apiKey: ApiKey) => (
 			<tr key={apiKey.Id}>
 				<td>{apiKey.Name}</td>
 				<td>
@@ -58,7 +58,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 					<SecretReveal secret={apiKey.AuthToken} />
 				</td>
 				<td>
-					<CommandIcon command={ClientRemove(apiKey.Id)} />
+					<CommandIcon command={ApikeyRemove(apiKey.Id)} />
 				</td>
 			</tr>
 		);
@@ -73,11 +73,11 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 						<th />
 					</tr>
 				</thead>
-				<tbody>{clients.map(toRow)}</tbody>
+				<tbody>{apiKeys.map(toRow)}</tbody>
 				<tfoot>
 					<tr>
 						<td colSpan={99}>
-							<CommandButton command={ClientCreate()} />
+							<CommandButton command={ApikeyCreate()} />
 						</td>
 					</tr>
 				</tfoot>
@@ -86,8 +86,8 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 	}
 
 	private async fetchData() {
-		const clients = await getClients();
+		const apiKeys = await getApiKeys();
 
-		this.setState({ clients });
+		this.setState({ apiKeys });
 	}
 }
