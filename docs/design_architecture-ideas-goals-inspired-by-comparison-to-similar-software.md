@@ -65,5 +65,6 @@ Inspired by & alternative software
 - [upspin](https://upspin.io/doc/arch.md)
 - [Bazil](https://bazil.org/)
 - [MezzFS](https://medium.com/netflix-techblog/mezzfs-mounting-object-storage-in-netflixs-media-processing-platform-cda01c446ba)
+- ["The Joy of Sync", from page 6 onwards](https://www.grc.com/sn/SN-734-Notes.pdf)
 
 TODO: comparison
