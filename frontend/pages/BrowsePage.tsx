@@ -146,7 +146,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								{content}
 							</TabController>
 						) : (
-							{ content }
+							content
 						)}
 					</div>
 					<div className="col-md-3">{this.directoryPanel(output)}</div>
