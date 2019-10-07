@@ -91,7 +91,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const breadcrumbs: Breadcrumb[] = output.Parents.map((dir) => {
 			return {
 				title: dir.Name,
-				url: browseRoute.buildUrl({ dir: dir.Id, v: '' }),
+				url: browseRoute.buildUrl({ dir: dir.Id, v: this.props.view }),
 			};
 		});
 
@@ -102,7 +102,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			switch (this.props.view) {
 				case '': // = "auto"
 					if (showTabController) {
-						return this.richView(output.Collections);
+						return this.richView(output);
 					} else {
 						return this.folderView(output);
 					}
@@ -255,7 +255,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const directoryToRow = (dir: Directory) => {
 			const content = sensitivityAuthorize(dir.Sensitivity) ? (
 				<div>
-					<a href={browseRoute.buildUrl({ dir: dir.Id, v: '' })}>{dir.Name}</a>
+					<a href={browseRoute.buildUrl({ dir: dir.Id, v: this.props.view })}>
+						{dir.Name}
+					</a>
 					{dir.Description ? (
 						<span className="label label-default margin-left">{dir.Description}</span>
 					) : (
@@ -349,13 +351,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 	}
 
-	private richView(collectionsWithMetadata: CollectionSubset[]): jsxChildType {
-		return collectionsWithMetadata.map((coll: CollectionSubset) => {
+	private richView(output: DirectoryOutput): jsxChildType {
+		const collectionToRow = (coll: CollectionSubset): jsxChildType => {
 			const metadata = metadataKvsToKv(coll.Metadata);
 
-			const image =
-				metadata[MetadataThumbnail] ||
-				globalConfig().assetsDir + '/../image-not-available.png';
+			const imageSrc = metadata[MetadataThumbnail] || imageNotAvailable();
 
 			const badges = [];
 
@@ -381,13 +381,38 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						})}>
 						<img
 							title={metadata[MetadataOverview] || ''}
-							src={image}
+							src={imageSrc}
 							style={{ maxWidth: '100%' }}
 						/>
 					</a>
 				</Panel>
 			);
-		});
+		};
+
+		const directoryToRow = (dir: Directory): jsxChildType => {
+			return (
+				<Panel heading={dir.Name}>
+					<a
+						href={browseRoute.buildUrl({
+							dir: dir.Id,
+							v: this.props.view,
+						})}>
+						<img src={imageNotAvailable()} style={{ maxWidth: '100%' }} />
+					</a>
+				</Panel>
+			);
+		};
+
+		const docToRow = (doc: DirOrCollection): jsxChildType => {
+			if (doc.dir) {
+				return directoryToRow(doc.dir);
+			} else if (doc.coll) {
+				return collectionToRow(doc.coll);
+			}
+			throw new Error('should not happen');
+		};
+
+		return <div>{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}</div>;
 	}
 
 	private directoryPanel(output: DirectoryOutput): jsxChildType {
@@ -464,3 +489,7 @@ const directoryDropdown = (dir: Directory): jsxChildType => {
 };
 
 const hasMeta = (coll: CollectionSubset): boolean => coll.Metadata && coll.Metadata.length > 0;
+
+function imageNotAvailable(): string {
+	return globalConfig().assetsDir + '/../image-not-available.png';
+}
