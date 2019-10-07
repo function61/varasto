@@ -203,6 +203,7 @@
 			"name": "Client",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
+				"Created": {"_": "datetime"},
 				"Name": {"_": "string"},
 				"AuthToken": {"_": "string"}
 			}}

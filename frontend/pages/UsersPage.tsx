@@ -2,6 +2,7 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
+import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { ClientCreate, ClientRemove } from 'generated/stoserver/stoservertypes_commands';
 import { getClients } from 'generated/stoserver/stoservertypes_endpoints';
@@ -47,15 +48,17 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 			return <Loading />;
 		}
 
-		const toRow = (client: Client) => (
-			<tr key={client.Id}>
-				<td>{client.Id}</td>
-				<td>{client.Name}</td>
+		const toRow = (apiKey: Client) => (
+			<tr key={apiKey.Id}>
+				<td>{apiKey.Name}</td>
 				<td>
-					<SecretReveal secret={client.AuthToken} />
+					<Timestamp ts={apiKey.Created} />
 				</td>
 				<td>
-					<CommandIcon command={ClientRemove(client.Id)} />
+					<SecretReveal secret={apiKey.AuthToken} />
+				</td>
+				<td>
+					<CommandIcon command={ClientRemove(apiKey.Id)} />
 				</td>
 			</tr>
 		);
@@ -64,7 +67,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 			<table className="table table-striped table-hover">
 				<thead>
 					<tr>
-						<th>Id</th>
+						<th>Age</th>
 						<th>Name</th>
 						<th>AuthToken</th>
 						<th />

@@ -571,6 +571,7 @@ func (h *handlers) GetClients(rctx *httpauth.RequestContext, w http.ResponseWrit
 	for _, dbObject := range dbObjects {
 		ret = append(ret, stoservertypes.Client{
 			Id:        dbObject.ID,
+			Created:   dbObject.Created,
 			Name:      dbObject.Name,
 			AuthToken: dbObject.AuthToken,
 		})

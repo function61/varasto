@@ -532,6 +532,7 @@ func (c *cHandlers) ClientCreate(cmd *stoservertypes.ClientCreate, ctx *command.
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),
+			Created:   ctx.Meta.Timestamp,
 			Name:      cmd.Name,
 			AuthToken: cryptorandombytes.Base64Url(32),
 		}, tx)

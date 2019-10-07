@@ -12,6 +12,7 @@ type Node struct {
 
 type Client struct {
 	ID        string
+	Created   time.Time
 	AuthToken string
 	Name      string
 }
