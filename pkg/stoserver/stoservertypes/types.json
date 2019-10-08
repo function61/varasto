@@ -14,6 +14,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}/meta", "produces": {"_": "BlobMetadata"}, "name": "getBlobMetadata" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getApiKeys" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
@@ -270,6 +271,15 @@
 				"SizeOnDisk": {"_": "integer"},
 				"Volumes": {"_": "list", "of": {"_": "integer"}},
 				"VolumesPendingReplication": {"_": "list", "of": {"_": "integer"}}
+			}}
+		},
+		{
+			"name": "UbackupStoredBackup",
+			"type": {"_": "object", "fields": {
+				"ID": {"_": "string"},
+				"Size": {"_": "integer"},
+				"Timestamp": {"_": "datetime"},
+				"Description": {"_": "string"}
 			}}
 		},
 		{

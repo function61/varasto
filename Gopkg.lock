@@ -170,7 +170,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9aaebca604a99e71a47871ef7c740d7668f9fbd57abec94aa4c87b701ec67810"
+  digest = "1:7b65feed4faba0bbb87447c0f11f6ae587e657f5d1bab48cdfae7142f3cbba89"
   name = "github.com/function61/ubackup"
   packages = [
     "pkg/backupfile",
@@ -180,7 +180,7 @@
     "pkg/ubtypes",
   ]
   pruneopts = "UT"
-  revision = "ed32ab7475fcfb3cace25f4217df9447aeeb8ed2"
+  revision = "23a68a15d8830e189a8d156ea0a3647c32cb239e"
 
 [[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
@@ -508,6 +508,7 @@
     "github.com/function61/pi-security-module/pkg/httpserver/muxregistrator",
     "github.com/function61/ubackup/pkg/ubbackup",
     "github.com/function61/ubackup/pkg/ubconfig",
+    "github.com/function61/ubackup/pkg/ubstorage",
     "github.com/function61/ubackup/pkg/ubtypes",
     "github.com/gorilla/mux",
     "github.com/prometheus/procfs",

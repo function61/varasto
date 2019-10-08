@@ -828,6 +828,22 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 	}
 }
 
+func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.UbackupStoredBackup {
+	conf, err := ubConfigFromDb(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	backups, err := listUbackupStoredBackups(*conf, h.logger)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	return &backups
+}
+
 // returns 404 if blob not found
 func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
 	getBlobMetadata := func(blobRefSerialized string) (*stotypes.BlobRef, *stotypes.Blob) {
