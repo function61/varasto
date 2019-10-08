@@ -9,7 +9,7 @@ import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { jsxChildType, plainDateToDateTime } from 'f61ui/types';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
 import {
 	IntegrityverificationjobResume,
 	IntegrityverificationjobStop,
@@ -20,6 +20,7 @@ import {
 	VolumeMount2,
 	VolumeSetManufacturingDate,
 	VolumeSetSerialNumber,
+	VolumeSetTechnology,
 	VolumeSetTopology,
 	VolumeSetWarrantyEndDate,
 	VolumeUnmount,
@@ -36,6 +37,7 @@ import {
 	Node,
 	Volume,
 	VolumeMount,
+	VolumeTechnology,
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
@@ -225,8 +227,9 @@ export default class VolumesAndMountsPage extends React.Component<
 
 	private renderTopologyView() {
 		const volumes = this.state.volumes;
+		const mounts = this.state.mounts;
 
-		if (!volumes) {
+		if (!volumes || !mounts) {
 			return <Loading />;
 		}
 
@@ -337,22 +340,14 @@ export default class VolumesAndMountsPage extends React.Component<
 		);
 
 		const toRow = (obj: Volume) => {
-			// TODO: this is a stupid heuristic
-			const tb = 1024 * 1024 * 1024 * 1024;
-			let techName = obj.Quota < 1 * tb ? 'SSD' : 'HDD';
-
-			// email address? => maybe cloud account
-			if (obj.Description.indexOf('@') !== -1) {
-				techName = '☁';
-			}
-
-			const techTag = <span className="label label-default">{techName}</span>;
-
 			return (
 				<tr key={obj.Id}>
 					<td title={`Uuid=${obj.Uuid} Id=${obj.Id}`}>{obj.Label}</td>
 					<td>
-						{techTag} {obj.Description}
+						<span className="label label-default">
+							{volumeTechnologyToDisplay(obj.Technology)}
+						</span>{' '}
+						{obj.Description}
 					</td>
 					<td>{blobCount(obj)}</td>
 					<td>{free(obj)}</td>
@@ -368,6 +363,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeChangeDescription(obj.Id, obj.Description)}
 							/>
+							<CommandLink command={VolumeSetTechnology(obj.Id, obj.Technology)} />
 							<CommandLink command={VolumeMigrateData(obj.Id)} />
 						</Dropdown>
 					</td>
@@ -384,6 +380,7 @@ export default class VolumesAndMountsPage extends React.Component<
 			},
 			{
 				BlobCount: 0,
+				Technology: VolumeTechnology.DiskHdd, // doesn't matter - not shown
 				Quota: 0,
 				BlobSizeTotal: 0,
 				Description: '',
@@ -575,6 +572,19 @@ export default class VolumesAndMountsPage extends React.Component<
 		]);
 
 		this.setState({ volumes, mounts, nodes, ivJobs });
+	}
+}
+
+function volumeTechnologyToDisplay(tech: VolumeTechnology): string {
+	switch (tech) {
+		case VolumeTechnology.DiskHdd:
+			return 'HDD';
+		case VolumeTechnology.DiskSsd:
+			return 'SSD';
+		case VolumeTechnology.Cloud:
+			return '☁';
+		default:
+			throw unrecognizedValue(tech);
 	}
 }
 

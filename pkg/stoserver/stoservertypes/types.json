@@ -59,6 +59,15 @@
 			]
 		},
 		{
+			"name": "VolumeTechnology",
+			"type": "string",
+			"stringMembers": [
+				"disk-hdd",
+				"disk-ssd",
+				"cloud"
+			]
+		},
+		{
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [
@@ -170,6 +179,7 @@
 			"name": "Volume",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "integer"},
+				"Technology": {"_": "VolumeTechnology"},
 				"Uuid": {"_": "string"},
 				"Description": {"_": "string"},
 				"Label": {"_": "string"},

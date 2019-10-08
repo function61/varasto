@@ -55,6 +55,17 @@
 		]
 	},
 	{
+		"command": "volume.SetTechnology",
+		"chain": "public",
+		"ctor": ["Id", "Technology"],
+		"crudNature": "update",
+		"title": "Set technology",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Technology", "type": "VolumeTechnology" }
+		]
+	},
+	{
 		"command": "volume.SetSerialNumber",
 		"chain": "public",
 		"ctor": ["Id", "SerialNumber"],

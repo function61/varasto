@@ -52,10 +52,11 @@ func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.
 		}
 
 		return stodb.VolumeRepository.Update(&stotypes.Volume{
-			ID:    max + 1,
-			UUID:  stoutils.NewVolumeUuid(),
-			Label: cmd.Name,
-			Quota: mebibytesToBytes(cmd.Quota),
+			ID:         max + 1,
+			UUID:       stoutils.NewVolumeUuid(),
+			Label:      cmd.Name,
+			Technology: string(stoservertypes.VolumeTechnologyDiskHdd),
+			Quota:      mebibytesToBytes(cmd.Quota),
 		}, tx)
 	})
 }
@@ -107,6 +108,19 @@ func (c *cHandlers) VolumeSetSerialNumber(cmd *stoservertypes.VolumeSetSerialNum
 		}
 
 		vol.SerialNumber = cmd.SerialNumber
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
+func (c *cHandlers) VolumeSetTechnology(cmd *stoservertypes.VolumeSetTechnology, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.Technology = string(cmd.Technology)
 
 		return stodb.VolumeRepository.Update(vol, tx)
 	})
