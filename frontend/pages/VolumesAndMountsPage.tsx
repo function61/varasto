@@ -230,6 +230,12 @@ export default class VolumesAndMountsPage extends React.Component<
 			return <Loading />;
 		}
 
+		const isOnline = (volId: number): boolean => {
+			const matchingMount = mounts.filter((m) => m.Volume === volId);
+
+			return matchingMount.length > 0 ? matchingMount[0].Online : false;
+		};
+
 		const enclosures: Enclosure[] = [];
 
 		const addEnclosure = (name: string) => {
@@ -276,6 +282,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							<thead>
 								<tr>
 									<th />
+									<th />
 									<th>{enclosure.name}</th>
 								</tr>
 							</thead>
@@ -283,6 +290,9 @@ export default class VolumesAndMountsPage extends React.Component<
 								{enclosure.bays.map((bay) => (
 									<tr>
 										<td>{bay.slot}</td>
+										<td>
+											{bay.volume ? onlineBadge(isOnline(bay.volume.Id)) : ''}
+										</td>
 										<td>
 											{bay.volume ? bay.volume.Label : ''}
 											{bay.volume ? (
@@ -426,12 +436,6 @@ export default class VolumesAndMountsPage extends React.Component<
 		}
 
 		const toRow = (obj: VolumeMount) => {
-			const onlineBadge = obj.Online ? (
-				<span className="label label-success">Online</span>
-			) : (
-				<span className="label label-danger">Offline</span>
-			);
-
 			const volume = volumes.filter((vol) => vol.Id === obj.Volume);
 			const node = nodes.filter((nd) => nd.Id === obj.Node);
 
@@ -440,7 +444,7 @@ export default class VolumesAndMountsPage extends React.Component<
 
 			return (
 				<tr key={obj.Id}>
-					<td>{onlineBadge}</td>
+					<td>{onlineBadge(obj.Online)}</td>
 					<td>
 						<span title={`MountId=${obj.Id}`}>{volumeName}</span>
 					</td>
@@ -572,4 +576,16 @@ export default class VolumesAndMountsPage extends React.Component<
 
 		this.setState({ volumes, mounts, nodes, ivJobs });
 	}
+}
+
+function onlineBadge(online: boolean): jsxChildType {
+	return online ? (
+		<span className="label label-success" title="Online">
+			<span className="glyphicon glyphicon-off" />
+		</span>
+	) : (
+		<span className="label label-danger" title="Offline">
+			<span className="glyphicon glyphicon-off" />
+		</span>
+	);
 }
