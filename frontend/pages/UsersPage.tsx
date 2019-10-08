@@ -58,7 +58,9 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 					<SecretReveal secret={apiKey.AuthToken} />
 				</td>
 				<td>
-					<CommandIcon command={ApikeyRemove(apiKey.Id)} />
+					<CommandIcon
+						command={ApikeyRemove(apiKey.Id, { disambiguation: apiKey.Name })}
+					/>
 				</td>
 			</tr>
 		);

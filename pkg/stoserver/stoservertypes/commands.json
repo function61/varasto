@@ -398,7 +398,7 @@
 		"chain": "public",
 		"ctor": [],
 		"crudNature": "create",
-		"title": "+ Client",
+		"title": "+ API key",
 		"fields": [
 			{ "key": "Name" }
 		]
@@ -408,7 +408,7 @@
 		"chain": "public",
 		"ctor": ["Id"],
 		"crudNature": "delete",
-		"title": "Remove",
+		"title": "Remove API key",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true }
 		]
