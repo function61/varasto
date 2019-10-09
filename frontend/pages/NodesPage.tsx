@@ -1,23 +1,26 @@
-import { Loading } from 'f61ui/component/loading';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { Result } from 'component/result';
 import { getNodes } from 'generated/stoserver/stoservertypes_endpoints';
 import { Node } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface NodesPageState {
-	nodes?: Node[];
+	nodes: Result<Node[]>;
 }
 
 export default class NodesPage extends React.Component<{}, NodesPageState> {
-	state: NodesPageState = {};
+	state: NodesPageState = {
+		nodes: new Result<Node[]>((_) => {
+			this.setState({ nodes: _ });
+		}),
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -29,19 +32,7 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 	}
 
 	private renderData() {
-		const nodes = this.state.nodes;
-
-		if (!nodes) {
-			return <Loading />;
-		}
-
-		const toRow = (obj: Node) => (
-			<tr key={obj.Id}>
-				<td>{obj.Id}</td>
-				<td>{obj.Addr}</td>
-				<td>{obj.Name}</td>
-			</tr>
-		);
+		const [nodes, loadingOrError] = this.state.nodes.unwrap();
 
 		return (
 			<table className="table table-striped table-hover">
@@ -52,14 +43,21 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 						<th>Name</th>
 					</tr>
 				</thead>
-				<tbody>{nodes.map(toRow)}</tbody>
+				<tbody>
+					{(nodes || []).map((node: Node) => (
+						<tr key={node.Id}>
+							<td>{node.Id}</td>
+							<td>{node.Addr}</td>
+							<td>{node.Name}</td>
+						</tr>
+					))}
+				</tbody>
+				<tfoot>{loadingOrError}</tfoot>
 			</table>
 		);
 	}
 
-	private async fetchData() {
-		const nodes = await getNodes();
-
-		this.setState({ nodes });
+	private fetchData() {
+		this.state.nodes.load(() => getNodes());
 	}
 }

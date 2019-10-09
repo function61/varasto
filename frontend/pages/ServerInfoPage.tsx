@@ -1,3 +1,4 @@
+import { Result } from 'component/result';
 import {
 	changeSensitivity,
 	getMaxSensitivityFromLocalStorage,
@@ -6,29 +7,36 @@ import {
 } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
+import { unrecognizedValue } from 'f61ui/utils';
 import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
 import { Health, HealthStatus, ServerInfo } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ServerInfoPageState {
-	serverInfo?: ServerInfo;
+	serverInfo: Result<ServerInfo>;
+	health: Result<Health>;
 	currSens: Sensitivity;
-	health?: Health;
 }
 
 export default class ServerInfoPage extends React.Component<{}, ServerInfoPageState> {
-	state: ServerInfoPageState = { currSens: getMaxSensitivityFromLocalStorage() };
+	state: ServerInfoPageState = {
+		serverInfo: new Result<ServerInfo>((_) => {
+			this.setState({ serverInfo: _ });
+		}),
+		health: new Result<Health>((_) => {
+			this.setState({ health: _ });
+		}),
+		currSens: getMaxSensitivityFromLocalStorage(),
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -41,28 +49,29 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		);
 	}
 	private renderInfo() {
-		const serverInfo = this.state.serverInfo;
-
-		if (!serverInfo) {
-			return <Loading />;
-		}
+		const [serverInfo, loadingOrError] = this.state.serverInfo.unwrap();
 
 		interface Item {
 			h: string;
 			t: React.ReactNode;
 		}
 
-		const items: Item[] = [
-			{ h: 'Varasto version', t: serverInfo.AppVersion },
-			{ h: 'Varasto uptime', t: <Timestamp ts={serverInfo.StartedAt} /> },
-			{ h: 'Database size', t: bytesToHumanReadable(serverInfo.DatabaseSize) },
-			{ h: 'Go version', t: serverInfo.GoVersion },
-			{ h: 'Server OS / arch', t: `${serverInfo.ServerOs} / ${serverInfo.ServerArch}` },
-			{ h: 'Process ID', t: serverInfo.ProcessId },
-			{ h: 'CPU count', t: serverInfo.CpuCount.toString() },
-			{ h: 'Goroutines', t: serverInfo.Goroutines.toString() },
-			{ h: 'Heap memory', t: bytesToHumanReadable(serverInfo.HeapBytes) },
-		];
+		const items: Item[] = serverInfo
+			? [
+					{ h: 'Varasto version', t: serverInfo.AppVersion },
+					{ h: 'Varasto uptime', t: <Timestamp ts={serverInfo.StartedAt} /> },
+					{ h: 'Database size', t: bytesToHumanReadable(serverInfo.DatabaseSize) },
+					{ h: 'Go version', t: serverInfo.GoVersion },
+					{
+						h: 'Server OS / arch',
+						t: `${serverInfo.ServerOs} / ${serverInfo.ServerArch}`,
+					},
+					{ h: 'Process ID', t: serverInfo.ProcessId },
+					{ h: 'CPU count', t: serverInfo.CpuCount.toString() },
+					{ h: 'Goroutines', t: serverInfo.Goroutines.toString() },
+					{ h: 'Heap memory', t: bytesToHumanReadable(serverInfo.HeapBytes) },
+			  ]
+			: [];
 
 		return (
 			<table className="table table-striped table-hover">
@@ -74,16 +83,17 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 						</tr>
 					))}
 				</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>{loadingOrError}</td>
+					</tr>
+				</tfoot>
 			</table>
 		);
 	}
 
 	private renderHealth() {
-		const health = this.state.health;
-
-		if (!health) {
-			return <Loading />;
-		}
+		const [health, loadingOrError] = this.state.health.unwrap();
 
 		const rows: JSX.Element[] = [];
 
@@ -101,7 +111,9 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 			});
 		};
 
-		pushHealthNodeAsRow(health, 0);
+		if (health) {
+			pushHealthNodeAsRow(health, 0);
+		}
 
 		return (
 			<table className="table table-striped table-hover">
@@ -113,6 +125,11 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 					</tr>
 				</thead>
 				<tbody>{rows}</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>{loadingOrError}</td>
+					</tr>
+				</tfoot>
 			</table>
 		);
 	}
@@ -147,10 +164,9 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		);
 	}
 
-	private async fetchData() {
-		const [serverInfo, health] = await Promise.all([getServerInfo(), getHealth()]);
-
-		this.setState({ serverInfo, health });
+	private fetchData() {
+		this.state.serverInfo.load(() => getServerInfo());
+		this.state.health.load(() => getHealth());
 	}
 }
 

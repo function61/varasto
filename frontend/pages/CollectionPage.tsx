@@ -3,6 +3,7 @@ import { collectionDropdown } from 'component/collectiondropdown';
 import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
+import { Result } from 'component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert } from 'f61ui/component/alerts';
@@ -12,7 +13,6 @@ import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
-import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
@@ -51,9 +51,10 @@ interface CollectionPageProps {
 }
 
 interface CollectionPageState {
-	collectionOutput?: CollectionOutput;
-	directoryOutput?: DirectoryOutput;
-	networkShareBaseUrl?: ConfigValue;
+	collectionOutput: Result<CollectionOutput>;
+	collectionOutputFixme?: CollectionOutput; // for file uploads, think again
+	directoryOutput: Result<DirectoryOutput>;
+	networkShareBaseUrl: Result<ConfigValue>;
 	selectedFileHashes: string[];
 }
 
@@ -61,7 +62,18 @@ export default class CollectionPage extends React.Component<
 	CollectionPageProps,
 	CollectionPageState
 > {
-	state: CollectionPageState = { selectedFileHashes: [] };
+	state: CollectionPageState = {
+		collectionOutput: new Result<CollectionOutput>((_) => {
+			this.setState({ collectionOutput: _ });
+		}),
+		directoryOutput: new Result<DirectoryOutput>((_) => {
+			this.setState({ directoryOutput: _ });
+		}),
+		networkShareBaseUrl: new Result<ConfigValue>((_) => {
+			this.setState({ networkShareBaseUrl: _ });
+		}),
+		selectedFileHashes: [],
+	};
 
 	componentDidMount() {
 		shouldAlwaysSucceed(this.fetchData());
@@ -72,8 +84,10 @@ export default class CollectionPage extends React.Component<
 	}
 
 	render() {
-		const collectionOutput = this.state.collectionOutput;
-		const directoryOutput = this.state.directoryOutput;
+		const [collectionOutput, directoryOutput, loadingOrError] = Result.unwrap2(
+			this.state.collectionOutput,
+			this.state.directoryOutput,
+		);
 
 		let breadcrumbs: Breadcrumb[] = [];
 		let title = 'Loading';
@@ -86,7 +100,8 @@ export default class CollectionPage extends React.Component<
 
 		return (
 			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
-				{collectionOutput ? this.renderData(collectionOutput) : <Loading />}
+				{loadingOrError}
+				{collectionOutput ? this.renderData(collectionOutput) : null}
 			</AppDefaultLayout>
 		);
 	}
@@ -215,10 +230,6 @@ export default class CollectionPage extends React.Component<
 				collOutput.SelectedPathContents.Files.length ===
 			0;
 
-		const networkShareBaseUrl = this.state.networkShareBaseUrl
-			? this.state.networkShareBaseUrl.Value
-			: '';
-
 		return (
 			<div>
 				<SensitivityHeadsUp />
@@ -324,17 +335,19 @@ export default class CollectionPage extends React.Component<
 								</tbody>
 							</table>
 						</Panel>
-						<Panel
-							heading={
-								<div>
-									FUSE &amp; network share{' '}
-									<ClipboardButton text={networkShareBaseUrl} />
-								</div>
-							}>
-							<CommandButton
-								command={CollectionFuseMount(collOutput.Collection.Id)}
-							/>
-						</Panel>
+						{this.state.networkShareBaseUrl.draw((networkShareBaseUrl) => (
+							<Panel
+								heading={
+									<div>
+										FUSE &amp; network share{' '}
+										<ClipboardButton text={networkShareBaseUrl.Value} />
+									</div>
+								}>
+								<CommandButton
+									command={CollectionFuseMount(collOutput.Collection.Id)}
+								/>
+							</Panel>
+						))}
 						<Panel heading="Changesets">
 							<table className="table table-striped table-hover">
 								<thead>
@@ -376,7 +389,7 @@ export default class CollectionPage extends React.Component<
 
 		await commitChangeset(this.props.id, {
 			ID: (await generateIds()).Changeset,
-			Parent: this.state.collectionOutput!.Collection.Head,
+			Parent: this.state.collectionOutputFixme!.Collection.Head,
 			Created: dateObjToDateTime(new Date()),
 			FilesCreated: createdFiles,
 			FilesUpdated: [],
@@ -388,7 +401,7 @@ export default class CollectionPage extends React.Component<
 
 	private async uploadOneFile(file: File): Promise<File2> {
 		const uploadEndpoint = makeQueryParams(
-			uploadFileUrl(this.state.collectionOutput!.Collection.Id),
+			uploadFileUrl(this.state.collectionOutputFixme!.Collection.Id),
 			{
 				mtime: file.lastModified.toString(),
 				filename: file.name, // spec says this is "without path information"
@@ -466,18 +479,21 @@ export default class CollectionPage extends React.Component<
 	}
 
 	private async fetchData() {
-		const collectionOutput = await getCollectiotAtRev(
+		this.state.networkShareBaseUrl.load(() => getConfig(CfgNetworkShareBaseUrl));
+
+		const collectionOutputPromise = getCollectiotAtRev(
 			this.props.id,
 			this.props.rev,
 			this.props.pathBase64,
 		);
 
-		const [directoryOutput, networkShareBaseUrl] = await Promise.all([
-			getDirectory(collectionOutput.Collection.Directory),
-			getConfig(CfgNetworkShareBaseUrl),
-		]);
+		this.state.collectionOutput.load(() => collectionOutputPromise);
 
-		this.setState({ collectionOutput, directoryOutput, networkShareBaseUrl });
+		const collectionOutput = await collectionOutputPromise;
+
+		this.setState({ collectionOutputFixme: collectionOutput });
+
+		this.state.directoryOutput.load(() => getDirectory(collectionOutput.Collection.Directory));
 	}
 }
 

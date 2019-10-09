@@ -1,9 +1,8 @@
+import { Result } from 'component/result';
 import { Panel, Well } from 'f61ui/component/bootstrap';
 import { CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
-import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { ConfigSetTheMovieDbApikey } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import { CfgTheMovieDbApikey, ConfigValue } from 'generated/stoserver/stoservertypes_types';
@@ -11,18 +10,22 @@ import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ContentMetadataPageState {
-	apikey?: ConfigValue;
+	apikey: Result<ConfigValue>;
 }
 
 export default class ContentMetadataPage extends React.Component<{}, ContentMetadataPageState> {
-	state: ContentMetadataPageState = {};
+	state: ContentMetadataPageState = {
+		apikey: new Result<ConfigValue>((_) => {
+			this.setState({ apikey: _ });
+		}),
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -55,10 +58,10 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 	}
 
 	private renderApikeyForm() {
-		const apikey = this.state.apikey;
+		const [apikey, loadingOrError] = this.state.apikey.unwrap();
 
 		if (!apikey) {
-			return <Loading />;
+			return loadingOrError;
 		}
 
 		return (
@@ -80,9 +83,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 		);
 	}
 
-	private async fetchData() {
-		const apikey = await getConfig(CfgTheMovieDbApikey);
-
-		this.setState({ apikey });
+	private fetchData() {
+		this.state.apikey.load(() => getConfig(CfgTheMovieDbApikey));
 	}
 }

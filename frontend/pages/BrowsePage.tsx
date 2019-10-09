@@ -1,5 +1,6 @@
 import { collectionDropdown } from 'component/collectiondropdown';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
+import { Result } from 'component/result';
 import {
 	createSensitivityAuthorizer,
 	Sensitivity,
@@ -12,9 +13,7 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
-import { Loading } from 'f61ui/component/loading';
 import { globalConfig } from 'f61ui/globalconfig';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionCreate,
 	CollectionMove,
@@ -50,7 +49,7 @@ interface BrowsePageProps {
 }
 
 interface BrowsePageState {
-	output?: DirectoryOutput;
+	output: Result<DirectoryOutput>;
 	selectedCollIds: string[];
 }
 
@@ -66,23 +65,28 @@ const moviesDirId = '70MqRF3FaxI';
 const seriesDirId = '7JczPh5-XSQ';
 
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
-	state: BrowsePageState = { selectedCollIds: [] };
+	state: BrowsePageState = {
+		output: new Result<DirectoryOutput>((_) => {
+			this.setState({ output: _ });
+		}),
+		selectedCollIds: [],
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
-		const output = this.state.output;
+		const [output, loadingOrError] = this.state.output.unwrap();
 
 		if (!output) {
 			return (
 				<AppDefaultLayout title="Loading" breadcrumbs={[]}>
-					<Loading />
+					{loadingOrError}
 				</AppDefaultLayout>
 			);
 		}
@@ -160,12 +164,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const sensitivityAuthorize = createSensitivityAuthorizer();
 
 		const masterCheckedChange = () => {
-			const outp = this.state.output; // name "output" would be shadowed
-			if (!outp) {
-				return;
-			}
-
-			const selectedCollIds = outp.Collections.map((coll) => coll.Id);
+			const selectedCollIds = output.Collections.map((coll) => coll.Id);
 
 			this.setState({ selectedCollIds });
 		};
@@ -446,10 +445,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 	}
 
-	private async fetchData() {
-		const output = await getDirectory(this.props.directoryId);
-
-		this.setState({ output });
+	private fetchData() {
+		this.state.output.load(() => getDirectory(this.props.directoryId));
 	}
 }
 

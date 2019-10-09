@@ -1,7 +1,6 @@
+import { Result } from 'component/result';
 import { Panel, Well } from 'f61ui/component/bootstrap';
 import { CommandIcon } from 'f61ui/component/CommandButton';
-import { Loading } from 'f61ui/component/loading';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	ConfigSetFuseServerBaseurl,
 	ConfigSetNetworkShareBaseUrl,
@@ -16,19 +15,26 @@ import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface FuseServerPageState {
-	baseUrl?: ConfigValue;
-	networkShareBaseUrl?: ConfigValue;
+	baseUrl: Result<ConfigValue>;
+	networkShareBaseUrl: Result<ConfigValue>;
 }
 
 export default class FuseServerPage extends React.Component<{}, FuseServerPageState> {
-	state: FuseServerPageState = {};
+	state: FuseServerPageState = {
+		baseUrl: new Result<ConfigValue>((_) => {
+			this.setState({ baseUrl: _ });
+		}),
+		networkShareBaseUrl: new Result<ConfigValue>((_) => {
+			this.setState({ networkShareBaseUrl: _ });
+		}),
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -40,38 +46,37 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 	}
 
 	private renderEditForm() {
-		const baseUrl = this.state.baseUrl;
-		const networkShareBaseUrl = this.state.networkShareBaseUrl;
-
-		if (!baseUrl || !networkShareBaseUrl) {
-			return <Loading />;
-		}
-
 		return (
 			<div className="form-horizontal">
-				<div className="form-group">
-					<label className="col-sm-2 control-label">
-						FUSE server base URL
-						<CommandIcon command={ConfigSetFuseServerBaseurl(baseUrl.Value)} />
-					</label>
-					<div className="col-sm-10">
-						{baseUrl.Value !== ''
-							? baseUrl.Value
-							: 'Not set - unable to mount network folders'}
+				{this.state.baseUrl.draw((baseUrl) => (
+					<div className="form-group">
+						<label className="col-sm-2 control-label">
+							FUSE server base URL
+							<CommandIcon command={ConfigSetFuseServerBaseurl(baseUrl.Value)} />
+						</label>
+						<div className="col-sm-10">
+							{baseUrl.Value !== ''
+								? baseUrl.Value
+								: 'Not set - unable to mount network folders'}
+						</div>
 					</div>
-				</div>
+				))}
 
-				<div className="form-group">
-					<label className="col-sm-2 control-label">
-						Network share base URL
-						<CommandIcon
-							command={ConfigSetNetworkShareBaseUrl(networkShareBaseUrl.Value)}
-						/>
-					</label>
-					<div className="col-sm-10">
-						{networkShareBaseUrl.Value !== '' ? networkShareBaseUrl.Value : 'Not set'}
+				{this.state.networkShareBaseUrl.draw((networkShareBaseUrl) => (
+					<div className="form-group">
+						<label className="col-sm-2 control-label">
+							Network share base URL
+							<CommandIcon
+								command={ConfigSetNetworkShareBaseUrl(networkShareBaseUrl.Value)}
+							/>
+						</label>
+						<div className="col-sm-10">
+							{networkShareBaseUrl.Value !== ''
+								? networkShareBaseUrl.Value
+								: 'Not set'}
+						</div>
 					</div>
-				</div>
+				))}
 
 				<Well>
 					<p>FUSE is technology in Linux where we can easily define filesystems.</p>
@@ -96,12 +101,8 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 		);
 	}
 
-	private async fetchData() {
-		const [baseUrl, networkShareBaseUrl] = await Promise.all([
-			getConfig(CfgFuseServerBaseUrl),
-			getConfig(CfgNetworkShareBaseUrl),
-		]);
-
-		this.setState({ baseUrl, networkShareBaseUrl });
+	private fetchData() {
+		this.state.baseUrl.load(() => getConfig(CfgFuseServerBaseUrl));
+		this.state.networkShareBaseUrl.load(() => getConfig(CfgNetworkShareBaseUrl));
 	}
 }

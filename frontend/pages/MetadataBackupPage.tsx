@@ -1,15 +1,14 @@
 import { DocLink } from 'component/doclink';
 import { RefreshButton } from 'component/refreshbutton';
+import { Result } from 'component/result';
 import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
-import { Loading } from 'f61ui/component/loading';
 import { MonospaceContent } from 'f61ui/component/monospacecontent';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { datetimeRFC3339 } from 'f61ui/types';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	DatabaseBackup,
 	DatabaseBackupConfigure,
@@ -26,23 +25,32 @@ import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface MetadataBackupPageState {
-	backupConfig?: ConfigValue;
-	backupLastOk?: ConfigValue;
-	backups?: UbackupStoredBackup[];
+	backupConfig: Result<ConfigValue>;
+	backupLastOk: Result<ConfigValue>;
+	backups: Result<UbackupStoredBackup[]>;
 	disclaimerAck: boolean;
 }
 
 export default class MetadataBackupPage extends React.Component<{}, MetadataBackupPageState> {
 	state: MetadataBackupPageState = {
 		disclaimerAck: false,
+		backupConfig: new Result<ConfigValue>((_) => {
+			this.setState({ backupConfig: _ });
+		}),
+		backupLastOk: new Result<ConfigValue>((_) => {
+			this.setState({ backupLastOk: _ });
+		}),
+		backups: new Result<UbackupStoredBackup[]>((_) => {
+			this.setState({ backups: _ });
+		}),
 	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -52,10 +60,10 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 				<Panel
 					heading={
 						<div>
-							Stored backups{' '}
+							Metadata backups{' '}
 							<RefreshButton
 								refresh={() => {
-									shouldAlwaysSucceed(this.refreshBackups());
+									this.refreshBackups();
 								}}
 							/>
 						</div>
@@ -67,11 +75,10 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 	}
 
 	private renderBackup() {
-		const backupConfig = this.state.backupConfig;
-		const backupLastOk = this.state.backupLastOk;
+		const [backupConfig, loadingOrError] = this.state.backupConfig.unwrap();
 
-		if (!backupConfig || !backupLastOk) {
-			return <Loading />;
+		if (!backupConfig) {
+			return loadingOrError;
 		}
 
 		const [
@@ -87,7 +94,7 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 			<Panel
 				heading={
 					<div>
-						Metadata backup
+						Metadata backup - configuration
 						<CommandIcon
 							command={DatabaseBackupConfigure(
 								bucket,
@@ -103,16 +110,6 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 				}>
 				<table className="table table-striped table-hover">
 					<tbody>
-						<tr>
-							<th>Last metadata backup</th>
-							<td>
-								{backupLastOk.Value ? (
-									<Timestamp ts={backupLastOk.Value as datetimeRFC3339} />
-								) : (
-									'(never)'
-								)}
-							</td>
-						</tr>
 						<tr>
 							<th>Bucket</th>
 							<td>{bucket}</td>
@@ -159,61 +156,68 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 	}
 
 	private renderStoredBackups() {
-		const backups = this.state.backups;
-
-		if (!backups) {
-			return <Loading />;
-		}
+		const [backups, loadingOrError] = this.state.backups.unwrap();
 
 		return (
-			<table className="table table-striped table-hover">
-				<thead>
-					<tr>
-						<th>Age</th>
-						<th>Description</th>
-						<th>Size</th>
-					</tr>
-				</thead>
-				<tbody>
-					{backups.map((backup) => (
-						<tr key={backup.ID}>
-							<td>
-								<Timestamp ts={backup.Timestamp} />
-							</td>
-							<td>{backup.Description}</td>
-							<td>{bytesToHumanReadable(backup.Size)}</td>
+			<div>
+				{this.state.backupLastOk.draw((backupLastOk) =>
+					backupLastOk.Value ? (
+						<p>
+							Last backup was <Timestamp ts={backupLastOk.Value as datetimeRFC3339} />
+							.
+						</p>
+					) : (
+						<p>No backup was ever taken :(</p>
+					),
+				)}
+
+				<table className="table table-striped table-hover">
+					<thead>
+						<tr>
+							<th>Age</th>
+							<th>Description</th>
+							<th>Size</th>
 						</tr>
-					))}
-				</tbody>
-				<tfoot>
-					<tr>
-						<td colSpan={99}>
-							{!this.state.disclaimerAck ? (
-								<InfoAlert>
-									Backups are not shown automatically. Click refresh to load them.
-								</InfoAlert>
-							) : (
-								''
-							)}
-						</td>
-					</tr>
-				</tfoot>
-			</table>
+					</thead>
+					<tbody>
+						{(backups || []).map((backup) => (
+							<tr key={backup.ID}>
+								<td>
+									<Timestamp ts={backup.Timestamp} />
+								</td>
+								<td>{backup.Description}</td>
+								<td>{bytesToHumanReadable(backup.Size)}</td>
+							</tr>
+						))}
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colSpan={99}>
+								{loadingOrError}
+								{!this.state.disclaimerAck ? (
+									<InfoAlert>
+										Backups are not shown automatically. Click refresh to load
+										them.
+									</InfoAlert>
+								) : (
+									''
+								)}
+							</td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
 		);
 	}
 
-	private async fetchData() {
-		const [backupConfig, backupLastOk] = await Promise.all([
-			getConfig(CfgUbackupConfig),
-			getConfig(CfgMetadataLastOk),
-		]);
-
-		this.setState({ backupConfig, backupLastOk });
+	private fetchData() {
+		this.state.backupConfig.load(() => getConfig(CfgUbackupConfig));
+		this.state.backupLastOk.load(() => getConfig(CfgMetadataLastOk));
 	}
 
-	private async refreshBackups() {
+	private refreshBackups() {
 		this.setState({ disclaimerAck: true });
 
-		this.setState({ backups: await getUbackupStoredBackups() });
+		this.state.backups.load(() => getUbackupStoredBackups());
 	}
 }

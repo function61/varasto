@@ -1,9 +1,8 @@
+import { Result } from 'component/result';
 import { Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
-import { Loading } from 'f61ui/component/loading';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { ApikeyCreate, ApikeyRemove } from 'generated/stoserver/stoservertypes_commands'; // FIXME
 import { getApiKeys } from 'generated/stoserver/stoservertypes_endpoints';
 import { ApiKey } from 'generated/stoserver/stoservertypes_types';
@@ -11,18 +10,22 @@ import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface UsersPageState {
-	apiKeys?: ApiKey[];
+	apiKeys: Result<ApiKey[]>;
 }
 
 export default class UsersPage extends React.Component<{}, UsersPageState> {
-	state: UsersPageState = {};
+	state: UsersPageState = {
+		apiKeys: new Result<ApiKey[]>((_) => {
+			this.setState({ apiKeys: _ });
+		}),
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -42,28 +45,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 	}
 
 	private renderApiKeys() {
-		const apiKeys = this.state.apiKeys;
-
-		if (!apiKeys) {
-			return <Loading />;
-		}
-
-		const toRow = (apiKey: ApiKey) => (
-			<tr key={apiKey.Id}>
-				<td>{apiKey.Name}</td>
-				<td>
-					<Timestamp ts={apiKey.Created} />
-				</td>
-				<td>
-					<SecretReveal secret={apiKey.AuthToken} />
-				</td>
-				<td>
-					<CommandIcon
-						command={ApikeyRemove(apiKey.Id, { disambiguation: apiKey.Name })}
-					/>
-				</td>
-			</tr>
-		);
+		const [apiKeys, loadingOrError] = this.state.apiKeys.unwrap();
 
 		return (
 			<table className="table table-striped table-hover">
@@ -75,10 +57,30 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 						<th />
 					</tr>
 				</thead>
-				<tbody>{apiKeys.map(toRow)}</tbody>
+				<tbody>
+					{(apiKeys || []).map((apiKey) => (
+						<tr key={apiKey.Id}>
+							<td>{apiKey.Name}</td>
+							<td>
+								<Timestamp ts={apiKey.Created} />
+							</td>
+							<td>
+								<SecretReveal secret={apiKey.AuthToken} />
+							</td>
+							<td>
+								<CommandIcon
+									command={ApikeyRemove(apiKey.Id, {
+										disambiguation: apiKey.Name,
+									})}
+								/>
+							</td>
+						</tr>
+					))}
+				</tbody>
 				<tfoot>
 					<tr>
 						<td colSpan={99}>
+							<div>{loadingOrError}</div>
 							<CommandButton command={ApikeyCreate()} />
 						</td>
 					</tr>
@@ -87,9 +89,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 		);
 	}
 
-	private async fetchData() {
-		const apiKeys = await getApiKeys();
-
-		this.setState({ apiKeys });
+	private fetchData() {
+		this.state.apiKeys.load(() => getApiKeys());
 	}
 }

@@ -1,15 +1,15 @@
 import { thousandSeparate } from 'component/numberformatter';
+import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
-import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { plainDateToDateTime } from 'f61ui/types';
-import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
+import { unrecognizedValue } from 'f61ui/utils';
 import {
 	IntegrityverificationjobResume,
 	IntegrityverificationjobStop,
@@ -48,10 +48,10 @@ interface VolumesAndMountsPageProps {
 }
 
 interface VolumesAndMountsPageState {
-	volumes?: Volume[];
-	mounts?: VolumeMount[];
-	ivJobs?: IntegrityVerificationJob[];
-	nodes?: Node[];
+	volumes: Result<Volume[]>;
+	mounts: Result<VolumeMount[]>;
+	ivJobs: Result<IntegrityVerificationJob[]>;
+	nodes: Result<Node[]>;
 }
 
 interface Enclosure {
@@ -66,14 +66,27 @@ export default class VolumesAndMountsPage extends React.Component<
 	VolumesAndMountsPageProps,
 	VolumesAndMountsPageState
 > {
-	state: VolumesAndMountsPageState = {};
+	state: VolumesAndMountsPageState = {
+		volumes: new Result<Volume[]>((_) => {
+			this.setState({ volumes: _ });
+		}),
+		mounts: new Result<VolumeMount[]>((_) => {
+			this.setState({ mounts: _ });
+		}),
+		ivJobs: new Result<IntegrityVerificationJob[]>((_) => {
+			this.setState({ ivJobs: _ });
+		}),
+		nodes: new Result<Node[]>((_) => {
+			this.setState({ nodes: _ });
+		}),
+	};
 
 	componentDidMount() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	componentWillReceiveProps() {
-		shouldAlwaysSucceed(this.fetchData());
+		this.fetchData();
 	}
 
 	render() {
@@ -159,11 +172,7 @@ export default class VolumesAndMountsPage extends React.Component<
 	}
 
 	private renderServiceView() {
-		const volumes = this.state.volumes;
-
-		if (!volumes) {
-			return <Loading />;
-		}
+		const [volumes, loadingOrError] = this.state.volumes.unwrap();
 
 		return (
 			<table className="table table-striped table-hover">
@@ -177,7 +186,7 @@ export default class VolumesAndMountsPage extends React.Component<
 					</tr>
 				</thead>
 				<tbody>
-					{volumes.map((vol) => {
+					{(volumes || []).map((vol) => {
 						const manufactured = vol.Manufactured;
 						const warrantyEnds = vol.WarrantyEnds;
 
@@ -221,16 +230,23 @@ export default class VolumesAndMountsPage extends React.Component<
 						);
 					})}
 				</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>{loadingOrError}</td>
+					</tr>
+				</tfoot>
 			</table>
 		);
 	}
 
 	private renderTopologyView() {
-		const volumes = this.state.volumes;
-		const mounts = this.state.mounts;
+		const [volumes, mounts, loadingOrError] = Result.unwrap2(
+			this.state.volumes,
+			this.state.mounts,
+		);
 
-		if (!volumes || !mounts) {
-			return <Loading />;
+		if (!volumes || !mounts || loadingOrError) {
+			return loadingOrError;
 		}
 
 		const isOnline = (volId: number): boolean => {
@@ -325,11 +341,8 @@ export default class VolumesAndMountsPage extends React.Component<
 	}
 
 	private renderVolumes() {
-		const volumes = this.state.volumes;
-
-		if (!volumes) {
-			return <Loading />;
-		}
+		const [volumesMaybe, loadingOrError] = this.state.volumes.unwrap();
+		const volumes = volumesMaybe || [];
 
 		const blobCount = (vol: Volume) => thousandSeparate(vol.BlobCount);
 		const free = (vol: Volume) => bytesToHumanReadable(vol.Quota - vol.BlobSizeTotal);
@@ -409,6 +422,13 @@ export default class VolumesAndMountsPage extends React.Component<
 				</thead>
 				<tbody>{volumes.map(toRow)}</tbody>
 				<tfoot>
+					{loadingOrError ? (
+						<tr>
+							<td colSpan={99}>{loadingOrError}</td>
+						</tr>
+					) : (
+						''
+					)}
 					<tr>
 						<td />
 						<td />
@@ -424,12 +444,14 @@ export default class VolumesAndMountsPage extends React.Component<
 	}
 
 	private renderMounts() {
-		const mounts = this.state.mounts;
-		const volumes = this.state.volumes;
-		const nodes = this.state.nodes;
+		const [mounts, volumes, nodes, loadingOrError] = Result.unwrap3(
+			this.state.mounts,
+			this.state.volumes,
+			this.state.nodes,
+		);
 
-		if (!mounts || !volumes || !nodes) {
-			return <Loading />;
+		if (!mounts || !volumes || !nodes || loadingOrError) {
+			return loadingOrError;
 		}
 
 		const toRow = (obj: VolumeMount) => {
@@ -475,11 +497,13 @@ export default class VolumesAndMountsPage extends React.Component<
 	}
 
 	private renderIvJobs() {
-		const ivJobs = this.state.ivJobs;
-		const volumes = this.state.volumes;
+		const [ivJobs, volumes, loadingOrError] = Result.unwrap2(
+			this.state.ivJobs,
+			this.state.volumes,
+		);
 
-		if (!ivJobs || !volumes) {
-			return <Loading />;
+		if (!ivJobs || !volumes || loadingOrError) {
+			return loadingOrError;
 		}
 
 		/*
@@ -563,15 +587,11 @@ export default class VolumesAndMountsPage extends React.Component<
 		);
 	}
 
-	private async fetchData() {
-		const [volumes, mounts, nodes, ivJobs] = await Promise.all([
-			getVolumes(),
-			getVolumeMounts(),
-			getNodes(),
-			getIntegrityVerificationJobs(),
-		]);
-
-		this.setState({ volumes, mounts, nodes, ivJobs });
+	private fetchData() {
+		this.state.volumes.load(() => getVolumes());
+		this.state.mounts.load(() => getVolumeMounts());
+		this.state.nodes.load(() => getNodes());
+		this.state.ivJobs.load(() => getIntegrityVerificationJobs());
 	}
 }
 

@@ -1,17 +1,20 @@
 import { RefreshButton } from 'component/refreshbutton';
+import { Result } from 'component/result';
 import { Panel } from 'f61ui/component/bootstrap';
-import { Loading } from 'f61ui/component/loading';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import { getLogs } from 'generated/stoserver/stoservertypes_endpoints';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface LogsPageState {
-	logs?: string[];
+	logs: Result<string[]>;
 }
 
 export default class LogsPage extends React.Component<{}, LogsPageState> {
-	state: LogsPageState = {};
+	state: LogsPageState = {
+		logs: new Result<string[]>((_) => {
+			this.setState({ logs: _ });
+		}),
+	};
 
 	componentDidMount() {
 		this.fetchData();
@@ -22,62 +25,48 @@ export default class LogsPage extends React.Component<{}, LogsPageState> {
 	}
 
 	render() {
+		const [logs, loadingOrError] = this.state.logs.unwrap();
+
 		return (
 			<SettingsLayout title="Logs" breadcrumbs={[]}>
-				<Panel heading="Logs">{this.renderLogs()}</Panel>
+				<Panel heading="Logs">
+					<RefreshButton
+						refresh={() => {
+							this.fetchData();
+						}}
+					/>
+
+					<table className="table table-striped table-hover">
+						<thead>
+							<tr>
+								<th>Line</th>
+							</tr>
+						</thead>
+						<tbody>
+							{(logs || []).map((line) => (
+								<tr>
+									<td>{line}</td>
+								</tr>
+							))}
+						</tbody>
+						<tfoot>
+							<tr>
+								<td colSpan={99}>{loadingOrError}</td>
+							</tr>
+						</tfoot>
+					</table>
+
+					<RefreshButton
+						refresh={() => {
+							this.fetchData();
+						}}
+					/>
+				</Panel>
 			</SettingsLayout>
 		);
 	}
 
-	private renderLogs() {
-		const logs = this.state.logs;
-
-		if (!logs) {
-			return <Loading />;
-		}
-
-		return (
-			<div>
-				<RefreshButton
-					refresh={() => {
-						this.fetchData();
-					}}
-				/>
-
-				<table className="table table-striped table-hover">
-					<thead>
-						<tr>
-							<th>Line</th>
-						</tr>
-					</thead>
-					<tbody>
-						{logs.map((line) => (
-							<tr>
-								<td>{line}</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
-
-				<RefreshButton
-					refresh={() => {
-						this.fetchData();
-					}}
-				/>
-			</div>
-		);
-	}
-
 	private fetchData() {
-		// TODO: show loading indicator when refreshing data. we could do that easily
-		// by just setState({ logs: undefined }) but the user probably doesn't want to see
-		// the whole table disappear-then-appear again
-		shouldAlwaysSucceed(
-			(async () => {
-				const logs = await getLogs();
-
-				this.setState({ logs });
-			})(),
-		);
+		this.state.logs.loadWhileKeepingOldResult(() => getLogs());
 	}
 }
