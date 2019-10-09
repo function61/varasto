@@ -69,8 +69,8 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 			<table className="table table-striped table-hover">
 				<thead>
 					<tr>
-						<th>Age</th>
 						<th>Name</th>
+						<th>Age</th>
 						<th>AuthToken</th>
 						<th />
 					</tr>
