@@ -8,7 +8,6 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { Loading } from 'f61ui/component/loading';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { jsxChildType } from 'f61ui/types';
 import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
 import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
 import { Health, HealthStatus, ServerInfo } from 'generated/stoserver/stoservertypes_types';
@@ -50,7 +49,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 		interface Item {
 			h: string;
-			t: jsxChildType;
+			t: React.ReactNode;
 		}
 
 		const items: Item[] = [

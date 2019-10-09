@@ -2,7 +2,6 @@ import { getCurrentHash } from 'f61ui/browserutils';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink } from 'f61ui/component/navigation';
-import { jsxChildType } from 'f61ui/types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import * as r from 'routes';
@@ -10,7 +9,7 @@ import * as r from 'routes';
 interface SettingsLayoutProps {
 	title: string;
 	breadcrumbs: Breadcrumb[];
-	children: jsxChildType;
+	children: React.ReactNode;
 }
 
 export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {

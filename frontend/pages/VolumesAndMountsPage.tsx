@@ -8,7 +8,7 @@ import { Loading } from 'f61ui/component/loading';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { jsxChildType, plainDateToDateTime } from 'f61ui/types';
+import { plainDateToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
 import {
 	IntegrityverificationjobResume,
@@ -86,7 +86,7 @@ export default class VolumesAndMountsPage extends React.Component<
 			</div>
 		);
 
-		const content = ((): jsxChildType => {
+		const content = ((): React.ReactNode => {
 			switch (this.props.view) {
 				case 'integrity':
 					return (
@@ -488,7 +488,7 @@ export default class VolumesAndMountsPage extends React.Component<
 			pass = isCompleted AND errors == 0
 			fail = isCompleted AND errors > 0
 		*/
-		const jobStatus = (obj: IntegrityVerificationJob): jsxChildType => {
+		const jobStatus = (obj: IntegrityVerificationJob): React.ReactNode => {
 			const completed = obj.Completed;
 
 			if (completed === null) {
@@ -588,7 +588,7 @@ function volumeTechnologyToDisplay(tech: VolumeTechnology): string {
 	}
 }
 
-function onlineBadge(online: boolean): jsxChildType {
+function onlineBadge(online: boolean): React.ReactNode {
 	return online ? (
 		<span className="label label-success" title="Online">
 			<span className="glyphicon glyphicon-off" />

@@ -2,7 +2,6 @@ import { getCurrentHash } from 'f61ui/browserutils';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink } from 'f61ui/component/navigation';
 import { DefaultLayout } from 'f61ui/layout/defaultlayout';
-import { jsxChildType } from 'f61ui/types';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
@@ -11,7 +10,7 @@ import { browseRoute, serverInfoRoute } from 'routes';
 interface AppDefaultLayoutProps {
 	title: string;
 	breadcrumbs: Breadcrumb[];
-	children: jsxChildType;
+	children: React.ReactNode;
 }
 
 // app's default layout uses the default layout with props that are common to the whole app

@@ -14,7 +14,6 @@ import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Loading } from 'f61ui/component/loading';
 import { globalConfig } from 'f61ui/globalconfig';
-import { jsxChildType } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionCreate,
@@ -98,7 +97,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const showTabController =
 			output.Collections.filter(hasMeta).length > 0 && output.Directory.Id !== moviesDirId;
 
-		const content = ((): jsxChildType => {
+		const content = ((): React.ReactNode => {
 			switch (this.props.view) {
 				case '': // = "auto"
 					if (showTabController) {
@@ -155,7 +154,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 	}
 
-	private folderView(output: DirectoryOutput): jsxChildType {
+	private folderView(output: DirectoryOutput): React.ReactNode {
 		const selectedCollIdsSerialized = this.state.selectedCollIds.join(',');
 
 		const sensitivityAuthorize = createSensitivityAuthorizer();
@@ -351,8 +350,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 	}
 
-	private richView(output: DirectoryOutput): jsxChildType {
-		const collectionToRow = (coll: CollectionSubset): jsxChildType => {
+	private richView(output: DirectoryOutput): React.ReactNode {
+		const collectionToRow = (coll: CollectionSubset): React.ReactNode => {
 			const metadata = metadataKvsToKv(coll.Metadata);
 
 			const imageSrc = metadata[MetadataThumbnail] || imageNotAvailable();
@@ -389,7 +388,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			);
 		};
 
-		const directoryToRow = (dir: Directory): jsxChildType => {
+		const directoryToRow = (dir: Directory): React.ReactNode => {
 			return (
 				<Panel heading={dir.Name}>
 					<a
@@ -403,7 +402,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			);
 		};
 
-		const docToRow = (doc: DirOrCollection): jsxChildType => {
+		const docToRow = (doc: DirOrCollection): React.ReactNode => {
 			if (doc.dir) {
 				return directoryToRow(doc.dir);
 			} else if (doc.coll) {
@@ -412,10 +411,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			throw new Error('should not happen');
 		};
 
-		return <div>{mergeDirectoriesAndCollectionsSorted(output).map(docToRow)}</div>;
+		return mergeDirectoriesAndCollectionsSorted(output).map(docToRow);
 	}
 
-	private directoryPanel(output: DirectoryOutput): jsxChildType {
+	private directoryPanel(output: DirectoryOutput): React.ReactNode {
 		return (
 			<Panel
 				heading={
@@ -475,7 +474,7 @@ const mkSensitivityBadge = (sens: Sensitivity) => (
 	</a>
 );
 
-const directoryDropdown = (dir: Directory): jsxChildType => {
+const directoryDropdown = (dir: Directory) => {
 	return (
 		<Dropdown>
 			<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />

@@ -1,5 +1,4 @@
 import { getCurrentHash } from 'f61ui/browserutils';
-import { jsxChildType } from 'f61ui/types';
 import * as React from 'react';
 
 export interface Tab {
@@ -9,7 +8,7 @@ export interface Tab {
 
 interface TabControllerProps {
 	tabs: Tab[];
-	children: jsxChildType;
+	children: React.ReactNode;
 }
 
 export class TabController extends React.Component<TabControllerProps, {}> {

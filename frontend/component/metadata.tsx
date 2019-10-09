@@ -1,6 +1,5 @@
 import { Panel } from 'f61ui/component/bootstrap';
 import { globalConfig } from 'f61ui/globalconfig';
-import { jsxChildType } from 'f61ui/types';
 import {
 	MetadataBackdrop,
 	MetadataHomepage,
@@ -40,7 +39,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 
 		const overview: string = metadata[MetadataOverview] || '';
 
-		const badges: jsxChildType[] = [];
+		const badges: React.ReactNode[] = [];
 
 		if (MetadataVideoRuntimeMins in metadata) {
 			let hours = +metadata[MetadataVideoRuntimeMins] / 60;
@@ -105,7 +104,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 		);
 	}
 
-	private maybeUrl(label: string, template: string, key?: string): jsxChildType {
+	private maybeUrl(label: string, template: string, key?: string): React.ReactNode {
 		if (!key) {
 			return '';
 		}
