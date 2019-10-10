@@ -78,6 +78,7 @@ Developers:
 Misc:
 
 - [Security policy](https://github.com/function61/varasto/security/policy)
+- [Sustainability](docs/sustainability.md) (how will this project make money)
 
 Food for thought:
 
