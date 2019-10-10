@@ -496,11 +496,11 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 			return err
 		}
 
+		coll.Name = cmd.Name
+
 		if err := validateUniqueNameWithinSiblings(coll.Directory, coll.Name, tx); err != nil {
 			return err
 		}
-
-		coll.Name = cmd.Name
 
 		return stodb.CollectionRepository.Update(coll, tx)
 	})
