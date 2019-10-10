@@ -239,9 +239,7 @@ export default class CollectionPage extends React.Component<
 
 						{eligibleForThumbnail.length > 0 ? (
 							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
-						) : (
-							''
-						)}
+						) : null}
 
 						<Panel heading="Files">
 							<table className="table table-striped table-hover">
@@ -259,9 +257,7 @@ export default class CollectionPage extends React.Component<
 
 							{noFilesOrSubdirs ? (
 								<InfoAlert>Collection is currently empty.</InfoAlert>
-							) : (
-								''
-							)}
+							) : null}
 						</Panel>
 
 						<Panel heading="Upload">
@@ -282,9 +278,7 @@ export default class CollectionPage extends React.Component<
 									this.state.selectedFileHashes.join(','),
 								)}
 							/>
-						) : (
-							''
-						)}
+						) : null}
 					</div>
 					<div className="col-md-4">
 						<Panel

@@ -199,9 +199,7 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 										Backups are not shown automatically. Click refresh to load
 										them.
 									</InfoAlert>
-								) : (
-									''
-								)}
+								) : null}
 							</td>
 						</tr>
 					</tfoot>

@@ -29,7 +29,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 		const metadata = this.props.data;
 
 		if (Object.keys(metadata).length === 0) {
-			return '';
+			return null;
 		}
 
 		const backdropImage =
@@ -106,7 +106,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 
 	private maybeUrl(label: string, template: string, key?: string): React.ReactNode {
 		if (!key) {
-			return '';
+			return null;
 		}
 
 		const url = template.replace('{key}', key);

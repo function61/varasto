@@ -326,9 +326,7 @@ export default class VolumesAndMountsPage extends React.Component<
 															: 0,
 													)}
 												/>
-											) : (
-												''
-											)}
+											) : null}
 										</td>
 									</tr>
 								))}
@@ -426,9 +424,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						<tr>
 							<td colSpan={99}>{loadingOrError}</td>
 						</tr>
-					) : (
-						''
-					)}
+					) : null}
 					<tr>
 						<td />
 						<td />

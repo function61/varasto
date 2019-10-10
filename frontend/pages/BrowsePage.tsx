@@ -192,9 +192,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							className="glyphicon glyphicon-exclamation-sign"
 						/>
 					</div>
-				) : (
-					''
-				);
+				) : null;
 
 			return (
 				<tr key={coll.Id}>
@@ -224,12 +222,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 									<span className="label label-default margin-left">
 										{coll.Description}
 									</span>
-								) : (
-									''
-								)}
+								) : null}
 								{coll.Sensitivity > Sensitivity.FamilyFriendly
 									? mkSensitivityBadge(coll.Sensitivity)
-									: ''}
+									: null}
 							</div>
 						) : (
 							<div>
@@ -258,12 +254,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					</a>
 					{dir.Description ? (
 						<span className="label label-default margin-left">{dir.Description}</span>
-					) : (
-						''
-					)}
+					) : null}
 					{dir.Sensitivity > Sensitivity.FamilyFriendly
 						? mkSensitivityBadge(dir.Sensitivity)
-						: ''}
+						: null}
 				</div>
 			) : (
 				<div>
@@ -281,9 +275,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						title="Metadata missing"
 						className="glyphicon glyphicon-exclamation-sign"
 					/>
-				) : (
-					''
-				);
+				) : null;
 
 			return (
 				<tr>
@@ -335,9 +327,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 										)}
 									/>
 								</div>
-							) : (
-								''
-							)}
+							) : null}
 
 							<CommandButton command={DirectoryCreate(output.Directory.Id)} />
 

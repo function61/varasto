@@ -40,7 +40,7 @@ export class SensitivityHeadsUp extends React.Component<{}, {}> {
 		const showMaxSensitivity = getMaxSensitivityFromLocalStorage();
 
 		if (showMaxSensitivity === Sensitivity.FamilyFriendly) {
-			return '';
+			return null;
 		}
 
 		// ends up as btn-warning | btn-danger | ...
