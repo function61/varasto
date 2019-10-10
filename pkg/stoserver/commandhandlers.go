@@ -24,6 +24,7 @@ import (
 	"go.etcd.io/bbolt"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 )
@@ -413,6 +414,7 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			EncryptionKey:  encryptionKey,
 			Changesets:     []stotypes.CollectionChangeset{},
 			Metadata:       map[string]string{},
+			Tags:           []string{},
 		}
 
 		// highly unlikely
@@ -499,6 +501,42 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 		}
 
 		coll.Name = cmd.Name
+
+		return stodb.CollectionRepository.Update(coll, tx)
+	})
+}
+
+func (c *cHandlers) CollectionTag(cmd *stoservertypes.CollectionTag, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		if sliceutil.ContainsString(coll.Tags, cmd.Tag) {
+			return fmt.Errorf("already tagged: %s", cmd.Tag)
+		}
+
+		coll.Tags = append(coll.Tags, cmd.Tag)
+
+		sort.Strings(coll.Tags)
+
+		return stodb.CollectionRepository.Update(coll, tx)
+	})
+}
+
+func (c *cHandlers) CollectionUntag(cmd *stoservertypes.CollectionUntag, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		if !sliceutil.ContainsString(coll.Tags, cmd.Tag) {
+			return fmt.Errorf("not tagged: %s", cmd.Tag)
+		}
+
+		coll.Tags = sliceutil.FilterString(coll.Tags, func(tag string) bool { return tag != cmd.Tag })
 
 		return stodb.CollectionRepository.Update(coll, tx)
 	})

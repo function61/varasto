@@ -5,6 +5,7 @@ import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
+import { CollectionTagEditor } from 'component/tags';
 import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
@@ -296,6 +297,14 @@ export default class CollectionPage extends React.Component<
 											{collOutput.Collection.Id}
 
 											<ClipboardButton text={collOutput.Collection.Id} />
+										</td>
+									</tr>
+									<tr>
+										<th>Tags</th>
+										<td>
+											<CollectionTagEditor
+												collection={collOutput.Collection}
+											/>
 										</td>
 									</tr>
 									<tr>

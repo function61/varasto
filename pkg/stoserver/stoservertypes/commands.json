@@ -321,6 +321,28 @@
 		]
 	},
 	{
+		"command": "collection.Tag",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Tag",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Tag" }
+		]
+	},
+	{
+		"command": "collection.Untag",
+		"chain": "public",
+		"ctor": ["Id", "Tag"],
+		"crudNature": "delete",
+		"title": "Untag",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Tag", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "replicationpolicy.ChangeDesiredVolumes",
 		"chain": "public",
 		"ctor": ["Id"],

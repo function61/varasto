@@ -68,6 +68,7 @@ type Collection struct {
 	EncryptionKey  [32]byte
 	Changesets     []CollectionChangeset
 	Metadata       map[string]string
+	Tags           []string
 }
 
 type CollectionChangeset struct {

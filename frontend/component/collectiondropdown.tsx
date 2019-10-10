@@ -8,6 +8,7 @@ import {
 	CollectionMove,
 	CollectionPullMetadata,
 	CollectionRename,
+	CollectionTag,
 } from 'generated/stoserver/stoservertypes_commands';
 import { CollectionSubset } from 'generated/stoserver/stoservertypes_types';
 import * as React from 'react';
@@ -21,6 +22,7 @@ export function collectionDropdown(coll: CollectionSubset) {
 			<CommandLink command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)} />
 			<CommandLink command={CollectionFuseMount(coll.Id)} />
 			<CommandLink command={CollectionPullMetadata(coll.Id)} />
+			<CommandLink command={CollectionTag(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionDelete(coll.Id, { disambiguation: coll.Name })} />
 		</Dropdown>
 	);

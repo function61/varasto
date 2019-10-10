@@ -8,6 +8,7 @@ import {
 	sensitivityLabel,
 } from 'component/sensitivity';
 import { TabController } from 'component/tabcontroller';
+import { CollectionTagView } from 'component/tags';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
@@ -240,7 +241,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							</div>
 						)}
 					</td>
-					<td>{warning}</td>
+					<td>
+						{warning} <CollectionTagView collection={coll} />
+					</td>
 					<td>{collectionDropdown(coll)}</td>
 				</tr>
 			);

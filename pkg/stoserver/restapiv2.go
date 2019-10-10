@@ -81,6 +81,7 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 		DesiredVolumes: coll.DesiredVolumes,
 		Sensitivity:    coll.Sensitivity,
 		Metadata:       metadataMapToKvList(coll.Metadata),
+		Tags:           coll.Tags,
 		Changesets:     changesets,
 	}
 }

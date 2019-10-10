@@ -145,6 +145,7 @@
 				"Sensitivity": {"_": "integer"},
 				"DesiredVolumes": {"_": "list", "of": {"_": "integer"}},
 				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
+				"Tags": {"_": "list", "of": {"_": "string"}},
 				"Changesets": {"_": "list", "of": {"_": "ChangesetSubset"}}
 			}}
 		},
