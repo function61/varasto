@@ -24,7 +24,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 			},
 			{
 				title: 'Backups',
-				url: r.metadataBackupRoute.buildUrl({}),
+				url: r.metadataBackupRoute.buildUrl({ v: '' }),
 				active: r.metadataBackupRoute.matchUrl(hash) !== null,
 			},
 			{

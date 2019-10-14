@@ -1,6 +1,7 @@
 import { DocLink } from 'component/doclink';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'component/result';
+import { TabController } from 'component/tabcontroller';
 import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -23,6 +24,11 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
+import { metadataBackupRoute } from 'routes';
+
+interface MetadataBackupPageProps {
+	view: string;
+}
 
 interface MetadataBackupPageState {
 	backupConfig: Result<ConfigValue>;
@@ -31,7 +37,10 @@ interface MetadataBackupPageState {
 	disclaimerAck: boolean;
 }
 
-export default class MetadataBackupPage extends React.Component<{}, MetadataBackupPageState> {
+export default class MetadataBackupPage extends React.Component<
+	MetadataBackupPageProps,
+	MetadataBackupPageState
+> {
 	state: MetadataBackupPageState = {
 		disclaimerAck: false,
 		backupConfig: new Result<ConfigValue>((_) => {
@@ -54,13 +63,12 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 	}
 
 	render() {
-		return (
-			<SettingsLayout title="Backups" breadcrumbs={[]}>
-				{this.renderBackup()}
+		const content =
+			this.props.view === '' ? (
 				<Panel
 					heading={
 						<div>
-							Metadata backups{' '}
+							Metadata backup list{' '}
 							<RefreshButton
 								refresh={() => {
 									this.refreshBackups();
@@ -70,11 +78,34 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 					}>
 					{this.renderStoredBackups()}
 				</Panel>
+			) : (
+				this.renderBackupConfig()
+			);
+
+		return (
+			<SettingsLayout title="Backups" breadcrumbs={[]}>
+				<TabController
+					tabs={[
+						{
+							url: metadataBackupRoute.buildUrl({
+								v: '',
+							}),
+							title: 'Metadata backup list',
+						},
+						{
+							url: metadataBackupRoute.buildUrl({
+								v: 'config',
+							}),
+							title: 'Metadata backup configuration',
+						},
+					]}>
+					{content}
+				</TabController>
 			</SettingsLayout>
 		);
 	}
 
-	private renderBackup() {
+	private renderBackupConfig() {
 		const [backupConfig, loadingOrError] = this.state.backupConfig.unwrap();
 
 		if (!backupConfig) {
@@ -94,7 +125,7 @@ export default class MetadataBackupPage extends React.Component<{}, MetadataBack
 			<Panel
 				heading={
 					<div>
-						Metadata backup - configuration
+						Metadata backup configuration
 						<CommandIcon
 							command={DatabaseBackupConfigure(
 								bucket,

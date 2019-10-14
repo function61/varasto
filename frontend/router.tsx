@@ -22,7 +22,7 @@ export const router = makeRouter(r.browseRoute, (opts) => (
 	.registerRoute(r.volumesAndMountsRoute, (opts) => <VolumesAndMountsPage view={opts.view} />)
 	.registerRoute(r.usersRoute, () => <UsersPage />)
 	.registerRoute(r.logsRoute, () => <LogsPage />)
-	.registerRoute(r.metadataBackupRoute, () => <MetadataBackupPage />)
+	.registerRoute(r.metadataBackupRoute, (opts) => <MetadataBackupPage view={opts.v} />)
 	.registerRoute(r.contentMetadataRoute, () => <ContentMetadataPage />)
 	.registerRoute(r.collectionRoute, (opts) => (
 		<CollectionPage

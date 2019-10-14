@@ -4,7 +4,7 @@ export const browseRoute = makeRoute('browse', { dir: 'string', v: 'string' });
 
 export const nodesRoute = makeRoute('nodes', {});
 
-export const metadataBackupRoute = makeRoute('metadataBackup', {});
+export const metadataBackupRoute = makeRoute('metadataBackup', { v: 'string' });
 
 export const usersRoute = makeRoute('users', {});
 
