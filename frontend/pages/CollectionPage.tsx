@@ -242,7 +242,17 @@ export default class CollectionPage extends React.Component<
 							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
 						) : null}
 
-						<Panel heading="Files">
+						<Panel
+							heading={
+								<div>
+									Files
+									{collOutput.Collection.Description ? (
+										<span className="label label-default margin-left">
+											{collOutput.Collection.Description}
+										</span>
+									) : null}
+								</div>
+							}>
 							<table className="table table-striped table-hover">
 								<thead>
 									<tr>
