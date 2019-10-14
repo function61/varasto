@@ -12,7 +12,7 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
-import { CommandButton } from 'f61ui/component/CommandButton';
+import { CommandButton, CommandInlineForm } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
@@ -21,6 +21,7 @@ import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionFuseMount,
 	CollectionMoveFilesIntoAnotherCollection,
+	CollectionPullMetadata,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
 	commitChangeset,
@@ -38,12 +39,17 @@ import {
 	ConfigValue,
 	Directory,
 	DirectoryOutput,
-	File as File2, // conflicts with HTML's "File" interface
+	File as File2,
+	MetadataImdbId, // conflicts with HTML's "File" interface
 	RootPathDotBase64FIXME,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';
+
+// FIXME
+const moviesDirId = '70MqRF3FaxI';
+const seriesDirId = '7JczPh5-XSQ';
 
 interface CollectionPageProps {
 	id: string;
@@ -102,12 +108,14 @@ export default class CollectionPage extends React.Component<
 		return (
 			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
 				{loadingOrError}
-				{collectionOutput ? this.renderData(collectionOutput) : null}
+				{collectionOutput && directoryOutput
+					? this.renderData(collectionOutput, directoryOutput)
+					: null}
 			</AppDefaultLayout>
 		);
 	}
 
-	private renderData(collOutput: CollectionOutput) {
+	private renderData(collOutput: CollectionOutput, directoryOutput: DirectoryOutput) {
 		const eligibleForThumbnail = collOutput.SelectedPathContents.Files.filter(
 			(file) => filetypeForFile(file) === Filetype.Picture,
 		);
@@ -231,12 +239,21 @@ export default class CollectionPage extends React.Component<
 				collOutput.SelectedPathContents.Files.length ===
 			0;
 
+		const metadataKv = metadataKvsToKv(collOutput.Collection.Metadata);
+
+		const inMoviesOrSeriesHierarchy =
+			directoryOutput.Parents.concat(directoryOutput.Directory).filter(
+				(dir) => [moviesDirId, seriesDirId].indexOf(dir.Id) !== -1,
+			).length > 0;
+		const imdbIdExpectedButMissing =
+			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);
+
 		return (
 			<div>
 				<SensitivityHeadsUp />
 				<div className="row">
 					<div className="col-md-8">
-						<MetadataPanel data={metadataKvsToKv(collOutput.Collection.Metadata)} />
+						<MetadataPanel data={metadataKv} />
 
 						{eligibleForThumbnail.length > 0 ? (
 							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
@@ -347,6 +364,12 @@ export default class CollectionPage extends React.Component<
 									</tr>
 								</tbody>
 							</table>
+
+							{imdbIdExpectedButMissing ? (
+								<CommandInlineForm
+									command={CollectionPullMetadata(collOutput.Collection.Id)}
+								/>
+							) : null}
 						</Panel>
 						{this.state.networkShareBaseUrl.draw((networkShareBaseUrl) => (
 							<Panel
