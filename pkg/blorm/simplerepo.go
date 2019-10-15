@@ -2,6 +2,7 @@ package blorm
 
 import (
 	"errors"
+	"fmt"
 	"github.com/asdine/storm/codec/msgpack"
 	"go.etcd.io/bbolt"
 )
@@ -43,7 +44,7 @@ func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *b
 	}
 
 	if err := msgpack.Codec.Unmarshal(data, record); err != nil {
-		return err
+		return fmt.Errorf("repo[%s] record[%s]: %v", r.bucketName, id, err)
 	}
 
 	return nil
@@ -120,7 +121,7 @@ func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) err
 		record := r.alloc()
 
 		if err := msgpack.Codec.Unmarshal(value, record); err != nil {
-			return err
+			return fmt.Errorf("repo[%s] record[%s]: %v", r.bucketName, key, err)
 		}
 
 		if err := fn(record); err != nil {
