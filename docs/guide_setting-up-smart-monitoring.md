@@ -35,7 +35,7 @@ are one such example where the concept does not apply.
 You have to specify "SMART ID" for each volume that supports polling their SMART data.
 
 The "SMART ID" is an ID with which the SMART subsystem will identify the disk. In practice
-it's device path to the Linux block device like `/dev/sda`.
+it's the device path to the Linux block device like `/dev/sda`.
 
 It's recommended to use paths under `/dev/disk/by-uuid/..` to explicitly specify which disk
 you're referring to, since `/dev/sda` could very well be `/dev/sdb` on next boot.
