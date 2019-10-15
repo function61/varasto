@@ -1,6 +1,8 @@
 import { makeRoute } from 'f61ui/typescript-safe-router/saferouter';
 
-export const browseRoute = makeRoute('browse', { dir: 'string', v: 'string' });
+// would've liked to keep 2nd param "view" as "v" for short, but have to work around this issue:
+// https://github.com/FrigoEU/typescript-safe-router/issues/4
+export const browseRoute = makeRoute('browse', { dir: 'string', view: 'string' });
 
 export const nodesRoute = makeRoute('nodes', {});
 

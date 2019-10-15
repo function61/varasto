@@ -14,7 +14,7 @@ import * as React from 'react';
 import * as r from 'routes';
 
 export const router = makeRouter(r.browseRoute, (opts) => (
-	<BrowsePage directoryId={opts.dir} view={opts.v} key={opts.dir} />
+	<BrowsePage directoryId={opts.dir} view={opts.view} key={opts.dir} />
 ))
 	.registerRoute(r.nodesRoute, () => <NodesPage />)
 	.registerRoute(r.fuseServerRoute, () => <FuseServerPage />)

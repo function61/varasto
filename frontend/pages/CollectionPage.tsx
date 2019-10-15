@@ -464,7 +464,7 @@ export default class CollectionPage extends React.Component<
 		const dirToBreadcrumb = (dir: Directory): Breadcrumb => {
 			return {
 				title: dir.Name,
-				url: browseRoute.buildUrl({ dir: dir.Id, v: '' }),
+				url: browseRoute.buildUrl({ dir: dir.Id, view: '' }),
 			};
 		};
 

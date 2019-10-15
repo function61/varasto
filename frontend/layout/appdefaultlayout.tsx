@@ -21,7 +21,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 		const navLinks: NavLink[] = [
 			{
 				title: 'Browse',
-				url: browseRoute.buildUrl({ dir: RootFolderId, v: '' }),
+				url: browseRoute.buildUrl({ dir: RootFolderId, view: '' }),
 				active: browseRoute.matchUrl(hash) !== null,
 			},
 			{
@@ -36,7 +36,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 				appName="Varasto"
 				appHomepage="https://github.com/function61/varasto"
 				navLinks={navLinks}
-				logoUrl={browseRoute.buildUrl({ dir: RootFolderId, v: '' })}
+				logoUrl={browseRoute.buildUrl({ dir: RootFolderId, view: '' })}
 				breadcrumbs={this.props.breadcrumbs.concat({ title: this.props.title })}
 				content={this.props.children}
 				version={version}

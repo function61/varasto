@@ -95,7 +95,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const breadcrumbs: Breadcrumb[] = output.Parents.map((dir) => {
 			return {
 				title: dir.Name,
-				url: browseRoute.buildUrl({ dir: dir.Id, v: this.props.view }),
+				url: browseRoute.buildUrl({ dir: dir.Id, view: this.props.view }),
 			};
 		});
 
@@ -135,14 +135,14 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 									{
 										url: browseRoute.buildUrl({
 											dir: this.props.directoryId,
-											v: '',
+											view: '',
 										}),
 										title: 'Metadata view',
 									},
 									{
 										url: browseRoute.buildUrl({
 											dir: this.props.directoryId,
-											v: 'folder',
+											view: 'folder',
 										}),
 										title: 'Folder view',
 									},
@@ -252,7 +252,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const directoryToRow = (dir: Directory) => {
 			const content = sensitivityAuthorize(dir.Sensitivity) ? (
 				<div>
-					<a href={browseRoute.buildUrl({ dir: dir.Id, v: this.props.view })}>
+					<a href={browseRoute.buildUrl({ dir: dir.Id, view: this.props.view })}>
 						{dir.Name}
 					</a>
 					{dir.Description ? (
@@ -386,7 +386,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					<a
 						href={browseRoute.buildUrl({
 							dir: dir.Id,
-							v: this.props.view,
+							view: this.props.view,
 						})}>
 						<img src={imageNotAvailable()} style={{ maxWidth: '100%' }} />
 					</a>
