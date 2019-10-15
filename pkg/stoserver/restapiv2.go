@@ -60,11 +60,17 @@ func defineRestApi(
 }
 
 func convertDir(dir stotypes.Directory) stoservertypes.Directory {
+	typ, err := stoservertypes.DirectoryTypeValidate(dir.Type)
+	if err != nil {
+		panic(err)
+	}
+
 	return stoservertypes.Directory{
 		Id:          dir.ID,
 		Parent:      dir.Parent,
 		Name:        dir.Name,
 		Description: dir.Description,
+		Type:        typ,
 		Metadata:    metadataMapToKvList(dir.Metadata),
 		Sensitivity: dir.Sensitivity,
 	}

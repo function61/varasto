@@ -2,6 +2,7 @@ package stodb
 
 import (
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
@@ -36,7 +37,11 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 
 	results := []error{
 		NodeRepository.Update(newNode, tx),
-		DirectoryRepository.Update(stotypes.NewDirectory("root", "", "root"), tx),
+		DirectoryRepository.Update(stotypes.NewDirectory(
+			"root",
+			"",
+			"root",
+			string(stoservertypes.DirectoryTypeGeneric)), tx),
 		ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",

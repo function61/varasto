@@ -15,6 +15,7 @@ import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { globalConfig } from 'f61ui/globalconfig';
+import { unrecognizedValue } from 'f61ui/utils';
 import {
 	CollectionCreate,
 	CollectionMove,
@@ -26,12 +27,14 @@ import {
 	DirectoryMove,
 	DirectoryPullMetadata,
 	DirectoryRename,
+	DirectorySetType,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getDirectory } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CollectionSubset,
 	Directory,
 	DirectoryOutput,
+	DirectoryType,
 	HeadRevisionId,
 	MetadataImdbId,
 	MetadataOverview,
@@ -60,10 +63,6 @@ interface DirOrCollection {
 	dir?: Directory;
 	coll?: CollectionSubset;
 }
-
-// FIXME
-const moviesDirId = '70MqRF3FaxI';
-const seriesDirId = '7JczPh5-XSQ';
 
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
 	state: BrowsePageState = {
@@ -100,7 +99,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		});
 
 		const showTabController =
-			output.Collections.filter(hasMeta).length > 0 && output.Directory.Id !== moviesDirId;
+			output.Collections.filter(hasMeta).length > 0 &&
+			output.Directory.Type !== DirectoryType.Movies &&
+			output.Directory.Type !== DirectoryType.Series;
 
 		const content = ((): React.ReactNode => {
 			switch (this.props.view) {
@@ -184,7 +185,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		};
 
 		const collectionToRow = (coll: CollectionSubset) => {
-			const dirIsForMovies = coll.Directory === moviesDirId;
+			const dirIsForMovies = output.Directory.Type === DirectoryType.Movies;
 			const warning =
 				dirIsForMovies && !(MetadataImdbId in metadataKvsToKv(coll.Metadata)) ? (
 					<div>
@@ -271,7 +272,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				</div>
 			);
 
-			const dirIsForSeries = dir.Parent === seriesDirId;
+			const dirIsForSeries = output.Directory.Type === DirectoryType.Series;
 			const warning =
 				dirIsForSeries && !(MetadataImdbId in metadataKvsToKv(dir.Metadata)) ? (
 					<span
@@ -433,6 +434,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								<ClipboardButton text={output.Directory.Id} />
 							</td>
 						</tr>
+						{output.Directory.Type !== DirectoryType.Generic ? (
+							<tr>
+								<th>Type</th>
+								<td>{directoryTypeToEmoji(output.Directory.Type)}</td>
+							</tr>
+						) : null}
 						<tr>
 							<th>Content</th>
 							<td>
@@ -481,6 +488,9 @@ const directoryDropdown = (dir: Directory) => {
 			<CommandLink command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)} />
 			<CommandLink command={DirectoryPullMetadata(dir.Id)} />
 			<CommandLink command={DirectoryMove(dir.Id, { disambiguation: dir.Name })} />
+			<CommandLink
+				command={DirectorySetType(dir.Id, dir.Type, { disambiguation: dir.Name })}
+			/>
 			<CommandLink command={DirectoryDelete(dir.Id, { disambiguation: dir.Name })} />
 		</Dropdown>
 	);
@@ -490,4 +500,19 @@ const hasMeta = (coll: CollectionSubset): boolean => coll.Metadata && coll.Metad
 
 function imageNotAvailable(): string {
 	return globalConfig().assetsDir + '/../image-not-available.png';
+}
+
+function directoryTypeToEmoji(type: DirectoryType): string {
+	switch (type) {
+		case DirectoryType.Generic:
+			return '🗀';
+		case DirectoryType.Movies:
+			return '🎬';
+		case DirectoryType.Series:
+			return '📺';
+		case DirectoryType.Podcasts:
+			return '🎙️';
+		default:
+			throw unrecognizedValue(type);
+	}
 }

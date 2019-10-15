@@ -59,6 +59,16 @@
 			]
 		},
 		{
+			"name": "DirectoryType",
+			"type": "string",
+			"stringMembers": [
+				"generic",
+				"movies",
+				"series",
+				"podcasts"
+			]
+		},
+		{
 			"name": "VolumeTechnology",
 			"type": "string",
 			"stringMembers": [
@@ -94,6 +104,7 @@
 				"Parent": {"_": "string"},
 				"Name": {"_": "string"},
 				"Description": {"_": "string"},
+				"Type": {"_": "DirectoryType"},
 				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Sensitivity": {"_": "integer"}
 			}}

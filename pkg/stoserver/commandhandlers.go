@@ -267,7 +267,8 @@ func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *co
 			stotypes.NewDirectory(
 				stoutils.NewDirectoryId(),
 				cmd.Parent,
-				cmd.Name),
+				cmd.Name,
+				string(stoservertypes.DirectoryTypeGeneric)),
 			tx)
 	})
 }
@@ -326,6 +327,19 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChan
 		}
 
 		dir.Description = cmd.Description
+
+		return stodb.DirectoryRepository.Update(dir, tx)
+	})
+}
+
+func (c *cHandlers) DirectorySetType(cmd *stoservertypes.DirectorySetType, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		dir, err := stodb.Read(tx).Directory(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		dir.Type = string(cmd.Type)
 
 		return stodb.DirectoryRepository.Update(dir, tx)
 	})

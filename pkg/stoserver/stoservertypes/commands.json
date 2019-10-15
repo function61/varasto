@@ -166,6 +166,17 @@
 		]
 	},
 	{
+		"command": "directory.SetType",
+		"chain": "public",
+		"ctor": ["Id", "Type"],
+		"crudNature": "update",
+		"title": "Set directory type",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Type", "type": "DirectoryType" }
+		]
+	},
+	{
 		"command": "directory.Move",
 		"chain": "public",
 		"ctor": ["Id"],

@@ -39,6 +39,7 @@ import {
 	ConfigValue,
 	Directory,
 	DirectoryOutput,
+	DirectoryType,
 	File as File2,
 	MetadataImdbId, // conflicts with HTML's "File" interface
 	RootPathDotBase64FIXME,
@@ -46,10 +47,6 @@ import {
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseRoute, collectionRoute } from 'routes';
-
-// FIXME
-const moviesDirId = '70MqRF3FaxI';
-const seriesDirId = '7JczPh5-XSQ';
 
 interface CollectionPageProps {
 	id: string;
@@ -243,7 +240,7 @@ export default class CollectionPage extends React.Component<
 
 		const inMoviesOrSeriesHierarchy =
 			directoryOutput.Parents.concat(directoryOutput.Directory).filter(
-				(dir) => [moviesDirId, seriesDirId].indexOf(dir.Id) !== -1,
+				(dir) => dir.Type === DirectoryType.Movies || dir.Type === DirectoryType.Series,
 			).length > 0;
 		const imdbIdExpectedButMissing =
 			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);

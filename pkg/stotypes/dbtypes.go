@@ -52,6 +52,7 @@ type Directory struct {
 	Parent      string
 	Name        string
 	Description string
+	Type        string
 	Metadata    map[string]string
 	Sensitivity int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 }
@@ -139,11 +140,12 @@ func NewChangeset(
 	}
 }
 
-func NewDirectory(id string, parent string, name string) *Directory {
+func NewDirectory(id string, parent string, name string, typ string) *Directory {
 	return &Directory{
 		ID:       id,
 		Parent:   parent,
 		Name:     name,
 		Metadata: map[string]string{},
+		Type:     typ,
 	}
 }
