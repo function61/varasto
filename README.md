@@ -46,8 +46,8 @@ Features
 | ✓      | Per-collection durability   | To save money, we support storing important files with higher redundancy than less important files |
 | ✓      | Transactional               | File or group of files are successfully committed or none at all. Practically no other filesystem does this |
 | ✓      | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
-| ✓   | [Ransomware protection](docs/guide_ransomware-protection.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
-| [TODO](https://github.com/function61/varasto/issues/18) | Integrated SMART monitoring | Detect disk failures early |
+| ✓      | [Ransomware protection](docs/guide_ransomware-protection.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
+| ✓      | [Integrated SMART monitoring](docs/guide_setting-up-smart-monitoring.md) | Detect disk failures early |
 | [TODO](https://github.com/function61/varasto/issues/53) | Tiered storage              | Use SSD for super fast data ingestion, and transfer it in background to a spinning disk |
 | [TODO](https://github.com/function61/varasto/issues/39) | Multi-user                  | Have separate file hierarchies for your friends & family |
 | TODO   | File sharing                | Share your own files to friends |
@@ -67,6 +67,7 @@ Operating:
 - [How to install](docs/guide_how-to-install.md)
 - [Setting up AWS S3](docs/guide_setting-up-s3.md)
 - [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+- [Setting up SMART monitoring](docs/guide_setting-up-smart-monitoring.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 - [Setting up ransomware protection](docs/guide_ransomware-protection.md)
 

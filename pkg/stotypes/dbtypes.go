@@ -30,6 +30,8 @@ type Volume struct {
 	Description   string
 	SerialNumber  string
 	Technology    string
+	SmartId       string
+	SmartReport   string
 	Enclosure     string
 	EnclosureSlot int // 0 = not defined
 	Manufactured  time.Time

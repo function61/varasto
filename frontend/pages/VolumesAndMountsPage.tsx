@@ -1,9 +1,11 @@
+import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
+import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
+import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
@@ -13,6 +15,7 @@ import { unrecognizedValue } from 'f61ui/utils';
 import {
 	IntegrityverificationjobResume,
 	IntegrityverificationjobStop,
+	NodeSmartScan,
 	VolumeChangeDescription,
 	VolumeChangeQuota,
 	VolumeCreate,
@@ -23,6 +26,7 @@ import {
 	VolumeSetTechnology,
 	VolumeSetTopology,
 	VolumeSetWarrantyEndDate,
+	VolumeSmartSetId,
 	VolumeUnmount,
 	VolumeVerifyIntegrity,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -33,6 +37,7 @@ import {
 	getVolumes,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import {
+	DocRef,
 	IntegrityVerificationJob,
 	Node,
 	Volume,
@@ -116,7 +121,17 @@ export default class VolumesAndMountsPage extends React.Component<
 				case 'service':
 					return <Panel heading="Service view">{this.renderServiceView()}</Panel>;
 				case 'smart':
-					return <Panel heading="SMART">TODO</Panel>;
+					return (
+						<Panel
+							heading={
+								<div>
+									SMART{' '}
+									<DocLink doc={DocRef.DocsGuideSettingUpSmartMonitoringMd} />
+								</div>
+							}>
+							{this.renderSmartView()}
+						</Panel>
+					);
 				case '':
 					return (
 						<div>
@@ -168,6 +183,73 @@ export default class VolumesAndMountsPage extends React.Component<
 					{content}
 				</TabController>
 			</SettingsLayout>
+		);
+	}
+
+	private renderSmartView() {
+		const [volumes, loadingOrError] = this.state.volumes.unwrap();
+
+		const volumesWithSmart = (volumes || []).filter((vol) => !!vol.Smart.LatestReport);
+
+		return (
+			<table className="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th>Passed</th>
+						<th>Label</th>
+						<th>Description</th>
+						<th>Reported</th>
+						<th>Temperature</th>
+						<th>PowerCycleCount</th>
+						<th>PowerOnTime</th>
+					</tr>
+				</thead>
+				<tbody>
+					{volumesWithSmart.map((vol) => {
+						const smart = vol.Smart.LatestReport!;
+
+						return (
+							<tr key={vol.Id}>
+								<td>{passFailBadge(smart.Passed)}</td>
+								<td>{vol.Label}</td>
+								<td>{vol.Description}</td>
+								<td>
+									<Timestamp ts={smart.Time} />
+								</td>
+								<td>
+									{smart.Temperature
+										? smart.Temperature.toString() + ' °C'
+										: null}
+								</td>
+								<td>
+									{smart.PowerCycleCount
+										? thousandSeparate(smart.PowerCycleCount)
+										: null}
+								</td>
+								<td>
+									{smart.PowerOnTime ? thousandSeparate(smart.PowerOnTime) : null}
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>
+							<div>{loadingOrError}</div>
+							{volumesWithSmart.length === 0 ? (
+								<div>
+									<InfoAlert>
+										No SMART-reporting volumes found. Read docs first:{' '}
+										<DocLink doc={DocRef.DocsGuideSettingUpSmartMonitoringMd} />
+									</InfoAlert>
+								</div>
+							) : null}
+							<CommandButton command={NodeSmartScan()} />
+						</td>
+					</tr>
+				</tfoot>
+			</table>
 		);
 	}
 
@@ -375,6 +457,7 @@ export default class VolumesAndMountsPage extends React.Component<
 								command={VolumeChangeDescription(obj.Id, obj.Description)}
 							/>
 							<CommandLink command={VolumeSetTechnology(obj.Id, obj.Technology)} />
+							<CommandLink command={VolumeSmartSetId(obj.Id, obj.Smart.Id)} />
 							<CommandLink command={VolumeMigrateData(obj.Id)} />
 						</Dropdown>
 					</td>
@@ -398,6 +481,10 @@ export default class VolumesAndMountsPage extends React.Component<
 				Label: '',
 				Uuid: '',
 				SerialNumber: '',
+				Smart: {
+					Id: '',
+					LatestReport: null,
+				},
 				Id: 0,
 				Manufactured: null,
 				WarrantyEnds: null,
@@ -612,6 +699,18 @@ function onlineBadge(online: boolean): React.ReactNode {
 	) : (
 		<span className="label label-danger" title="Offline">
 			<span className="glyphicon glyphicon-off" />
+		</span>
+	);
+}
+
+function passFailBadge(online: boolean): React.ReactNode {
+	return online ? (
+		<span className="label label-success" title="Pass">
+			✓
+		</span>
+	) : (
+		<span className="label label-danger" title="Fail">
+			❌
 		</span>
 	);
 }

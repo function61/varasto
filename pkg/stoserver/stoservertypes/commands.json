@@ -55,6 +55,17 @@
 		]
 	},
 	{
+		"command": "volume.SmartSetId",
+		"chain": "public",
+		"ctor": ["Id", "SmartId"],
+		"crudNature": "update",
+		"title": "Set SMART ID",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "SmartId", "optional": true }
+		]
+	},
+	{
 		"command": "volume.SetTechnology",
 		"chain": "public",
 		"ctor": ["Id", "Technology"],
@@ -363,6 +374,14 @@
 			{ "key": "Id", "hideIfDefaultValue": true },
 			{ "key": "DesiredVolumes" }
 		]
+	},
+	{
+		"command": "node.SmartScan",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "SMART scan",
+		"fields": []
 	},
 	{
 		"command": "database.Backup",

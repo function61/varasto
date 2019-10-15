@@ -14,6 +14,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/smart"
 	"github.com/function61/varasto/pkg/stofuse/stofuseclient"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
@@ -659,6 +660,106 @@ func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuse
 func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.CfgNetworkShareBaseUrl.Set(cmd.Baseurl, tx)
+	})
+}
+
+func (c *cHandlers) VolumeSmartSetId(cmd *stoservertypes.VolumeSmartSetId, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.SmartId = cmd.SmartId
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
+func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {
+	type smartCapableVolume struct {
+		volId   int
+		smartId string
+		report  *stoservertypes.SmartReport
+	}
+
+	scans := []*smartCapableVolume{}
+
+	// list volumes that are capable of their SMART scan (for example cloud volumes obviously are not)
+	if err := c.db.View(func(tx *bolt.Tx) error {
+		return stodb.VolumeRepository.Each(func(record interface{}) error {
+			vol := record.(*stotypes.Volume)
+
+			if vol.SmartId != "" {
+				scans = append(scans, &smartCapableVolume{
+					volId:   vol.ID,
+					smartId: vol.SmartId,
+				})
+			}
+
+			return nil
+		}, tx)
+	}); err != nil {
+		return err
+	}
+
+	for _, scan := range scans {
+		report, err := smart.Scan(scan.smartId, smart.SmartCtlDockerBackend)
+		if err != nil {
+			return fmt.Errorf("volume %d (%s) error scanning SMART: %v", scan.volId, scan.smartId, err)
+		}
+
+		var temp *int
+		var powerOnTime *int
+		var powerCycleCount *int
+
+		if report.Temperature.Current != 0 {
+			temp = &report.Temperature.Current
+		}
+
+		if report.PowerOnTime.Hours != 0 {
+			powerOnTime = &report.PowerOnTime.Hours
+		}
+
+		if report.PowerCycleCount != 0 {
+			powerCycleCount = &report.PowerCycleCount
+		}
+
+		scan.report = &stoservertypes.SmartReport{
+			Time:            time.Now(),
+			Passed:          report.SmartStatus.Passed,
+			Temperature:     temp,
+			PowerCycleCount: powerCycleCount,
+			PowerOnTime:     powerOnTime,
+		}
+	}
+
+	// nothing to do
+	if len(scans) == 0 {
+		return nil
+	}
+
+	return c.db.Update(func(tx *bolt.Tx) error {
+		for _, scan := range scans {
+			vol, err := stodb.Read(tx).Volume(scan.volId)
+			if err != nil {
+				return err
+			}
+
+			// update back into db
+			smartReportJson, err := json.Marshal(scan.report)
+			if err != nil {
+				return err
+			}
+
+			vol.SmartReport = string(smartReportJson)
+
+			if err := stodb.VolumeRepository.Update(vol, tx); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 }
 

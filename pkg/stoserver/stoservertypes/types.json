@@ -81,6 +81,7 @@
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [
+				"docs/guide_setting-up-smart-monitoring.md",
 				"docs/guide_setting-up-backup.md"
 			]
 		}
@@ -195,6 +196,7 @@
 				"Uuid": {"_": "string"},
 				"Description": {"_": "string"},
 				"Label": {"_": "string"},
+				"Smart": {"_": "VolumeSmartAttrs"},
 				"SerialNumber": {"_": "string"},
 				"Manufactured": {"_": "date", "nullable": true},
 				"WarrantyEnds": {"_": "date", "nullable": true},
@@ -202,6 +204,23 @@
 				"Quota": {"_": "integer"},
 				"BlobSizeTotal": {"_": "integer"},
 				"BlobCount": {"_": "integer"}
+			}}
+		},
+		{
+			"name": "VolumeSmartAttrs",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"LatestReport": {"_": "SmartReport", "nullable": true}
+			}}
+		},
+		{
+			"name": "SmartReport",
+			"type": {"_": "object", "fields": {
+				"Time": {"_": "datetime"},
+				"Passed": {"_": "boolean"},
+				"Temperature": {"_": "integer", "nullable": true},
+				"PowerCycleCount": {"_": "integer", "nullable": true},
+				"PowerOnTime": {"_": "integer", "nullable": true}
 			}}
 		},
 		{

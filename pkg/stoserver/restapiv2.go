@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
@@ -16,6 +17,7 @@ import (
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/duration"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
@@ -329,6 +331,17 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 			}
 		}
 
+		var latestReport *stoservertypes.SmartReport
+		if dbObject.SmartReport != "" {
+			latestReport = &stoservertypes.SmartReport{}
+			panicIfError(json.Unmarshal([]byte(dbObject.SmartReport), latestReport))
+		}
+
+		smartAttrs := stoservertypes.VolumeSmartAttrs{
+			Id:           dbObject.SmartId,
+			LatestReport: latestReport,
+		}
+
 		var mfg *guts.Date
 		if !dbObject.Manufactured.IsZero() {
 			mfg = &guts.Date{Time: dbObject.Manufactured}
@@ -349,6 +362,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 			Manufactured:  mfg,
 			WarrantyEnds:  we,
 			Topology:      topology,
+			Smart:         smartAttrs,
 			Quota:         int(dbObject.Quota), // FIXME: lossy conversions here
 			BlobSizeTotal: int(dbObject.BlobSizeTotal),
 			BlobCount:     int(dbObject.BlobCount),
@@ -764,7 +778,11 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 }
 
 func (h *handlers) GetHealth(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.Health {
-	healthRoot := getHealthCheckerGraph(h.db)
+	healthRoot, err := getHealthCheckerGraph(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
 
 	graph, err := healthRoot.CheckHealth()
 	if err != nil {
@@ -1062,13 +1080,56 @@ func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
 	return false, err // unknown error
 }
 
-func getHealthCheckerGraph(db *bolt.DB) stohealth.HealthChecker {
+func getHealthCheckerGraph(db *bolt.DB) (stohealth.HealthChecker, error) {
+	temps := []stohealth.HealthChecker{}
+	smarts := []stohealth.HealthChecker{}
+
+	now := time.Now()
+
+	if err := db.View(func(tx *bolt.Tx) error {
+		return stodb.VolumeRepository.Each(func(record interface{}) error {
+			vol := record.(*stotypes.Volume)
+
+			if vol.SmartReport == "" {
+				return nil
+			}
+
+			report := &stoservertypes.SmartReport{}
+			if err := json.Unmarshal([]byte(vol.SmartReport), report); err != nil {
+				return err
+			}
+
+			if report.Temperature != nil {
+				temps = append(temps, stohealth.NewStaticHealthNode(
+					vol.Label,
+					stoservertypes.HealthStatusPass,
+					fmt.Sprintf("%d °C", *report.Temperature)))
+			}
+
+			smartStatus := stoservertypes.HealthStatusPass
+			if !report.Passed {
+				smartStatus = stoservertypes.HealthStatusFail
+			}
+
+			smarts = append(smarts, stohealth.NewStaticHealthNode(
+				vol.Label,
+				smartStatus,
+				fmt.Sprintf("Checked %s ago", duration.Humanize(now.Sub(report.Time)))))
+
+			return nil
+		}, tx)
+	}); err != nil {
+		return nil, err
+	}
+
 	return stohealth.NewHealthFolder(
 		"Varasto",
 		stohealth.NewLastSuccessfullBackup(db),
 		stohealth.NewLastIntegrityVerificationJob(db),
 		stohealth.NewHealthFolder(
+			"Temperatures",
+			temps...),
+		stohealth.NewHealthFolder(
 			"SMART",
-			stohealth.NewSmartChecker("Dummy 1"),
-			stohealth.NewSmartChecker("Dummy 2")))
+			smarts...)), nil
 }

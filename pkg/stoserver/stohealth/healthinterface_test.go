@@ -20,28 +20,32 @@ func TestBasic(t *testing.T) {
           "Children": [],
           "Details": "",
           "Health": "pass",
-          "Title": "Disk Dummy 1 SMART"
+          "Title": "Dummy 1"
         },
         {
           "Children": [],
           "Details": "",
-          "Health": "pass",
-          "Title": "Disk Dummy 2 SMART"
+          "Health": "warn",
+          "Title": "Dummy 2"
         }
       ],
       "Details": "",
-      "Health": "pass",
+      "Health": "warn",
       "Title": "SMART"
     }
   ],
   "Details": "",
-  "Health": "pass",
+  "Health": "warn",
   "Title": "Varasto"
 }`)
 }
 
 func getTestGraph() (*stoservertypes.Health, error) {
-	root := NewHealthFolder("Varasto", NewHealthFolder("SMART", NewSmartChecker("Dummy 1"), NewSmartChecker("Dummy 2")))
+	root := NewHealthFolder(
+		"Varasto",
+		NewHealthFolder("SMART",
+			NewStaticHealthNode("Dummy 1", stoservertypes.HealthStatusPass, ""),
+			NewStaticHealthNode("Dummy 2", stoservertypes.HealthStatusWarn, "")))
 
 	return root.CheckHealth()
 }
