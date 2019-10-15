@@ -174,13 +174,6 @@ export default class MetadataBackupPage extends React.Component<
 							</td>
 						</tr>
 					</tbody>
-					<tfoot>
-						<tr>
-							<td colSpan={99}>
-								<CommandButton command={DatabaseBackup()} />
-							</td>
-						</tr>
-					</tfoot>
 				</table>
 			</Panel>
 		);
@@ -201,6 +194,8 @@ export default class MetadataBackupPage extends React.Component<
 						<p>No backup was ever taken :(</p>
 					),
 				)}
+
+				<CommandButton command={DatabaseBackup()} />
 
 				<table className="table table-striped table-hover">
 					<thead>
