@@ -3,7 +3,6 @@ package themoviedbapi
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/function61/gokit/ezhttp"
 	"strconv"
@@ -114,32 +113,14 @@ func (c *Client) GetSeasonEpisodes(seasonNumber int, tvId string) ([]Episode, er
 }
 
 func (c *Client) findMovieByImdbId(imdbId string) (string, error) {
-	id, isMovie, err := c.findMovieOrTvByImdbId(imdbId)
-	if err != nil {
-		return "", err
-	}
-
-	if !isMovie {
-		return "", errors.New("is not movie")
-	}
-
-	return id, nil
+	return c.findMovieOrTvByImdbId(imdbId, true)
 }
 
 func (c *Client) findTvByImdbId(imdbId string) (string, error) {
-	id, isMovie, err := c.findMovieOrTvByImdbId(imdbId)
-	if err != nil {
-		return "", err
-	}
-
-	if isMovie {
-		return "", errors.New("is not tv")
-	}
-
-	return id, nil
+	return c.findMovieOrTvByImdbId(imdbId, false)
 }
 
-func (c *Client) findMovieOrTvByImdbId(imdbId string) (string, bool, error) {
+func (c *Client) findMovieOrTvByImdbId(imdbId string, expectMovie bool) (string, error) {
 	res := struct {
 		MovieResults []struct {
 			Id int64 `json:"id"`
@@ -156,20 +137,27 @@ func (c *Client) findMovieOrTvByImdbId(imdbId string) (string, bool, error) {
 		ctx,
 		endpoint("/find/"+imdbId+"?external_source=imdb_id&api_key="+c.apiKey),
 		ezhttp.RespondsJson(&res, true)); err != nil {
-		return "", false, err
+		return "", err
 	}
 
-	if len(res.MovieResults)+len(res.TvResults) != 1 {
-		return "", false, fmt.Errorf(
-			"expecting exactly 1 result for TV or movie; got movies=%d tv=%d",
-			len(res.MovieResults),
-			len(res.TvResults))
-	}
+	// can't assert len(MovieResults) + len(TvResults) == 1 because tt0903747 (= Breaking
+	// Bad TV series in IMDb) yiels both a movie and a TV series in TMDb
+	if expectMovie {
+		if len(res.MovieResults) != 1 {
+			return "", fmt.Errorf(
+				"expecting exactly 1 movie result; got=%d",
+				len(res.MovieResults))
+		}
 
-	if len(res.MovieResults) == 1 {
-		return strconv.Itoa(int(res.MovieResults[0].Id)), true, nil
+		return strconv.Itoa(int(res.MovieResults[0].Id)), nil
 	} else {
-		return strconv.Itoa(int(res.TvResults[0].Id)), false, nil
+		if len(res.TvResults) != 1 {
+			return "", fmt.Errorf(
+				"expecting exactly 1 TV result; got=%d",
+				len(res.TvResults))
+		}
+
+		return strconv.Itoa(int(res.TvResults[0].Id)), nil
 	}
 }
 
