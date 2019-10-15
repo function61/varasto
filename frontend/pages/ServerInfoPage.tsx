@@ -174,19 +174,19 @@ function healthStatusToIcon(input: HealthStatus): JSX.Element {
 	switch (input) {
 		case HealthStatus.Fail:
 			return (
-				<span className="alert alert-danger">
+				<span className="label label-danger">
 					<span className="glyphicon glyphicon-fire" />
 				</span>
 			);
 		case HealthStatus.Warn:
 			return (
-				<span className="alert alert-warning">
+				<span className="label label-warning">
 					<span className="glyphicon glyphicon-warning-sign" />
 				</span>
 			);
 		case HealthStatus.Pass:
 			return (
-				<span className="alert alert-success">
+				<span className="label label-success">
 					<span className="glyphicon glyphicon-ok" />
 				</span>
 			);
