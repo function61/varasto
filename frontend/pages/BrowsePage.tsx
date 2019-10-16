@@ -366,6 +366,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				);
 			}
 
+			if (coll.Description) {
+				badges.push(
+					<span className="label label-default margin-left">{coll.Description}</span>,
+				);
+			}
+
 			return (
 				<Panel
 					heading={
