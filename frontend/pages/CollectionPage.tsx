@@ -271,6 +271,7 @@ export default class CollectionPage extends React.Component<
 								<thead>
 									<tr>
 										<td style={{ width: '1%' }} />
+										<td style={{ width: '1%' }} />
 										<td colSpan={99} />
 									</tr>
 								</thead>
