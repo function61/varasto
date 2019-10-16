@@ -119,7 +119,19 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		})();
 
 		return (
-			<AppDefaultLayout title={output.Directory.Name} breadcrumbs={breadcrumbs}>
+			<AppDefaultLayout
+				title={output.Directory.Name}
+				titleElem={
+					<span>
+						{output.Directory.Name}
+						{output.Directory.Description ? (
+							<span className="label label-default margin-left">
+								{output.Directory.Description}
+							</span>
+						) : null}
+					</span>
+				}
+				breadcrumbs={breadcrumbs}>
 				<SensitivityHeadsUp />
 				<div className="row">
 					<div className="col-md-9">

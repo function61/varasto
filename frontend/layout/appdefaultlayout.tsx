@@ -9,6 +9,7 @@ import { browseRoute, serverInfoRoute } from 'routes';
 
 interface AppDefaultLayoutProps {
 	title: string;
+	titleElem?: React.ReactNode;
 	breadcrumbs: Breadcrumb[];
 	children: React.ReactNode;
 }
@@ -37,7 +38,9 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 				appHomepage="https://github.com/function61/varasto"
 				navLinks={navLinks}
 				logoUrl={browseRoute.buildUrl({ dir: RootFolderId, view: '' })}
-				breadcrumbs={this.props.breadcrumbs.concat({ title: this.props.title })}
+				breadcrumbs={this.props.breadcrumbs.concat({
+					title: this.props.titleElem || this.props.title,
+				})}
 				content={this.props.children}
 				version={version}
 				pageTitle={this.props.title}

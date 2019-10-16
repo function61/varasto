@@ -93,21 +93,32 @@ export default class CollectionPage extends React.Component<
 			this.state.directoryOutput,
 		);
 
-		let breadcrumbs: Breadcrumb[] = [];
-		let title = 'Loading';
-
-		if (collectionOutput && directoryOutput) {
-			const ret = this.renderBreadcrumbs(collectionOutput, directoryOutput);
-			title = ret.title;
-			breadcrumbs = ret.breadcrumbs;
+		if (!collectionOutput || !directoryOutput) {
+			return (
+				<AppDefaultLayout title="Loading" breadcrumbs={[]}>
+					{loadingOrError}
+				</AppDefaultLayout>
+			);
 		}
 
+		const ret = this.renderBreadcrumbs(collectionOutput, directoryOutput);
+
 		return (
-			<AppDefaultLayout title={title} breadcrumbs={breadcrumbs}>
+			<AppDefaultLayout
+				title={ret.title}
+				titleElem={
+					<span>
+						{ret.title}
+						{collectionOutput.Collection.Description ? (
+							<span className="label label-default margin-left">
+								{collectionOutput.Collection.Description}
+							</span>
+						) : null}
+					</span>
+				}
+				breadcrumbs={ret.breadcrumbs}>
 				{loadingOrError}
-				{collectionOutput && directoryOutput
-					? this.renderData(collectionOutput, directoryOutput)
-					: null}
+				{this.renderData(collectionOutput, directoryOutput)}
 			</AppDefaultLayout>
 		);
 	}
@@ -256,17 +267,7 @@ export default class CollectionPage extends React.Component<
 							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
 						) : null}
 
-						<Panel
-							heading={
-								<div>
-									Files
-									{collOutput.Collection.Description ? (
-										<span className="label label-default margin-left">
-											{collOutput.Collection.Description}
-										</span>
-									) : null}
-								</div>
-							}>
+						<Panel heading="Files">
 							<table className="table table-striped table-hover">
 								<thead>
 									<tr>
