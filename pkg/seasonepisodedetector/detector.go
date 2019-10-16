@@ -11,8 +11,12 @@ type Result struct {
 	Episode string
 }
 
+func (d *Result) SeasonDesignation() string {
+	return "S" + d.Season
+}
+
 func (d *Result) String() string {
-	return "S" + d.Season + "E" + d.Episode
+	return d.SeasonDesignation() + "E" + d.Episode
 }
 
 func (d *Result) LaxEqual(other Result) bool {

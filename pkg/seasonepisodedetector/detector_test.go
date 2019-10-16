@@ -5,21 +5,25 @@ import (
 	"testing"
 )
 
+func TestSeasonDesignation(t *testing.T) {
+	assert.EqualString(t, Detect("Simpsons 07x01 - Who Shot Mr Burns (Part 2)").SeasonDesignation(), "S07")
+}
+
 func TestDetect(t *testing.T) {
 	cs := []struct {
 		input  string
 		expect string
 	}{
 		{
-			input:  "[ www.Speed.Cd ] - Grand.Designs.S12E06.720p.HDTV.x264-C4TV",
+			input:  "Grand.Designs.S12E06.720p.HDTV.x264",
 			expect: "S12E06",
 		},
 		{
-			input:  "[ www.Speed.Cd ] - Grand.Designs.s12e6.720p.HDTV.x264-C4TV",
+			input:  "Grand.Designs.s12e6.720p.HDTV.x264",
 			expect: "S12E6",
 		},
 		{
-			input:  "[ www.Speed.Cd ] - Grand.Designs.s12e.720p.HDTV.x264-C4TV",
+			input:  "Grand.Designs.s12e.720p.HDTV.x264",
 			expect: "nomatch",
 		},
 		{

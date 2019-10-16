@@ -4,6 +4,7 @@ import (
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/spf13/cobra"
 	"os"
+	"path/filepath"
 )
 
 func Entrypoint() *cobra.Command {
@@ -72,7 +73,8 @@ func episodeFromFilename(input string) string {
 		return ""
 	}
 
-	return result.String()
+	// "S03/S03E07"
+	return filepath.Join(result.SeasonDesignation(), result.String())
 }
 
 func panicIfError(err error) {
