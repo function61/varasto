@@ -2,6 +2,7 @@ package stohealth
 
 import (
 	"fmt"
+	"github.com/function61/varasto/pkg/docreference"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"go.etcd.io/bbolt"
@@ -31,7 +32,10 @@ func (h *lastSuccessfullBackup) CheckHealth() (*stoservertypes.Health, error) {
 	title := "Last metadata backup"
 
 	if lastSuccessRaw == "" {
-		return mkHealth(title, stoservertypes.HealthStatusFail, "Never taken, see: https://github.com/function61/varasto/blob/master/docs/guide_setting-up-backup.md")
+		return mkHealth(
+			title,
+			stoservertypes.HealthStatusFail,
+			"Never taken, see: "+docreference.GitHubMaster(stoservertypes.DocRefDocsGuideSettingUpBackupMd))
 	}
 
 	lastSuccess, err := time.Parse(time.RFC3339, lastSuccessRaw)

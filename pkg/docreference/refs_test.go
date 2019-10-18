@@ -22,3 +22,10 @@ func TestDocsExistForDocRefs(t *testing.T) {
 		})
 	}
 }
+
+func TestGitHubMaster(t *testing.T) {
+	assert.EqualString(
+		t,
+		GitHubMaster(stoservertypes.DocRefDocsGuideSettingUpBackupMd),
+		"https://github.com/function61/varasto/blob/master/docs/guide_setting-up-backup.md")
+}
