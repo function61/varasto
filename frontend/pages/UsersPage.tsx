@@ -3,7 +3,7 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { ApikeyCreate, ApikeyRemove } from 'generated/stoserver/stoservertypes_commands'; // FIXME
+import { ApikeyCreate, ApikeyRemove } from 'generated/stoserver/stoservertypes_commands';
 import { getApiKeys } from 'generated/stoserver/stoservertypes_endpoints';
 import { ApiKey } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
