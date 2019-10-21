@@ -3,6 +3,7 @@ package stoserver
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
@@ -23,6 +24,10 @@ import (
 
 const (
 	varastoUbackupServiceId = "varasto"
+)
+
+var (
+	backupInProgress nonBlockingLock
 )
 
 func (c *cHandlers) DatabaseBackupConfigure(cmd *stoservertypes.DatabaseBackupConfigure, ctx *command.Ctx) error {
@@ -60,6 +65,12 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 	if err != nil {
 		return err
 	}
+
+	ok, unlock := backupInProgress.TryLock()
+	if !ok {
+		return errors.New("another backup already in progress")
+	}
+	defer unlock()
 
 	target := ubtypes.BackupTarget{
 		ServiceName: varastoUbackupServiceId,

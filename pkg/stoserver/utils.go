@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"sync/atomic"
 )
 
 func panicIfError(err error) {
@@ -82,5 +83,23 @@ func parseStringBool(serialized string) (bool, error) {
 		return false, nil
 	default:
 		return false, fmt.Errorf(`parseStringBool: expected "true" or "false"; got "%s"`, serialized)
+	}
+}
+
+type nonBlockingLock struct {
+	// same could be done with a buffered channel, but we'd need to do ..New()
+	// and this design lets us benefit from zero value
+	locked int32
+}
+
+func (b *nonBlockingLock) TryLock() (bool, func()) {
+	if atomic.CompareAndSwapInt32(&b.locked, 0, 1) {
+		return true, func() {
+			if !atomic.CompareAndSwapInt32(&b.locked, 1, 0) {
+				panic("we should have had exclusive access")
+			}
+		}
+	} else {
+		return false, func() { panic("should not be called") }
 	}
 }
