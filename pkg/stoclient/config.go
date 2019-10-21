@@ -42,11 +42,15 @@ func writeConfig(conf *ClientConfig) error {
 func ReadConfig() (*ClientConfig, error) {
 	confPath, err := configFilePath()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Varasto client config: %v", err)
 	}
 
 	conf := &ClientConfig{}
-	return conf, jsonfile.Read(confPath, conf, true)
+	if err := jsonfile.Read(confPath, conf, true); err != nil {
+		return nil, fmt.Errorf("Varasto client config: %v", err)
+	}
+
+	return conf, nil
 }
 
 func configFilePath() (string, error) {
