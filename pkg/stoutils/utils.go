@@ -27,6 +27,7 @@ var NewVolumeUuid = longId
 var NewNodeId = shortId
 var NewClientId = shortId
 var NewIntegrityVerificationJobId = shortId
+var NewApiKeyToken = cryptoLongId
 
 func shortId() string {
 	return randomBase64UrlWithoutLeadingDash(3)
@@ -34,6 +35,10 @@ func shortId() string {
 
 func longId() string {
 	return randomBase64UrlWithoutLeadingDash(8)
+}
+
+func cryptoLongId() string {
+	return randomBase64UrlWithoutLeadingDash(32)
 }
 
 // CLI arguments beginning with dash are problematic (which base64 URL variant can produce),

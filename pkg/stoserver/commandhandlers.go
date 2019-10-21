@@ -9,7 +9,6 @@ import (
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
-	"github.com/function61/gokit/cryptorandombytes"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -601,7 +600,7 @@ func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.
 			ID:        stoutils.NewClientId(),
 			Created:   ctx.Meta.Timestamp,
 			Name:      cmd.Name,
-			AuthToken: cryptorandombytes.Base64Url(32),
+			AuthToken: stoutils.NewApiKeyToken(),
 		}, tx)
 	})
 }
