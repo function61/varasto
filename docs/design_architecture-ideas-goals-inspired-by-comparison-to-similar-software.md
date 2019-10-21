@@ -11,7 +11,7 @@ Varasto is backed by a
 Ideas / goals
 -------------
 
-- "[RAID is not backup](https://serverfault.com/questions/2888/why-is-raid-not-a-backup)",
+- "[RAID is not a backup](https://serverfault.com/questions/2888/why-is-raid-not-a-backup)",
   so you would need backup in addition to RAID anyway. But what if we designed for backup
   first and its redundant storage as the primary source of truth?
 - Varasto works like GitHub, with your different directories being like GitHub repos,
