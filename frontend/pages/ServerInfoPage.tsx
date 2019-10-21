@@ -1,3 +1,4 @@
+import { DangerLabel, SuccessLabel, WarningLabel } from 'component/labels';
 import { Result } from 'component/result';
 import {
 	changeSensitivity,
@@ -7,16 +8,29 @@ import {
 } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { CommandLink } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
-import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
-import { Health, HealthStatus, ServerInfo } from 'generated/stoserver/stoservertypes_types';
+import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';
+import {
+	getHealth,
+	getServerInfo,
+	getSubsystemStatuses,
+} from 'generated/stoserver/stoservertypes_endpoints';
+import {
+	Health,
+	HealthStatus,
+	ServerInfo,
+	SubsystemStatus,
+} from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ServerInfoPageState {
 	serverInfo: Result<ServerInfo>;
 	health: Result<Health>;
+	subsystemStatuses: Result<SubsystemStatus[]>;
 	currSens: Sensitivity;
 }
 
@@ -27,6 +41,9 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		}),
 		health: new Result<Health>((_) => {
 			this.setState({ health: _ });
+		}),
+		subsystemStatuses: new Result<SubsystemStatus[]>((_) => {
+			this.setState({ subsystemStatuses: _ });
 		}),
 		currSens: getMaxSensitivityFromLocalStorage(),
 	};
@@ -43,11 +60,13 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		return (
 			<SettingsLayout title="Server info &amp; health" breadcrumbs={[]}>
 				<Panel heading="Server info">{this.renderInfo()}</Panel>
+				<Panel heading="Subsystems">{this.renderSubsystems()}</Panel>
 				<Panel heading="Health">{this.renderHealth()}</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
 			</SettingsLayout>
 		);
 	}
+
 	private renderInfo() {
 		const [serverInfo, loadingOrError] = this.state.serverInfo.unwrap();
 
@@ -134,6 +153,55 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		);
 	}
 
+	private renderSubsystems() {
+		const [subsystemStatuses, loadingOrError] = this.state.subsystemStatuses.unwrap();
+
+		return (
+			<table className="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th>Status</th>
+						<th>Subsystem</th>
+						<th>Started</th>
+						<th>Process ID</th>
+						<th>HTTP mount</th>
+						<th />
+					</tr>
+				</thead>
+				<tbody>
+					{(subsystemStatuses || []).map((subsys) => {
+						const started = subsys.Started; // TS doesn't remove null without this
+
+						return (
+							<tr key={subsys.Id}>
+								<td>{subsystemStatusLabel(subsys.Alive, subsys.Enabled)}</td>
+								<td>{subsys.Description}</td>
+								<td>{started && <Timestamp ts={started} />}</td>
+								<td>{subsys.Pid}</td>
+								<td>{subsys.HttpMount}</td>
+								<td>
+									<Dropdown>
+										{!subsys.Enabled && (
+											<CommandLink command={SubsystemStart(subsys.Id)} />
+										)}
+										{subsys.Enabled && (
+											<CommandLink command={SubsystemStop(subsys.Id)} />
+										)}
+									</Dropdown>
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>{loadingOrError}</td>
+					</tr>
+				</tfoot>
+			</table>
+		);
+	}
+
 	private renderSensitivitySelector() {
 		const sensitivityRadioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 			changeSensitivity(+e.target.value);
@@ -167,6 +235,21 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 	private fetchData() {
 		this.state.serverInfo.load(() => getServerInfo());
 		this.state.health.load(() => getHealth());
+		this.state.subsystemStatuses.load(() => getSubsystemStatuses());
+	}
+}
+
+function subsystemStatusLabel(alive: boolean, enabled: boolean): React.ReactNode {
+	if (alive && enabled) {
+		return <SuccessLabel>running</SuccessLabel>;
+	} else if (alive && !enabled) {
+		return <DangerLabel>running but should be stopped</DangerLabel>;
+	} else if (!alive && enabled) {
+		return <DangerLabel>stopped but should be running</DangerLabel>;
+	} else if (!alive && !enabled) {
+		return <WarningLabel>stopped</WarningLabel>;
+	} else {
+		throw new Error('Should not happen');
 	}
 }
 
@@ -174,21 +257,21 @@ function healthStatusToIcon(input: HealthStatus): JSX.Element {
 	switch (input) {
 		case HealthStatus.Fail:
 			return (
-				<span className="label label-danger">
+				<DangerLabel>
 					<span className="glyphicon glyphicon-fire" />
-				</span>
+				</DangerLabel>
 			);
 		case HealthStatus.Warn:
 			return (
-				<span className="label label-warning">
+				<WarningLabel>
 					<span className="glyphicon glyphicon-warning-sign" />
-				</span>
+				</WarningLabel>
 			);
 		case HealthStatus.Pass:
 			return (
-				<span className="label label-success">
+				<SuccessLabel>
 					<span className="glyphicon glyphicon-ok" />
-				</span>
+				</SuccessLabel>
 			);
 		default:
 			throw unrecognizedValue(input);

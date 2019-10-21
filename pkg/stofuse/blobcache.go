@@ -2,25 +2,27 @@ package stofuse
 
 import (
 	"context"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
 	"io/ioutil"
-	"log"
 	"time"
 )
 
 type FsServer struct {
 	clientConfig stoclient.ClientConfig
 	blobCache    *BlobCache
+	logl         *logex.Leveled
 }
 
 // FIXME: global
 var globalFsServer *FsServer
 
-func NewFsServer(clientConfig stoclient.ClientConfig) {
+func NewFsServer(clientConfig stoclient.ClientConfig, logl *logex.Leveled) {
 	globalFsServer = &FsServer{
 		clientConfig: clientConfig,
 		blobCache:    NewBlobCache(),
+		logl:         logl,
 	}
 }
 
@@ -54,7 +56,7 @@ func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef) (*BlobData, e
 	subCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	log.Printf("BlobCache:Get <- %s", refHex)
+	globalFsServer.logl.Debug.Printf("dl %s", refHex)
 
 	blobContent, blobContentCloser, err := stoclient.DownloadChunk(subCtx, ref, globalFsServer.clientConfig)
 	if err != nil {

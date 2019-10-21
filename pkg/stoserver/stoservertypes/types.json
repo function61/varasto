@@ -3,6 +3,7 @@
 		{ "chain": "authenticated", "method": "GET", "path": "/api_v2/database/export", "name": "databaseExport" },
 		{ "chain": "authenticated", "method": "GET", "path": "/api_v2/database/export_sha256s", "name": "databaseExportSha256s" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/serverinfo", "produces": {"_": "ServerInfo"}, "name": "getServerInfo" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/serverinfo/subsystem_statuses", "produces": {"_": "list", "of": {"_": "SubsystemStatus"}}, "name": "getSubsystemStatuses" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}", "name": "getCollection", "description": "TODO: type" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dir/{path}", "produces": {"_": "CollectionOutput"}, "name": "getCollectiotAtRev" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/collections/{id}/{rev}/dl", "name": "downloadFile", "description": "Downloads a file from specific revision" },
@@ -78,6 +79,14 @@
 			]
 		},
 		{
+			"name": "SubsystemId",
+			"type": "string",
+			"stringMembers": [
+				"thumbnail-generator",
+				"fuse-projector"
+			]
+		},
+		{
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [
@@ -108,6 +117,18 @@
 				"Type": {"_": "DirectoryType"},
 				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Sensitivity": {"_": "integer"}
+			}}
+		},
+		{
+			"name": "SubsystemStatus",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "SubsystemId"},
+				"Description": {"_": "string"},
+				"Pid": {"_": "string"},
+				"HttpMount": {"_": "string"},
+				"Alive": {"_": "boolean"},
+				"Enabled": {"_": "boolean"},
+				"Started": {"_": "datetime", "nullable": true}
 			}}
 		},
 		{

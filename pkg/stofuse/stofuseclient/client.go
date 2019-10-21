@@ -15,25 +15,25 @@ func New(baseUrl string) *Client {
 	return &Client{stofusetypes.NewRestClientUrlBuilder(baseUrl)}
 }
 
-func (v *Client) Mount(collectionId string) error {
+func (c *Client) Mount(ctx context.Context, collectionId string) error {
 	_, err := ezhttp.Post(
-		context.Background(),
-		v.urls.FuseMount(),
+		ctx,
+		c.urls.FuseMount(),
 		ezhttp.SendJson(&stofusetypes.CollectionId{Id: collectionId}))
 	return err
 }
 
-func (v *Client) Unmount(collectionId string) error {
+func (c *Client) Unmount(ctx context.Context, collectionId string) error {
 	_, err := ezhttp.Post(
-		context.Background(),
-		v.urls.FuseUnmount(),
+		ctx,
+		c.urls.FuseUnmount(),
 		ezhttp.SendJson(&stofusetypes.CollectionId{Id: collectionId}))
 	return err
 }
 
-func (v *Client) UnmountAll() error {
+func (c *Client) UnmountAll(ctx context.Context) error {
 	_, err := ezhttp.Post(
-		context.Background(),
-		v.urls.FuseUnmountAll())
+		ctx,
+		c.urls.FuseUnmountAll())
 	return err
 }

@@ -14,17 +14,25 @@ import (
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
 	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/childprocesscontroller"
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
 	"log"
+	"net"
 	"net/http"
+	"net/http/httputil"
 	"os"
+)
+
+var (
+	defaultDialer = net.Dialer{}
 )
 
 type ServerConfigFile struct {
@@ -83,11 +91,45 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 		}
 	}
 
+	workers := stopper.NewManager()
+
+	// upcoming:
+	// - transcoding server
+	// - (possible microservice) generic user/auth microservice (pluggable for Lambda-hosted function61 one)
+	// - blobstore drivers, so integrity verification jobs can be ionice'd?
+	thumbnailerSockAddr := "/tmp/sto-thumbnailer.sock"
+
+	serverConfig.ThumbServer = &subsystem{
+		id:        stoservertypes.SubsystemIdThumbnailGenerator,
+		httpMount: "/api/thumbnails",
+		enabled:   true,
+		controller: childprocesscontroller.New(
+			[]string{os.Args[0], "thumbserver", "--addr", "domainsocket://" + thumbnailerSockAddr},
+			"Thumbnail generator",
+			logex.Prefix("manager(thumbserver)", logger),
+			logex.Prefix("thumbserver", logger),
+			workers.Stopper()),
+		sockPath: thumbnailerSockAddr,
+	}
+
+	fuseProjectorSockAddr := "/tmp/sto-fuseprojector.sock"
+
+	serverConfig.FuseProjector = &subsystem{
+		id:        stoservertypes.SubsystemIdFuseProjector,
+		httpMount: "/api/fuse",
+		enabled:   false,
+		controller: childprocesscontroller.New(
+			[]string{os.Args[0], "fuse", "serve", "--addr", "domainsocket://" + fuseProjectorSockAddr},
+			"FUSE projector",
+			logex.Prefix("manager(fuse)", logger),
+			logex.Prefix("fuse", logger),
+			workers.Stopper()),
+		sockPath: fuseProjectorSockAddr,
+	}
+
 	mwares := createDummyMiddlewares(serverConfig)
 
 	router := mux.NewRouter()
-
-	workers := stopper.NewManager()
 
 	ivController := stointegrityverifier.NewController(
 		db,
@@ -107,6 +149,29 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	); err != nil {
 		return err
 	}
+
+	mountSubsystem := func(subsys *subsystem) {
+		router.PathPrefix(subsys.httpMount).Handler(&httputil.ReverseProxy{
+			Transport: &http.Transport{
+				DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+					return defaultDialer.DialContext(ctx, "unix", subsys.sockPath)
+				},
+			},
+			Director: func(req *http.Request) {
+				req.URL.Scheme = "http"
+				// does not matter with domain sockets unless the server uses
+				// name-based hosting (does not in this case)
+				req.URL.Host = "server"
+			},
+		})
+
+		if subsys.enabled {
+			subsys.controller.Start()
+		}
+	}
+
+	mountSubsystem(serverConfig.ThumbServer)
+	mountSubsystem(serverConfig.FuseProjector)
 
 	eventLog, err := createNonPersistingEventLog()
 	if err != nil {
@@ -165,6 +230,15 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	return nil
 }
 
+// pairs together a subprocess controller and its socket path
+type subsystem struct {
+	id         stoservertypes.SubsystemId
+	enabled    bool
+	httpMount  string
+	controller *childprocesscontroller.Controller
+	sockPath   string
+}
+
 type ServerConfig struct {
 	File              ServerConfigFile
 	SelfNode          stotypes.Node
@@ -172,6 +246,8 @@ type ServerConfig struct {
 	DiskAccess        *stodiskaccess.Controller // only for mounts on self node
 	ClientsAuthTokens map[string]bool
 	LogTail           *logtee.StringTail
+	ThumbServer       *subsystem
+	FuseProjector     *subsystem
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed

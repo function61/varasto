@@ -230,10 +230,9 @@ export default class CollectionPage extends React.Component<
 				file.Path,
 			);
 
-			const thumbUrl =
-				'//' +
-				document.location!.hostname +
-				`:8688/thumb?coll=${collOutput.Collection.Id}&amp;file=${file.Sha256}`;
+			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&amp;file=${
+				file.Sha256
+			}`;
 
 			return (
 				<a href={dl} target="_blank" title={file.Path} className="margin-left">

@@ -64,12 +64,13 @@ func configFilePath() (string, error) {
 
 func configInitEntrypoint() *cobra.Command {
 	return &cobra.Command{
-		Use:   "config-init [serverAddr] [authToken]",
+		Use:   "config-init [serverAddr] [authToken] [fuseMountPath]",
 		Short: "Initialize configuration, use http://localhost:8066 for dev",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			serverAddr := args[0]
 			authToken := args[1]
+			fuseMountPath := args[2]
 
 			confPath, err := configFilePath()
 			if err != nil {
@@ -86,8 +87,9 @@ func configInitEntrypoint() *cobra.Command {
 			}
 
 			conf := &ClientConfig{
-				ServerAddr: serverAddr,
-				AuthToken:  authToken,
+				ServerAddr:    serverAddr,
+				AuthToken:     authToken,
+				FuseMountPath: fuseMountPath,
 			}
 
 			if err := writeConfig(conf); err != nil {

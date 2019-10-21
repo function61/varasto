@@ -7,12 +7,12 @@ import (
 	"bazil.org/fuse/fs"
 	"context"
 	"errors"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/retry"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
-	"log"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,14 +33,14 @@ func newSigs() *sigFabric {
 	}
 }
 
-func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, stop *stopper.Stopper) error {
+func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, stop *stopper.Stopper, logl *logex.Leveled) error {
 	defer stop.Done()
 
 	if conf.FuseMountPath == "" {
 		return errors.New("FuseMountPath not set")
 	}
 
-	NewFsServer(conf)
+	NewFsServer(conf, logl)
 
 	varastoFs, err := NewVarastoFS(sigs)
 	if err != nil {
@@ -111,15 +111,15 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 				break
 			case collectionId := <-sigs.mount:
 				if err := mountAdd(collectionId); err != nil {
-					log.Printf("ERROR: mountAdd: %v", err)
+					logl.Error.Printf("mountAdd: %v", err)
 				} else {
-					log.Printf("mount: %s", collectionId)
+					logl.Info.Printf("mount: %s", collectionId)
 				}
 			case collectionId := <-sigs.unmount:
 				if err := mountRemove(collectionId); err != nil {
-					log.Printf("ERROR: mountRemove: %v", err)
+					logl.Error.Printf("mountRemove: %v", err)
 				} else {
-					log.Printf("unmount: %s", collectionId)
+					logl.Info.Printf("unmount: %s", collectionId)
 				}
 			case <-sigs.unmountAll:
 				varastoFs.root.subdirs = []*Dir{}
@@ -142,13 +142,13 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 
 		// retrying because unmount will fail if any process is accessing the mount
 		if err := retry.Retry(ctx, tryUnmount, retry.DefaultBackoff(), func(err error) {
-			log.Printf("tryUnmount: %v", err)
+			logl.Error.Printf("tryUnmount: %v", err)
 		}); err != nil {
 			panic(err)
 		}
 	}()
 
-	log.Printf("VarastoFS server started")
+	logl.Info.Println("VarastoFS server started")
 
 	if err := fs.Serve(fuseConn, varastoFs); err != nil {
 		return err
@@ -158,7 +158,7 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 	// blocks as long as server is up
 	<-fuseConn.Ready
 	if err := fuseConn.MountError; err != nil {
-		log.Fatal(err)
+		logl.Error.Fatal(err)
 	}
 
 	return nil

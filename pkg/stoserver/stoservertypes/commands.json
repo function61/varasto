@@ -444,7 +444,7 @@
 		"crudNature": "update",
 		"title": "Set network share baseurl",
 		"fields": [
-			{ "key": "Baseurl", "optional": true, "help": "Looks like \\\\servername\\varasto" }
+			{ "key": "Baseurl", "optional": true, "placeholder": "\\\\servername\\varasto" }
 		]
 	},
 	{
@@ -454,7 +454,27 @@
 		"crudNature": "update",
 		"title": "Set FUSE server baseurl",
 		"fields": [
-			{ "key": "Baseurl", "optional": true, "help": "Looks like http://192.168.1.103:8689" }
+			{ "key": "Baseurl", "optional": true, "placeholder": "Looks like http://localhost:8066" }
+		]
+	},
+	{
+		"command": "subsystem.Start",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Start",
+		"fields": [
+			{ "key": "Id", "type": "SubsystemId", "hideIfDefaultValue": true }
+		]
+	},
+	{
+		"command": "subsystem.Stop",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Stop",
+		"fields": [
+			{ "key": "Id", "type": "SubsystemId", "hideIfDefaultValue": true }
 		]
 	},
 	{

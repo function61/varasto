@@ -5,7 +5,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/stoclient"
+	"github.com/function61/varasto/pkg/stoutils"
 	"io"
 	"log"
 	"net/http"
@@ -18,11 +21,15 @@ import (
 type ThumbParallelProcessor struct {
 	mu                    sync.Mutex
 	inProgressCollections map[string]chan interface{}
+	logl                  *logex.Leveled
+	clientConfig          stoclient.ClientConfig
 }
 
-func NewThumbParallelProcessor() *ThumbParallelProcessor {
+func NewThumbParallelProcessor(clientConfig stoclient.ClientConfig, logl *logex.Leveled) *ThumbParallelProcessor {
 	return &ThumbParallelProcessor{
 		inProgressCollections: map[string]chan interface{}{},
+		logl:                  logl,
+		clientConfig:          clientConfig,
 	}
 }
 
@@ -46,8 +53,8 @@ func (x *ThumbParallelProcessor) makeThumbnailsForCollection(collectionId string
 	x.inProgressCollections[collectionId] = done
 
 	go func() {
-		if err := makeThumbsForCollection(collectionId); err != nil {
-			log.Printf("FAIL makeThumbsForCollection: %v", err)
+		if err := makeThumbsForCollection(collectionId, x.clientConfig, x.logl); err != nil {
+			x.logl.Error.Printf("makeThumbsForCollection: %v", err)
 		}
 
 		close(done)
@@ -58,14 +65,17 @@ func (x *ThumbParallelProcessor) makeThumbnailsForCollection(collectionId string
 	return done
 }
 
-func runServer(stop *stopper.Stopper) error {
-	srv := http.Server{
-		Addr: ":8688",
+func runServer(addr string, logger *log.Logger, stop *stopper.Stopper) error {
+	logl := logex.Levels(logger)
+
+	clientConfig, err := stoclient.ReadConfig()
+	if err != nil {
+		return err
 	}
 
-	thumbProcessor := NewThumbParallelProcessor()
+	thumbProcessor := NewThumbParallelProcessor(*clientConfig, logl)
 
-	http.HandleFunc("/thumb", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/thumbnails/thumb", func(w http.ResponseWriter, r *http.Request) {
 		collectionId := r.URL.Query().Get("coll")
 
 		if collectionId == "" {
@@ -113,6 +123,13 @@ func runServer(stop *stopper.Stopper) error {
 		io.Copy(w, thumbFile)
 	})
 
+	listener, err := stoutils.CreateTcpOrDomainSocketListener(addr, logl)
+	if err != nil {
+		return err
+	}
+
+	srv := http.Server{}
+
 	go func() {
 		defer stop.Done()
 
@@ -124,7 +141,9 @@ func runServer(stop *stopper.Stopper) error {
 		}
 	}()
 
-	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+	logl.Info.Printf("listening on %s", addr)
+
+	if err := srv.Serve(listener); err != http.ErrServerClosed {
 		return err
 	}
 

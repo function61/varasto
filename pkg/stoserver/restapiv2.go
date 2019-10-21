@@ -311,6 +311,32 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 }
 
+func (h *handlers) GetSubsystemStatuses(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.SubsystemStatus {
+	convert := func(subsys *subsystem) stoservertypes.SubsystemStatus {
+		status := subsys.controller.Status()
+
+		var started *time.Time
+		if !status.Started.IsZero() {
+			started = &status.Started
+		}
+
+		return stoservertypes.SubsystemStatus{
+			Id:          subsys.id,
+			Description: status.Description,
+			Pid:         status.Pid,
+			Alive:       status.Alive,
+			HttpMount:   subsys.httpMount,
+			Enabled:     subsys.enabled,
+			Started:     started,
+		}
+	}
+
+	return &[]stoservertypes.SubsystemStatus{
+		convert(h.conf.ThumbServer),
+		convert(h.conf.FuseProjector),
+	}
+}
+
 func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Volume {
 	ret := []stoservertypes.Volume{}
 

@@ -62,6 +62,36 @@ func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.
 	})
 }
 
+func (c *cHandlers) SubsystemStart(cmd *stoservertypes.SubsystemStart, ctx *command.Ctx) error {
+	subsys := c.getSubsystem(cmd.Id)
+	if subsys == nil {
+		panic("shouldnt happen")
+	}
+
+	if subsys.enabled {
+		return fmt.Errorf("subsystem %s already enabled", cmd.Id)
+	}
+	subsys.enabled = !subsys.enabled
+
+	subsys.controller.Start()
+	return nil
+}
+
+func (c *cHandlers) SubsystemStop(cmd *stoservertypes.SubsystemStop, ctx *command.Ctx) error {
+	subsys := c.getSubsystem(cmd.Id)
+	if subsys == nil {
+		panic("shouldnt happen")
+	}
+
+	if !subsys.enabled {
+		return fmt.Errorf("subsystem %s already disabled", cmd.Id)
+	}
+	subsys.enabled = !subsys.enabled
+
+	subsys.controller.Stop()
+	return nil
+}
+
 func (c *cHandlers) VolumeChangeQuota(cmd *stoservertypes.VolumeChangeQuota, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
@@ -571,12 +601,12 @@ func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount,
 	vstofuse := stofuseclient.New(baseUrl)
 
 	if cmd.UnmountOthers {
-		if err := vstofuse.UnmountAll(); err != nil {
+		if err := vstofuse.UnmountAll(context.TODO()); err != nil {
 			return err
 		}
 	}
 
-	return vstofuse.Mount(cmd.Collection)
+	return vstofuse.Mount(context.TODO(), cmd.Collection)
 }
 
 func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *command.Ctx) error {
@@ -673,6 +703,17 @@ func (c *cHandlers) VolumeSmartSetId(cmd *stoservertypes.VolumeSmartSetId, ctx *
 
 		return stodb.VolumeRepository.Update(vol, tx)
 	})
+}
+
+func (c *cHandlers) getSubsystem(id stoservertypes.SubsystemId) *subsystem {
+	switch stoservertypes.SubsystemIdExhaustived3ed3e(id) {
+	case stoservertypes.SubsystemIdThumbnailGenerator:
+		return c.conf.ThumbServer
+	case stoservertypes.SubsystemIdFuseProjector:
+		return c.conf.FuseProjector
+	default:
+		return nil
+	}
 }
 
 func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {

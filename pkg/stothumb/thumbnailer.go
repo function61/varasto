@@ -10,6 +10,7 @@ import (
 	"github.com/disintegration/imageorient"
 	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -20,7 +21,6 @@ import (
 	"image/jpeg"
 	_ "image/png"
 	"io"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -29,13 +29,8 @@ import (
 	"sync/atomic"
 )
 
-func makeThumbsForCollection(collectionId string) error {
-	cc, err := stoclient.ReadConfig()
-	if err != nil {
-		return err
-	}
-
-	coll, err := stoclient.FetchCollectionMetadata(*cc, collectionId)
+func makeThumbsForCollection(collectionId string, clientConfig stoclient.ClientConfig, logl *logex.Leveled) error {
+	coll, err := stoclient.FetchCollectionMetadata(clientConfig, collectionId)
 	if err != nil {
 		return err
 	}
@@ -53,8 +48,8 @@ func makeThumbsForCollection(collectionId string) error {
 		defer workersDone.Done()
 
 		for file := range work {
-			if err := makeThumbForFile(file, *cc); err != nil {
-				log.Printf("makeThumbForFile: %s: %v", file.Path, err)
+			if err := makeThumbForFile(file, clientConfig, logl); err != nil {
+				logl.Error.Printf("makeThumbForFile: %s: %v", file.Path, err)
 				atomic.AddUint64(&errors, 1)
 			}
 		}
@@ -107,7 +102,7 @@ func genThumbPath(fileContentSha256 []byte) string {
 // - thumb written succesfully
 // - error making thumb - same should not be tried again for this file
 // - thumb already exists
-func makeThumbForFile(file stotypes.File, config stoclient.ClientConfig) error {
+func makeThumbForFile(file stotypes.File, clientConfig stoclient.ClientConfig, logl *logex.Leveled) error {
 	fileContentSha256, err := hex.DecodeString(file.Sha256)
 	if err != nil {
 		return err
@@ -123,14 +118,14 @@ func makeThumbForFile(file stotypes.File, config stoclient.ClientConfig) error {
 		return nil // already exists
 	}
 
+	logl.Debug.Printf("thumbnailing %s", file.Path)
+
 	if err := os.MkdirAll(filepath.Dir(thumbPath), 0755); err != nil {
 		return err
 	}
 
-	log.Printf("Thumbnailing %s", file.Path)
-
 	origBuffer := &bytes.Buffer{}
-	if err := stoclient.DownloadOneFile(file, origBuffer, config); err != nil {
+	if err := stoclient.DownloadOneFile(file, origBuffer, clientConfig); err != nil {
 		return err
 	}
 

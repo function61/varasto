@@ -1,4 +1,5 @@
 import { DocLink } from 'component/doclink';
+import { DangerLabel, SuccessLabel, WarningLabel } from 'component/labels';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
@@ -210,7 +211,13 @@ export default class VolumesAndMountsPage extends React.Component<
 
 						return (
 							<tr key={vol.Id}>
-								<td>{passFailBadge(smart.Passed)}</td>
+								<td>
+									{smart.Passed ? (
+										<SuccessLabel title="Pass">✓</SuccessLabel>
+									) : (
+										<DangerLabel title="Fail">❌</DangerLabel>
+									)}
+								</td>
 								<td>{vol.Label}</td>
 								<td>{vol.Description}</td>
 								<td>
@@ -600,7 +607,7 @@ export default class VolumesAndMountsPage extends React.Component<
 
 			if (completed === null) {
 				if (!obj.Running) {
-					return <span className="label label-warning">Stopped</span>;
+					return <WarningLabel>Stopped</WarningLabel>;
 				}
 
 				// since the blobref is a SHA256, and its properties is uniform random distribution,
@@ -618,13 +625,13 @@ export default class VolumesAndMountsPage extends React.Component<
 			}
 
 			if (obj.ErrorsFound > 0) {
-				return <span className="label label-danger">Failed</span>;
+				return <DangerLabel>Failed</DangerLabel>;
 			}
 
 			return (
-				<span className="label label-success">
+				<SuccessLabel>
 					Pass <Timestamp ts={completed} />
-				</span>
+				</SuccessLabel>
 			);
 		};
 
@@ -693,24 +700,12 @@ function volumeTechnologyToDisplay(tech: VolumeTechnology): string {
 
 function onlineBadge(online: boolean): React.ReactNode {
 	return online ? (
-		<span className="label label-success" title="Online">
+		<SuccessLabel title="Online">
 			<span className="glyphicon glyphicon-off" />
-		</span>
+		</SuccessLabel>
 	) : (
-		<span className="label label-danger" title="Offline">
+		<DangerLabel title="Offline">
 			<span className="glyphicon glyphicon-off" />
-		</span>
-	);
-}
-
-function passFailBadge(online: boolean): React.ReactNode {
-	return online ? (
-		<span className="label label-success" title="Pass">
-			✓
-		</span>
-	) : (
-		<span className="label label-danger" title="Fail">
-			❌
-		</span>
+		</DangerLabel>
 	);
 }
