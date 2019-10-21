@@ -22,12 +22,11 @@ Make `config.json` in the same directory with content:
 
 ```
 {	
-	"db_location": "varasto.db",
-	"allow_bootstrap": true
+	"db_location": "varasto.db"
 }
 ```
 
-Now start the server:
+Now start the server (you may need to use sudo):
 
 ```
 $ ./sto server
@@ -35,12 +34,7 @@ $ ./sto server
 2019/08/02 12:35:04 [INFO] node LCb0 (ver. dev) started
 ```
 
-Now stop it by pressing `ctrl+c`. Change `allow_bootstrap` to `false` in the config,
-otherwise you'll get this warning the next time you'd start the server:
-
-```
-2019/08/02 12:35:52 [ERROR] AllowBootstrap true after bootstrap already done => dangerous
-```
+If everything seems to work, now stop it by pressing `ctrl+c`.
 
 Now make it start on system boot (you may need to run this with `sudo`):
 

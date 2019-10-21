@@ -37,7 +37,6 @@ var (
 
 type ServerConfigFile struct {
 	DbLocation                   string `json:"db_location"`
-	AllowBootstrap               bool   `json:"allow_bootstrap"`
 	DisableReplicationController bool   `json:"disable_replication_controller"`
 }
 
@@ -72,10 +71,6 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 			return err
 		}
 
-		if !scf.AllowBootstrap {
-			logl.Error.Fatalln("bootstrap needed but AllowBootstrap false")
-		}
-
 		// was not found error => run bootstrap
 		if err := stodb.Bootstrap(db, logex.Prefix("bootstrap", logger)); err != nil {
 			return err
@@ -84,10 +79,6 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 		serverConfig, err = readConfigFromDatabase(db, scf, logger, logTail)
 		if err != nil {
 			return err
-		}
-	} else {
-		if scf.AllowBootstrap {
-			logl.Error.Fatalln("AllowBootstrap true after bootstrap already done => dangerous")
 		}
 	}
 

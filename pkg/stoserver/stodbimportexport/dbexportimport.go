@@ -65,7 +65,19 @@ func Import(content io.Reader, dbLocation string) error {
 	}
 	defer db.Close()
 
-	if err := stodb.BootstrapRepos(db); err != nil {
+	if err := func() error {
+		tx, err := db.Begin(true)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		if err := stodb.BootstrapRepos(tx); err != nil {
+			return err
+		}
+
+		return tx.Commit()
+	}(); err != nil {
 		return err
 	}
 

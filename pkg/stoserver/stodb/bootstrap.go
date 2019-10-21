@@ -1,6 +1,7 @@
 package stodb
 
 import (
+	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -17,15 +18,22 @@ func Open(dbLocation string) (*bolt.DB, error) {
 func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
-	if err := BootstrapRepos(db); err != nil {
-		return err
-	}
-
 	tx, err := db.Begin(true)
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
+
+	// be extra safe and scan the DB to see that it is totally empty
+	if err := tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+		return fmt.Errorf("DB not empty, found bucket: %s", name)
+	}); err != nil {
+		return err
+	}
+
+	if err := BootstrapRepos(tx); err != nil {
+		return err
+	}
 
 	newNode := &stotypes.Node{
 		ID:   stoutils.NewNodeId(),
@@ -57,20 +65,14 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	return tx.Commit()
 }
 
-func BootstrapRepos(db *bolt.DB) error {
-	tx, err := db.Begin(true)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
+func BootstrapRepos(tx *bolt.Tx) error {
 	for _, repo := range RepoByRecordType {
 		if err := repo.Bootstrap(tx); err != nil {
 			return err
 		}
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 func allOk(errs []error) error {
