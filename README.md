@@ -29,10 +29,11 @@ Features
 |--------|-----------------------------|---------------------------------------|
 | ✓      | Supported OSs               | Linux, Windows (Mac might come later) |
 | ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
+| ✓      | Backup all your devices' data | Varasto's architecture is ideal for backing up all your PCs, mobile devices etc. |
 | ✓      | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive) |
-| ✓      | [Integrated backups](docs/guide_setting-up-backup.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
+| ✓      | [Integrated internal database backups](docs/guide_setting-up-backup.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
 | ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compresses well) & transparently |
-| ✓      | Metadata support            | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. |
+| ✓      | Metadata support & tagging  | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. Can also add tags to collections. |
 | ✓      | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! |
 | ✓      | Thumbnails for photos       | Automatic thumbnailing of photos/pictures |
 | [TODO](https://github.com/function61/varasto/issues/40) | Thumbnails for videos       | Automatic thumbnailing of videos |
