@@ -14,6 +14,8 @@ import (
 
 type BlobDiscoveredListener interface {
 	BlobDiscovered(blobDiscoveredAttrs)
+	// listener (like backgroundUploader) will inform its producer (blob discoverer) that
+	// uploads are erroring, to request that blob discovery should be stopped
 	CancelCh() chan interface{}
 }
 
@@ -22,12 +24,16 @@ func NewBlobDiscoveredAttrs(
 	collectionId string,
 	content []byte,
 	maybeCompressible bool,
+	filePath string,
+	size int64,
 ) blobDiscoveredAttrs {
 	return blobDiscoveredAttrs{
 		ref:               ref,
 		collectionId:      collectionId,
 		content:           content,
 		maybeCompressible: maybeCompressible,
+		filePath:          filePath,
+		size:              size,
 	}
 }
 
@@ -36,6 +42,8 @@ type blobDiscoveredAttrs struct {
 	collectionId      string
 	content           []byte
 	maybeCompressible bool
+	filePath          string
+	size              int64
 }
 
 type blobDiscoveredNoopListener struct{}
@@ -56,15 +64,17 @@ type backgroundUploader struct {
 	clientConfig         ClientConfig
 	uploadersDone        chan error
 	cancelCh             chan interface{}
+	uploadProgress       UploadProgressListener
 	blobAlreadyUploading *mutexmap.M // keyed by blob ref
 }
 
-func NewBackgroundUploader(n int, clientConfig ClientConfig) *backgroundUploader {
+func NewBackgroundUploader(n int, clientConfig ClientConfig, uploadProgress UploadProgressListener) *backgroundUploader {
 	b := &backgroundUploader{
 		uploadJobs:           make(chan blobDiscoveredAttrs),
 		uploadersDone:        make(chan error, n),
 		clientConfig:         clientConfig,
 		cancelCh:             make(chan interface{}),
+		uploadProgress:       uploadProgress,
 		blobAlreadyUploading: mutexmap.New(),
 	}
 
@@ -80,6 +90,13 @@ func NewBackgroundUploader(n int, clientConfig ClientConfig) *backgroundUploader
 // might block while uploader slots become available
 // errors are reported later by WaitFinished()
 func (b *backgroundUploader) BlobDiscovered(attrs blobDiscoveredAttrs) {
+	// send "0 bytes uploaded" progress event so UI starts showing 0 % for this file,
+	// because the next event is sent after blob is uploaded
+	b.uploadProgress.ReportUploadProgress(fileProgressEvent{
+		filePath:         attrs.filePath,
+		bytesInFileTotal: attrs.size,
+	})
+
 	b.uploadJobs <- attrs
 }
 
@@ -98,6 +115,8 @@ func (b *backgroundUploader) WaitFinished() error {
 			return fmt.Errorf("at least one uploader encountered job error: %v", err)
 		}
 	}
+
+	b.uploadProgress.Close()
 
 	return nil
 }
@@ -149,14 +168,29 @@ func (b *backgroundUploader) upload(job blobDiscoveredAttrs) error {
 }
 
 func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscoveredAttrs) error {
+	started := time.Now()
+
 	// just check if the chunk exists already
 	blobAlreadyExists, err := blobExists(job.ref, b.clientConfig)
 	if err != nil {
 		return err
 	}
 
+	notifyProgress := func() {
+		b.uploadProgress.ReportUploadProgress(fileProgressEvent{
+			filePath:            job.filePath,
+			bytesInFileTotal:    job.size,
+			bytesUploadedInBlob: int64(len(job.content)),
+			started:             started,
+			completed:           time.Now(),
+		})
+	}
+
 	if blobAlreadyExists {
 		log.Printf("Deduplicated chunk %s", job.ref.AsHex())
+
+		notifyProgress()
+
 		return nil
 	}
 
@@ -172,7 +206,7 @@ func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscove
 		return fmt.Errorf("error uploading blob %s: %v", job.ref.AsHex(), errSample(err, res))
 	}
 
-	fmt.Printf(".")
+	notifyProgress()
 
 	return nil
 }

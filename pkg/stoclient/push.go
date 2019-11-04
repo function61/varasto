@@ -204,7 +204,13 @@ func scanFileAndDiscoverBlobs(
 
 		bfile.BlobRefs = append(bfile.BlobRefs, blobRef.AsHex())
 
-		bdl.BlobDiscovered(NewBlobDiscoveredAttrs(*blobRef, collectionId, chunk, stoutils.IsMaybeCompressible(relativePath)))
+		bdl.BlobDiscovered(NewBlobDiscoveredAttrs(
+			*blobRef,
+			collectionId,
+			chunk,
+			stoutils.IsMaybeCompressible(relativePath),
+			bfile.Path,
+			bfile.Size))
 
 		if int64(len(chunk)) < stotypes.BlobSize {
 			break
@@ -257,7 +263,10 @@ func pushOne(collectionId string, path string) error {
 		return err
 	}
 
-	buploader := NewBackgroundUploader(backgroundUploaderConcurrency, *clientConfig)
+	buploader := NewBackgroundUploader(
+		backgroundUploaderConcurrency,
+		*clientConfig,
+		textUiUploadProgressOutputIfInTerminal())
 
 	file, err := scanFileAndDiscoverBlobs(absolutePath, path, fileInfo, collectionId, buploader)
 	if err != nil {
@@ -281,7 +290,10 @@ func pushOne(collectionId string, path string) error {
 }
 
 func push(wd *workdirLocation) error {
-	buploader := NewBackgroundUploader(backgroundUploaderConcurrency, wd.clientConfig)
+	buploader := NewBackgroundUploader(
+		backgroundUploaderConcurrency,
+		wd.clientConfig,
+		textUiUploadProgressOutputIfInTerminal())
 
 	ch, err := computeChangeset(wd, buploader)
 	if err != nil {

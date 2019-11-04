@@ -236,6 +236,38 @@
   revision = "c2b33e84"
 
 [[projects]]
+  digest = "1:d62282425ffb75047679d7e2c3b980eea7f82c05ef5fb9142ee617ebac6e7432"
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "88ba11cfdc67c7588b30042edf244b2875f892b6"
+  version = "v0.0.10"
+
+[[projects]]
+  digest = "1:8b9352f5af622f234923139000732eb2fb32574949fa84d60a21c70e5dd7d3e6"
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "f93a0d58d5fd95e53f82782d07bb0c79d23e1290"
+  version = "v0.0.6"
+
+[[projects]]
+  branch = "master"
+  digest = "1:3748273fbc527cb86628e8060e1a98df3d082f1d750a63056522e01ea87ff4a0"
+  name = "github.com/nsf/termbox-go"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "93860e16131719fa9722e7c448dbf8c0e3210a0d"
+
+[[projects]]
+  digest = "1:abcdbf03ca6ca13d3697e2186edc1f33863bbdac2b3a44dfa39015e8903f7409"
+  name = "github.com/olekukonko/tablewriter"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970"
+  version = "v0.0.1"
+
+[[projects]]
   branch = "master"
   digest = "1:9ea97158ea06d60b1f324aa384f6a4cbd596a81b3cae994e17108b195f398d01"
   name = "github.com/prometheus/procfs"
@@ -511,6 +543,9 @@
     "github.com/function61/ubackup/pkg/ubstorage",
     "github.com/function61/ubackup/pkg/ubtypes",
     "github.com/gorilla/mux",
+    "github.com/mattn/go-isatty",
+    "github.com/nsf/termbox-go",
+    "github.com/olekukonko/tablewriter",
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
     "go.etcd.io/bbolt",
