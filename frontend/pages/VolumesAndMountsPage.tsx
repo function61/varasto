@@ -35,6 +35,7 @@ import {
 import {
 	getIntegrityVerificationJobs,
 	getNodes,
+	getReplicationStatuses,
 	getVolumeMounts,
 	getVolumes,
 } from 'generated/stoserver/stoservertypes_endpoints';
@@ -42,6 +43,7 @@ import {
 	DocRef,
 	IntegrityVerificationJob,
 	Node,
+	ReplicationStatus,
 	Volume,
 	VolumeMount,
 	VolumeTechnology,
@@ -59,6 +61,7 @@ interface VolumesAndMountsPageState {
 	mounts: Result<VolumeMount[]>;
 	ivJobs: Result<IntegrityVerificationJob[]>;
 	nodes: Result<Node[]>;
+	replicationStatuses: Result<ReplicationStatus[]>;
 }
 
 interface Enclosure {
@@ -85,6 +88,9 @@ export default class VolumesAndMountsPage extends React.Component<
 		}),
 		nodes: new Result<Node[]>((_) => {
 			this.setState({ nodes: _ });
+		}),
+		replicationStatuses: new Result<ReplicationStatus[]>((_) => {
+			this.setState({ replicationStatuses: _ });
 		}),
 	};
 
@@ -122,6 +128,8 @@ export default class VolumesAndMountsPage extends React.Component<
 					return <Panel heading="Topology view">{this.renderTopologyView()}</Panel>;
 				case 'service':
 					return <Panel heading="Service view">{this.renderServiceView()}</Panel>;
+				case 'replicationStatuses':
+					return <Panel heading="Replication">{this.renderReplicationStatuses()}</Panel>;
 				case 'smart':
 					return (
 						<Panel
@@ -180,6 +188,12 @@ export default class VolumesAndMountsPage extends React.Component<
 								view: 'integrity',
 							}),
 							title: 'Integrity',
+						},
+						{
+							url: volumesAndMountsRoute.buildUrl({
+								view: 'replicationStatuses',
+							}),
+							title: 'Replication',
 						},
 					]}>
 					{content}
@@ -701,11 +715,49 @@ export default class VolumesAndMountsPage extends React.Component<
 		);
 	}
 
+	private renderReplicationStatuses() {
+		const [replicationStatuses, volumes, loadingOrError] = Result.unwrap2(
+			this.state.replicationStatuses,
+			this.state.volumes,
+		);
+
+		if (!replicationStatuses || !volumes || loadingOrError) {
+			return loadingOrError;
+		}
+
+		return (
+			<table className="table table-striped table-hover">
+				<thead>
+					<tr>
+						<th>Volume</th>
+						<th>Progress</th>
+					</tr>
+				</thead>
+				<tbody>
+					{replicationStatuses.map((status) => {
+						const volume = volumes.filter((vol) => vol.Id === status.VolumeId);
+						const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
+
+						return (
+							<tr key={status.VolumeId}>
+								<td>{volumeName}</td>
+								<td>
+									<ProgressBar progress={status.Progress} />
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		);
+	}
+
 	private fetchData() {
 		this.state.volumes.load(() => getVolumes());
 		this.state.mounts.load(() => getVolumeMounts());
 		this.state.nodes.load(() => getNodes());
 		this.state.ivJobs.load(() => getIntegrityVerificationJobs());
+		this.state.replicationStatuses.load(() => getReplicationStatuses());
 	}
 }
 

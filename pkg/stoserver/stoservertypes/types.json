@@ -13,6 +13,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}", "name": "downloadBlob", "description": "TODO: type" },
 		{ "chain": "public", "method": "POST", "path": "/api_v2/blobs/{ref}?collection={collection}&maybe_compressible={maybeCompressible}", "name": "uploadBlob" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}/meta", "produces": {"_": "BlobMetadata"}, "name": "getBlobMetadata" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/replication_progress", "produces": {"_": "list", "of": {"_": "ReplicationStatus"}}, "name": "getReplicationStatuses" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
@@ -129,6 +130,13 @@
 				"Alive": {"_": "boolean"},
 				"Enabled": {"_": "boolean"},
 				"Started": {"_": "datetime", "nullable": true}
+			}}
+		},
+		{
+			"name": "ReplicationStatus",
+			"type": {"_": "object", "fields": {
+				"VolumeId": {"_": "integer"},
+				"Progress": {"_": "integer"}
 			}}
 		},
 		{

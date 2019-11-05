@@ -585,6 +585,20 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 	return &ret
 }
 
+func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationStatus {
+	statuses := []stoservertypes.ReplicationStatus{}
+	for volId, controller := range h.conf.ReplicationControllers {
+		statuses = append(statuses, stoservertypes.ReplicationStatus{
+			VolumeId: volId,
+			Progress: controller.Progress(),
+		})
+	}
+
+	sort.Slice(statuses, func(i, j int) bool { return statuses[i].VolumeId < statuses[j].VolumeId })
+
+	return &statuses
+}
+
 func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Node {
 	ret := []stoservertypes.Node{}
 

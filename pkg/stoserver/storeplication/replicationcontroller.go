@@ -2,7 +2,9 @@
 package storeplication
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -13,6 +15,7 @@ import (
 	"go.etcd.io/bbolt"
 	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -21,31 +24,41 @@ type replicationJob struct {
 	FromVolumeId int
 }
 
-type controller struct {
+type Controller struct {
 	toVolumeId int
+	progress   *atomicInt32
 	stop       *stopper.Stopper
 	logl       *logex.Leveled
 	db         *bolt.DB
 	diskAccess *stodiskaccess.Controller
 }
 
-func StartReplicationController(toVolumeId int, db *bolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) {
-	logl := logex.Levels(logger)
-
-	defer stop.Done()
-	defer logl.Info.Println("stopped")
-
-	fiveSeconds := time.NewTicker(5 * time.Second)
-
-	c := &controller{
+func Start(toVolumeId int, db *bolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) *Controller {
+	c := &Controller{
 		toVolumeId: toVolumeId,
+		progress:   newAtomicInt32(0),
 		stop:       stop,
-		logl:       logl,
+		logl:       logex.Levels(logger),
 		db:         db,
 		diskAccess: diskAccess,
 	}
 
+	go c.run(stop)
+
+	return c
+}
+
+func (c *Controller) Progress() int {
+	return int(c.progress.Get())
+}
+
+func (c *Controller) run(stop *stopper.Stopper) {
+	defer stop.Done()
+	defer c.logl.Info.Println("stopped")
+
 	continueToken := stodb.StartFromFirst
+
+	fiveSeconds := time.NewTicker(5 * time.Second)
 
 	for {
 		// give priority to stop signal
@@ -61,8 +74,17 @@ func StartReplicationController(toVolumeId int, db *bolt.DB, diskAccess *stodisk
 		case <-fiveSeconds.C:
 			nextContinueToken, err := c.discoverAndRunReplicationJobs(continueToken)
 			if err != nil {
-				logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
+				c.logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
+			}
+
+			if bytes.Equal(nextContinueToken, stodb.StartFromFirst) {
+				c.progress.Set(100)
+			} else if len(nextContinueToken) >= 2 {
+				// our database is btree so iteration of blobs is sorted, and keys are hashes
+				// with random distribution, so we can estimate progress by looking at first
+				// 16 bits of hash
+				c.progress.Set(int32(float64(binary.BigEndian.Uint16(nextContinueToken[0:2])) / 65536.0 * 100.0))
 			}
 
 			continueToken = nextContinueToken
@@ -70,7 +92,7 @@ func StartReplicationController(toVolumeId int, db *bolt.DB, diskAccess *stodisk
 	}
 }
 
-func (c *controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte, error) {
+func (c *Controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte, error) {
 	jobs, nextContinueToken, err := c.discoverReplicationJobs(continueToken)
 	if err != nil {
 		return nextContinueToken, err
@@ -124,7 +146,7 @@ func (c *controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte
 	return nextContinueToken, nil
 }
 
-func (c *controller) replicateJob(job *replicationJob) error {
+func (c *Controller) replicateJob(job *replicationJob) error {
 	return c.diskAccess.Replicate(
 		context.TODO(),
 		job.FromVolumeId,
@@ -132,7 +154,7 @@ func (c *controller) replicateJob(job *replicationJob) error {
 		job.Ref)
 }
 
-func (c *controller) discoverReplicationJobs(continueToken []byte) ([]*replicationJob, []byte, error) {
+func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicationJob, []byte, error) {
 	tx, err := c.db.Begin(false)
 	if err != nil {
 		return nil, continueToken, err
@@ -183,4 +205,22 @@ func (c *controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 		return nil
 	}, tx)
+}
+
+type atomicInt32 struct {
+	num *int32
+}
+
+func newAtomicInt32(initialValue int32) *atomicInt32 {
+	return &atomicInt32{
+		num: &initialValue,
+	}
+}
+
+func (a *atomicInt32) Get() int32 {
+	return atomic.LoadInt32(a.num)
+}
+
+func (a *atomicInt32) Set(val int32) {
+	atomic.StoreInt32(a.num, val)
 }

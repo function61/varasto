@@ -191,7 +191,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 			continue
 		}
 
-		go storeplication.StartReplicationController(
+		serverConfig.ReplicationControllers[mount.Volume] = storeplication.Start(
 			mount.Volume,
 			db,
 			serverConfig.DiskAccess,
@@ -231,14 +231,15 @@ type subsystem struct {
 }
 
 type ServerConfig struct {
-	File              ServerConfigFile
-	SelfNode          stotypes.Node
-	ClusterWideMounts map[int]stotypes.VolumeMount
-	DiskAccess        *stodiskaccess.Controller // only for mounts on self node
-	ClientsAuthTokens map[string]bool
-	LogTail           *logtee.StringTail
-	ThumbServer       *subsystem
-	FuseProjector     *subsystem
+	File                   ServerConfigFile
+	SelfNode               stotypes.Node
+	ClusterWideMounts      map[int]stotypes.VolumeMount
+	DiskAccess             *stodiskaccess.Controller // only for mounts on self node
+	ClientsAuthTokens      map[string]bool
+	LogTail                *logtee.StringTail
+	ReplicationControllers map[int]*storeplication.Controller
+	ThumbServer            *subsystem
+	FuseProjector          *subsystem
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
@@ -309,12 +310,13 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}
 
 	return &ServerConfig{
-		File:              *scf,
-		SelfNode:          *selfNode,
-		ClusterWideMounts: clusterWideMountsMapped,
-		DiskAccess:        dam,
-		ClientsAuthTokens: authTokens,
-		LogTail:           logTail,
+		File:                   *scf,
+		SelfNode:               *selfNode,
+		ClusterWideMounts:      clusterWideMountsMapped,
+		DiskAccess:             dam,
+		ClientsAuthTokens:      authTokens,
+		LogTail:                logTail,
+		ReplicationControllers: map[int]*storeplication.Controller{},
 	}, nil
 }
 
