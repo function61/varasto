@@ -7,6 +7,13 @@ emphasis on integrity and encryption.
 
 See [screenshots](docs/screenshots.md) to get a better picture.
 
+Varasto is optimized for WORM-style (Write Once; Read Many, i.e. file archival, backups)
+workloads. If files in your particular directory change more than once an hour averaged
+throughout the day, you should have that collection cloned into your computer and have
+Varasto take daily (or even hourly) backups. If your files change less often, you can use
+Varasto as the authoritative store. 
+
+
 Status & timeline
 -----------------
 
