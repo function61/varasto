@@ -93,8 +93,9 @@ func (b *backgroundUploader) BlobDiscovered(attrs blobDiscoveredAttrs) {
 	// send "0 bytes uploaded" progress event so UI starts showing 0 % for this file,
 	// because the next event is sent after blob is uploaded
 	b.uploadProgress.ReportUploadProgress(fileProgressEvent{
-		filePath:         attrs.filePath,
-		bytesInFileTotal: attrs.size,
+		filePath:            attrs.filePath,
+		bytesInFileTotal:    attrs.size,
+		bytesUploadedInBlob: 0,
 	})
 
 	b.uploadJobs <- attrs
