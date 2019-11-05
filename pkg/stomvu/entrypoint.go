@@ -15,6 +15,7 @@ func Entrypoint() *cobra.Command {
 
 	cmd.AddCommand(epEntrypoint())
 	cmd.AddCommand(photoEntrypoint())
+	cmd.AddCommand(customMonthlyPatternEntrypoint())
 
 	return cmd
 }
