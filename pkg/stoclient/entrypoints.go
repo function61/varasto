@@ -62,7 +62,7 @@ func logEntrypoint() *cobra.Command {
 }
 
 func pushEntrypoint() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "push",
 		Short: "Uploads a collection from workdir to server",
 		Args:  cobra.NoArgs,
@@ -87,6 +87,10 @@ func pushEntrypoint() *cobra.Command {
 			panicIfError(push(wd))
 		},
 	}
+
+	cmd.AddCommand(bulkUploadScriptEntrypoint())
+
+	return cmd
 }
 
 func pushOneEntrypoint() *cobra.Command {
