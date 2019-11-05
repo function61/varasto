@@ -10,26 +10,11 @@ func TestDetectPhotoVideoDate(t *testing.T) {
 		input  string
 		expect string
 	}{
-		{
-			input:  "IMG_20180526_151345.jpg",
-			expect: "2018-05 - Unsorted",
-		},
-		{
-			input:  "VID_20190626_151345.jpg",
-			expect: "2019-06 - Unsorted",
-		},
-		{
-			input:  "20170429_194919.mp4",
-			expect: "2017-04 - Unsorted",
-		},
-		{
-			input:  "20170627_203226.jpg",
-			expect: "2017-06 - Unsorted",
-		},
-		{
-			input:  "IMG_20180526666_151345.jpg",
-			expect: "nomatch",
-		},
+		{"IMG_20180526_151345.jpg", "2018-05 - Unsorted"},
+		{"VID_20190626_151345.jpg", "2019-06 - Unsorted"},
+		{"20170429_194919.mp4", "2017-04 - Unsorted"},
+		{"20170627_203226.jpg", "2017-06 - Unsorted"},
+		{"IMG_20180526666_151345.jpg", "nomatch"},
 	}
 
 	for _, c := range cs {
