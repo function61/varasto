@@ -454,7 +454,7 @@
 		"crudNature": "update",
 		"title": "Set FUSE server baseurl",
 		"fields": [
-			{ "key": "Baseurl", "optional": true, "placeholder": "Looks like http://localhost:8066" }
+			{ "key": "Baseurl", "optional": true, "placeholder": "http://localhost:8066" }
 		]
 	},
 	{
