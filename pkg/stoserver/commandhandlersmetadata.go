@@ -40,6 +40,10 @@ func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMet
 			}
 
 			collection.Name = info.OriginalTitle
+
+			if err := validateUniqueNameWithinSiblings(collection.Directory, collection.Name, tx); err != nil {
+				return err
+			}
 		}
 
 		collection.Metadata[stoservertypes.MetadataTheMovieDbMovieId] = strconv.Itoa(int(info.Id))
