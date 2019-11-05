@@ -144,6 +144,17 @@
 		]
 	},
 	{
+		"command": "volume.MarkDataLost",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Mark all volume data lost",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "OnlyIfRedundancy", "type": "checkbox", "help": "Abort if blob would lose last redundant copy" }
+		]
+	},
+	{
 		"command": "directory.Create",
 		"chain": "public",
 		"ctor": ["Parent"],

@@ -20,6 +20,7 @@ import {
 	VolumeChangeDescription,
 	VolumeChangeQuota,
 	VolumeCreate,
+	VolumeMarkDataLost,
 	VolumeMigrateData,
 	VolumeMount2,
 	VolumeSetManufacturingDate,
@@ -455,17 +456,40 @@ export default class VolumesAndMountsPage extends React.Component<
 					<td>{progressBar(obj)}</td>
 					<td>
 						<Dropdown>
-							<CommandLink command={VolumeMount2(obj.Id)} />
 							<CommandLink
-								command={VolumeChangeQuota(obj.Id, obj.Quota / 1024 / 1024)}
+								command={VolumeMount2(obj.Id, { disambiguation: obj.Label })}
 							/>
-							<CommandLink command={VolumeVerifyIntegrity(obj.Id)} />
 							<CommandLink
-								command={VolumeChangeDescription(obj.Id, obj.Description)}
+								command={VolumeChangeQuota(obj.Id, obj.Quota / 1024 / 1024, {
+									disambiguation: obj.Label,
+								})}
 							/>
-							<CommandLink command={VolumeSetTechnology(obj.Id, obj.Technology)} />
-							<CommandLink command={VolumeSmartSetId(obj.Id, obj.Smart.Id)} />
-							<CommandLink command={VolumeMigrateData(obj.Id)} />
+							<CommandLink
+								command={VolumeVerifyIntegrity(obj.Id, {
+									disambiguation: obj.Label,
+								})}
+							/>
+							<CommandLink
+								command={VolumeChangeDescription(obj.Id, obj.Description, {
+									disambiguation: obj.Label,
+								})}
+							/>
+							<CommandLink
+								command={VolumeSetTechnology(obj.Id, obj.Technology, {
+									disambiguation: obj.Label,
+								})}
+							/>
+							<CommandLink
+								command={VolumeSmartSetId(obj.Id, obj.Smart.Id, {
+									disambiguation: obj.Label,
+								})}
+							/>
+							<CommandLink
+								command={VolumeMigrateData(obj.Id, { disambiguation: obj.Label })}
+							/>
+							<CommandLink
+								command={VolumeMarkDataLost(obj.Id, { disambiguation: obj.Label })}
+							/>
 						</Dropdown>
 					</td>
 				</tr>
