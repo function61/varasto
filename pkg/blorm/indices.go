@@ -135,7 +135,7 @@ func indexQueryShared(indexName string, value []byte, start []byte, fn func(id [
 	}
 
 	for ; key != nil; key, _ = idx.Next() {
-		if err := fn(key); err != nil {
+		if err := fn(makeCopy(key)); err != nil {
 			if err == StopIteration {
 				return nil
 			} else {
@@ -188,4 +188,11 @@ func indexBucketRefForWrite(ref qualifiedIndexRef, tx *bolt.Tx) *bolt.Bucket {
 	}
 
 	return lvl2
+}
+
+// https://github.com/boltdb/bolt/issues/658#issuecomment-277898467
+func makeCopy(from []byte) []byte {
+	copied := make([]byte, len(from))
+	copy(copied, from)
+	return copied
 }
