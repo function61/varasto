@@ -818,7 +818,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 }
 
 func (h *handlers) GetHealth(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.Health {
-	healthRoot, err := getHealthCheckerGraph(h.db)
+	healthRoot, err := getHealthCheckerGraph(h.db, h.conf)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
@@ -1120,15 +1120,33 @@ func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
 	return false, err // unknown error
 }
 
-func getHealthCheckerGraph(db *bolt.DB) (stohealth.HealthChecker, error) {
+func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChecker, error) {
 	temps := []stohealth.HealthChecker{}
 	smarts := []stohealth.HealthChecker{}
+	replicationQueues := []stohealth.HealthChecker{}
 
 	now := time.Now()
 
 	if err := db.View(func(tx *bolt.Tx) error {
 		return stodb.VolumeRepository.Each(func(record interface{}) error {
 			vol := record.(*stotypes.Volume)
+
+			replicationController, hasReplicationController := conf.ReplicationControllers[vol.ID]
+			if hasReplicationController {
+				replicationProgress := replicationController.Progress()
+
+				if replicationProgress != 100 {
+					replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
+						vol.Label,
+						stoservertypes.HealthStatusWarn,
+						fmt.Sprintf("Progress at %d %%", replicationProgress)))
+				} else {
+					replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
+						vol.Label,
+						stoservertypes.HealthStatusPass,
+						"Realtime"))
+				}
+			}
 
 			if vol.SmartReport == "" {
 				return nil
@@ -1171,5 +1189,8 @@ func getHealthCheckerGraph(db *bolt.DB) (stohealth.HealthChecker, error) {
 			temps...),
 		stohealth.NewHealthFolder(
 			"SMART",
-			smarts...)), nil
+			smarts...),
+		stohealth.NewHealthFolder(
+			"Replication queue",
+			replicationQueues...)), nil
 }
