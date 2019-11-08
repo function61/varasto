@@ -1,6 +1,7 @@
 import { DocLink } from 'component/doclink';
 import { DangerLabel, SuccessLabel, WarningLabel } from 'component/labels';
 import { thousandSeparate } from 'component/numberformatter';
+import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
 import { InfoAlert } from 'f61ui/component/alerts';
@@ -130,7 +131,21 @@ export default class VolumesAndMountsPage extends React.Component<
 				case 'service':
 					return <Panel heading="Service view">{this.renderServiceView()}</Panel>;
 				case 'replicationStatuses':
-					return <Panel heading="Replication">{this.renderReplicationStatuses()}</Panel>;
+					return (
+						<Panel
+							heading={
+								<div>
+									Replication{' '}
+									<RefreshButton
+										refresh={() => {
+											this.loadReplicationStatuses();
+										}}
+									/>
+								</div>
+							}>
+							{this.renderReplicationStatuses()}
+						</Panel>
+					);
 				case 'smart':
 					return (
 						<Panel
@@ -761,6 +776,12 @@ export default class VolumesAndMountsPage extends React.Component<
 		this.state.mounts.load(() => getVolumeMounts());
 		this.state.nodes.load(() => getNodes());
 		this.state.ivJobs.load(() => getIntegrityVerificationJobs());
+
+		this.loadReplicationStatuses();
+	}
+
+	// used from >1 places
+	private loadReplicationStatuses() {
 		this.state.replicationStatuses.load(() => getReplicationStatuses());
 	}
 }
