@@ -8,6 +8,7 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
+import { Info } from 'f61ui/component/info';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -730,7 +731,10 @@ export default class VolumesAndMountsPage extends React.Component<
 				<thead>
 					<tr>
 						<th>Volume</th>
-						<th>Progress</th>
+						<th>
+							Progress{' '}
+							<Info text="Doesn't update in realtime. If you don't see a change you're expecting, wait a few minutes." />
+						</th>
 					</tr>
 				</thead>
 				<tbody>
