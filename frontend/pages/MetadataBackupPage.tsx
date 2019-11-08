@@ -2,7 +2,6 @@ import { DocLink } from 'component/doclink';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
-import { InfoAlert } from 'f61ui/component/alerts';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
@@ -34,7 +33,6 @@ interface MetadataBackupPageState {
 	backupConfig: Result<ConfigValue>;
 	backupLastOk: Result<ConfigValue>;
 	backups: Result<UbackupStoredBackup[]>;
-	disclaimerAck: boolean;
 }
 
 export default class MetadataBackupPage extends React.Component<
@@ -42,7 +40,6 @@ export default class MetadataBackupPage extends React.Component<
 	MetadataBackupPageState
 > {
 	state: MetadataBackupPageState = {
-		disclaimerAck: false,
 		backupConfig: new Result<ConfigValue>((_) => {
 			this.setState({ backupConfig: _ });
 		}),
@@ -71,7 +68,7 @@ export default class MetadataBackupPage extends React.Component<
 							Metadata backup list{' '}
 							<RefreshButton
 								refresh={() => {
-									this.refreshBackups();
+									this.loadBackups();
 								}}
 							/>
 						</div>
@@ -218,15 +215,7 @@ export default class MetadataBackupPage extends React.Component<
 					</tbody>
 					<tfoot>
 						<tr>
-							<td colSpan={99}>
-								{loadingOrError}
-								{!this.state.disclaimerAck ? (
-									<InfoAlert>
-										Backups are not shown automatically. Click refresh to load
-										them.
-									</InfoAlert>
-								) : null}
-							</td>
+							<td colSpan={99}>{loadingOrError}</td>
 						</tr>
 					</tfoot>
 				</table>
@@ -237,11 +226,11 @@ export default class MetadataBackupPage extends React.Component<
 	private fetchData() {
 		this.state.backupConfig.load(() => getConfig(CfgUbackupConfig));
 		this.state.backupLastOk.load(() => getConfig(CfgMetadataLastOk));
+
+		this.loadBackups();
 	}
 
-	private refreshBackups() {
-		this.setState({ disclaimerAck: true });
-
+	private loadBackups() {
 		this.state.backups.load(() => getUbackupStoredBackups());
 	}
 }
