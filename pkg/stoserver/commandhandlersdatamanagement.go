@@ -304,7 +304,6 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 	return nil
 }
 
-// FIXME: is this already implemented somewhere
 func eachBlobOfCollection(coll *stotypes.Collection, visit func(ref stotypes.BlobRef) error) error {
 	visitBlobRefs := func(brs []string) error {
 		for _, brSerialized := range brs {
