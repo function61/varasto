@@ -36,6 +36,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -1032,6 +1033,77 @@ func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseW
 	}
 
 	outJson(w, coll)
+}
+
+func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ReconciliationReport {
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+	defer tx.Rollback()
+
+	nonCompliantItems := []stoservertypes.ReconcilableItem{}
+
+	max := 100
+
+	totalItems := 0
+
+	report := latestReconciliationReport
+	if report != nil {
+		totalItems = len(report.CollectionsWithNonCompliantPolicy)
+
+		for idx, ctr := range report.CollectionsWithNonCompliantPolicy {
+			if idx+1 >= max {
+				break
+			}
+
+			coll, err := stodb.Read(tx).Collection(ctr.collectionId)
+			if err != nil {
+				panic(err)
+			}
+
+			path := []string{coll.Name}
+
+			dirId := coll.Directory
+			for dirId != "" {
+				dir, err := stodb.Read(tx).Directory(dirId)
+				if err != nil {
+					panic(err)
+				}
+
+				path = append([]string{dir.Name}, path...)
+
+				dirId = dir.Parent
+			}
+
+			presenceItems := []string{}
+
+			fullReplicas := []int{}
+
+			for volId, blobCount := range ctr.presence {
+				if ctr.blobCount == blobCount {
+					fullReplicas = append(fullReplicas, volId)
+				}
+
+				presenceItems = append(presenceItems, fmt.Sprintf("%d[%d blobs]", volId, blobCount))
+			}
+
+			nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
+				CollectionId:    ctr.collectionId,
+				Description:     strings.Join(path, " » "),
+				TotalBlobs:      ctr.blobCount,
+				DesiredReplicas: ctr.desiredReplicas,
+				FullReplicas:    fullReplicas,
+				Presence:        strings.Join(presenceItems, " "),
+			})
+		}
+	}
+
+	return &stoservertypes.ReconciliationReport{
+		Items:      nonCompliantItems,
+		TotalItems: totalItems,
+	}
 }
 
 func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.GeneratedIds {

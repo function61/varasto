@@ -8,11 +8,15 @@ import {
 } from 'component/sensitivity';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandLink } from 'f61ui/component/CommandButton';
+import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
-import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';
+import {
+	DatabaseScanAbandoned,
+	SubsystemStart,
+	SubsystemStop,
+} from 'generated/stoserver/stoservertypes_commands';
 import {
 	getHealth,
 	getServerInfo,
@@ -104,7 +108,10 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 				</tbody>
 				<tfoot>
 					<tr>
-						<td colSpan={99}>{loadingOrError}</td>
+						<td colSpan={99}>
+							<div>{loadingOrError}</div>
+							<CommandButton command={DatabaseScanAbandoned()} />
+						</td>
 					</tr>
 				</tfoot>
 			</table>

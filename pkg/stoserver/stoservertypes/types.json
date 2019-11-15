@@ -16,6 +16,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replication_progress", "produces": {"_": "list", "of": {"_": "ReplicationStatus"}}, "name": "getReplicationStatuses" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/reconciliation", "produces": {"_": "ReconciliationReport"}, "name": "getReconcilableItems" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getApiKeys" },
@@ -350,6 +351,24 @@
 				"Size": {"_": "integer"},
 				"Timestamp": {"_": "datetime"},
 				"Description": {"_": "string"}
+			}}
+		},
+		{
+			"name": "ReconcilableItem",
+			"type": {"_": "object", "fields": {
+				"CollectionId": {"_": "string"},
+				"Description": {"_": "string"},
+				"TotalBlobs": {"_": "integer"},
+				"DesiredReplicas": {"_": "integer"},
+				"FullReplicas": {"_": "list", "of": {"_": "integer"}},
+				"Presence": {"_": "string"}
+			}}
+		},
+		{
+			"name": "ReconciliationReport",
+			"type": {"_": "object", "fields": {
+				"TotalItems": {"_": "integer"},
+				"Items": {"_": "list", "of": {"_": "ReconcilableItem"}}
 			}}
 		},
 		{

@@ -1,22 +1,50 @@
-import { CommandLink } from 'f61ui/component/CommandButton';
+import { thousandSeparate } from 'component/numberformatter';
+import { Result } from 'component/result';
+import { Panel } from 'f61ui/component/bootstrap';
+import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
-import { Loading } from 'f61ui/component/loading';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
-import { ReplicationpolicyChangeDesiredVolumes } from 'generated/stoserver/stoservertypes_commands';
-import { getReplicationPolicies } from 'generated/stoserver/stoservertypes_endpoints';
-import { ReplicationPolicy } from 'generated/stoserver/stoservertypes_types';
+import {
+	DatabaseDiscoverReconcilableReplicationPolicies,
+	DatabaseReconcileReplicationPolicy,
+	ReplicationpolicyChangeDesiredVolumes,
+} from 'generated/stoserver/stoservertypes_commands';
+import {
+	getReconcilableItems,
+	getReplicationPolicies,
+	getVolumes,
+} from 'generated/stoserver/stoservertypes_endpoints';
+import {
+	ReconciliationReport,
+	ReplicationPolicy,
+	Volume,
+} from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ReplicationPoliciesPageState {
-	replicationpolicies?: ReplicationPolicy[];
+	selectedCollIds: string[];
+	replicationpolicies: Result<ReplicationPolicy[]>;
+	reconciliationReport: Result<ReconciliationReport>;
+	volumes: Result<Volume[]>;
 }
 
 export default class ReplicationPoliciesPage extends React.Component<
 	{},
 	ReplicationPoliciesPageState
 > {
-	state: ReplicationPoliciesPageState = {};
+	state: ReplicationPoliciesPageState = {
+		selectedCollIds: [],
+		reconciliationReport: new Result<ReconciliationReport>((_) => {
+			this.setState({ reconciliationReport: _ });
+		}),
+		replicationpolicies: new Result<ReplicationPolicy[]>((_) => {
+			this.setState({ replicationpolicies: _ });
+		}),
+		volumes: new Result<Volume[]>((_) => {
+			this.setState({ volumes: _ });
+		}),
+	};
 
 	componentDidMount() {
 		shouldAlwaysSucceed(this.fetchData());
@@ -29,30 +57,15 @@ export default class ReplicationPoliciesPage extends React.Component<
 	render() {
 		return (
 			<SettingsLayout title="Replication policies" breadcrumbs={[]}>
-				{this.renderData()}
+				<Panel heading="Policies">{this.renderPolicies()}</Panel>
+
+				<Panel heading="Reconciliation">{this.renderReconcilable()}</Panel>
 			</SettingsLayout>
 		);
 	}
 
-	private renderData() {
-		const replicationpolicies = this.state.replicationpolicies;
-
-		if (!replicationpolicies) {
-			return <Loading />;
-		}
-
-		const toRow = (obj: ReplicationPolicy) => (
-			<tr key={obj.Id}>
-				<td>{obj.Id}</td>
-				<td>{obj.Name}</td>
-				<td>{obj.DesiredVolumes.join(', ')}</td>
-				<td>
-					<Dropdown>
-						<CommandLink command={ReplicationpolicyChangeDesiredVolumes(obj.Id)} />
-					</Dropdown>
-				</td>
-			</tr>
-		);
+	private renderPolicies() {
+		const [replicationpolicies, loadingOrError] = this.state.replicationpolicies.unwrap();
 
 		return (
 			<table className="table table-striped table-hover">
@@ -64,14 +77,140 @@ export default class ReplicationPoliciesPage extends React.Component<
 						<th />
 					</tr>
 				</thead>
-				<tbody>{replicationpolicies.map(toRow)}</tbody>
+				<tbody>
+					{(replicationpolicies || []).map((rp) => (
+						<tr key={rp.Id}>
+							<td>{rp.Id}</td>
+							<td>{rp.Name}</td>
+							<td>{rp.DesiredVolumes.join(', ')}</td>
+							<td>
+								<Dropdown>
+									<CommandLink
+										command={ReplicationpolicyChangeDesiredVolumes(rp.Id)}
+									/>
+								</Dropdown>
+							</td>
+						</tr>
+					))}
+				</tbody>
+				<tfoot>
+					<tr>
+						<td colSpan={99}>{loadingOrError}</td>
+					</tr>
+				</tfoot>
 			</table>
+		);
+	}
+	private renderReconcilable() {
+		const [report, volumes, loadingOrError] = Result.unwrap2(
+			this.state.reconciliationReport,
+			this.state.volumes,
+		);
+
+		if (!report || !volumes) {
+			return loadingOrError;
+		}
+
+		const masterCheckedChange = () => {
+			const selectedCollIds = report.Items.map((item) => item.CollectionId);
+
+			this.setState({ selectedCollIds });
+		};
+
+		const collCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+			const collId = e.target.value;
+
+			// removes collId if it already exists
+			const selectedCollIds = this.state.selectedCollIds.filter((id) => id !== collId);
+
+			if (e.target.checked) {
+				selectedCollIds.push(collId);
+			}
+
+			this.setState({ selectedCollIds });
+		};
+
+		return (
+			<div>
+				<p>
+					{thousandSeparate(report.TotalItems)} collections in non-compliance with its
+					replication policy.
+				</p>
+
+				<table className="table table-striped table-hover">
+					<thead>
+						<tr>
+							<th>
+								<input type="checkbox" onChange={masterCheckedChange} />
+							</th>
+							<th>Collection</th>
+							<th>Blob count</th>
+							<th>Desired replicas</th>
+							<th>Current replicas</th>
+						</tr>
+					</thead>
+					<tbody>
+						{report.Items.map((r) => (
+							<tr>
+								<td>
+									<input
+										type="checkbox"
+										checked={
+											this.state.selectedCollIds.indexOf(r.CollectionId) !==
+											-1
+										}
+										onChange={collCheckedChange}
+										value={r.CollectionId}
+									/>
+								</td>
+								<td>{r.Description}</td>
+								<td>{thousandSeparate(r.TotalBlobs)}</td>
+								<td>{r.DesiredReplicas}</td>
+								<td title={r.Presence}>
+									{r.FullReplicas.map((id) => {
+										const vol = volumes.filter((v) => v.Id === id);
+										const volLabel =
+											vol.length === 1 ? vol[0].Label : '(error)';
+
+										return (
+											<span className="label label-default">{volLabel}</span>
+										);
+									})}
+								</td>
+							</tr>
+						))}
+					</tbody>
+					<tfoot>
+						<tr>
+							<td colSpan={2}>
+								{this.state.selectedCollIds.length > 0 && (
+									<CommandButton
+										command={DatabaseReconcileReplicationPolicy(
+											this.state.selectedCollIds.join(','),
+										)}
+									/>
+								)}
+							</td>
+							<td colSpan={99}>
+								{thousandSeparate(
+									report.Items.reduce(
+										(prev, current) => prev + current.TotalBlobs,
+										0,
+									),
+								)}
+							</td>
+						</tr>
+					</tfoot>
+				</table>
+
+				<CommandButton command={DatabaseDiscoverReconcilableReplicationPolicies()} />
+			</div>
 		);
 	}
 
 	private async fetchData() {
-		const replicationpolicies = await getReplicationPolicies();
-
-		this.setState({ replicationpolicies });
+		this.state.replicationpolicies.load(() => getReplicationPolicies());
+		this.state.reconciliationReport.load(() => getReconcilableItems());
+		this.state.volumes.load(() => getVolumes());
 	}
 }

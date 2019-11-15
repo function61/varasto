@@ -395,6 +395,33 @@
 		"fields": []
 	},
 	{
+		"command": "database.ScanAbandoned",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "Scan for abandoned blobs",
+		"fields": []
+	},
+	{
+		"command": "database.DiscoverReconcilableReplicationPolicies",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "update",
+		"title": "Discover reconcilable replication policies",
+		"fields": []
+	},
+	{
+		"command": "database.ReconcileReplicationPolicy",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "update",
+		"title": "Reconcile replication policy",
+		"fields": [
+			{ "key": "Id", "max_length": 4096, "hideIfDefaultValue": true },
+			{ "key": "Volume", "type": "integer" }
+		]
+	},
+	{
 		"command": "database.Backup",
 		"chain": "public",
 		"ctor": [],
