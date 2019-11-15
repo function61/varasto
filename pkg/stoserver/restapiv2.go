@@ -277,7 +277,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		blob, err := stodb.Read(tx).Blob(*ref)
 		if err != nil {
 			if err == blorm.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, "blob not found: "+ref.AsHex(), http.StatusInternalServerError)
 				return
 			} else {
 				http.Error(w, "blob pointed to by file metadata not found", http.StatusInternalServerError)
@@ -538,7 +538,8 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 		for _, refHex := range file.BlobRefs {
 			ref, err := stotypes.BlobRefFromHex(refHex)
 			if err != nil {
-				panic(err)
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return nil
 			}
 
 			blob, err := stodb.Read(tx).Blob(*ref)
