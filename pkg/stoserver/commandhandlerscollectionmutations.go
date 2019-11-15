@@ -15,10 +15,6 @@ import (
 )
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes.CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
-	if true {
-		return errors.New("cannot use before changing blobs' owners and taking encryption keys into account")
-	}
-
 	// keep indexed map of filenames to move. they are removed on-the-fly, so in the end
 	// we can check for len() == 0 to see that we saw them all
 	hashesToMove := map[string]bool{}
@@ -41,7 +37,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 			return errors.New("Source and destination cannot be same")
 		}
 
-		state, err := stateresolver.ComputeStateAt(*collSrc, collSrc.Head)
+		sourceState, err := stateresolver.ComputeStateAt(*collSrc, collSrc.Head)
 		if err != nil {
 			return err
 		}
@@ -49,15 +45,40 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		deleteFromSource := []string{}
 		createToDestination := []stotypes.File{}
 
-		for _, file := range state.Files() {
-			if _, shouldMove := hashesToMove[file.Sha256]; shouldMove {
-				delete(hashesToMove, file.Sha256)
-			} else {
+		for _, file := range sourceState.Files() {
+			if _, shouldMove := hashesToMove[file.Sha256]; !shouldMove {
 				continue
 			}
 
+			delete(hashesToMove, file.Sha256)
+
 			deleteFromSource = append(deleteFromSource, file.Path)
 			createToDestination = append(createToDestination, file)
+
+			for _, refSerialized := range file.BlobRefs {
+				ref, err := stotypes.BlobRefFromHex(refSerialized)
+				if err != nil {
+					return err
+				}
+
+				blob, err := stodb.Read(tx).Blob(*ref)
+				if err != nil {
+					return err
+				}
+
+				// if destination collection doesn't have encryption key for this blob,
+				// copy it over
+				if stotypes.FindKeyById(blob.EncryptionKeyId, collDst.EncryptionKeys) == nil {
+					keyToCopy := stotypes.FindKeyById(blob.EncryptionKeyId, collSrc.EncryptionKeys)
+					if keyToCopy == nil {
+						return fmt.Errorf(
+							"cannot find key envelope %s from source collection",
+							blob.EncryptionKeyId)
+					}
+
+					collDst.EncryptionKeys = append(collDst.EncryptionKeys, *keyToCopy)
+				}
+			}
 		}
 
 		if len(hashesToMove) != 0 {
@@ -72,6 +93,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 			nil,
 			deleteFromSource)
 
+		// duplicate filenames are asserted by appendAndValidateChangeset()
 		dstChangeset := stotypes.NewChangeset(
 			stoutils.NewCollectionChangesetId(),
 			collDst.Head,
