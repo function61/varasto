@@ -556,7 +556,7 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 				coll.DesiredVolumes)
 
 			// FIXME: temporary limitation
-			if !stotypes.HasKeyId(blob.EncryptionKeyId, coll.EncryptionKeys) {
+			if stotypes.FindKeyById(blob.EncryptionKeyId, coll.EncryptionKeys) == nil {
 				http.Error(w, "deduplicating Blob? EncryptionKeyId not in coll.EncryptionKeys", http.StatusInternalServerError)
 				return nil
 			}

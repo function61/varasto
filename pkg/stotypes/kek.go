@@ -82,14 +82,14 @@ func DecryptKek(kenv KeyEnvelope, privateKey *rsa.PrivateKey) ([]byte, error) {
 	return key, nil
 }
 
-func HasKeyId(keyId string, envelopes []KeyEnvelope) bool {
-	for _, env := range envelopes {
-		if env.KeyId == keyId {
-			return true
+func FindKeyById(keyId string, kenvs []KeyEnvelope) *KeyEnvelope {
+	for _, kenv := range kenvs {
+		if kenv.KeyId == keyId {
+			return &kenv
 		}
 	}
 
-	return false
+	return nil
 }
 
 func Sha256FingerprintForPublicKey(publicKey *rsa.PublicKey) (string, error) {

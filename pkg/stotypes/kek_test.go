@@ -47,8 +47,8 @@ func TestEncryptAndDecryptKeyEnvelope(t *testing.T) {
 	assert.EqualString(t, tryDecryption(privateKey2), "my secret message")
 	assert.EqualString(t, tryDecryption(privateKey3), "key slot not found for SHA256:ToUnMHKdU4jKDIjztM5qOH1bOJJbOj4WQ8n98Fl5Tj0")
 
-	assert.Assert(t, !HasKeyId("foo", []KeyEnvelope{*kenv}))
-	assert.Assert(t, HasKeyId("dummyKeyId", []KeyEnvelope{*kenv}))
+	assert.Assert(t, FindKeyById("foo", []KeyEnvelope{*kenv}) == nil)
+	assert.Assert(t, FindKeyById("dummyKeyId", []KeyEnvelope{*kenv}) != nil)
 }
 
 func TestEncryptEmptyKeyIdOrNoPublicKeys(t *testing.T) {
