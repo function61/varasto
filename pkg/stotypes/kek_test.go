@@ -41,9 +41,6 @@ func TestEncryptAndDecryptKeyEnvelope(t *testing.T) {
 		} else {
 			return string(decrypted)
 		}
-		assert.Assert(t, err == nil)
-
-		return string(decrypted)
 	}
 
 	assert.EqualString(t, tryDecryption(privateKey1), "my secret message")
