@@ -68,7 +68,7 @@ type Collection struct {
 	Sensitivity    int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
 	DesiredVolumes []int
 	Head           string
-	EncryptionKey  [32]byte
+	EncryptionKeys []KeyEnvelope // first is for all new blobs, the following for moved/deduplicated ones
 	Changesets     []CollectionChangeset
 	Metadata       map[string]string
 	Tags           []string
@@ -98,7 +98,7 @@ type File struct {
 
 type Blob struct {
 	Ref                       BlobRef
-	Coll                      string // collection that owns (& encrypts) this. many collections can refer to this same blob
+	EncryptionKeyId           string
 	Volumes                   []int
 	VolumesPendingReplication []int
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
@@ -122,6 +122,17 @@ type IntegrityVerificationJob struct {
 type Config struct {
 	Key   string
 	Value string
+}
+
+type KeyEncryptionKey struct {
+	ID          string
+	Kind        string // rsa | ecdsa
+	Bits        int
+	Created     time.Time
+	Label       string
+	Fingerprint string
+	PublicKey   string
+	PrivateKey  string
 }
 
 func NewChangeset(

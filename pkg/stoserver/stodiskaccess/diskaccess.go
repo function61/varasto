@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/function61/gokit/hashverifyreader"
+	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -17,7 +18,6 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
-	"os"
 )
 
 type Controller struct {
@@ -61,9 +61,9 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId
 		return err
 	}
 
-	meta, err := d.metadataStore.QueryBlobMetadata(ref)
-	if err != nil { // expecting this
-		return fmt.Errorf("Replicate() QueryBlobMetadata: %v", err)
+	expectedCrc32, err := d.metadataStore.QueryBlobCrc32(ref)
+	if err != nil {
+		return fmt.Errorf("Replicate() QueryBlobCrc32: %v", err)
 	}
 
 	rawContent, err := fromDriver.RawFetch(ctx, ref)
@@ -72,7 +72,7 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId
 	}
 	defer rawContent.Close()
 
-	crc32VerifiedReader := hashverifyreader.New(rawContent, crc32.NewIEEE(), meta.ExpectedCrc32)
+	crc32VerifiedReader := hashverifyreader.New(rawContent, crc32.NewIEEE(), expectedCrc32)
 
 	if err := toDriver.RawStore(ctx, ref, crc32VerifiedReader); err != nil {
 		return err
@@ -92,12 +92,13 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 
 	// since we're writing a blob (and not replicating), for safety we'll check that we haven't
 	// seen this blob before
-	if _, err := d.metadataStore.QueryBlobMetadata(ref); err != os.ErrNotExist { // expecting this
-		if err != nil {
-			return err // some other error
+	if exists, err := d.metadataStore.QueryBlobExists(ref); err != nil || exists {
+		if err != nil { // error checking existence
+			return err
+		} else {
+			// blob exists, which is unexpected
+			return fmt.Errorf("WriteBlob() already exists: %s", ref.AsHex())
 		}
-
-		return fmt.Errorf("WriteBlob() already exists: %s", ref.AsHex())
 	}
 
 	// this is going to take relatively long time, so we can't keep
@@ -111,7 +112,7 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 	readCounter := writeCounter{}
 	verifiedContent := readCounter.Tee(stoutils.BlobHashVerifier(content, ref))
 
-	encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKey(collId)
+	encryptionKeyId, encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKeyForNewBlobs(collId)
 	if err != nil {
 		return err
 	}
@@ -126,13 +127,12 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 	}
 
 	meta := &BlobMeta{
-		Ref:                 ref,
-		RealSize:            int32(readCounter.BytesWritten()),
-		SizeOnDisk:          int32(len(blobEncrypted.CiphertextMaybeCompressed)),
-		IsCompressed:        blobEncrypted.Compressed,
-		EncryptionKeyOfColl: collId,
-		EncryptionKey:       encryptionKey,
-		ExpectedCrc32:       blobEncrypted.Crc32,
+		Ref:             ref,
+		RealSize:        int32(readCounter.BytesWritten()),
+		SizeOnDisk:      int32(len(blobEncrypted.CiphertextMaybeCompressed)),
+		IsCompressed:    blobEncrypted.Compressed,
+		EncryptionKeyId: encryptionKeyId,
+		ExpectedCrc32:   blobEncrypted.Crc32,
 	}
 
 	if err := d.metadataStore.WriteBlobCreated(meta, volumeId); err != nil {
@@ -144,18 +144,18 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 
 // does decrypt(optional_decompress(blobOnDisk))
 // verifies blob integrity for you!
-func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, error) {
+func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEnvelope, volumeId int) (io.ReadCloser, error) {
 	driver, err := d.driverFor(volumeId)
 	if err != nil {
 		return nil, err
 	}
 
-	meta, err := d.metadataStore.QueryBlobMetadata(ref)
+	meta, err := d.metadataStore.QueryBlobMetadata(ref, encryptionKeys)
 	if err != nil {
 		return nil, err
 	}
 
-	body, err := driver.RawFetch(context.TODO(), meta.Ref)
+	body, err := driver.RawFetch(context.TODO(), ref)
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +169,7 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, e
 		return nil, fmt.Errorf("Fetch() AES cipher: %v", err)
 	}
 
-	decrypted := &cipher.StreamReader{S: cipher.NewCTR(aesDecrypter, deriveIvFromBlobRef(meta.Ref)), R: crc32VerifiedCiphertextReader}
+	decrypted := &cipher.StreamReader{S: cipher.NewCTR(aesDecrypter, deriveIvFromBlobRef(ref)), R: crc32VerifiedCiphertextReader}
 
 	// assume no compression ..
 	uncompressedReader := io.Reader(decrypted)
@@ -183,7 +183,7 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, volumeId int) (io.ReadCloser, e
 		uncompressedReader = gzipReader
 	}
 
-	blobDecryptedUncompressed := stoutils.BlobHashVerifier(uncompressedReader, meta.Ref)
+	blobDecryptedUncompressed := stoutils.BlobHashVerifier(uncompressedReader, ref)
 
 	return &readCloseWrapper{blobDecryptedUncompressed, body}, nil
 }
@@ -211,18 +211,18 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
 		return 0, err
 	}
 
-	meta, err := d.metadataStore.QueryBlobMetadata(ref)
+	expectedCrc32, err := d.metadataStore.QueryBlobCrc32(ref)
 	if err != nil {
 		return 0, err
 	}
 
-	body, err := driver.RawFetch(context.TODO(), meta.Ref)
+	body, err := driver.RawFetch(context.TODO(), ref)
 	if err != nil {
 		return 0, err
 	}
 	defer body.Close()
 
-	verifiedReader := hashverifyreader.New(body, crc32.NewIEEE(), meta.ExpectedCrc32)
+	verifiedReader := hashverifyreader.New(body, crc32.NewIEEE(), expectedCrc32)
 
 	bytesRead, err := io.Copy(ioutil.Discard, verifiedReader)
 	return bytesRead, err

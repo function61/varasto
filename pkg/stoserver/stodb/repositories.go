@@ -37,6 +37,11 @@ var ClientRepository = register("Client", blorm.NewSimpleRepo(
 	func() interface{} { return &stotypes.Client{} },
 	func(record interface{}) []byte { return []byte(record.(*stotypes.Client).ID) }))
 
+var KeyEncryptionKeyRepository = register("KeyEncryptionKey", blorm.NewSimpleRepo(
+	"keyencryptionkeys",
+	func() interface{} { return &stotypes.KeyEncryptionKey{} },
+	func(record interface{}) []byte { return []byte(record.(*stotypes.KeyEncryptionKey).ID) }))
+
 var ReplicationPolicyRepository = register("ReplicationPolicy", blorm.NewSimpleRepo(
 	"replicationpolicies",
 	func() interface{} { return &stotypes.ReplicationPolicy{} },
@@ -136,6 +141,13 @@ func VolumeMountAppender(slice *[]stotypes.VolumeMount) func(record interface{})
 func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob) func(record interface{}) error {
 	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*stotypes.IntegrityVerificationJob))
+		return nil
+	}
+}
+
+func KeyEncryptionKeyAppender(slice *[]stotypes.KeyEncryptionKey) func(record interface{}) error {
+	return func(record interface{}) error {
+		*slice = append(*slice, *record.(*stotypes.KeyEncryptionKey))
 		return nil
 	}
 }

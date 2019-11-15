@@ -44,7 +44,7 @@ func NewBlobCache() *BlobCache {
 	}
 }
 
-func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef) (*BlobData, error) {
+func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef, collectionId string) (*BlobData, error) {
 	refHex := ref.AsHex()
 
 	for _, cachedData := range b.lruCache {
@@ -58,7 +58,11 @@ func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef) (*BlobData, e
 
 	globalFsServer.logl.Debug.Printf("dl %s", refHex)
 
-	blobContent, blobContentCloser, err := stoclient.DownloadChunk(subCtx, ref, globalFsServer.clientConfig)
+	blobContent, blobContentCloser, err := stoclient.DownloadChunk(
+		subCtx,
+		ref,
+		collectionId,
+		globalFsServer.clientConfig)
 	if err != nil {
 		return nil, err
 	}

@@ -80,7 +80,7 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 				return err
 			}
 
-			collectionRoot := processOneDir(state.FileList(), ".")
+			collectionRoot := processOneDir(state.FileList(), ".", collectionId)
 			collectionRoot.collection = coll
 
 			// collection's root dir has always dot as name, fix it
@@ -168,7 +168,7 @@ type VarastoFSRoot struct {
 	root *Dir
 }
 
-func processOneDir(dirFiles []stotypes.File, pathForDirpeek string) *Dir {
+func processOneDir(dirFiles []stotypes.File, pathForDirpeek string, collectionId string) *Dir {
 	dpr := stateresolver.DirPeek(dirFiles, pathForDirpeek)
 
 	rootFiles := []*File{}
@@ -177,7 +177,8 @@ func processOneDir(dirFiles []stotypes.File, pathForDirpeek string) *Dir {
 		f := NewFile(
 			mkFsSafe(filepath.Base(file.Path)),
 			nextInode(),
-			file)
+			file,
+			collectionId)
 
 		rootFiles = append(rootFiles, f)
 	}
@@ -185,7 +186,7 @@ func processOneDir(dirFiles []stotypes.File, pathForDirpeek string) *Dir {
 	subDirs := []*Dir{}
 
 	for _, subDirPath := range dpr.SubDirs {
-		subDir := processOneDir(dirFiles, subDirPath)
+		subDir := processOneDir(dirFiles, subDirPath, collectionId)
 
 		subDirs = append(subDirs, subDir)
 	}
@@ -282,15 +283,16 @@ type FileCustomInterface interface {
 }
 */
 
-func NewFile(name string, inode uint64, file stotypes.File) *File {
-	return &File{inode, file, name}
+func NewFile(name string, inode uint64, file stotypes.File, collectionId string) *File {
+	return &File{inode, file, name, collectionId}
 }
 
 // File implements both Node and Handle for the hello file.
 type File struct {
-	inode uint64
-	file  stotypes.File
-	name  string
+	inode        uint64
+	file         stotypes.File
+	name         string
+	collectionId string
 }
 
 func (f File) Attr(ctx context.Context, attrs *fuse.Attr) error {
@@ -315,7 +317,7 @@ func (f File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadRe
 		return err
 	}
 
-	bd, err := globalFsServer.blobCache.Get(ctx, *blobRef)
+	bd, err := globalFsServer.blobCache.Get(ctx, *blobRef, f.collectionId)
 	if err != nil {
 		return err
 	}

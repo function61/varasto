@@ -353,6 +353,19 @@ export default class CollectionPage extends React.Component<
 										<td>{collOutput.Collection.DesiredVolumes.join(', ')}</td>
 									</tr>
 									<tr>
+										<th>
+											Encryption keys{' '}
+											<Info text="Usually has exactly one key. Additional keys appear if files are moved or deduplicated here from other collections (each have own encryption key)." />
+										</th>
+										<td
+											title={collOutput.Collection.EncryptionKeyIds.join(
+												', ',
+											)}>
+											Using {collOutput.Collection.EncryptionKeyIds.length}{' '}
+											key(s)
+										</td>
+									</tr>
+									<tr>
 										<th>Clone command</th>
 										<td>
 											<ClipboardButton

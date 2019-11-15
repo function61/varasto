@@ -395,6 +395,17 @@
 		"fields": []
 	},
 	{
+		"command": "kek.Create",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "Create key encryption key",
+		"fields": [
+			{ "key": "Label" },
+			{ "key": "Data", "optional": true, "title": "Import existing", "help": "If you want to import existing key, paste it here. Otherwise, a key will be generated for you.", "type": "multiline", "placeholder": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo6U17l0YhFiFpxxU4pTk3Lifz9R3zsIsu\n..." }
+		]
+	},
+	{
 		"command": "database.ScanAbandoned",
 		"chain": "public",
 		"ctor": [],

@@ -108,7 +108,7 @@ func cloneCollection(path string, revisionId string, collection *stotypes.Collec
 	return cloneCollectionExistingDir(path, revisionId, collection)
 }
 
-func DownloadOneFile(file stotypes.File, destination io.Writer, config ClientConfig) error {
+func DownloadOneFile(file stotypes.File, collectionId string, destination io.Writer, config ClientConfig) error {
 	for _, chunkDigest := range file.BlobRefs {
 		blobRef, err := stotypes.BlobRefFromHex(chunkDigest)
 		if err != nil {
@@ -117,7 +117,7 @@ func DownloadOneFile(file stotypes.File, destination io.Writer, config ClientCon
 
 		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
 
-		verifiedBody, closeBody, err := DownloadChunk(ctx, *blobRef, config)
+		verifiedBody, closeBody, err := DownloadChunk(ctx, *blobRef, collectionId, config)
 		if err != nil {
 			cancel()
 			return err
@@ -154,7 +154,7 @@ func cloneOneFile(wd *workdirLocation, file stotypes.File) error {
 	}
 	defer fileHandle.Close()
 
-	if err := DownloadOneFile(file, fileHandle, wd.clientConfig); err != nil {
+	if err := DownloadOneFile(file, wd.manifest.Collection.ID, fileHandle, wd.clientConfig); err != nil {
 		return err
 	}
 
@@ -182,10 +182,10 @@ func FetchCollectionMetadata(clientConfig ClientConfig, id string) (*stotypes.Co
 }
 
 // verifies chunk integrity on-the-fly
-func DownloadChunk(ctx context.Context, ref stotypes.BlobRef, clientConfig ClientConfig) (io.Reader, func(), error) {
+func DownloadChunk(ctx context.Context, ref stotypes.BlobRef, collectionId string, clientConfig ClientConfig) (io.Reader, func(), error) {
 	chunkDataRes, err := ezhttp.Get(
 		ctx,
-		clientConfig.UrlBuilder().DownloadBlob(ref.AsHex()),
+		clientConfig.UrlBuilder().DownloadBlob(ref.AsHex(), collectionId),
 		ezhttp.AuthBearer(clientConfig.AuthToken))
 	if err != nil {
 		return nil, func() {}, err

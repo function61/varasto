@@ -340,6 +340,22 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:5c9ddb027d811ef385e9918af10264d9d66d7bcb05769985a6802d017a5226be"
+  name = "golang.org/x/crypto"
+  packages = [
+    "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "internal/subtle",
+    "poly1305",
+    "ssh",
+  ]
+  pruneopts = "UT"
+  revision = "bd318be0434a57050ed475e0f45c3dbb16c09c2e"
+
+[[projects]]
+  branch = "master"
   digest = "1:cae4bc8ee8e1803deae4eaef7eaba71f45146d4308a42696347d5e15a3a867d2"
   name = "golang.org/x/image"
   packages = [
@@ -383,9 +399,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:8775d8a768d9e65e8b659172804aac5db1fc8d563ba766470a6c2698c57c61a7"
+  digest = "1:b5822e8b1920b7225e6282614078af440c70f0a2243676063a571f715cd77d58"
   name = "golang.org/x/sys"
-  packages = ["unix"]
+  packages = [
+    "cpu",
+    "unix",
+  ]
   pruneopts = "UT"
   revision = "4ed8d59d0b35e1e29334a206d1b3f38b1e5dfb31"
 
@@ -522,6 +541,7 @@
     "github.com/function61/gokit/atomicfilewrite",
     "github.com/function61/gokit/aws/s3facade",
     "github.com/function61/gokit/cryptorandombytes",
+    "github.com/function61/gokit/cryptoutil",
     "github.com/function61/gokit/dynversion",
     "github.com/function61/gokit/dynversion/precompilationversion",
     "github.com/function61/gokit/ezhttp",
@@ -549,6 +569,7 @@
     "github.com/prometheus/procfs",
     "github.com/spf13/cobra",
     "go.etcd.io/bbolt",
+    "golang.org/x/crypto/ssh",
     "golang.org/x/image/bmp",
     "golang.org/x/image/draw",
     "golang.org/x/oauth2",

@@ -80,18 +80,24 @@ func convertDir(dir stotypes.Directory) stoservertypes.Directory {
 }
 
 func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.ChangesetSubset) stoservertypes.CollectionSubset {
+	encryptionKeyIds := []string{}
+	for _, encryptionKey := range coll.EncryptionKeys {
+		encryptionKeyIds = append(encryptionKeyIds, encryptionKey.KeyId)
+	}
+
 	return stoservertypes.CollectionSubset{
-		Id:             coll.ID,
-		Head:           coll.Head,
-		Created:        coll.Created,
-		Directory:      coll.Directory,
-		Name:           coll.Name,
-		Description:    coll.Description,
-		DesiredVolumes: coll.DesiredVolumes,
-		Sensitivity:    coll.Sensitivity,
-		Metadata:       metadataMapToKvList(coll.Metadata),
-		Tags:           coll.Tags,
-		Changesets:     changesets,
+		Id:               coll.ID,
+		Head:             coll.Head,
+		Created:          coll.Created,
+		Directory:        coll.Directory,
+		Name:             coll.Name,
+		Description:      coll.Description,
+		DesiredVolumes:   coll.DesiredVolumes,
+		Sensitivity:      coll.Sensitivity,
+		EncryptionKeyIds: encryptionKeyIds,
+		Metadata:         metadataMapToKvList(coll.Metadata),
+		Tags:             coll.Tags,
+		Changesets:       changesets,
 	}
 }
 
@@ -297,7 +303,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
 
 	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
-		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeId.Ref, refAndVolumeId.VolumeId)
+		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeId.Ref, coll.EncryptionKeys, refAndVolumeId.VolumeId)
 		if err != nil {
 			return err
 		}
@@ -450,7 +456,6 @@ func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.Respons
 
 	return &stoservertypes.BlobMetadata{
 		Ref:                       blob.Ref.AsHex(),
-		Coll:                      blob.Coll,
 		Size:                      int(blob.Size),
 		SizeOnDisk:                int(blob.SizeOnDisk),
 		Referenced:                blob.Referenced,
@@ -549,6 +554,12 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 				blob.Volumes,
 				coll.DesiredVolumes)
 
+			// FIXME: temporary limitation
+			if !stotypes.HasKeyId(blob.EncryptionKeyId, coll.EncryptionKeys) {
+				http.Error(w, "deduplicating Blob? EncryptionKeyId not in coll.EncryptionKeys", http.StatusInternalServerError)
+				return nil
+			}
+
 			panicIfError(stodb.BlobRepository.Update(blob, tx))
 		}
 	}
@@ -598,6 +609,31 @@ func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.
 	sort.Slice(statuses, func(i, j int) bool { return statuses[i].VolumeId < statuses[j].VolumeId })
 
 	return &statuses
+}
+
+func (h *handlers) GetKeyEncryptionKeys(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.KeyEncryptionKey {
+	ret := []stoservertypes.KeyEncryptionKey{}
+
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer tx.Rollback()
+
+	dbObjects := []stotypes.KeyEncryptionKey{}
+	panicIfError(stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&dbObjects), tx))
+
+	for _, dbObject := range dbObjects {
+		ret = append(ret, stoservertypes.KeyEncryptionKey{
+			Id:          dbObject.ID,
+			Kind:        dbObject.Kind,
+			Bits:        dbObject.Bits,
+			Created:     dbObject.Created,
+			Label:       dbObject.Label,
+			Fingerprint: dbObject.Fingerprint,
+			PublicKey:   dbObject.PublicKey,
+		})
+	}
+
+	return &ret
 }
 
 func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Node {
@@ -913,6 +949,10 @@ func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http
 
 // returns 404 if blob not found
 func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	collId := r.URL.Query().Get("collId")
+
+	var coll *stotypes.Collection
+
 	getBlobMetadata := func(blobRefSerialized string) (*stotypes.BlobRef, *stotypes.Blob) {
 		blobRef, err := stotypes.BlobRefFromHex(blobRefSerialized)
 		if err != nil {
@@ -935,6 +975,13 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 			}
 		}
 
+		coll, err = stodb.Read(tx).Collection(collId)
+		if err != nil {
+			// cannot be bothered with a blorm.ErrNotFound check here, since that shouldn't happen
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil, nil
+		}
+
 		return blobRef, blobMetadata
 	}
 
@@ -949,7 +996,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 		return
 	}
 
-	file, err := h.conf.DiskAccess.Fetch(*blobRef, bestVolumeId)
+	file, err := h.conf.DiskAccess.Fetch(*blobRef, coll.EncryptionKeys, bestVolumeId)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// should not happen, because metadata said that we should have this blob

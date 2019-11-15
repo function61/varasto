@@ -10,11 +10,12 @@
 		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/changesets", "name": "commitChangeset", "consumes": {"_": "Changeset"} },
 		{ "chain": "public", "method": "POST", "path": "/api_v2/collections/{id}/fileupload", "name": "uploadFile", "produces": {"_": "File"} },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/directories/{id}", "produces": {"_": "DirectoryOutput"}, "name": "getDirectory" },
-		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}", "name": "downloadBlob", "description": "TODO: type" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}?collId={collId}", "name": "downloadBlob", "description": "TODO: type" },
 		{ "chain": "public", "method": "POST", "path": "/api_v2/blobs/{ref}?collection={collection}&maybe_compressible={maybeCompressible}", "name": "uploadBlob" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/blobs/{ref}/meta", "produces": {"_": "BlobMetadata"}, "name": "getBlobMetadata" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replication_progress", "produces": {"_": "list", "of": {"_": "ReplicationStatus"}}, "name": "getReplicationStatuses" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/keyencryptionkeys", "produces": {"_": "list", "of": {"_": "KeyEncryptionKey"}}, "name": "getKeyEncryptionKeys" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/reconciliation", "produces": {"_": "ReconciliationReport"}, "name": "getReconcilableItems" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
@@ -185,6 +186,7 @@
 				"Name": {"_": "string"},
 				"Description": {"_": "string"},
 				"Sensitivity": {"_": "integer"},
+				"EncryptionKeyIds": {"_": "list", "of": {"_": "string"}},
 				"DesiredVolumes": {"_": "list", "of": {"_": "integer"}},
 				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Tags": {"_": "list", "of": {"_": "string"}},
@@ -216,6 +218,18 @@
 				"Id": {"_": "string"},
 				"Addr": {"_": "string"},
 				"Name": {"_": "string"}
+			}}
+		},
+		{
+			"name": "KeyEncryptionKey",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Kind": {"_": "string"},
+				"Bits": {"_": "integer"},
+				"Created": {"_": "datetime"},
+				"Label": {"_": "string"},
+				"Fingerprint": {"_": "string"},
+				"PublicKey": {"_": "string"}
 			}}
 		},
 		{

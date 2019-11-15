@@ -3,12 +3,14 @@ package stoserver
 import (
 	"context"
 	"crypto/rand"
+	"crypto/rsa"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
+	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -443,8 +445,35 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			return errors.New("replicationPolicy doesn't specify any volumes")
 		}
 
+		kekPublicKeys := []rsa.PublicKey{}
+
+		keks := []stotypes.KeyEncryptionKey{}
+		if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
+			return err
+		}
+
+		for _, kek := range keks {
+			pubKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(strings.NewReader(kek.PublicKey))
+			if err != nil {
+				return err
+			}
+
+			kekPublicKeys = append(kekPublicKeys, *pubKey)
+		}
+
+		if len(kekPublicKeys) == 0 {
+			return fmt.Errorf("no public keys found for encrypting %s", cmd.Name)
+		}
+
 		encryptionKey := [32]byte{}
 		if _, err := rand.Read(encryptionKey[:]); err != nil {
+			return err
+		}
+
+		// pack encryption key in an envelope protected with public key crypto,
+		// so Varasto can store data without being able to access it itself
+		encryptionKeyEnveloped, err := stotypes.EncryptEnvelope(stoutils.NewEncryptionKeyId(), encryptionKey[:], kekPublicKeys)
+		if err != nil {
 			return err
 		}
 
@@ -455,7 +484,7 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			Name:           cmd.Name,
 			DesiredVolumes: replicationPolicy.DesiredVolumes,
 			Head:           stotypes.NoParentId,
-			EncryptionKey:  encryptionKey,
+			EncryptionKeys: []stotypes.KeyEnvelope{*encryptionKeyEnveloped},
 			Changesets:     []stotypes.CollectionChangeset{},
 			Metadata:       map[string]string{},
 			Tags:           []string{},
@@ -630,7 +659,7 @@ func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.
 			ID:        stoutils.NewClientId(),
 			Created:   ctx.Meta.Timestamp,
 			Name:      cmd.Name,
-			AuthToken: stoutils.NewApiKeyToken(),
+			AuthToken: stoutils.NewApiKeyTokenId(),
 		}, tx)
 	})
 }

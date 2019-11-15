@@ -27,7 +27,9 @@ var NewVolumeUuid = longId
 var NewNodeId = shortId
 var NewClientId = shortId
 var NewIntegrityVerificationJobId = shortId
-var NewApiKeyToken = cryptoLongId
+var NewEncryptionKeyId = longId
+var NewKeyEncryptionKeyId = shortId
+var NewApiKeyTokenId = cryptoLongId
 
 func shortId() string {
 	return randomBase64UrlWithoutLeadingDash(3)

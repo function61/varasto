@@ -48,7 +48,7 @@ func makeThumbsForCollection(collectionId string, clientConfig stoclient.ClientC
 		defer workersDone.Done()
 
 		for file := range work {
-			if err := makeThumbForFile(file, clientConfig, logl); err != nil {
+			if err := makeThumbForFile(file, collectionId, clientConfig, logl); err != nil {
 				logl.Error.Printf("makeThumbForFile: %s: %v", file.Path, err)
 				atomic.AddUint64(&errors, 1)
 			}
@@ -102,7 +102,7 @@ func genThumbPath(fileContentSha256 []byte) string {
 // - thumb written succesfully
 // - error making thumb - same should not be tried again for this file
 // - thumb already exists
-func makeThumbForFile(file stotypes.File, clientConfig stoclient.ClientConfig, logl *logex.Leveled) error {
+func makeThumbForFile(file stotypes.File, collectionId string, clientConfig stoclient.ClientConfig, logl *logex.Leveled) error {
 	fileContentSha256, err := hex.DecodeString(file.Sha256)
 	if err != nil {
 		return err
@@ -125,7 +125,7 @@ func makeThumbForFile(file stotypes.File, clientConfig stoclient.ClientConfig, l
 	}
 
 	origBuffer := &bytes.Buffer{}
-	if err := stoclient.DownloadOneFile(file, origBuffer, clientConfig); err != nil {
+	if err := stoclient.DownloadOneFile(file, collectionId, origBuffer, clientConfig); err != nil {
 		return err
 	}
 
