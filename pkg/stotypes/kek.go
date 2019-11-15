@@ -37,7 +37,7 @@ func EncryptEnvelope(keyId string, key []byte, publicKeys []rsa.PublicKey) (*Key
 			return nil, err
 		}
 
-		kekFingerprint, err := sha256FingerprintForPublicKey(&publicKey)
+		kekFingerprint, err := Sha256FingerprintForPublicKey(&publicKey)
 		if err != nil {
 			return nil, err
 		}
@@ -55,7 +55,7 @@ func EncryptEnvelope(keyId string, key []byte, publicKeys []rsa.PublicKey) (*Key
 }
 
 func DecryptKek(kenv KeyEnvelope, privateKey *rsa.PrivateKey) ([]byte, error) {
-	kekFingerprint, err := sha256FingerprintForPublicKey(&privateKey.PublicKey)
+	kekFingerprint, err := Sha256FingerprintForPublicKey(&privateKey.PublicKey)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func HasKeyId(keyId string, envelopes []KeyEnvelope) bool {
 	return false
 }
 
-func sha256FingerprintForPublicKey(publicKey *rsa.PublicKey) (string, error) {
+func Sha256FingerprintForPublicKey(publicKey *rsa.PublicKey) (string, error) {
 	// need to convert to ssh.PublicKey to be able to use the fingerprint util
 	sshPubKey, err := ssh.NewPublicKey(publicKey)
 	if err != nil {

@@ -11,7 +11,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
-	"golang.org/x/crypto/ssh"
 	"strings"
 )
 
@@ -31,7 +30,7 @@ func (c *cHandlers) KekCreate(cmd *stoservertypes.KekCreate, ctx *command.Ctx) e
 		return err
 	}
 
-	fingerprint, err := sha256FingerprintForPublicKey(&privateKey.PublicKey)
+	fingerprint, err := stotypes.Sha256FingerprintForPublicKey(&privateKey.PublicKey)
 	if err != nil {
 		return err
 	}
@@ -59,14 +58,4 @@ func generateKek() (string, error) {
 	}
 
 	return string(cryptoutil.MarshalPemBytes(x509.MarshalPKCS1PrivateKey(privateKey), cryptoutil.PemTypeRsaPrivateKey)), nil
-}
-
-func sha256FingerprintForPublicKey(publicKey *rsa.PublicKey) (string, error) {
-	// need to convert to ssh.PublicKey to be able to use the fingerprint util
-	sshPubKey, err := ssh.NewPublicKey(publicKey)
-	if err != nil {
-		return "", err
-	}
-
-	return ssh.FingerprintSHA256(sshPubKey), nil
 }
