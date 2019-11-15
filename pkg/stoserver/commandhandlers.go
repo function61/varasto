@@ -205,7 +205,7 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 		mountSpec := &stotypes.VolumeMount{
 			ID:         stoutils.NewVolumeMountId(),
 			Volume:     vol.ID,
-			Node:       c.conf.SelfNode.ID,
+			Node:       c.conf.SelfNodeId,
 			Driver:     stotypes.VolumeDriverKind(cmd.Kind),
 			DriverOpts: cmd.DriverOpts,
 		}

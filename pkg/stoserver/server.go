@@ -210,7 +210,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 
 	logl.Info.Printf(
 		"node %s (ver. %s) started",
-		serverConfig.SelfNode.ID,
+		serverConfig.SelfNodeId,
 		dynversion.Version)
 
 	<-stop.Signal
@@ -235,7 +235,7 @@ type subsystem struct {
 
 type ServerConfig struct {
 	File                   ServerConfigFile
-	SelfNode               stotypes.Node
+	SelfNodeId             string
 	ClusterWideMounts      map[int]stotypes.VolumeMount
 	DiskAccess             *stodiskaccess.Controller // only for mounts on self node
 	ClientsAuthTokens      map[string]bool
@@ -330,7 +330,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 
 	return &ServerConfig{
 		File:                   *scf,
-		SelfNode:               *selfNode,
+		SelfNodeId:             selfNode.ID,
 		ClusterWideMounts:      clusterWideMountsMapped,
 		DiskAccess:             dam,
 		ClientsAuthTokens:      authTokens,
