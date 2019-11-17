@@ -5,7 +5,11 @@ import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { ApikeyCreate, ApikeyRemove, KekCreate } from 'generated/stoserver/stoservertypes_commands';
+import {
+	ApikeyCreate,
+	ApikeyRemove,
+	KekGenerateOrImport,
+} from 'generated/stoserver/stoservertypes_commands';
 import { getApiKeys, getKeyEncryptionKeys } from 'generated/stoserver/stoservertypes_endpoints';
 import { ApiKey, KeyEncryptionKey } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
@@ -132,7 +136,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 					<tr>
 						<td colSpan={99}>
 							<div>{loadingOrError}</div>
-							<CommandButton command={KekCreate()} />
+							<CommandButton command={KekGenerateOrImport()} />
 						</td>
 					</tr>
 				</tfoot>

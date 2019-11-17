@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-func (c *cHandlers) KekCreate(cmd *stoservertypes.KekCreate, ctx *command.Ctx) error {
+func (c *cHandlers) KekGenerateOrImport(cmd *stoservertypes.KekGenerateOrImport, ctx *command.Ctx) error {
 	data := cmd.Data
 
 	if data == "" {
