@@ -1302,7 +1302,7 @@ func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChe
 			if report.Temperature != nil {
 				temps = append(temps, stohealth.NewStaticHealthNode(
 					vol.Label,
-					stoservertypes.HealthStatusPass,
+					temperatureToHealthStatus(*report.Temperature),
 					fmt.Sprintf("%d °C", *report.Temperature)))
 			}
 
