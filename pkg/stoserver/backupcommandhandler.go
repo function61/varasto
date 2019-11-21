@@ -182,3 +182,26 @@ func listUbackupStoredBackups(conf ubconfig.Config, logger *log.Logger) ([]stose
 
 	return ret, nil
 }
+
+func downloadBackup(
+	backupId string,
+	output io.Writer,
+	conf ubconfig.Config,
+	logger *log.Logger,
+) error {
+	storage, err := ubstorage.StorageFromConfig(conf, logger)
+	if err != nil {
+		return err
+	}
+
+	backupReader, err := storage.Get(backupId)
+	if err != nil {
+		return err
+	}
+
+	if _, err := io.Copy(output, backupReader); err != nil {
+		return err
+	}
+
+	return backupReader.Close()
+}

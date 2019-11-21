@@ -19,6 +19,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/reconciliation", "produces": {"_": "ReconciliationReport"}, "name": "getReconcilableItems" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups/dl?id={id}", "name": "downloadUbackupStoredBackup" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getApiKeys" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },

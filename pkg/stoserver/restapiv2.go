@@ -33,6 +33,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -929,6 +930,27 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 		Goroutines:   runtime.NumGoroutine(),
 		ServerOs:     runtime.GOOS,
 		ServerArch:   runtime.GOARCH,
+	}
+}
+
+func (h *handlers) DownloadUbackupStoredBackup(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "id not given", http.StatusBadRequest)
+		return
+	}
+
+	conf, err := ubConfigFromDb(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filepath.Base(id)))
+
+	if err := downloadBackup(id, w, *conf, h.logger); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
 

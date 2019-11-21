@@ -5,6 +5,7 @@ import { TabController } from 'component/tabcontroller';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
 import { MonospaceContent } from 'f61ui/component/monospacecontent';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -14,6 +15,7 @@ import {
 	DatabaseBackupConfigure,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig, getUbackupStoredBackups } from 'generated/stoserver/stoservertypes_endpoints';
+import { downloadUbackupStoredBackupUrl } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CfgMetadataLastOk,
 	CfgUbackupConfig,
@@ -200,6 +202,7 @@ export default class MetadataBackupPage extends React.Component<
 							<th>Age</th>
 							<th>Description</th>
 							<th>Size</th>
+							<th />
 						</tr>
 					</thead>
 					<tbody>
@@ -210,6 +213,13 @@ export default class MetadataBackupPage extends React.Component<
 								</td>
 								<td>{backup.Description}</td>
 								<td>{bytesToHumanReadable(backup.Size)}</td>
+								<td>
+									<Dropdown>
+										<a href={downloadUbackupStoredBackupUrl(backup.ID)}>
+											Download
+										</a>
+									</Dropdown>
+								</td>
 							</tr>
 						))}
 					</tbody>
