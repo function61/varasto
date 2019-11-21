@@ -34,4 +34,5 @@ Planned enterprise features
 
 - Support
 
-- Consulting, if you need help with planning Varasto architecture or any use cases where you'll be using Varasto
+- [Consulting](https://function61.com/consulting/), if you need help with planning Varasto
+  architecture or any use cases where you'll be using Varasto
