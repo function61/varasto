@@ -70,7 +70,7 @@ func Import(content io.Reader, dbLocation string) error {
 		if err != nil {
 			return err
 		}
-		defer ignoreError(tx.Rollback())
+		defer func() { ignoreError(tx.Rollback()) }()
 
 		if err := stodb.BootstrapRepos(tx); err != nil {
 			return err

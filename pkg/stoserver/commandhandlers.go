@@ -620,7 +620,7 @@ func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount,
 	if err != nil {
 		return err
 	}
-	defer ignoreError(tx.Rollback())
+	defer func() { ignoreError(tx.Rollback()) }()
 
 	baseUrl, err := stodb.CfgFuseServerBaseUrl.GetRequired(tx)
 	if err != nil {

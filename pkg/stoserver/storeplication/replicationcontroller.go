@@ -159,7 +159,7 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 	if err != nil {
 		return nil, continueToken, err
 	}
-	defer ignoreError(tx.Rollback())
+	defer func() { ignoreError(tx.Rollback()) }()
 
 	batchLimit := 500
 

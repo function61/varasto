@@ -24,7 +24,7 @@ func (h *lastIvJob) CheckHealth() (*stoservertypes.Health, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer ignoreError(tx.Rollback())
+	defer func() { ignoreError(tx.Rollback()) }()
 
 	newest := time.Time{}
 
