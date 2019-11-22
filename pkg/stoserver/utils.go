@@ -18,6 +18,8 @@ func panicIfError(err error) {
 	}
 }
 
+func ignoreError(err error) {}
+
 var bearerRe = regexp.MustCompile("^Bearer (.+)")
 
 func authenticate(serverConfig *ServerConfig, w http.ResponseWriter, r *http.Request) bool {
@@ -33,12 +35,12 @@ func authenticate(serverConfig *ServerConfig, w http.ResponseWriter, r *http.Req
 	return false
 }
 
-func outJson(w http.ResponseWriter, out interface{}) {
+func outJson(w http.ResponseWriter, out interface{}) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	encoder := json.NewEncoder(w)
 	encoder.SetIndent("", "  ")
-	encoder.Encode(out)
+	return encoder.Encode(out)
 }
 
 func collectionHasChangesetId(id string, coll *stotypes.Collection) bool {

@@ -2,6 +2,7 @@
 package stothumb
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"github.com/function61/gokit/fileexists"
@@ -120,7 +121,9 @@ func runServer(addr string, logger *log.Logger, stop *stopper.Stopper) error {
 		w.Header().Set("Content-Type", "image/jpeg")
 		w.Header().Set("Content-Length", fmt.Sprintf("%d", stat.Size()))
 
-		io.Copy(w, thumbFile)
+		if _, err := io.Copy(w, thumbFile); err != nil {
+			logl.Error.Printf("thumb endpoint write to client: %v", err)
+		}
 	})
 
 	listener, err := stoutils.CreateTcpOrDomainSocketListener(addr, logl)
@@ -135,9 +138,8 @@ func runServer(addr string, logger *log.Logger, stop *stopper.Stopper) error {
 
 		<-stop.Signal
 
-		if err := srv.Shutdown(nil); err != nil {
-			panic(err)
-			// logl.Error.Fatalf("Shutdown() failed: %v", err)
+		if err := srv.Shutdown(context.TODO()); err != nil {
+			logl.Error.Fatalf("Shutdown() failed: %v", err)
 		}
 	}()
 

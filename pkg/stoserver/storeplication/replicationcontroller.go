@@ -159,7 +159,7 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 	if err != nil {
 		return nil, continueToken, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	batchLimit := 500
 
@@ -223,4 +223,8 @@ func (a *atomicInt32) Get() int32 {
 
 func (a *atomicInt32) Set(val int32) {
 	atomic.StoreInt32(a.num, val)
+}
+
+func ignoreError(err error) {
+	// no-op
 }

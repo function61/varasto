@@ -78,7 +78,7 @@ func (p *uploadProgressTextUi) run() error {
 
 	files := map[string]*fileUploadStatus{}
 
-	drawProgress := func() {
+	drawProgress := func() error {
 		renderedTbl := &bytes.Buffer{}
 
 		tblBuilder := tablewriter.NewWriter(renderedTbl)
@@ -96,15 +96,19 @@ func (p *uploadProgressTextUi) run() error {
 
 		tblBuilder.Render()
 
-		termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
+		if err := termbox.Clear(termbox.ColorDefault, termbox.ColorDefault); err != nil {
+			return err
+		}
 
-		p.drawLinesToTerminal(strings.Split(string(renderedTbl.Bytes()), "\n"))
+		p.drawLinesToTerminal(strings.Split(renderedTbl.String(), "\n"))
 
-		termbox.Flush()
+		return termbox.Flush()
 	}
 
 	// first draw of UI
-	drawProgress()
+	if err := drawProgress(); err != nil {
+		return err
+	}
 
 	for {
 		select {
@@ -147,7 +151,9 @@ func (p *uploadProgressTextUi) run() error {
 			// we get 100 events with bytesUploadedInBlob=0. we are only interested in the
 			// first one which notifies of the new file upload starting
 			if !statusFound || progress.bytesUploadedInBlob != 0 {
-				drawProgress()
+				if err := drawProgress(); err != nil {
+					return err
+				}
 			}
 		}
 	}

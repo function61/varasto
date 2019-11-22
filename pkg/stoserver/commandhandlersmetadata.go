@@ -265,7 +265,7 @@ func (c *cHandlers) themoviedbapiClient() (*themoviedbapi.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	apikey, err := stodb.CfgTheMovieDbApikey.GetRequired(tx)
 	if err != nil {

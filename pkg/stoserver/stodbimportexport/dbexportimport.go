@@ -70,7 +70,7 @@ func Import(content io.Reader, dbLocation string) error {
 		if err != nil {
 			return err
 		}
-		defer tx.Rollback()
+		defer ignoreError(tx.Rollback())
 
 		if err := stodb.BootstrapRepos(tx); err != nil {
 			return err
@@ -123,7 +123,7 @@ func Import(content io.Reader, dbLocation string) error {
 			return
 		}
 
-		openTx.Rollback()
+		ignoreError(openTx.Rollback())
 	}()
 
 	if err := importDbInternal(content, withTx); err != nil {
@@ -192,7 +192,7 @@ func makeBackupHeader(nodeId string) string {
 	return fmt.Sprintf("# Varasto-backup-v1(nodeId=%s)", nodeId)
 }
 
-var backupHeaderRe = regexp.MustCompile("# Varasto-backup-v1\\(nodeId=([^\\)]+)\\)")
+var backupHeaderRe = regexp.MustCompile(`# Varasto-backup-v1\(nodeId=([^\)]+)\)`)
 
 // returns nodeId
 func parseBackupHeader(backupHeader string) (string, error) {
@@ -201,4 +201,8 @@ func parseBackupHeader(backupHeader string) (string, error) {
 		return "", errors.New("failed to recognize backup header. did you remember to decrypt the backup file?")
 	}
 	return matches[1], nil
+}
+
+func ignoreError(err error) {
+	// no-op
 }

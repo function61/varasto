@@ -32,6 +32,8 @@ func EncryptEnvelope(keyId string, key []byte, publicKeys []rsa.PublicKey) (*Key
 	slots := []KeySlot{}
 
 	for _, publicKey := range publicKeys {
+		publicKey := publicKey // pin
+
 		keyEncrypted, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, &publicKey, key, nil)
 		if err != nil {
 			return nil, err
@@ -62,6 +64,7 @@ func DecryptKek(kenv KeyEnvelope, privateKey *rsa.PrivateKey) ([]byte, error) {
 
 	var slot *KeySlot
 	for _, slotCandidate := range kenv.Slots {
+		slotCandidate := slotCandidate // pin
 		if slotCandidate.KekFingerprint == kekFingerprint {
 			slot = &slotCandidate
 			break

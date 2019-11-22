@@ -24,7 +24,7 @@ func (h *lastIvJob) CheckHealth() (*stoservertypes.Health, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	newest := time.Time{}
 
@@ -63,4 +63,8 @@ func (h *lastIvJob) CheckHealth() (*stoservertypes.Health, error) {
 
 func naiveDays(amount time.Duration) time.Duration {
 	return amount * 24 * time.Hour
+}
+
+func ignoreError(err error) {
+	// no-op
 }

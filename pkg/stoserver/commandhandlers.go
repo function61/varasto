@@ -192,7 +192,7 @@ func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDesc
 
 // FIXME: name ends in 2 because conflicts with types.VolumeMount
 func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.Ctx) error {
-	sameVolumeOnSameNode := func(a, b *stotypes.VolumeMount) bool {
+	sameVolumeOnSameNode := func(a, b stotypes.VolumeMount) bool {
 		return a.Volume == b.Volume && a.Node == b.Node
 	}
 
@@ -216,7 +216,7 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 		}
 
 		for _, otherMount := range allMounts {
-			if sameVolumeOnSameNode(mountSpec, &otherMount) {
+			if sameVolumeOnSameNode(*mountSpec, otherMount) {
 				return fmt.Errorf("same volume is already mounted at specified node. mount id: %s", otherMount.ID)
 			}
 		}
@@ -620,7 +620,7 @@ func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount,
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	baseUrl, err := stodb.CfgFuseServerBaseUrl.GetRequired(tx)
 	if err != nil {
@@ -858,7 +858,7 @@ func registerCommandEndpoints(
 			}
 		} else {
 			// no-op => ok
-			w.Write([]byte(`{}`))
+			_, _ = w.Write([]byte(`{}`))
 		}
 	})).Methods(http.MethodPost)
 }

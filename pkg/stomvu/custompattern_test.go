@@ -8,7 +8,7 @@ import (
 func TestCustomMonthlyPattern(t *testing.T) {
 	phoneCallPattern := customMonthlyPattern("^[0-9a-f]{2}([0-9]{14})p", "20060102150405")
 
-	cs := []struct {
+	tcs := []struct {
 		input  string
 		expect string
 	}{
@@ -17,9 +17,10 @@ func TestCustomMonthlyPattern(t *testing.T) {
 		{"0d20181320121528p+358504123456.m4a", ""}, // there is no 13th month => invalid
 	}
 
-	for _, c := range cs {
-		t.Run(c.input, func(t *testing.T) {
-			assert.EqualString(t, phoneCallPattern(c.input), c.expect)
+	for _, tc := range tcs {
+		tc := tc // pin
+		t.Run(tc.input, func(t *testing.T) {
+			assert.EqualString(t, phoneCallPattern(tc.input), tc.expect)
 		})
 	}
 }

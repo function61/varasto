@@ -17,17 +17,17 @@ func TestComposite(t *testing.T) {
 		tail.Write(line)
 	})
 
-	upstream.Write([]byte("line 1\nline 2\nline 3 left open"))
+	_, _ = upstream.Write([]byte("line 1\nline 2\nline 3 left open"))
 
 	assert.EqualString(t, fmt.Sprintf("%v", tail.Snapshot()), "[line 1 line 2]")
 
-	upstream.Write([]byte("\n")) // close line 3
+	_, _ = upstream.Write([]byte("\n")) // close line 3
 
 	assert.EqualString(t, fmt.Sprintf("%v", tail.Snapshot()), "[line 1 line 2 line 3 left open]")
 
-	upstream.Write([]byte("line 4\nline 5\nline 6\n"))
+	_, _ = upstream.Write([]byte("line 4\nline 5\nline 6\n"))
 
 	assert.EqualString(t, fmt.Sprintf("%v", tail.Snapshot()), "[line 3 left open line 4 line 5 line 6]")
 
-	assert.EqualString(t, string(sink.Bytes()), "line 1\nline 2\nline 3 left open\nline 4\nline 5\nline 6\n")
+	assert.EqualString(t, sink.String(), "line 1\nline 2\nline 3 left open\nline 4\nline 5\nline 6\n")
 }

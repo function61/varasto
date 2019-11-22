@@ -148,7 +148,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	rcr := NewReconciliationCompletionReport()
 
@@ -218,6 +218,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		}
 
 		for _, coll := range colls {
+			coll := coll // pin
 			if err := visitCollection(&coll); err != nil {
 				return err
 			}
@@ -252,7 +253,7 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	logl := logex.Levels(logex.Prefix("abandonedscanner", c.logger))
 

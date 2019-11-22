@@ -25,7 +25,7 @@ func Entrypoint() *cobra.Command {
 
 			go func() {
 				// wait for stdin EOF (or otherwise broken pipe)
-				io.Copy(ioutil.Discard, os.Stdin)
+				_, _ = io.Copy(ioutil.Discard, os.Stdin)
 
 				logl.Error.Println("parent process died (detected by closed stdin) - stopping")
 

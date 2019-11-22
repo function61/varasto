@@ -12,6 +12,7 @@ import (
 // not 404 if we move files around later and forget to update the ref
 func TestDocsExistForDocRefs(t *testing.T) {
 	for _, member := range stoservertypes.DocRefMembers {
+		member := member // pin
 		t.Run(string(member), func(t *testing.T) {
 			exists, err := fileexists.Exists("../../" + string(member))
 			if err != nil {

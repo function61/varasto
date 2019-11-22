@@ -127,7 +127,7 @@ func ubConfigFromDb(db *bolt.DB) (*ubconfig.Config, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	serializedUbConfig, err := stodb.CfgUbackupConfig.GetRequired(tx)
 	if err != nil {

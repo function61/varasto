@@ -95,7 +95,7 @@ func genThumbPath(fileContentSha256 []byte) string {
 	return filepath.Join(
 		"thumbs",
 		asBase64[0:2],
-		fmt.Sprintf("%s.jpg", asBase64[2:len(asBase64)]))
+		fmt.Sprintf("%s.jpg", asBase64[2:]))
 }
 
 // possible outcomes:
@@ -140,7 +140,6 @@ func makeThumbForFile(file stotypes.File, collectionId string, clientConfig stoc
 
 		return err
 	}
-	origBuffer = nil // release memory early
 
 	origBounds := orig.Bounds()
 

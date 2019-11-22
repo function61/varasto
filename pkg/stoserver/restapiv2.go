@@ -107,7 +107,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dir, err := stodb.Read(tx).Directory(dirId)
 	panicIfError(err)
@@ -158,7 +158,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	coll, err := stodb.Read(tx).Collection(collectionId)
 	if err != nil {
@@ -236,7 +236,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	coll, err := stodb.Read(tx).Collection(collectionId)
 	if err != nil {
@@ -298,7 +298,11 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		})
 	}
 
-	tx.Rollback() // eagerly b/c the below operation is slow
+	// eagerly b/c the below operation (send to client) can be slow
+	if err := tx.Rollback(); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
@@ -350,7 +354,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.Volume{}
 	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
@@ -411,7 +415,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.VolumeMount{}
 	panicIfError(stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&dbObjects), tx))
@@ -442,7 +446,7 @@ func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.Respons
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	blob, err := stodb.Read(tx).Blob(*ref)
 	if err != nil {
@@ -502,7 +506,7 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 		// logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
 		log.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
 
-		outJson(w, coll)
+		ignoreError(outJson(w, coll))
 	}
 }
 
@@ -512,7 +516,7 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 		http.Error(w, errTxBegin.Error(), http.StatusInternalServerError)
 		return nil
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	coll, err := stodb.Read(tx).Collection(collectionId)
 	panicIfError(err)
@@ -583,7 +587,7 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.ReplicationPolicy{}
 	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
@@ -618,7 +622,7 @@ func (h *handlers) GetKeyEncryptionKeys(rctx *httpauth.RequestContext, w http.Re
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.KeyEncryptionKey{}
 	panicIfError(stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&dbObjects), tx))
@@ -643,7 +647,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.Node{}
 	panicIfError(stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx))
@@ -664,7 +668,7 @@ func (h *handlers) GetApiKeys(rctx *httpauth.RequestContext, w http.ResponseWrit
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.Client{}
 	panicIfError(stodb.ClientRepository.Each(stodb.ClientAppender(&dbObjects), tx))
@@ -684,7 +688,7 @@ func (h *handlers) GetApiKeys(rctx *httpauth.RequestContext, w http.ResponseWrit
 func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	w.Header().Set("Content-Type", "text/plain")
 
@@ -697,10 +701,12 @@ func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.R
 
 		for _, changeset := range coll.Changesets {
 			for _, file := range changeset.FilesCreated {
+				file := file // pin
 				processFile(&file)
 			}
 
 			for _, file := range changeset.FilesUpdated {
+				file := file // pin
 				processFile(&file)
 			}
 		}
@@ -717,7 +723,7 @@ func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.R
 func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	panicIfError(stodbimportexport.Export(tx, w))
 }
@@ -823,7 +829,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	dbObjects := []stotypes.IntegrityVerificationJob{}
 	panicIfError(stodb.IntegrityVerificationJobRepository.Each(stodb.IntegrityVerificationJobAppender(&dbObjects), tx))
@@ -880,7 +886,7 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	var val string
 	switch key {
@@ -985,7 +991,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 
 		tx, err := h.db.Begin(false)
 		panicIfError(err)
-		defer tx.Rollback()
+		defer ignoreError(tx.Rollback())
 
 		blobMetadata, err := stodb.Read(tx).Blob(*blobRef)
 		if err != nil {
@@ -1090,7 +1096,7 @@ func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseW
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	coll, err := stodb.Read(tx).Collection(mux.Vars(r)["id"])
 	if err != nil {
@@ -1102,7 +1108,7 @@ func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseW
 		return
 	}
 
-	outJson(w, coll)
+	ignoreError(outJson(w, coll))
 }
 
 func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ReconciliationReport {
@@ -1111,7 +1117,7 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	nonCompliantItems := []stoservertypes.ReconcilableItem{}
 
@@ -1249,7 +1255,7 @@ func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	_, err = stodb.Read(tx).Blob(ref)
 	if err == nil {

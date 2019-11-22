@@ -94,7 +94,7 @@ func NewController(
 			case result := <-ctrl.opListRunningJobIds:
 				jobIds := []string{}
 
-				for id, _ := range ctrl.runningJobIds {
+				for id := range ctrl.runningJobIds {
 					jobIds = append(jobIds, id)
 				}
 
@@ -135,7 +135,7 @@ func (s *Controller) nextBlobsForJob(lastCompletedBlobRef stotypes.BlobRef, limi
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	blobs := []stotypes.Blob{}
 
@@ -161,7 +161,7 @@ func (s *Controller) resumeJobWorker(
 			return s.ivJobRepository.Update(job, tx)
 		})
 	}
-	defer updateJobStatusInDb() // to cover all following returns. ignores error
+	defer ignoreError(updateJobStatusInDb()) // to cover all following returns. ignores error
 
 	// returns error if maximum errors detected and the job should stop
 	pushErr := func(reportLine string) error {
@@ -249,7 +249,7 @@ func (s *Controller) loadJob(jobId string) (*stotypes.IntegrityVerificationJob, 
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	job := &stotypes.IntegrityVerificationJob{}
 	if err := s.ivJobRepository.OpenByPrimaryKey([]byte(jobId), job, tx); err != nil {
@@ -257,4 +257,8 @@ func (s *Controller) loadJob(jobId string) (*stotypes.IntegrityVerificationJob, 
 	}
 
 	return job, nil
+}
+
+func ignoreError(err error) {
+	// no-op
 }

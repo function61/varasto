@@ -22,7 +22,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	// be extra safe and scan the DB to see that it is totally empty
 	if err := tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
@@ -82,4 +82,8 @@ func allOk(errs []error) error {
 		}
 	}
 	return nil
+}
+
+func ignoreError(err error) {
+	// no-op
 }

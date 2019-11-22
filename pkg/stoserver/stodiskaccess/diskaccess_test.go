@@ -352,7 +352,7 @@ func xorSlices(a []byte, b []byte) []byte {
 
 	c := make([]byte, len(a))
 
-	for k, _ := range a {
+	for k := range a {
 		c[k] = a[k] ^ b[k]
 	}
 

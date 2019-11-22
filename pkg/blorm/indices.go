@@ -157,6 +157,7 @@ func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(rec
 
 func indexRefExistsIn(ir qualifiedIndexRef, coll []qualifiedIndexRef) bool {
 	for _, other := range coll {
+		other := other // pin
 		if ir.Equals(&other) {
 			return true
 		}

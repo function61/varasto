@@ -167,8 +167,6 @@ func (s *Controller) handler(stop *stopper.Stopper) {
 				startChildProcess()
 			}
 		case <-stop.Signal:
-			desiredRunning = false
-
 			if isRunning() {
 				stopSubprocess()
 			}

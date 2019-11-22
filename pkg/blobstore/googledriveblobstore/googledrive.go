@@ -10,6 +10,7 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/option"
 	"io"
 	"io/ioutil"
 	"log"
@@ -144,7 +145,7 @@ func authDance() (*drive.Service, error) {
 	defer cancel()
 	client := getClient(ctx, config)
 
-	srv, err := drive.New(client)
+	srv, err := drive.NewService(context.TODO(), option.WithHTTPClient(client))
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve Drive client: %v", err)
 	}

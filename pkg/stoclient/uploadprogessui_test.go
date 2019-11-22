@@ -80,6 +80,7 @@ func TestSpeedMbps(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
+		tc := tc // pin
 		t.Run(tc.expectedOutput, func(t *testing.T) {
 			assert.EqualString(t, speedMbps(tc.input), tc.expectedOutput)
 		})

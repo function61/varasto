@@ -94,7 +94,7 @@ func computeChangeset(wd *workdirLocation, bdl BlobDiscoveredListener) (*stotype
 	}
 
 	deleted := []string{}
-	for missing, _ := range filesMissing {
+	for missing := range filesMissing {
 		deleted = append(deleted, missing)
 	}
 	sort.Strings(deleted)

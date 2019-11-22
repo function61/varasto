@@ -6,7 +6,7 @@ import (
 )
 
 func TestDetectPhotoVideoDate(t *testing.T) {
-	cs := []struct {
+	tcs := []struct {
 		input  string
 		expect string
 	}{
@@ -17,9 +17,10 @@ func TestDetectPhotoVideoDate(t *testing.T) {
 		{"IMG_20180526666_151345.jpg", "nomatch"},
 	}
 
-	for _, c := range cs {
-		t.Run(c.input, func(t *testing.T) {
-			res := detectPhotoVideoDate(c.input)
+	for _, tc := range tcs {
+		tc := tc // pin
+		t.Run(tc.input, func(t *testing.T) {
+			res := detectPhotoVideoDate(tc.input)
 
 			var output string
 			if res != nil {
@@ -28,7 +29,7 @@ func TestDetectPhotoVideoDate(t *testing.T) {
 				output = "nomatch"
 			}
 
-			assert.EqualString(t, output, c.expect)
+			assert.EqualString(t, output, tc.expect)
 		})
 	}
 }

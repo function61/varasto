@@ -205,7 +205,9 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	go func(stop *stopper.Stopper) {
 		defer stop.Done()
 
-		srv.ListenAndServe()
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			logl.Error.Fatalf("ListenAndServe: %v", err)
+		}
 	}(workers.Stopper())
 
 	logl.Info.Printf(
@@ -215,7 +217,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 
 	<-stop.Signal
 
-	if err := srv.Shutdown(nil); err != nil {
+	if err := srv.Shutdown(context.TODO()); err != nil {
 		logl.Error.Fatalf("Shutdown: %v", err)
 	}
 
@@ -251,7 +253,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
 	if err != nil {
@@ -378,7 +380,7 @@ func (d *dbbma) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	if _, err := stodb.Read(tx).Blob(ref); err != nil {
 		if err == blorm.ErrNotFound {
@@ -430,7 +432,7 @@ func (d *dbbma) QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	blob, err := stodb.Read(tx).Blob(ref)
 	if err != nil {
@@ -449,7 +451,7 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 	if err != nil {
 		return nil, err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	blob, err := stodb.Read(tx).Blob(ref)
 	if err != nil {
@@ -501,7 +503,7 @@ func (d *dbbma) WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	blobToUpdate, err := stodb.Read(tx).Blob(ref)
 	if err != nil {
@@ -521,7 +523,7 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer ignoreError(tx.Rollback())
 
 	newBlob := &stotypes.Blob{
 		Ref:             meta.Ref,
