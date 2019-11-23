@@ -12,7 +12,7 @@ func bulkUploadScriptEntrypoint() *cobra.Command {
 	rm := false
 
 	cmd := &cobra.Command{
-		Use:   "bulkuploadscript [parentDirectory]",
+		Use:   "bulk [parentDirectory]",
 		Short: "Generates a shell script to adopt & push all subdirectories as collections",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
