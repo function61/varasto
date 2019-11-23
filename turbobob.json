@@ -24,7 +24,7 @@
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
 			},
-			"dev_public_ingress": ["8066/HostRegexp:varasto.{[^.]+}.fn61.net"]
+			"dev_ports": ["8066:8066"]
 		},
 		{
 			"name": "frontend",
