@@ -18,6 +18,7 @@ import (
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/childprocesscontroller"
 	"github.com/function61/varasto/pkg/logtee"
+	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
@@ -171,12 +172,25 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	if err != nil {
 		return err
 	}
+	chandlers := &cHandlers{db, serverConfig, ivController, logger} // Bing
 
 	registerCommandEndpoints(
 		router,
 		eventLog,
-		&cHandlers{db, serverConfig, ivController, logger},
+		chandlers,
 		mwares)
+
+	schedulerController, err := setupScheduledJobs(
+		chandlers,
+		eventLog,
+		db,
+		logger,
+		workers.Stopper(),
+		workers.Stopper())
+	if err != nil {
+		return err
+	}
+	serverConfig.Scheduler = schedulerController
 
 	if err := defineUi(router); err != nil {
 		return err
@@ -243,6 +257,7 @@ type ServerConfig struct {
 	ClientsAuthTokens      map[string]bool
 	LogTail                *logtee.StringTail
 	ReplicationControllers map[int]*storeplication.Controller
+	Scheduler              *scheduler.Controller
 	ThumbServer            *subsystem
 	FuseProjector          *subsystem
 }

@@ -281,6 +281,14 @@
   revision = "aa55a523dc0a8297edf51bb75e8eec13eb3be45d"
 
 [[projects]]
+  digest = "1:b778880d47d8544b11cd82b0d9731f9669d653489b400d0b5899b8a20934e7b4"
+  name = "github.com/robfig/cron"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "45fbe1491cdd47d74d1bf1396286d67faee8b8b5"
+  version = "v3.0.0"
+
+[[projects]]
   digest = "1:645cabccbb4fa8aab25a956cbcbdf6a6845ca736b2c64e197ca7cbb9d210b939"
   name = "github.com/spf13/cobra"
   packages = ["."]
@@ -567,6 +575,7 @@
     "github.com/nsf/termbox-go",
     "github.com/olekukonko/tablewriter",
     "github.com/prometheus/procfs",
+    "github.com/robfig/cron",
     "github.com/spf13/cobra",
     "go.etcd.io/bbolt",
     "golang.org/x/crypto/ssh",

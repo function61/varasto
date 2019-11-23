@@ -1,6 +1,7 @@
 package stotypes
 
 import (
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"time"
 )
 
@@ -133,6 +134,22 @@ type KeyEncryptionKey struct {
 	Fingerprint string
 	PublicKey   string
 	PrivateKey  string
+}
+
+type ScheduledJob struct {
+	ID          string
+	Kind        stoservertypes.ScheduledJobKind
+	Description string
+	Schedule    string
+	Enabled     bool
+	NextRun     time.Time
+	LastRun     *ScheduledJobLastRun
+}
+
+type ScheduledJobLastRun struct {
+	Started  time.Time
+	Finished time.Time
+	Error    string
 }
 
 func NewChangeset(

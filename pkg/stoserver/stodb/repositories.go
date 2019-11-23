@@ -88,6 +88,11 @@ var IntegrityVerificationJobRepository = register("IntegrityVerificationJob", bl
 	func() interface{} { return &stotypes.IntegrityVerificationJob{} },
 	func(record interface{}) []byte { return []byte(record.(*stotypes.IntegrityVerificationJob).ID) }))
 
+var ScheduledJobRepository = register("ScheduledJob", blorm.NewSimpleRepo(
+	"scheduledjobs",
+	func() interface{} { return &stotypes.ScheduledJob{} },
+	func(record interface{}) []byte { return []byte(record.(*stotypes.ScheduledJob).ID) }))
+
 var configRepository = register("Config", blorm.NewSimpleRepo(
 	"config",
 	func() interface{} { return &stotypes.Config{} },
@@ -141,6 +146,13 @@ func VolumeMountAppender(slice *[]stotypes.VolumeMount) func(record interface{})
 func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob) func(record interface{}) error {
 	return func(record interface{}) error {
 		*slice = append(*slice, *record.(*stotypes.IntegrityVerificationJob))
+		return nil
+	}
+}
+
+func ScheduledJobAppender(slice *[]stotypes.ScheduledJob) func(record interface{}) error {
+	return func(record interface{}) error {
+		*slice = append(*slice, *record.(*stotypes.ScheduledJob))
 		return nil
 	}
 }

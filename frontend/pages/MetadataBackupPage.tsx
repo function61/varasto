@@ -9,7 +9,6 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { MonospaceContent } from 'f61ui/component/monospacecontent';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { datetimeRFC3339 } from 'f61ui/types';
 import {
 	DatabaseBackup,
 	DatabaseBackupConfigure,
@@ -17,7 +16,6 @@ import {
 import { getConfig, getUbackupStoredBackups } from 'generated/stoserver/stoservertypes_endpoints';
 import { downloadUbackupStoredBackupUrl } from 'generated/stoserver/stoservertypes_endpoints';
 import {
-	CfgMetadataLastOk,
 	CfgUbackupConfig,
 	ConfigValue,
 	DocRef,
@@ -33,7 +31,6 @@ interface MetadataBackupPageProps {
 
 interface MetadataBackupPageState {
 	backupConfig: Result<ConfigValue>;
-	backupLastOk: Result<ConfigValue>;
 	backups: Result<UbackupStoredBackup[]>;
 }
 
@@ -44,9 +41,6 @@ export default class MetadataBackupPage extends React.Component<
 	state: MetadataBackupPageState = {
 		backupConfig: new Result<ConfigValue>((_) => {
 			this.setState({ backupConfig: _ });
-		}),
-		backupLastOk: new Result<ConfigValue>((_) => {
-			this.setState({ backupLastOk: _ });
 		}),
 		backups: new Result<UbackupStoredBackup[]>((_) => {
 			this.setState({ backups: _ });
@@ -67,12 +61,8 @@ export default class MetadataBackupPage extends React.Component<
 				<Panel
 					heading={
 						<div>
-							Metadata backup list{' '}
-							<RefreshButton
-								refresh={() => {
-									this.loadBackups();
-								}}
-							/>
+							Metadata backup list &nbsp;
+							<DocLink doc={DocRef.DocsGuideSettingUpBackupMd} />
 						</div>
 					}>
 					{this.renderStoredBackups()}
@@ -134,8 +124,7 @@ export default class MetadataBackupPage extends React.Component<
 								encryptionPublicKey,
 								alertmanagerBaseUrl,
 							)}
-						/>{' '}
-						<DocLink doc={DocRef.DocsGuideSettingUpBackupMd} />
+						/>
 					</div>
 				}>
 				<table className="table table-striped table-hover">
@@ -183,19 +172,6 @@ export default class MetadataBackupPage extends React.Component<
 
 		return (
 			<div>
-				{this.state.backupLastOk.draw((backupLastOk) =>
-					backupLastOk.Value ? (
-						<p>
-							Last backup was <Timestamp ts={backupLastOk.Value as datetimeRFC3339} />
-							.
-						</p>
-					) : (
-						<p>No backup was ever taken :(</p>
-					),
-				)}
-
-				<CommandButton command={DatabaseBackup()} />
-
 				<table className="table table-striped table-hover">
 					<thead>
 						<tr>
@@ -225,7 +201,17 @@ export default class MetadataBackupPage extends React.Component<
 					</tbody>
 					<tfoot>
 						<tr>
-							<td colSpan={99}>{loadingOrError}</td>
+							<td colSpan={99}>
+								<div>{loadingOrError}</div>
+								<div>
+									<RefreshButton
+										refresh={() => {
+											this.loadBackups();
+										}}
+									/>
+								</div>
+								<CommandButton command={DatabaseBackup()} />
+							</td>
 						</tr>
 					</tfoot>
 				</table>
@@ -235,7 +221,6 @@ export default class MetadataBackupPage extends React.Component<
 
 	private fetchData() {
 		this.state.backupConfig.load(() => getConfig(CfgUbackupConfig));
-		this.state.backupLastOk.load(() => getConfig(CfgMetadataLastOk));
 
 		this.loadBackups();
 	}

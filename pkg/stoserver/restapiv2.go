@@ -18,6 +18,7 @@ import (
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/duration"
+	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
@@ -583,7 +584,7 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 }
 
 func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationPolicy {
-	ret := []stoservertypes.ReplicationPolicy{}
+	policies := []stoservertypes.ReplicationPolicy{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -593,14 +594,87 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
-		ret = append(ret, stoservertypes.ReplicationPolicy{
+		policies = append(policies, stoservertypes.ReplicationPolicy{
 			Id:             dbObject.ID,
 			Name:           dbObject.Name,
 			DesiredVolumes: dbObject.DesiredVolumes,
 		})
 	}
 
-	return &ret
+	return &policies
+}
+
+func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.SchedulerJob {
+	fetchJobs := func() ([]stotypes.ScheduledJob, error) {
+		tx, err := h.db.Begin(false)
+		if err != nil {
+			return nil, err
+		}
+		defer func() { ignoreError(tx.Rollback()) }()
+
+		dbJobs := []stotypes.ScheduledJob{}
+
+		if err := stodb.ScheduledJobRepository.Each(stodb.ScheduledJobAppender(&dbJobs), tx); err != nil {
+			return nil, err
+		}
+
+		return dbJobs, nil
+	}
+
+	jobInSchedulerById := map[string]*scheduler.JobSpec{}
+
+	for _, jobInScheduler := range h.conf.Scheduler.Snapshot() {
+		jobInScheduler := jobInScheduler // pin
+		jobInSchedulerById[jobInScheduler.Id] = &jobInScheduler
+	}
+
+	dbJobs, err := fetchJobs()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	jobs := []stoservertypes.SchedulerJob{}
+
+	for _, dbJob := range dbJobs {
+		var lastRun *stoservertypes.SchedulerJobLastRun
+		if dbJob.LastRun != nil {
+			var errorStrPtr *string
+			if dbJob.LastRun.Error != "" {
+				errorStrPtr = &dbJob.LastRun.Error
+			}
+
+			lastRun = &stoservertypes.SchedulerJobLastRun{
+				Error:    errorStrPtr,
+				Started:  dbJob.LastRun.Started,
+				Finished: dbJob.LastRun.Finished,
+			}
+		}
+
+		running := false
+		fromScheduler := jobInSchedulerById[dbJob.ID]
+		if fromScheduler != nil {
+			running = fromScheduler.Running
+		}
+
+		var nextRun *time.Time = nil
+		if !dbJob.NextRun.IsZero() {
+			nextRun = &dbJob.NextRun
+		}
+
+		jobs = append(jobs, stoservertypes.SchedulerJob{
+			Id:          dbJob.ID,
+			Description: dbJob.Description,
+			Enabled:     dbJob.Enabled,
+			Kind:        dbJob.Kind,
+			Schedule:    dbJob.Schedule,
+			Running:     running,
+			NextRun:     nextRun,
+			LastRun:     lastRun,
+		})
+	}
+
+	return &jobs
 }
 
 func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationStatus {
@@ -898,8 +972,6 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 		val, err = stodb.CfgNetworkShareBaseUrl.GetOptional(tx)
 	case stoservertypes.CfgUbackupConfig:
 		val, err = stodb.CfgUbackupConfig.GetOptional(tx)
-	case stoservertypes.CfgMetadataLastOk:
-		val, err = stodb.CfgMetadataLastOk.GetOptional(tx)
 	default:
 		http.Error(w, fmt.Sprintf("unknown key: %s", key), http.StatusNotFound)
 		return nil
@@ -1269,75 +1341,79 @@ func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
 }
 
 func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChecker, error) {
+	tx, err := db.Begin(false)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	now := time.Now()
+
 	temps := []stohealth.HealthChecker{}
 	smarts := []stohealth.HealthChecker{}
 	replicationQueues := []stohealth.HealthChecker{}
 
-	now := time.Now()
+	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
+		vol := record.(*stotypes.Volume)
 
-	if err := db.View(func(tx *bolt.Tx) error {
-		return stodb.VolumeRepository.Each(func(record interface{}) error {
-			vol := record.(*stotypes.Volume)
+		replicationController, hasReplicationController := conf.ReplicationControllers[vol.ID]
+		if hasReplicationController {
+			replicationProgress := replicationController.Progress()
 
-			replicationController, hasReplicationController := conf.ReplicationControllers[vol.ID]
-			if hasReplicationController {
-				replicationProgress := replicationController.Progress()
-
-				if replicationProgress != 100 {
-					replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
-						vol.Label,
-						stoservertypes.HealthStatusWarn,
-						fmt.Sprintf("Progress at %d %%", replicationProgress)))
-				} else {
-					replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
-						vol.Label,
-						stoservertypes.HealthStatusPass,
-						"Realtime"))
-				}
-			}
-
-			if vol.SmartReport == "" {
-				return nil
-			}
-
-			report := &stoservertypes.SmartReport{}
-			if err := json.Unmarshal([]byte(vol.SmartReport), report); err != nil {
-				return err
-			}
-
-			if report.Temperature != nil {
-				temps = append(temps, stohealth.NewStaticHealthNode(
+			if replicationProgress != 100 {
+				replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
 					vol.Label,
-					temperatureToHealthStatus(*report.Temperature),
-					fmt.Sprintf("%d °C", *report.Temperature)))
+					stoservertypes.HealthStatusWarn,
+					fmt.Sprintf("Progress at %d %%", replicationProgress)))
+			} else {
+				replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
+					vol.Label,
+					stoservertypes.HealthStatusPass,
+					"Realtime"))
 			}
+		}
 
-			smartStatus := stoservertypes.HealthStatusPass
-			if !report.Passed {
-				smartStatus = stoservertypes.HealthStatusFail
-			}
-
-			smarts = append(smarts, stohealth.NewStaticHealthNode(
-				vol.Label,
-				smartStatus,
-				fmt.Sprintf("Checked %s ago", duration.Humanize(now.Sub(report.Time)))))
-
+		if vol.SmartReport == "" {
 			return nil
-		}, tx)
-	}); err != nil {
+		}
+
+		report := &stoservertypes.SmartReport{}
+		if err := json.Unmarshal([]byte(vol.SmartReport), report); err != nil {
+			return err
+		}
+
+		if report.Temperature != nil {
+			temps = append(temps, stohealth.NewStaticHealthNode(
+				vol.Label,
+				temperatureToHealthStatus(*report.Temperature),
+				fmt.Sprintf("%d °C", *report.Temperature)))
+		}
+
+		smartStatus := stoservertypes.HealthStatusPass
+		if !report.Passed {
+			smartStatus = stoservertypes.HealthStatusFail
+		}
+
+		smarts = append(smarts, stohealth.NewStaticHealthNode(
+			vol.Label,
+			smartStatus,
+			fmt.Sprintf("Checked %s ago", duration.Humanize(now.Sub(report.Time)))))
+
+		return nil
+	}, tx); err != nil {
 		return nil, err
 	}
 
 	return stohealth.NewHealthFolder(
 		"Varasto",
-		stohealth.NewLastSuccessfullBackup(db),
 		stohealth.NewLastIntegrityVerificationJob(db),
 		stohealth.NewHealthFolder(
 			"Temperatures",
 			temps...),
 		stohealth.NewHealthFolder(
-			"SMART",
+			"SMART diagnostics",
 			smarts...),
+		healthForScheduledJobs(tx),
 		stohealth.NewHealthFolder(
 			"Replication queue",
 			replicationQueues...)), nil

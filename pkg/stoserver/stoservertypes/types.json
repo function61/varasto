@@ -22,6 +22,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups/dl?id={id}", "name": "downloadUbackupStoredBackup" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getApiKeys" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/scheduler/jobs", "produces": {"_": "list", "of": {"_": "SchedulerJob"}}, "name": "getSchedulerJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
@@ -50,7 +51,6 @@
 		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
 		{ "key": "CfgNetworkShareBaseUrl", "value": "networkshare_baseurl" },
 		{ "key": "CfgUbackupConfig", "value": "ubackup_config" },
-		{ "key": "CfgMetadataLastOk", "value": "metadatabackupLastSuccess" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [
@@ -91,6 +91,14 @@
 			]
 		},
 		{
+			"name": "ScheduledJobKind",
+			"type": "string",
+			"stringMembers": [
+				"smartpoll",
+				"metadatabackup"
+			]
+		},
+		{
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [
@@ -109,6 +117,27 @@
 				"Modified": {"_": "datetime"},
 				"Size": {"_": "integer"},
 				"BlobRefs": {"_": "list", "of": {"_": "string"}}
+			}}
+		},
+		{
+			"name": "SchedulerJob",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"Description": {"_": "string"},
+				"Kind": {"_": "ScheduledJobKind"},
+				"Schedule": {"_": "string"},
+				"Enabled": {"_": "boolean"},
+				"Running": {"_": "boolean"},
+				"NextRun": {"_": "datetime", "nullable": true},
+				"LastRun": {"_": "SchedulerJobLastRun", "nullable": true}
+			}}
+		},
+		{
+			"name": "SchedulerJobLastRun",
+			"type": {"_": "object", "fields": {
+				"Error": {"_": "string", "nullable": true},
+				"Started": {"_": "datetime"},
+				"Finished": {"_": "datetime"}
 			}}
 		},
 		{

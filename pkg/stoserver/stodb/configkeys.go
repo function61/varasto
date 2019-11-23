@@ -10,5 +10,4 @@ var (
 	CfgFuseServerBaseUrl   = ConfigAccessor(stoservertypes.CfgFuseServerBaseUrl)
 	CfgNetworkShareBaseUrl = ConfigAccessor(stoservertypes.CfgNetworkShareBaseUrl)
 	CfgUbackupConfig       = ConfigAccessor(stoservertypes.CfgUbackupConfig)
-	CfgMetadataLastOk      = ConfigAccessor("metadatabackupLastSuccess")
 )

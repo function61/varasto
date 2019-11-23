@@ -23,6 +23,11 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				active: r.serverInfoRoute.matchUrl(hash) !== null,
 			},
 			{
+				title: 'Scheduled jobs',
+				url: r.scheduledJobsRoute.buildUrl({}),
+				active: r.scheduledJobsRoute.matchUrl(hash) !== null,
+			},
+			{
 				title: 'Backups',
 				url: r.metadataBackupRoute.buildUrl({ v: '' }),
 				active: r.metadataBackupRoute.matchUrl(hash) !== null,

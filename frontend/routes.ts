@@ -22,6 +22,8 @@ export const contentMetadataRoute = makeRoute('contentMetadata', {});
 
 export const fuseServerRoute = makeRoute('fuseServer', {});
 
+export const scheduledJobsRoute = makeRoute('scheduledJobs', {});
+
 export const collectionRoute = makeRoute('collection', {
 	id: 'string',
 	rev: 'string',

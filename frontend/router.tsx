@@ -7,6 +7,7 @@ import LogsPage from 'pages/LogsPage';
 import MetadataBackupPage from 'pages/MetadataBackupPage';
 import NodesPage from 'pages/NodesPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
+import ScheduledJobsPage from 'pages/ScheduledJobsPage';
 import ServerInfoPage from 'pages/ServerInfoPage';
 import UsersPage from 'pages/UsersPage';
 import VolumesAndMountsPage from 'pages/VolumesAndMountsPage';
@@ -19,6 +20,7 @@ export const router = makeRouter(r.browseRoute, (opts) => (
 	.registerRoute(r.nodesRoute, () => <NodesPage />)
 	.registerRoute(r.fuseServerRoute, () => <FuseServerPage />)
 	.registerRoute(r.serverInfoRoute, () => <ServerInfoPage />)
+	.registerRoute(r.scheduledJobsRoute, () => <ScheduledJobsPage />)
 	.registerRoute(r.volumesAndMountsRoute, (opts) => <VolumesAndMountsPage view={opts.view} />)
 	.registerRoute(r.usersRoute, () => <UsersPage />)
 	.registerRoute(r.logsRoute, () => <LogsPage />)

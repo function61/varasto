@@ -13,7 +13,7 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
 import {
-	DatabaseScanAbandoned,
+	DatabaseMigrate,
 	SubsystemStart,
 	SubsystemStop,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -110,7 +110,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 					<tr>
 						<td colSpan={99}>
 							<div>{loadingOrError}</div>
-							<CommandButton command={DatabaseScanAbandoned()} />
+							<CommandButton command={DatabaseMigrate()} />
 						</td>
 					</tr>
 				</tfoot>

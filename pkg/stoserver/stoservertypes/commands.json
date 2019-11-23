@@ -441,6 +441,16 @@
 		"fields": []
 	},
 	{
+		"command": "database.Migrate",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "update",
+		"title": "Migrate database",
+		"fields": [
+			{ "key": "Phase", "type": "integer" }
+		]
+	},
+	{
 		"command": "database.BackupConfigure",
 		"chain": "public",
 		"ctor": ["Bucket", "BucketRegion", "AccessKeyId", "AccessKeySecret", "EncryptionPublicKey", "AlertmanagerBaseUrl"],
@@ -524,6 +534,47 @@
 		"title": "Stop",
 		"fields": [
 			{ "key": "Id", "type": "SubsystemId", "hideIfDefaultValue": true }
+		]
+	},
+	{
+		"command": "scheduledjob.Start",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Start manually",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true }
+		]
+	},
+	{
+		"command": "scheduledjob.ChangeSchedule",
+		"chain": "public",
+		"ctor": ["Id", "Schedule"],
+		"crudNature": "update",
+		"title": "Change schedule",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Schedule" }
+		]
+	},
+	{
+		"command": "scheduledjob.Enable",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Enable",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true }
+		]
+	},
+	{
+		"command": "scheduledjob.Disable",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Disable",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true }
 		]
 	},
 	{

@@ -31,6 +31,15 @@ func (d *dbQueries) Collection(id string) (*stotypes.Collection, error) {
 	return record, nil
 }
 
+func (d *dbQueries) ScheduledJob(id string) (*stotypes.ScheduledJob, error) {
+	record := &stotypes.ScheduledJob{}
+	if err := ScheduledJobRepository.OpenByPrimaryKey([]byte(id), record, d.tx); err != nil {
+		return nil, err
+	}
+
+	return record, nil
+}
+
 func (d *dbQueries) CollectionsByDirectory(dirId string) ([]stotypes.Collection, error) {
 	collections := []stotypes.Collection{}
 
