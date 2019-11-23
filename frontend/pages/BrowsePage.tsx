@@ -391,18 +391,15 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
 							{badges}
 						</div>
-					}>
+					}
+					footer={metadata[MetadataOverview] && <p>{metadata[MetadataOverview]}</p>}>
 					<a
 						href={collectionRoute.buildUrl({
 							id: coll.Id,
 							rev: HeadRevisionId,
 							path: RootPathDotBase64FIXME,
 						})}>
-						<img
-							title={metadata[MetadataOverview] || ''}
-							src={imageSrc}
-							style={{ maxWidth: '100%' }}
-						/>
+						<img src={imageSrc} style={{ maxWidth: '100%' }} />
 					</a>
 				</Panel>
 			);
