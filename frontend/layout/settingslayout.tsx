@@ -23,6 +23,11 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				active: r.serverInfoRoute.matchUrl(hash) !== null,
 			},
 			{
+				title: 'Volumes & mounts',
+				url: r.volumesAndMountsRoute.buildUrl({ view: '' }),
+				active: r.volumesAndMountsRoute.matchUrl(hash) !== null,
+			},
+			{
 				title: 'Scheduled jobs',
 				url: r.scheduledJobsRoute.buildUrl({}),
 				active: r.scheduledJobsRoute.matchUrl(hash) !== null,
@@ -33,19 +38,14 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				active: r.metadataBackupRoute.matchUrl(hash) !== null,
 			},
 			{
-				title: 'Logs',
-				url: r.logsRoute.buildUrl({}),
-				active: r.logsRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Volumes & mounts',
-				url: r.volumesAndMountsRoute.buildUrl({ view: '' }),
-				active: r.volumesAndMountsRoute.matchUrl(hash) !== null,
-			},
-			{
 				title: 'Users',
 				url: r.usersRoute.buildUrl({}),
 				active: r.usersRoute.matchUrl(hash) !== null,
+			},
+			{
+				title: 'Logs',
+				url: r.logsRoute.buildUrl({}),
+				active: r.logsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Nodes',
