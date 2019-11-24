@@ -25,14 +25,27 @@ type Job struct {
 
 var cronParser = cron.NewParser(cron.SecondOptional | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 
-func NewJob(spec JobSpec, run JobFn) *Job {
-	return &Job{
-		Spec: spec,
-		Run:  run,
-	}
+func ValidateSpec(spec JobSpec) (cron.Schedule, error) {
+	return cronParser.Parse(spec.Schedule)
 }
 
-// serializable/persistable portion of "Job"
+func NewJob(spec JobSpec, run JobFn, now time.Time) (*Job, error) {
+	schedule, err := ValidateSpec(spec)
+	if err != nil {
+		return nil, err
+	}
+
+	if spec.NextRun.IsZero() {
+		spec.NextRun = schedule.Next(now)
+	}
+
+	return &Job{
+		Spec:     spec,
+		Run:      run,
+		Schedule: schedule,
+	}, nil
+}
+
 type JobSpec struct {
 	Id          string
 	Description string
@@ -60,21 +73,6 @@ type Controller struct {
 }
 
 func Start(jobs []*Job, jobLogger *log.Logger, stop *stopper.Stopper) (*Controller, error) {
-	now := time.Now()
-
-	for _, job := range jobs {
-		schedule, err := cronParser.Parse(job.Spec.Schedule)
-		if err != nil {
-			stop.Done()
-			return nil, err
-		}
-
-		job.Schedule = schedule
-		if job.Spec.NextRun.IsZero() {
-			job.Spec.NextRun = schedule.Next(now)
-		}
-	}
-
 	s := &Controller{
 		make(chan *snapshotRequest),
 		make(chan string),

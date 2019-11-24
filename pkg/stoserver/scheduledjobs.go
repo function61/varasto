@@ -114,26 +114,22 @@ func setupScheduledJobs(
 		return nil, err
 	}
 
+	now := time.Now()
+
 	for _, dbJob := range dbJobs {
 		if !dbJob.Enabled {
 			continue
 		}
 
-		var lastRun *scheduler.JobLastRun
-		if dbJob.LastRun != nil {
-			lastRun = &scheduler.JobLastRun{
-				Started:  dbJob.LastRun.Started,
-				Finished: dbJob.LastRun.Finished,
-				Error:    dbJob.LastRun.Error,
-			}
+		job, err := scheduler.NewJob(
+			dbJobToJobSpec(dbJob),
+			scheduledJobRunner(dbJob.Kind, commandPlumbing),
+			now)
+		if err != nil {
+			return nil, err
 		}
 
-		jobs = append(jobs, scheduler.NewJob(scheduler.JobSpec{
-			Id:          dbJob.ID,
-			Description: dbJob.Description,
-			Schedule:    dbJob.Schedule,
-			LastRun:     lastRun,
-		}, scheduledJobRunner(dbJob.Kind, commandPlumbing)))
+		jobs = append(jobs, job)
 	}
 
 	controller, err := scheduler.Start(jobs, logger, stop)
@@ -150,7 +146,7 @@ func setupScheduledJobs(
 				}
 
 				dbJob.NextRun = job.NextRun
-				dbJob.LastRun = convertLastRun(job.LastRun)
+				dbJob.LastRun = convertLastRunToDb(job.LastRun)
 
 				if err := stodb.ScheduledJobRepository.Update(dbJob, tx); err != nil {
 					return err
@@ -183,7 +179,25 @@ func setupScheduledJobs(
 	return controller, nil
 }
 
-func convertLastRun(lastRun *scheduler.JobLastRun) *stotypes.ScheduledJobLastRun {
+func dbJobToJobSpec(dbJob stotypes.ScheduledJob) scheduler.JobSpec {
+	var lastRun *scheduler.JobLastRun
+	if dbJob.LastRun != nil {
+		lastRun = &scheduler.JobLastRun{
+			Started:  dbJob.LastRun.Started,
+			Finished: dbJob.LastRun.Finished,
+			Error:    dbJob.LastRun.Error,
+		}
+	}
+
+	return scheduler.JobSpec{
+		Id:          dbJob.ID,
+		Description: dbJob.Description,
+		Schedule:    dbJob.Schedule,
+		LastRun:     lastRun,
+	}
+}
+
+func convertLastRunToDb(lastRun *scheduler.JobLastRun) *stotypes.ScheduledJobLastRun {
 	if lastRun == nil {
 		return nil
 	}
