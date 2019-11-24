@@ -170,7 +170,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:7b65feed4faba0bbb87447c0f11f6ae587e657f5d1bab48cdfae7142f3cbba89"
+  digest = "1:a5d0b9052bd90be7340041c089639270ee8331e52a4e49359da60658c4636873"
   name = "github.com/function61/ubackup"
   packages = [
     "pkg/backupfile",
@@ -180,7 +180,7 @@
     "pkg/ubtypes",
   ]
   pruneopts = "UT"
-  revision = "23a68a15d8830e189a8d156ea0a3647c32cb239e"
+  revision = "c62a02c584778f1b243ad4e4545909c5afaf8197"
 
 [[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"
@@ -584,6 +584,7 @@
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
     "google.golang.org/api/drive/v3",
+    "google.golang.org/api/option",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
