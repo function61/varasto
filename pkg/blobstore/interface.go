@@ -18,4 +18,6 @@ type Driver interface {
 	RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error)
 
 	Mountable(ctx context.Context) error
+
+	RoutingCost() int
 }

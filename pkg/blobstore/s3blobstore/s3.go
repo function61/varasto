@@ -81,6 +81,10 @@ func (g *s3blobstore) Mountable(ctx context.Context) error {
 	return err
 }
 
+func (s *s3blobstore) RoutingCost() int {
+	return 20
+}
+
 func toS3BlobstoreName(ref stotypes.BlobRef) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(ref))
 }

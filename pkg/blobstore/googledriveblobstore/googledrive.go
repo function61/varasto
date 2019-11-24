@@ -100,6 +100,10 @@ func (g *googledrive) Mountable(ctx context.Context) error {
 	return nil
 }
 
+func (g *googledrive) RoutingCost() int {
+	return 20
+}
+
 func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobRef) (string, error) {
 	// https://twitter.com/joonas_fi/status/1108008997238595590
 	exactFilenameInExactFolderQuery := fmt.Sprintf(

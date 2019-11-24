@@ -10,7 +10,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/function61/gokit/hashverifyreader"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -23,6 +22,7 @@ import (
 type Controller struct {
 	metadataStore  MetadataStore
 	mountedDrivers map[int]blobstore.Driver // only mounted drivers
+	routingCosts   map[int]int              // volume id => cost. lower (local disks) is better than higher (remote disks)
 	writingBlobs   *mutexmap.M
 }
 
@@ -30,6 +30,7 @@ func New(metadataStore MetadataStore) *Controller {
 	return &Controller{
 		metadataStore,
 		map[int]blobstore.Driver{},
+		map[int]int{},
 		mutexmap.New(),
 	}
 }
@@ -41,6 +42,7 @@ func (d *Controller) Define(volumeId int, driver blobstore.Driver) {
 	}
 
 	d.mountedDrivers[volumeId] = driver
+	d.routingCosts[volumeId] = driver.RoutingCost()
 }
 
 func (d *Controller) IsMounted(volumeId int) bool {
@@ -192,13 +194,27 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEn
 // - is the HDD currently spinning
 // - best latency & bandwidth
 func (d *Controller) BestVolumeId(volumeIds []int) (int, error) {
+	lowestCost := 99
+	lowestCostVolumeId := 0
+
 	for _, volumeId := range volumeIds {
-		if d.IsMounted(volumeId) {
-			return volumeId, nil
+		if !d.IsMounted(volumeId) {
+			continue
+		}
+
+		cost := d.routingCosts[volumeId]
+
+		if cost < lowestCost {
+			lowestCostVolumeId = volumeId
+			lowestCost = cost
 		}
 	}
 
-	return 0, stotypes.ErrBlobNotAccessibleOnThisNode
+	if lowestCostVolumeId == 0 {
+		return 0, stotypes.ErrBlobNotAccessibleOnThisNode
+	}
+
+	return lowestCostVolumeId, nil
 }
 
 // runs a scrub for a blob in a given volume to detect errors

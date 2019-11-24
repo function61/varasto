@@ -85,7 +85,7 @@ func setupDefault() *testSaga {
 }
 
 func setup(encKey []byte) *testSaga {
-	blobStorage := newTestingBlobStorage()
+	blobStorage := newTestingBlobStorage(10)
 
 	tda := &testDbAccess{
 		encKey,
@@ -230,11 +230,37 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 	assert.EqualString(t, string(content), text4x)
 }
 
+func TestRoutingCost(t *testing.T) {
+	/*	We'll end up with volumes and their routing costs:
+
+		1 => 10
+		2 => 30
+		3 => 20
+	*/
+	test := setupDefault()
+	test.diskAccess.Define(2, newTestingBlobStorage(30))
+	test.diskAccess.Define(3, newTestingBlobStorage(20))
+
+	bestVolumeId := func(volumeIds []int) int {
+		best, err := test.diskAccess.BestVolumeId(volumeIds)
+		if err != nil {
+			panic(err)
+		}
+		return best
+	}
+
+	assert.Assert(t, bestVolumeId([]int{1, 2, 3}) == 1)
+	assert.Assert(t, bestVolumeId([]int{1, 2}) == 1)
+	assert.Assert(t, bestVolumeId([]int{1, 3}) == 1)
+	assert.Assert(t, bestVolumeId([]int{2, 3}) == 3)
+	assert.Assert(t, bestVolumeId([]int{3, 1}) == 1)
+}
+
 func TestReplication(t *testing.T) {
 	test := setupDefault()
 	firstStore := test.blobStorage
 
-	secondBlobStore := newTestingBlobStorage()
+	secondBlobStore := newTestingBlobStorage(10)
 	test.diskAccess.Define(2, secondBlobStore)
 
 	contentToStore := "The quick brown fox jumps over the lazy dog"
@@ -262,7 +288,7 @@ func TestReplicateRottenData(t *testing.T) {
 	test := setupDefault()
 	firstStore := test.blobStorage
 
-	secondBlobStore := newTestingBlobStorage()
+	secondBlobStore := newTestingBlobStorage(10)
 	test.diskAccess.Define(2, secondBlobStore)
 
 	contentToStore := "The quick brown fox jumps over the lazy dog"
@@ -312,17 +338,23 @@ func sha256Hex(input []byte) string {
 }
 
 type testingBlobStorage struct {
-	files map[string][]byte
+	files       map[string][]byte
+	routingCost int
 }
 
-func newTestingBlobStorage() *testingBlobStorage {
+func newTestingBlobStorage(routingCost int) *testingBlobStorage {
 	return &testingBlobStorage{
-		files: map[string][]byte{},
+		files:       map[string][]byte{},
+		routingCost: routingCost,
 	}
 }
 
 func (t *testingBlobStorage) Mountable(_ context.Context) error {
 	return nil
+}
+
+func (t *testingBlobStorage) RoutingCost() int {
+	return t.routingCost
 }
 
 func (t *testingBlobStorage) RawFetch(_ context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {

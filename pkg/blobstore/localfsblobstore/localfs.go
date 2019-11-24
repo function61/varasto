@@ -80,6 +80,10 @@ func (l *localFs) Mountable(ctx context.Context) error {
 	return nil
 }
 
+func (l *local) RoutingCost() int {
+	return 10
+}
+
 func (l *localFs) getPath(ref stotypes.BlobRef) string {
 	bsn := toBlobstoreName(ref)
 
