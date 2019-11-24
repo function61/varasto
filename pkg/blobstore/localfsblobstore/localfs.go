@@ -80,7 +80,7 @@ func (l *localFs) Mountable(ctx context.Context) error {
 	return nil
 }
 
-func (l *local) RoutingCost() int {
+func (l *localFs) RoutingCost() int {
 	return 10
 }
 
