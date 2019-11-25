@@ -111,7 +111,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 									&nbsp;
 									{job.Running && (
 										<SuccessLabel>
-											<span className="glyphicon glyphicon-off" />
+											<span className="glyphicon glyphicon-off">&nbsp;</span>
 											running
 										</SuccessLabel>
 									)}
