@@ -3,20 +3,40 @@ package mutexmap
 import (
 	"github.com/function61/gokit/assert"
 	"testing"
+	"time"
 )
 
 func TestMutexMap(t *testing.T) {
 	mm := New()
 
-	releaseFoo, fooOk := mm.TryLock("foo")
+	unlockFoo := mm.Lock("foo")
+	unlockFoo()
+
+	unlockFoo, fooOk := mm.TryLock("foo")
 	assert.Assert(t, fooOk)
 
 	_, fooConcurrentOk := mm.TryLock("foo")
 	assert.Assert(t, !fooConcurrentOk)
 
-	releaseFoo()
+	unlockFoo()
 
-	releaseFoo, fooOk = mm.TryLock("foo")
+	unlockFoo, fooOk = mm.TryLock("foo")
 	assert.Assert(t, fooOk)
-	defer releaseFoo()
+
+	lockAcquireDuration := make(chan time.Duration)
+
+	go func() {
+		startedAcquiringLock := time.Now()
+
+		unlock := mm.Lock("foo")
+		defer unlock()
+
+		lockAcquireDuration <- time.Since(startedAcquiringLock)
+	}()
+
+	time.Sleep(11 * time.Millisecond)
+
+	unlockFoo()
+
+	assert.Assert(t, <-lockAcquireDuration > 10*time.Millisecond)
 }
