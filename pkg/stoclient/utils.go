@@ -10,7 +10,7 @@ func panicIfError(err error) {
 	}
 }
 
-func BlobIdxFromOffset(offset uint64) (int, int64) {
+func BlobIdxFromOffset(offset int64) (int, int64) {
 	blobIdx := int(offset / stotypes.BlobSize)
 	return blobIdx, int64(offset) - (int64(blobIdx) * stotypes.BlobSize)
 }

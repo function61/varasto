@@ -305,30 +305,25 @@ func (f File) Attr(ctx context.Context, attrs *fuse.Attr) error {
 }
 
 func (f File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	// nothing to offer
+	// nothing to offer, already past file limit
 	if req.Offset >= f.file.Size {
-		return nil
+		return errors.New("offset past EOF")
 	}
 
-	chunkIdx, correctedOffset := stoclient.BlobIdxFromOffset(uint64(req.Offset))
+	for _, alignedRead := range alignReads(req.Offset, min(int64(req.Size), f.file.Size-req.Offset)) {
+		blobRef, err := stotypes.BlobRefFromHex(f.file.BlobRefs[alignedRead.blobIdx])
+		if err != nil {
+			return err
+		}
 
-	blobRef, err := stotypes.BlobRefFromHex(f.file.BlobRefs[chunkIdx])
-	if err != nil {
-		return err
+		bd, err := globalFsServer.blobCache.Get(ctx, *blobRef, f.collectionId)
+		if err != nil {
+			return err
+		}
+
+		resp.Data = append(resp.Data, bd.Data[alignedRead.offsetInBlob:int64(alignedRead.offsetInBlob)+alignedRead.lenInBlob]...)
 	}
 
-	bd, err := globalFsServer.blobCache.Get(ctx, *blobRef, f.collectionId)
-	if err != nil {
-		return err
-	}
-
-	end := correctedOffset + int64(req.Size)
-
-	if end > f.file.Size {
-		end = f.file.Size
-	}
-
-	resp.Data = bd.Data[correctedOffset:end]
 	return nil
 }
 
