@@ -357,17 +357,17 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 }
 
 func getDriver(volume stotypes.Volume, mount stotypes.VolumeMount, logger *log.Logger) (blobstore.Driver, error) {
-	switch mount.Driver {
-	case stotypes.VolumeDriverKindLocalFs:
+	switch stoservertypes.VolumeDriverKindExhaustive42cc85(mount.Driver) {
+	case stoservertypes.VolumeDriverKindLocalFs:
 		return localfsblobstore.New(
 			volume.UUID,
 			mount.DriverOpts,
 			logex.Prefix("blobdriver/localfs", logger)), nil
-	case stotypes.VolumeDriverKindAmazonS3:
+	case stoservertypes.VolumeDriverKindAwsS3:
 		return s3blobstore.New(
 			mount.DriverOpts,
 			logex.Prefix("blobdriver/s3", logger))
-	case stotypes.VolumeDriverKindGoogleDrive:
+	case stoservertypes.VolumeDriverKindGoogledrive:
 		return googledriveblobstore.New(
 			mount.DriverOpts,
 			logex.Prefix("blobdriver/googledrive", logger))

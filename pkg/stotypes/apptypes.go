@@ -42,11 +42,3 @@ func (b *BlobRef) AsHex() string {
 func (b *BlobRef) AsSha256Sum() []byte {
 	return []byte(*b)
 }
-
-type VolumeDriverKind string
-
-const (
-	VolumeDriverKindLocalFs     VolumeDriverKind = "local-fs"
-	VolumeDriverKindGoogleDrive                  = "googledrive"
-	VolumeDriverKindAmazonS3                     = "aws-s3"
-)

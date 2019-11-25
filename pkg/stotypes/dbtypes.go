@@ -46,7 +46,7 @@ type VolumeMount struct {
 	ID         string
 	Volume     int
 	Node       string
-	Driver     VolumeDriverKind
+	Driver     stoservertypes.VolumeDriverKind
 	DriverOpts string
 }
 

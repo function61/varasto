@@ -83,6 +83,15 @@
 			]
 		},
 		{
+			"name": "VolumeDriverKind",
+			"type": "string",
+			"stringMembers": [
+				"local-fs",
+				"googledrive",
+				"aws-s3"
+			]
+		},
+		{
 			"name": "SubsystemId",
 			"type": "string",
 			"stringMembers": [

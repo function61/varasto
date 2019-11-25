@@ -118,7 +118,7 @@
 		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "Kind" },
+			{ "key": "Kind", "type": "VolumeDriverKind" },
 			{ "key": "DriverOpts", "help": "Example: /mnt/hdd1/varasto-UalPLodNjrA/" }
 		]
 	},
