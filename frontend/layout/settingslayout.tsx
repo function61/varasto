@@ -1,7 +1,7 @@
 import { getCurrentHash } from 'f61ui/browserutils';
 import { Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
-import { NavLink } from 'f61ui/component/navigation';
+import { NavLink, renderNavLink } from 'f61ui/component/navigation';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import * as r from 'routes';
@@ -19,51 +19,61 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 		const settingsLinks: NavLink[] = [
 			{
 				title: 'Server info & health',
+				glyphicon: 'dashboard',
 				url: r.serverInfoRoute.buildUrl({}),
 				active: r.serverInfoRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Volumes & mounts',
+				glyphicon: 'hdd',
 				url: r.volumesAndMountsRoute.buildUrl({ view: '' }),
 				active: r.volumesAndMountsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Scheduled jobs',
+				glyphicon: 'time',
 				url: r.scheduledJobsRoute.buildUrl({}),
 				active: r.scheduledJobsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Backups',
+				glyphicon: 'cloud-upload',
 				url: r.metadataBackupRoute.buildUrl({ v: '' }),
 				active: r.metadataBackupRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Users',
+				glyphicon: 'user',
 				url: r.usersRoute.buildUrl({}),
 				active: r.usersRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Logs',
+				glyphicon: 'list-alt',
 				url: r.logsRoute.buildUrl({}),
 				active: r.logsRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Nodes',
+				glyphicon: 'th-large',
 				url: r.nodesRoute.buildUrl({}),
 				active: r.nodesRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Replication policies',
+				glyphicon: 'retweet',
 				url: r.replicationPoliciesRoute.buildUrl({}),
 				active: r.replicationPoliciesRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Content metadata',
+				glyphicon: 'book',
 				url: r.contentMetadataRoute.buildUrl({}),
 				active: r.contentMetadataRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'FUSE server & network folders',
+				glyphicon: 'folder-open',
 				url: r.fuseServerRoute.buildUrl({}),
 				active: r.fuseServerRoute.matchUrl(hash) !== null,
 			},
@@ -81,13 +91,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 						<div className="col-md-3">
 							<Panel heading="Settings">
 								<ul className="nav nav-pills nav-stacked">
-									{settingsLinks.map((l) => (
-										<li
-											role="presentation"
-											className={l.active ? 'active' : ''}>
-											<a href={l.url}>{l.title}</a>
-										</li>
-									))}
+									{settingsLinks.map(renderNavLink)}
 								</ul>
 							</Panel>
 						</div>
