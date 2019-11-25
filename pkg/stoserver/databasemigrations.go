@@ -228,10 +228,6 @@ func migration5(tx *bolt.Tx) error {
 }
 
 func migration6(tx *bolt.Tx) error {
-	if err := stodb.ScheduledJobRepository.Bootstrap(tx); err != nil {
-		return err
-	}
-
 	for _, job := range []stotypes.ScheduledJob{
 		{
 			ID:          "ocKgpTHU3Sk",
