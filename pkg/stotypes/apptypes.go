@@ -1,6 +1,7 @@
 package stotypes
 
 import (
+	"bytes"
 	"encoding/hex"
 )
 
@@ -28,6 +29,10 @@ func BlobRefFromBytes(bytes []byte) (*BlobRef, error) {
 
 	br := BlobRef(bytes)
 	return &br, nil
+}
+
+func (b *BlobRef) Equal(other BlobRef) bool {
+	return bytes.Equal(*b, other)
 }
 
 func (b *BlobRef) AsHex() string {
