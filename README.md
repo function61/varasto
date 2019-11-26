@@ -37,7 +37,7 @@ Features
 | ✓      | Supported OSs               | Linux, Windows (Mac might come later) |
 | ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
 | ✓      | Backup all your devices' data | Varasto's architecture is ideal for backing up all your PCs, mobile devices etc. |
-| ✓      | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive) |
+| ✓      | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive), all in encrypted form so you don't have to trust the cloud or have data leaks if local HDDs get stolen. |
 | ✓      | [Integrated internal database backups](docs/guide_setting-up-backup.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
 | ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compresses well) & transparently |
 | ✓      | Metadata support & tagging  | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. Can also add tags to collections. |
