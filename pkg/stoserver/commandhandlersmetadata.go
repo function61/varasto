@@ -28,7 +28,7 @@ func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMet
 			return err
 		}
 
-		info, err := tmdb.OpenMovieByImdbId(cmd.ForeignKey)
+		info, err := tmdb.OpenMovieByImdbId(ctx.Ctx, cmd.ForeignKey)
 		if err != nil {
 			return err
 		}
@@ -77,7 +77,7 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *stoservertypes.DirectoryPullMetad
 		return err
 	}
 
-	tv, err := tmdb.OpenTvByImdbId(cmd.ForeignKey)
+	tv, err := tmdb.OpenTvByImdbId(ctx.Ctx, cmd.ForeignKey)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 		}
 
 		for _, seasonNumber := range uniqueSeasonNumbers {
-			episodes, err := tmdb.GetSeasonEpisodes(seasonNumber, theTvDbSeriesId)
+			episodes, err := tmdb.GetSeasonEpisodes(ctx.Ctx, seasonNumber, theTvDbSeriesId)
 			if err != nil {
 				return err
 			}
@@ -250,7 +250,7 @@ func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMo
 		if cmd.Apikey != "" { // allow clearing this without testing
 			// validate the API key by trying to use the API
 			client := themoviedbapi.New(cmd.Apikey)
-			_, err := client.OpenMovieByImdbId("tt1226229") // one of my fav underrated movies :)
+			_, err := client.OpenMovieByImdbId(ctx.Ctx, "tt1226229") // one of my fav movies, way underrated :)
 			if err != nil {
 				return fmt.Errorf("failed validating API key: %v", err)
 			}

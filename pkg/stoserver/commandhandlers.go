@@ -1,7 +1,6 @@
 package stoserver
 
 import (
-	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
@@ -227,7 +226,7 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 			return err
 		}
 
-		if err := driver.Mountable(context.TODO()); err != nil {
+		if err := driver.Mountable(ctx.Ctx); err != nil {
 			return err
 		}
 

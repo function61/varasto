@@ -54,13 +54,13 @@ func New(apiKey string) *Client {
 	}
 }
 
-func (c *Client) OpenMovieByImdbId(imdbId string) (*Movie, error) {
-	id, err := c.findMovieByImdbId(imdbId)
+func (c *Client) OpenMovieByImdbId(ctx context.Context, imdbId string) (*Movie, error) {
+	id, err := c.findMovieByImdbId(ctx, imdbId)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	res := &Movie{}
@@ -74,13 +74,13 @@ func (c *Client) OpenMovieByImdbId(imdbId string) (*Movie, error) {
 	return res, nil
 }
 
-func (c *Client) OpenTvByImdbId(imdbId string) (*Tv, error) {
-	id, err := c.findTvByImdbId(imdbId)
+func (c *Client) OpenTvByImdbId(ctx context.Context, imdbId string) (*Tv, error) {
+	id, err := c.findTvByImdbId(ctx, imdbId)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	res := &Tv{}
@@ -94,8 +94,8 @@ func (c *Client) OpenTvByImdbId(imdbId string) (*Tv, error) {
 	return res, nil
 }
 
-func (c *Client) GetSeasonEpisodes(seasonNumber int, tvId string) ([]Episode, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
+func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId string) ([]Episode, error) {
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	res := struct {
@@ -112,15 +112,15 @@ func (c *Client) GetSeasonEpisodes(seasonNumber int, tvId string) ([]Episode, er
 	return res.Episodes, nil
 }
 
-func (c *Client) findMovieByImdbId(imdbId string) (string, error) {
-	return c.findMovieOrTvByImdbId(imdbId, true)
+func (c *Client) findMovieByImdbId(ctx context.Context, imdbId string) (string, error) {
+	return c.findMovieOrTvByImdbId(ctx, imdbId, true)
 }
 
-func (c *Client) findTvByImdbId(imdbId string) (string, error) {
-	return c.findMovieOrTvByImdbId(imdbId, false)
+func (c *Client) findTvByImdbId(ctx context.Context, imdbId string) (string, error) {
+	return c.findMovieOrTvByImdbId(ctx, imdbId, false)
 }
 
-func (c *Client) findMovieOrTvByImdbId(imdbId string, expectMovie bool) (string, error) {
+func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expectMovie bool) (string, error) {
 	res := struct {
 		MovieResults []struct {
 			Id int64 `json:"id"`
@@ -130,7 +130,7 @@ func (c *Client) findMovieOrTvByImdbId(imdbId string, expectMovie bool) (string,
 		} `json:"tv_results"`
 	}{}
 
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	if _, err := ezhttp.Get(
