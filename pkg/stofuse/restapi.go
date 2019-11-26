@@ -1,5 +1,3 @@
-// +build !windows
-
 package stofuse
 
 import (
@@ -16,14 +14,6 @@ import (
 
 type handlers struct {
 	sigs *sigFabric
-}
-
-func (h *handlers) FuseMount(rctx *httpauth.RequestContext, pars stofusetypes.CollectionId, w http.ResponseWriter, r *http.Request) {
-	h.sigs.mount <- pars.Id
-}
-
-func (h *handlers) FuseUnmount(rctx *httpauth.RequestContext, pars stofusetypes.CollectionId, w http.ResponseWriter, r *http.Request) {
-	h.sigs.unmount <- pars.Id
 }
 
 func (h *handlers) FuseUnmountAll(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {

@@ -1,4 +1,4 @@
-package stofuse
+package stofuseentrypoint
 
 import (
 	"github.com/spf13/cobra"

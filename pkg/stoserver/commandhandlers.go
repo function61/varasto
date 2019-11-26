@@ -614,7 +614,7 @@ func (c *cHandlers) CollectionUntag(cmd *stoservertypes.CollectionUntag, ctx *co
 	})
 }
 
-func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount, ctx *command.Ctx) error {
+func (c *cHandlers) FuseUnmountAll(cmd *stoservertypes.FuseUnmountAll, ctx *command.Ctx) error {
 	tx, err := c.db.Begin(false)
 	if err != nil {
 		return err
@@ -628,13 +628,7 @@ func (c *cHandlers) CollectionFuseMount(cmd *stoservertypes.CollectionFuseMount,
 
 	vstofuse := stofuseclient.New(baseUrl)
 
-	if cmd.UnmountOthers {
-		if err := vstofuse.UnmountAll(context.TODO()); err != nil {
-			return err
-		}
-	}
-
-	return vstofuse.Mount(context.TODO(), cmd.Collection)
+	return vstofuse.UnmountAll(ctx.Ctx)
 }
 
 func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *command.Ctx) error {

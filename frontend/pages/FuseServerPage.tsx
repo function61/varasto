@@ -1,9 +1,10 @@
 import { Result } from 'component/result';
 import { Panel, Well } from 'f61ui/component/bootstrap';
-import { CommandIcon } from 'f61ui/component/CommandButton';
+import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import {
 	ConfigSetFuseServerBaseurl,
 	ConfigSetNetworkShareBaseUrl,
+	FuseUnmountAll,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import {
@@ -77,6 +78,8 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 						</div>
 					</div>
 				))}
+
+				<CommandButton command={FuseUnmountAll()} />
 
 				<Well>
 					<p>FUSE is technology in Linux where we can easily define filesystems.</p>

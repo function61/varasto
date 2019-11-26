@@ -309,17 +309,6 @@
 		]
 	},
 	{
-		"command": "collection.FuseMount",
-		"chain": "public",
-		"ctor": ["Collection"],
-		"crudNature": "create",
-		"title": "Fuse mount",
-		"fields": [
-			{ "key": "Collection", "hideIfDefaultValue": true },
-			{ "key": "UnmountOthers", "type": "checkbox" }
-		]
-	},
-	{
 		"command": "collection.Rename",
 		"chain": "public",
 		"ctor": ["Collection", "Name"],
@@ -505,6 +494,14 @@
 		"fields": [
 			{ "key": "Baseurl", "optional": true, "placeholder": "\\\\servername\\varasto" }
 		]
+	},
+	{
+		"command": "fuse.UnmountAll",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "delete",
+		"title": "Unmount all cached mounts",
+		"fields": []
 	},
 	{
 		"command": "config.SetFuseServerBaseurl",

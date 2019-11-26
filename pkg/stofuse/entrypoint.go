@@ -1,5 +1,3 @@
-// +build !windows
-
 // FUSE adapter for interfacing with Varasto from filesystem
 package stofuse
 

@@ -1,15 +1,6 @@
 {
 	"endpoints": [
-		{ "chain": "public", "method": "POST", "path": "/api/fuse/mount", "consumes": {"_": "CollectionId"}, "name": "fuseMount" },
-		{ "chain": "public", "method": "POST", "path": "/api/fuse/unmount_all", "name": "fuseUnmountAll" },
-		{ "chain": "public", "method": "POST", "path": "/api/fuse/unmount", "consumes": {"_": "CollectionId"}, "name": "fuseUnmount" }
+		{ "chain": "public", "method": "POST", "path": "/api/fuse/unmount_all", "name": "fuseUnmountAll" }
 	],
-	"types": [
-		{
-			"name": "CollectionId",
-			"type": {"_": "object", "fields": {
-				"Id": {"_": "string"}
-			}}
-		}
-	]
+	"types": []
 }

@@ -11,23 +11,6 @@ import (
 	"time"
 )
 
-type FsServer struct {
-	clientConfig stoclient.ClientConfig
-	blobCache    *BlobCache
-	logl         *logex.Leveled
-}
-
-// FIXME: global
-var globalFsServer *FsServer
-
-func NewFsServer(clientConfig stoclient.ClientConfig, logl *logex.Leveled) {
-	globalFsServer = &FsServer{
-		clientConfig: clientConfig,
-		blobCache:    NewBlobCache(),
-		logl:         logl,
-	}
-}
-
 const lruCacheSize = 10
 
 type BlobData struct {
@@ -39,12 +22,16 @@ type BlobCache struct {
 	lruCache     []*BlobData
 	lruCacheMu   sync.Mutex
 	blobDownload *mutexmap.M
+	clientConfig stoclient.ClientConfig
+	logl         *logex.Leveled
 }
 
-func NewBlobCache() *BlobCache {
+func NewBlobCache(clientConfig stoclient.ClientConfig, logl *logex.Leveled) *BlobCache {
 	return &BlobCache{
 		lruCache:     []*BlobData{},
 		blobDownload: mutexmap.New(),
+		clientConfig: clientConfig,
+		logl:         logl,
 	}
 }
 
@@ -62,13 +49,13 @@ func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef, collectionId 
 	subCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	globalFsServer.logl.Debug.Printf("dl %s", ref.AsHex())
+	b.logl.Debug.Printf("dl %s", ref.AsHex())
 
 	blobContent, blobContentCloser, err := stoclient.DownloadChunk(
 		subCtx,
 		ref,
 		collectionId,
-		globalFsServer.clientConfig)
+		b.clientConfig)
 	if err != nil {
 		return nil, err
 	}

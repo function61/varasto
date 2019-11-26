@@ -19,7 +19,6 @@ import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
-	CollectionFuseMount,
 	CollectionMoveFilesIntoAnotherCollection,
 	CollectionPullMetadata,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -373,6 +372,28 @@ export default class CollectionPage extends React.Component<
 											/>
 										</td>
 									</tr>
+									<tr>
+										<th>FUSE &amp; network share</th>
+										<td>
+											{this.state.networkShareBaseUrl.draw(
+												(networkShareBaseUrl) => {
+													const networkSharePath =
+														networkShareBaseUrl.Value +
+														collOutput.Collection.Id +
+														' - ' +
+														collOutput.Collection.Name;
+
+													return (
+														<div title={networkSharePath}>
+															<ClipboardButton
+																text={networkSharePath}
+															/>
+														</div>
+													);
+												},
+											)}
+										</td>
+									</tr>
 								</tbody>
 							</table>
 
@@ -382,19 +403,6 @@ export default class CollectionPage extends React.Component<
 								/>
 							) : null}
 						</Panel>
-						{this.state.networkShareBaseUrl.draw((networkShareBaseUrl) => (
-							<Panel
-								heading={
-									<div>
-										FUSE &amp; network share{' '}
-										<ClipboardButton text={networkShareBaseUrl.Value} />
-									</div>
-								}>
-								<CommandButton
-									command={CollectionFuseMount(collOutput.Collection.Id)}
-								/>
-							</Panel>
-						))}
 						<Panel heading="Changesets">
 							<table className="table table-striped table-hover">
 								<thead>
