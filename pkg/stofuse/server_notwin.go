@@ -15,7 +15,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 )
 
@@ -325,12 +324,4 @@ func (f File) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadRe
 	}
 
 	return nil
-}
-
-// https://serverfault.com/a/650041
-// \ / : * ? " < > |
-var fsWindowsUnsafeRe = regexp.MustCompile("[\\\\/:*?\"<>|]")
-
-func mkFsSafe(input string) string {
-	return fsWindowsUnsafeRe.ReplaceAllString(input, "_")
 }

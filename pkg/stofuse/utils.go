@@ -3,6 +3,7 @@ package stofuse
 import (
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
+	"regexp"
 )
 
 var reservedInodeCounter = uint64(0)
@@ -43,6 +44,14 @@ func alignReads(offsetInFile int64, readLen int64) []alignedBlobRead {
 	}
 
 	return append([]alignedBlobRead{firstRead}, additionalReads...)
+}
+
+// https://serverfault.com/a/650041
+// \ / : * ? " < > |
+var fsWindowsUnsafeRe = regexp.MustCompile("[\\\\/:*?\"<>|]")
+
+func mkFsSafe(input string) string {
+	return fsWindowsUnsafeRe.ReplaceAllString(input, "_")
 }
 
 func min(a, b int64) int64 {
