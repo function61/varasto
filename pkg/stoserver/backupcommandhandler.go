@@ -81,7 +81,7 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 		if err != nil {
 			return err
 		}
-		defer ignoreError(tx.Rollback())
+		defer func() { ignoreError(tx.Rollback()) }()
 
 		return stodbimportexport.Export(tx, sink)
 	}, logex.Prefix("µbackup", c.logger))
