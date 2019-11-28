@@ -1,5 +1,5 @@
-Storing movies
-==============
+Guide: storing movies
+=====================
 
 Contents:
 
