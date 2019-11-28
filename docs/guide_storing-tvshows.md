@@ -18,7 +18,7 @@ It's better to show you the end result first, so this guide is easier to underst
 
 ![](guide_storing-tvshows-endresult.png)
 
-(note: with Varasto you can also keep track of the episodes you've seen - look for the
+(note: with Varasto you can also keep track of the episodes you've seen - look at the
 "seen" tag)
 
 
@@ -34,7 +34,7 @@ necessary, but it allows Varasto to be smarter on how it's going to display your
 
 ![](guide_storing-movies-directorytype.png)
 
-Now you can see directory type: 📺
+Now you can see the directory type: 📺
 
 
 Preparing files for uploading
@@ -45,7 +45,8 @@ Varasto to know that "these two files belong to episode 1, this one doesn't belo
 any episode", so we'll need to do some pre-processing to sort each episode in its own
 directory.
 
-In Varasto each independent group of files should be its own collection.
+In Varasto each independent group of related files (in this case a single TV episode - for
+photos it could be a photo album with 100 pictures) should be its own collection.
 
 Let's say you have directory with these season's episodes in:
 
@@ -199,7 +200,7 @@ Ok create a directory in Varasto for this series. I created `Media > Series > Br
 Now let's tell Varasto exactly which TV series this is, fetch IMDb ID according to
 [these instructions](guide_storing-movies.md#fetching-metadata), but instead of entering
 it for a collection like with movies we enter the metadata ID for the main series directory
-(Varasto will know that collections under this directory are for the same series):
+(Varasto will know that collections under this directory tree are for the same series):
 
 ![](guide_storing-tvshows-enter-imdb-id.png)
 
@@ -217,14 +218,14 @@ $ cd S04/
 $ sto push bulk --rm bkaPHC-pZoM | bash
 ```
 
-Done - all your episodes are uploaded! Let's unpack what this does!
+Done - all your episodes are uploaded! Let's break down the above command!
 
-The general form of the bulk command is `bulk <parentDirectory>`.
+The general form of the bulk command is `push bulk <parentDirectory>`.
 
 The `--rm` switch removes the source files after they've been uploaded to Varasto. Don't
-worry, when Varasto reports that the file is uploaded, it's already stored with integrity
-checks, atomic durable commit and all. If you don't want to remove the source files, leave out
-the switch.
+worry, the
+[removal has safeguards](guide_storing-movies.md#removing-the-local-copy-that-we-just-uploaded)
+which make it safe. If you don't want to remove the source files, leave out the switch.
 
 The `bulk` command generates a small uploader shell script that will invoke `$ sto` commands
 for each subdirectory to be uploaded as separate collection:
