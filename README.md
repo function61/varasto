@@ -70,11 +70,15 @@ Design:
 - [Terminology](docs/design_terminology.md)
 - [Architecture / ideas & goals / inspired by / comparison to similar software](docs/design_architecture-ideas-goals-inspired-by-comparison-to-similar-software.md)
 
-Operating:
+Using:
 
 - [How to install](docs/guide_how-to-install.md)
-- [Setting up AWS S3](docs/guide_setting-up-s3.md)
-- [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+- [(storage) Setting up AWS S3](docs/guide_setting-up-s3.md)
+- [(storage) Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+- (content) Storing photos (TODO)
+- [(content) Storing TV shows](docs/guide_storing-tvshows.md)
+- [(content) Storing movies](docs/guide_storing-movies.md)
+- (content) Storing podcasts (TODO)
 - [Setting up SMART monitoring](docs/guide_setting-up-smart-monitoring.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 - [Setting up ransomware protection](docs/guide_ransomware-protection.md)
