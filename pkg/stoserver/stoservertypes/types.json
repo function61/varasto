@@ -112,6 +112,8 @@
 			"type": "string",
 			"stringMembers": [
 				"docs/guide_setting-up-smart-monitoring.md",
+				"docs/guide_storing-tvshows.md",
+				"docs/guide_storing-movies.md",
 				"docs/guide_setting-up-backup.md"
 			]
 		}

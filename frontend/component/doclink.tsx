@@ -3,6 +3,7 @@ import * as React from 'react';
 
 interface DocLinkProps {
 	doc: DocRef;
+	title?: string;
 }
 
 export class DocLink extends React.Component<DocLinkProps, {}> {
@@ -10,9 +11,10 @@ export class DocLink extends React.Component<DocLinkProps, {}> {
 		return (
 			<a
 				href={'https://github.com/function61/varasto/blob/master/' + this.props.doc}
-				title="View documentation"
+				title={this.props.title || 'View documentation'}
 				target="_blank">
-				<span className="glyphicon glyphicon-question-sign" />
+				<span className="glyphicon glyphicon-question-sign">&nbsp;</span>
+				{this.props.title || ''}
 			</a>
 		);
 	}

@@ -1,4 +1,5 @@
 import { collectionDropdown } from 'component/collectiondropdown';
+import { DocLink } from 'component/doclink';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { Result } from 'component/result';
 import {
@@ -35,6 +36,7 @@ import {
 	Directory,
 	DirectoryOutput,
 	DirectoryType,
+	DocRef,
 	HeadRevisionId,
 	MetadataImdbId,
 	MetadataOverview,
@@ -432,6 +434,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 
 	private directoryPanel(output: DirectoryOutput): React.ReactNode {
+		const dirHelp = helpByDirectoryType(output.Directory.Type);
+
 		return (
 			<Panel
 				heading={
@@ -455,6 +459,14 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								<td>{directoryTypeToEmoji(output.Directory.Type)}</td>
 							</tr>
 						) : null}
+						{dirHelp && (
+							<tr>
+								<th>Docs</th>
+								<td>
+									<DocLink doc={dirHelp.doc} title={dirHelp.title} />
+								</td>
+							</tr>
+						)}
 						<tr>
 							<th>Content</th>
 							<td>
@@ -515,6 +527,25 @@ const hasMeta = (coll: CollectionSubset): boolean => coll.Metadata && coll.Metad
 
 function imageNotAvailable(): string {
 	return globalConfig().assetsDir + '/../image-not-available.png';
+}
+
+interface HelpForDirType {
+	doc: DocRef;
+	title: string;
+}
+
+function helpByDirectoryType(type: DirectoryType): HelpForDirType | null {
+	switch (type) {
+		case DirectoryType.Movies:
+			return { doc: DocRef.DocsGuideStoringMoviesMd, title: 'Guide: storing movies' };
+		case DirectoryType.Series:
+			return { doc: DocRef.DocsGuideStoringTvshowsMd, title: 'Guide: storing TV shows' };
+		case DirectoryType.Generic:
+		case DirectoryType.Podcasts:
+			return null;
+		default:
+			throw unrecognizedValue(type);
+	}
 }
 
 function directoryTypeToEmoji(type: DirectoryType): string {
