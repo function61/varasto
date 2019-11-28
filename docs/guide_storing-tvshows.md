@@ -4,9 +4,11 @@ Guide: storing TV shows
 Contents:
 
 - [End result](#end-result)
-- [Preparing to upload files](#preparing-to-upload-files)
+- [Preparations](#preparations)
+- [Preparing files for uploading](#preparing-files-for-uploading)
 - [Uploading a single season](#uploading-a-single-season)
 - [Uploading multiple seasons](#uploading-multiple-seasons)
+- [Metadata support](#metadata-support)
 
 
 End result
