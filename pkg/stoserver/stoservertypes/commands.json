@@ -482,7 +482,7 @@
 		"crudNature": "update",
 		"title": "Set https://themoviedb.org API key",
 		"fields": [
-			{ "key": "Apikey", "optional": true }
+			{ "key": "Apikey", "optional": true, "placeholder": "778afba08c531c549272ecb5621b08d3" }
 		]
 	},
 	{
