@@ -5,6 +5,7 @@ Contents:
 
 - [End result](#end-result)
 - [Preparations](#preparations)
+- [Preparations for each TV show](#preparations-for-each-tv-show)
 - [Preparing files for uploading](#preparing-files-for-uploading)
 - [Uploading a single season](#uploading-a-single-season)
 - [Uploading multiple seasons](#uploading-multiple-seasons)
@@ -37,10 +38,26 @@ necessary, but it allows Varasto to be smarter on how it's going to display your
 Now you can see the directory type: 📺
 
 
+Preparations for each TV show
+-----------------------------
+
+Create a directory in Varasto for this series. I created `Media > Series > Brooklyn Nine-Nine`.
+
+Now let's tell Varasto exactly which TV series this is, fetch IMDb ID according to
+[these instructions](guide_storing-movies.md#fetching-metadata), but instead of entering
+it for a collection like with movies we enter the metadata ID for the main series directory
+(Varasto will know that collections under this directory tree are for the same series):
+
+![](guide_storing-tvshows-enter-imdb-id.png)
+
+You should now see metadata info and banner image being shown. You're done setting up a
+directory for this TV series!
+
+
 Preparing files for uploading
 -----------------------------
 
-Your TV episode files might be layed out in a single directory, so it's hard(er) for
+Your TV episode files might be laid out in a single directory, so it's hard(er) for
 Varasto to know that "these two files belong to episode 1, this one doesn't belong to
 any episode", so we'll need to do some pre-processing to sort each episode in its own
 directory.
@@ -195,16 +212,7 @@ $ tree .
 Uploading a single season
 -------------------------
 
-Ok create a directory in Varasto for this series. I created `Media > Series > Brooklyn Nine-Nine`.
-
-Now let's tell Varasto exactly which TV series this is, fetch IMDb ID according to
-[these instructions](guide_storing-movies.md#fetching-metadata), but instead of entering
-it for a collection like with movies we enter the metadata ID for the main series directory
-(Varasto will know that collections under this directory tree are for the same series):
-
-![](guide_storing-tvshows-enter-imdb-id.png)
-
-Now observe that metadata is fetched! Now we need to create a directory for the season:
+Let's create a directory for the season 4:
 
 ![](guide_storing-tvshows-create-season-directory.png)
 

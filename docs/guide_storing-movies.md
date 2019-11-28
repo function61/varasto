@@ -105,7 +105,7 @@ Ok let's remove the changed file so we can remove the movie directory safely:
 
 ```
 $ rm hello.txt
-$ sto st
+$ sto st  # note: no changes are reported below
 $ cd ..
 $ sto rm ted2/
 ```
