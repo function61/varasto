@@ -12,7 +12,7 @@ export class CollectionTagView extends React.Component<CollectionTagViewProps, {
 		const coll = this.props.collection; // shorthand
 
 		return (
-			<div>
+			<span>
 				{coll.Tags.map((tag) => (
 					<span className="label label-default margin-left">
 						<span className="glyphicon glyphicon-tag" />
@@ -20,7 +20,7 @@ export class CollectionTagView extends React.Component<CollectionTagViewProps, {
 						{tag}
 					</span>
 				))}
-			</div>
+			</span>
 		);
 	}
 }
@@ -34,7 +34,7 @@ export class CollectionTagEditor extends React.Component<CollectionTagEditorProp
 		const coll = this.props.collection; // shorthand
 
 		return (
-			<div>
+			<span>
 				{coll.Tags.map((tag) => (
 					<span className="label label-default margin-left">
 						<span className="glyphicon glyphicon-tag" />
@@ -50,7 +50,7 @@ export class CollectionTagEditor extends React.Component<CollectionTagEditorProp
 					<span className="glyphicon glyphicon-tag" />
 					<CommandIcon command={CollectionTag(coll.Id)} />
 				</span>
-			</div>
+			</span>
 		);
 	}
 }

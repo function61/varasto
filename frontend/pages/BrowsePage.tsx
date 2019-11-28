@@ -366,6 +366,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		);
 	}
 
+	// FIXME: sensitivityAuthorize
 	private richView(output: DirectoryOutput): React.ReactNode {
 		const collectionToRow = (coll: CollectionSubset): React.ReactNode => {
 			const metadata = metadataKvsToKv(coll.Metadata);
@@ -392,6 +393,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<div>
 							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
 							{badges}
+							<CollectionTagView collection={coll} />
 						</div>
 					}
 					footer={metadata[MetadataOverview] && <p>{metadata[MetadataOverview]}</p>}>
