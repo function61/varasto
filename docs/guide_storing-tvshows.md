@@ -62,8 +62,8 @@ Varasto to know that "these two files belong to episode 1, this one doesn't belo
 any episode", so we'll need to do some pre-processing to sort each episode in its own
 directory.
 
-In Varasto each independent group of related files (in this case a single TV episode - for
-photos it could be a photo album with 100 pictures) should be its own collection.
+In Varasto each independent group of related files should be its own collection - in this
+case a single TV episode (for photos it could be a photo album with 100 related pictures).
 
 Let's say you have directory with these season's episodes in:
 
