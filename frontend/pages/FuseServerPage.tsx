@@ -1,3 +1,4 @@
+import { DocLink } from 'component/doclink';
 import { Result } from 'component/result';
 import { Panel, Well } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
@@ -11,6 +12,7 @@ import {
 	CfgFuseServerBaseUrl,
 	CfgNetworkShareBaseUrl,
 	ConfigValue,
+	DocRef,
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
@@ -41,7 +43,14 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 	render() {
 		return (
 			<SettingsLayout title="FUSE server &amp; network folders" breadcrumbs={[]}>
-				<Panel heading="Settings">{this.renderEditForm()}</Panel>
+				<Panel
+					heading={
+						<div>
+							Settings <DocLink doc={DocRef.DocsGuideNetworkFoldersMd} />
+						</div>
+					}>
+					{this.renderEditForm()}
+				</Panel>
 			</SettingsLayout>
 		);
 	}
