@@ -1,6 +1,17 @@
 Setting up backup
 =================
 
+Contents:
+
+- [Motivation](#motivation)
+- [File backup vs metadata backup](#file-backup-vs-metadata-backup)
+- [Setting up](#setting-up)
+- [Taking a backup](#taking-a-backup)
+- [Restoring from backup, motivation for testing](#restoring-from-backup--motivation-for-testing)
+- [Restoring from backup, instructions](#restoring-from-backup--instructions)
+- [Using external backup program](#using-external-backup-program)
+
+
 Motivation
 ----------
 
@@ -36,6 +47,10 @@ Setting up
 Since this is so important, we've made it easy to back it up - Varasto has
 [µbackup](https://github.com/function61/ubackup) built-in. The backup files are encrypted
 so your backup hosting provider can't look at your metadata.
+
+This support looks like this:
+
+![](guide_setting-up-backup_backuplist.png)
 
 If you don't like µbackup or you want to use another backup program,
 [that is also supported](#using-external-backup-program).
