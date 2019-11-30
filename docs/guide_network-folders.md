@@ -39,9 +39,6 @@ OS limitations
 
 Currently you need Linux to share data from Varasto as network folders.
 
-Your Varasto server can run on Windows, your Varasto users can run Windows, but you need
-Linux to do the network folder exporting.
-
 
 Architecture / how does it work?
 --------------------------------
@@ -54,20 +51,19 @@ Note "local" - this directory hierarchy is only accessible on the computer the V
 FUSE projector runs on. But we can use Samba to export that directory hierarchy as network
 share.
 
-Taking look at Varasto architecture overview:
-
-![](architecture.png)
-
-The FUSE interface is built on top of the Varasto client library, which talks to the
-Varasto server over HTTP. That means that if you want, you can run the FUSE projector
-on a different computer than where the Varasto server runs.
+If you take a look at
+[Varasto architecture](design_architecture-ideas-goals-inspired-by-comparison-to-similar-software.md)
+drawing, you'll see that the FUSE interface is built on top of the Varasto client library,
+which talks to the Varasto server over HTTP. That means that if you want, you can run the
+FUSE projector on a different computer than where the Varasto server runs.
 
 Focusing on network folders: Varasto FUSE projector + FUSE + Samba - here's how it could
 look like with with separate computers for Varasto server and Varasto FUSE projector:
 
 ![](guide_network-folders_architecture.png)
 
-Even if you run them on the same computer, this diagram should explain things pretty well.
+Even if you run server + projector on the same computer, this diagram is great for explain
+the components and their interactions.
 
 
 Setting up FUSE projector on the same computer as Varasto server
@@ -98,8 +94,7 @@ You need to decide where you want the Varasto filesystem mountpoint be placed. I
 drawing it's `/mnt/varasto` but you can use anything you want. Run `$ mkdir /mnt/varasto`.
 
 Since Varasto FUSE projector is a client, we need to configure how to connect to the server.
-
-Your config should look like this:
+Your config would look about like this:
 
 ```
 $ sto config-print
@@ -126,11 +121,15 @@ Testing that FUSE projector is working
 --------------------------------------
 
 Once you've started the FUSE projector, we should test that it works before moving on to
-configure Samba. `$ cd /mnt/varasto/id` and under that directory run
-`$ cd "$id_of_any_collection_you_have_created" && ls`. FUSE projector dynamically fetches
-the latest revision of that collection. You should see its files now.
+configure Samba.
 
-Once you've got the FUSE projector working, it's time to set up Samba.
+FUSE projector works like this: if you have a collection with ID `bmnpli5QXgc`, it can be
+accessed over fuse at `/mnt/varasto/id/bmnpli5QXgc`.
+
+Find a collection from Varasto's web UI to test with, and `$ cd` into that. FUSE projector
+dynamically fetches the latest revision of that collection. You should see its files now.
+
+If the above works, it's time to set up Samba.
 
 
 Setting up Samba
