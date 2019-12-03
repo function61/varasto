@@ -6,7 +6,8 @@ Contents:
 - [Motivation](#motivation)
 - [File backup vs metadata backup](#file-backup-vs-metadata-backup)
 - [Setting up](#setting-up)
-- [Taking a backup](#taking-a-backup)
+- [Automated backups](#automated-backups)
+- [Taking a backup manually](#taking-a-backup-manually)
 - [Restoring from backup, motivation for testing](#restoring-from-backup--motivation-for-testing)
 - [Restoring from backup, instructions](#restoring-from-backup--instructions)
 - [Using external backup program](#using-external-backup-program)
@@ -72,14 +73,24 @@ preferably away from the machine that you run Varasto on. Technically, Varasto c
 open the backup file after the backup is created.
 
 
-Taking a backup
----------------
+Automated backups
+-----------------
 
-In "Backups" page in Varasto's UI there's a "Backup database" button. It'll start the
-backup, but currently you'll only see its progress from the "Logs" page.
+Backups are most effective if they're done frequently - this implies automation. Varasto
+has scheduler that can automatically take these backups for you, and Varasto has built-in
+monitoring for scheduled tasks.
 
 It's fine to use Varasto during backing up, since the underlying database uses
 [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control).
+
+
+Taking a backup manually
+------------------------
+
+Sometimes you'll migrate servers or want to try something risky. There's also a button that
+let's you take a backup **now**.
+
+This is why we also have a "Backup database" button (look at the screenshot).
 
 
 Restoring from backup, motivation for testing
