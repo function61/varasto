@@ -426,6 +426,7 @@
 		"chain": "public",
 		"ctor": [],
 		"crudNature": "create",
+		"additional_confirmation": "I understand that uploading backup can take a long time and I won't see a progress bar.",
 		"title": "Backup database",
 		"fields": []
 	},
