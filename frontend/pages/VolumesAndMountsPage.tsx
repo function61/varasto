@@ -127,9 +127,29 @@ export default class VolumesAndMountsPage extends React.Component<
 						</div>
 					);
 				case 'topology':
-					return <Panel heading="Topology view">{this.renderTopologyView()}</Panel>;
+					return (
+						<Panel
+							heading={
+								<div>
+									Topology view{' '}
+									<Info text="If you have a lot of disks, it's great to know where they're physically located, so if you need to detach a disk you know to detact the right one." />
+								</div>
+							}>
+							{this.renderTopologyView()}
+						</Panel>
+					);
 				case 'service':
-					return <Panel heading="Service view">{this.renderServiceView()}</Panel>;
+					return (
+						<Panel
+							heading={
+								<div>
+									Service view{' '}
+									<Info text="If you have problems with a disk, find out its age, warranty details, serial number etc." />
+								</div>
+							}>
+							{this.renderServiceView()}
+						</Panel>
+					);
 				case 'replicationStatuses':
 					return (
 						<Panel
