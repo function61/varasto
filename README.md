@@ -19,9 +19,9 @@ Status & timeline
 
 | Date               | Status      |
 |--------------------|-------------|
-| Before 30 Nov 2019 | Heavy development, everything subject to change. Not recommended for any data you're willing to lose since data migration scripts won't be made |
-| After 30 Nov 2019  | MVP version with rough edges but minimal data loss risk - recommended for early adopters willing to report bugs and feature suggestions to development |
-| After 31 Jan 2020  | General availability for all users |
+| Before 31 Dec 2019 | Heavy development, everything subject to change. Not recommended for any data you're willing to lose since data migration scripts won't be made |
+| After 31 Dec 2019  | MVP version with rough edges but minimal data loss risk - recommended for early adopters willing to report bugs and feature suggestions to development |
+| After 29 Feb 2020  | General availability for all users |
 
 Currently *under heavy development*. Works so robustly (blobs currently cannot be
 deleted so if metadata DB is properly backed up, you can't lose data) that I'm already
