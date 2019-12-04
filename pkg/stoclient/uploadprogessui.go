@@ -70,6 +70,8 @@ type fileUploadStatus struct {
 func (p *uploadProgressTextUi) run() error {
 	defer func() { close(p.stopped) }()
 
+	// while using termbox, ctrl+c doesn't work as a SIGINT anymore:
+	//   https://github.com/nsf/termbox-go/issues/50#issuecomment-60668910
 	err := termbox.Init()
 	if err != nil {
 		return err
