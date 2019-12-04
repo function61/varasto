@@ -1,13 +1,14 @@
 package stoclient
 
 import (
+	"context"
 	"fmt"
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 )
 
-func rm(path string) error {
+func rm(ctx context.Context, path string) error {
 	dir, err := filepath.Abs(path)
 	if err != nil {
 		return err
@@ -19,7 +20,7 @@ func rm(path string) error {
 		return err
 	}
 
-	ch, err := computeChangeset(wd, NewBlobDiscoveredNoopListener())
+	ch, err := computeChangeset(ctx, wd, NewBlobDiscoveredNoopListener())
 	if err != nil {
 		return err
 	}
@@ -38,7 +39,9 @@ func rmEntrypoint() *cobra.Command {
 		Short: "Removes a local clone of collection, but only if remote has full state",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			panicIfError(rm(args[0]))
+			panicIfError(wrapWithStopSupport(func(ctx context.Context) error {
+				return rm(ctx, args[0])
+			}))
 		},
 	}
 }

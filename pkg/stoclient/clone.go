@@ -16,7 +16,13 @@ import (
 	"time"
 )
 
-func clone(collectionId string, revisionId string, parentDir string, dirName string) error {
+func clone(
+	ctx context.Context,
+	collectionId string,
+	revisionId string,
+	parentDir string,
+	dirName string,
+) error {
 	clientConfig, err := ReadConfig()
 	if err != nil {
 		return err
@@ -31,10 +37,15 @@ func clone(collectionId string, revisionId string, parentDir string, dirName str
 		dirName = collection.Name
 	}
 
-	return cloneCollection(filepath.Join(parentDir, dirName), revisionId, collection)
+	return cloneCollection(ctx, filepath.Join(parentDir, dirName), revisionId, collection)
 }
 
-func cloneCollectionExistingDir(path string, revisionId string, collection *stotypes.Collection) error {
+func cloneCollectionExistingDir(
+	ctx context.Context,
+	path string,
+	revisionId string,
+	collection *stotypes.Collection,
+) error {
 	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
 	// manage to write the statefile to disk, use normal procedure to init wd
 	halfBakedWd := &workdirLocation{
@@ -76,7 +87,7 @@ func cloneCollectionExistingDir(path string, revisionId string, collection *stot
 	}
 
 	for _, file := range state.Files() {
-		if err := cloneOneFile(wd, file); err != nil {
+		if err := cloneOneFile(ctx, wd, file); err != nil {
 			return err
 		}
 	}
@@ -85,7 +96,12 @@ func cloneCollectionExistingDir(path string, revisionId string, collection *stot
 }
 
 // used both by collection create and collection download
-func cloneCollection(path string, revisionId string, collection *stotypes.Collection) error {
+func cloneCollection(
+	ctx context.Context,
+	path string,
+	revisionId string,
+	collection *stotypes.Collection,
+) error {
 	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
 	// manage to write the statefile to disk, use normal procedure to init wd
 	halfBakedWd := &workdirLocation{
@@ -105,19 +121,25 @@ func cloneCollection(path string, revisionId string, collection *stotypes.Collec
 		return err
 	}
 
-	return cloneCollectionExistingDir(path, revisionId, collection)
+	return cloneCollectionExistingDir(ctx, path, revisionId, collection)
 }
 
-func DownloadOneFile(file stotypes.File, collectionId string, destination io.Writer, config ClientConfig) error {
+func DownloadOneFile(
+	ctx context.Context,
+	file stotypes.File,
+	collectionId string,
+	destination io.Writer,
+	config ClientConfig,
+) error {
 	for _, chunkDigest := range file.BlobRefs {
 		blobRef, err := stotypes.BlobRefFromHex(chunkDigest)
 		if err != nil {
 			return err
 		}
 
-		ctx, cancel := context.WithTimeout(context.TODO(), 15*time.Second)
+		childCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 
-		verifiedBody, closeBody, err := DownloadChunk(ctx, *blobRef, collectionId, config)
+		verifiedBody, closeBody, err := DownloadChunk(childCtx, *blobRef, collectionId, config)
 		if err != nil {
 			cancel()
 			return err
@@ -137,7 +159,7 @@ func DownloadOneFile(file stotypes.File, collectionId string, destination io.Wri
 	return nil
 }
 
-func cloneOneFile(wd *workdirLocation, file stotypes.File) error {
+func cloneOneFile(ctx context.Context, wd *workdirLocation, file stotypes.File) error {
 	log.Printf("Downloading %s", file.Path)
 
 	filename := wd.Join(file.Path)
@@ -154,7 +176,7 @@ func cloneOneFile(wd *workdirLocation, file stotypes.File) error {
 	}
 	defer fileHandle.Close()
 
-	if err := DownloadOneFile(file, wd.manifest.Collection.ID, fileHandle, wd.clientConfig); err != nil {
+	if err := DownloadOneFile(ctx, file, wd.manifest.Collection.ID, fileHandle, wd.clientConfig); err != nil {
 		return err
 	}
 

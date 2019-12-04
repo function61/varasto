@@ -4,6 +4,7 @@ package stothumb
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
@@ -125,7 +126,7 @@ func makeThumbForFile(file stotypes.File, collectionId string, clientConfig stoc
 	}
 
 	origBuffer := &bytes.Buffer{}
-	if err := stoclient.DownloadOneFile(file, collectionId, origBuffer, clientConfig); err != nil {
+	if err := stoclient.DownloadOneFile(context.TODO(), file, collectionId, origBuffer, clientConfig); err != nil {
 		return err
 	}
 

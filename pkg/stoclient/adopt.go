@@ -37,7 +37,7 @@ func adopt(wd string, parentDirectoryId string) error {
 
 	// since we created an empty collection, there's actually nothing to download,
 	// but this does other important housekeeping
-	return cloneCollectionExistingDir(wd, "", collection)
+	return cloneCollectionExistingDir(ctx, wd, "", collection)
 }
 
 func adoptEntrypoint() *cobra.Command {

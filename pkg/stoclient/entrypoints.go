@@ -2,9 +2,12 @@
 package stoclient
 
 import (
+	"context"
 	"fmt"
+	"github.com/function61/gokit/ossignal"
 	"github.com/function61/varasto/pkg/fssnapshot"
 	"github.com/spf13/cobra"
+	"log"
 	"os"
 	"time"
 )
@@ -17,15 +20,19 @@ func cloneEntrypoint() *cobra.Command {
 		Short: "Downloads a collection from server to workdir",
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
-			dirName := ""
-			if len(args) > 1 {
-				dirName = args[1]
-			}
+			panicIfError(wrapWithStopSupport(func(ctx context.Context) error {
+				dirName := ""
+				if len(args) > 1 {
+					dirName = args[1]
+				}
 
-			parentDir, err := os.Getwd()
-			panicIfError(err)
+				parentDir, err := os.Getwd()
+				if err != nil {
+					return err
+				}
 
-			panicIfError(clone(args[0], rev, parentDir, dirName))
+				return clone(ctx, args[0], rev, parentDir, dirName)
+			}))
 		},
 	}
 
@@ -67,24 +74,32 @@ func pushEntrypoint() *cobra.Command {
 		Short: "Uploads a collection from workdir to server",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			cwd, err := os.Getwd()
-			panicIfError(err)
+			panicIfError(wrapWithStopSupport(func(ctx context.Context) error {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
 
-			// take filesystem snapshot, so our reads within the file tree are atomic
-			snapshotter := fssnapshot.NullSnapshotter()
-			// snapshotter := fssnapshot.PlatformSpecificSnapshotter()
-			snapshot, err := snapshotter.Snapshot(cwd)
-			panicIfError(err)
+				// take filesystem snapshot, so our reads within the file tree are atomic
+				snapshotter := fssnapshot.NullSnapshotter()
+				// snapshotter := fssnapshot.PlatformSpecificSnapshotter()
+				snapshot, err := snapshotter.Snapshot(cwd)
+				if err != nil {
+					return err
+				}
 
-			defer func() { // always release snapshot
-				panicIfError(snapshotter.Release(*snapshot))
-			}()
+				defer func() { // always release snapshot
+					panicIfError(snapshotter.Release(*snapshot))
+				}()
 
-			// now read the workdir from within the snapshot (and not the actual cwd)
-			wd, err := NewWorkdirLocation(snapshot.OriginInSnapshotPath)
-			panicIfError(err)
+				// now read the workdir from within the snapshot (and not the actual cwd)
+				wd, err := NewWorkdirLocation(snapshot.OriginInSnapshotPath)
+				if err != nil {
+					return err
+				}
 
-			panicIfError(push(wd))
+				return push(ctx, wd)
+			}))
 		},
 	}
 
@@ -99,7 +114,9 @@ func pushOneEntrypoint() *cobra.Command {
 		Short: "Uploads a single file to a collection",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			panicIfError(pushOne(args[0], args[1]))
+			panicIfError(wrapWithStopSupport(func(ctx context.Context) error {
+				return pushOne(ctx, args[0], args[1])
+			}))
 		},
 	}
 }
@@ -110,26 +127,36 @@ func stEntrypoint() *cobra.Command {
 		Short: "Shows working directory status compared to the parent revision",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			cwd, err := os.Getwd()
-			panicIfError(err)
+			panicIfError(wrapWithStopSupport(func(ctx context.Context) error {
+				cwd, err := os.Getwd()
+				if err != nil {
+					return err
+				}
 
-			wd, err := NewWorkdirLocation(cwd)
-			panicIfError(err)
+				wd, err := NewWorkdirLocation(cwd)
+				if err != nil {
+					return err
+				}
 
-			ch, err := computeChangeset(wd, NewBlobDiscoveredNoopListener())
-			panicIfError(err)
+				ch, err := computeChangeset(ctx, wd, NewBlobDiscoveredNoopListener())
+				if err != nil {
+					return err
+				}
 
-			for _, created := range ch.FilesCreated {
-				fmt.Printf("+ %s\n", created.Path)
-			}
+				for _, created := range ch.FilesCreated {
+					fmt.Printf("+ %s\n", created.Path)
+				}
 
-			for _, updated := range ch.FilesUpdated {
-				fmt.Printf("M %s\n", updated.Path)
-			}
+				for _, updated := range ch.FilesUpdated {
+					fmt.Printf("M %s\n", updated.Path)
+				}
 
-			for _, deleted := range ch.FilesDeleted {
-				fmt.Printf("- %s\n", deleted)
-			}
+				for _, deleted := range ch.FilesDeleted {
+					fmt.Printf("- %s\n", deleted)
+				}
+
+				return nil
+			}))
 		},
 	}
 }
@@ -146,4 +173,22 @@ func Entrypoints() []*cobra.Command {
 		configInitEntrypoint(),
 		configPrintEntrypoint(),
 	}
+}
+
+func wrapWithStopSupport(fn func(ctx context.Context) error) error {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	stopWaitingForSignals := make(chan interface{}, 1)
+	defer close(stopWaitingForSignals)
+
+	go func() {
+		select {
+		case sig := <-ossignal.InterruptOrTerminate():
+			log.Printf("got %s; stopping", sig)
+			cancel()
+		case <-stopWaitingForSignals:
+		}
+	}()
+
+	return fn(ctx)
 }
