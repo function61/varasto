@@ -60,6 +60,10 @@ func (c *Client) OpenMovieByImdbId(ctx context.Context, imdbId string) (*Movie, 
 		return nil, err
 	}
 
+	return c.OpenMovie(ctx, id)
+}
+
+func (c *Client) OpenMovie(ctx context.Context, id string) (*Movie, error) {
 	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
@@ -80,6 +84,10 @@ func (c *Client) OpenTvByImdbId(ctx context.Context, imdbId string) (*Tv, error)
 		return nil, err
 	}
 
+	return c.OpenTv(ctx, id)
+}
+
+func (c *Client) OpenTv(ctx context.Context, id string) (*Tv, error) {
 	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
