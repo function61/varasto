@@ -66,7 +66,7 @@ func (c *Client) OpenMovieByImdbId(ctx context.Context, imdbId string) (*Movie, 
 	res := &Movie{}
 	if _, err := ezhttp.Get(
 		ctx,
-		endpoint("/movie/"+id+"?api_key="+c.apiKey+"&append_to_response=external_ids"),
+		endpointV3("/movie/"+id+"?api_key="+c.apiKey+"&append_to_response=external_ids"),
 		ezhttp.RespondsJson(res, true)); err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *Client) OpenTvByImdbId(ctx context.Context, imdbId string) (*Tv, error)
 	res := &Tv{}
 	if _, err := ezhttp.Get(
 		ctx,
-		endpoint("/tv/"+id+"?api_key="+c.apiKey+"&append_to_response=external_ids"),
+		endpointV3("/tv/"+id+"?api_key="+c.apiKey+"&append_to_response=external_ids"),
 		ezhttp.RespondsJson(res, true)); err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId s
 
 	if _, err := ezhttp.Get(
 		ctx,
-		endpoint("/tv/"+tvId+"/season/"+strconv.Itoa(seasonNumber)+"?api_key="+c.apiKey),
+		endpointV3("/tv/"+tvId+"/season/"+strconv.Itoa(seasonNumber)+"?api_key="+c.apiKey),
 		ezhttp.RespondsJson(&res, true)); err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expec
 
 	if _, err := ezhttp.Get(
 		ctx,
-		endpoint("/find/"+imdbId+"?external_source=imdb_id&api_key="+c.apiKey),
+		endpointV3("/find/"+imdbId+"?external_source=imdb_id&api_key="+c.apiKey),
 		ezhttp.RespondsJson(&res, true)); err != nil {
 		return "", err
 	}
@@ -161,7 +161,7 @@ func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expec
 	}
 }
 
-func endpoint(path string) string {
+func endpointV3(path string) string {
 	return "https://api.themoviedb.org/3" + path
 }
 
