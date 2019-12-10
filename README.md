@@ -2,8 +2,10 @@
 [![Download](https://img.shields.io/badge/Download-bintray%20latest-blue.svg?style=for-the-badge)](https://bintray.com/function61/dl/varasto/_latestVersion#files)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=for-the-badge)](https://godoc.org/github.com/function61/varasto)
 
-Software defined distributed storage array with custom replication policies and strong
-emphasis on integrity and encryption.
+![Varasto logo](docs/logo-readme.png)
+
+All your files in one simple, encrypted place - with built-in backups and configurable
+ransomware protection. Files are stored in multiple locations to minimize risk of data loss.
 
 See [screenshots](docs/screenshots.md) to get a better picture.
 
@@ -56,6 +58,7 @@ Features
 | ✓      | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
 | ✓      | [Ransomware protection](docs/guide_ransomware-protection.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
 | ✓      | [Integrated SMART monitoring](docs/guide_setting-up-smart-monitoring.md) | Detect disk failures early |
+| ✓      | Distributed architecture    | For high availability and other use cases, you can run a cluster of Varasto servers. |
 | [TODO](https://github.com/function61/varasto/issues/53) | Tiered storage              | Use SSD for super fast data ingestion, and transfer it in background to a spinning disk |
 | [TODO](https://github.com/function61/varasto/issues/39) | Multi-user                  | Have separate file hierarchies for your friends & family |
 | TODO   | File sharing                | Share your own files to friends |
