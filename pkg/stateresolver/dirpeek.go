@@ -28,10 +28,10 @@ func DirPeek(files []stotypes.File, dirToPeek string) *DirPeekResult {
 	// "foo/bar/baz" => 3
 	levelOfSubDirToPeek := strings.Count(dirToPeek, "/")
 
-	dirToPeek2 := dirToPeek
-	if dirToPeek2 == "." {
+	dirToPeekWithSlash := dirToPeek + "/"
+	if dirToPeekWithSlash == "./" {
 		levelOfSubDirToPeek--
-		dirToPeek2 = ""
+		dirToPeekWithSlash = ""
 	}
 
 	for _, file := range files {
@@ -40,7 +40,7 @@ func DirPeek(files []stotypes.File, dirToPeek string) *DirPeekResult {
 
 		if dir == dirToPeek {
 			res.Files = append(res.Files, file)
-		} else if strings.HasPrefix(dir, dirToPeek2) {
+		} else if strings.HasPrefix(dir, dirToPeekWithSlash) {
 			// "foo/bar" => ["foo", "bar"]
 			components := strings.Split(dir, "/")
 			if len(components) < levelOfSubDirToPeek+1 {
