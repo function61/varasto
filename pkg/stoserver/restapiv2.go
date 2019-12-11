@@ -504,8 +504,7 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 
 	// FIXME: add "produces" to here because commitChangesetInternal responds with updated collection
 	if coll != nil {
-		// logl.Info.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
-		log.Printf("Collection %s changeset %s committed", coll.ID, changeset.ID)
+		h.logger.Printf("committed %s to coll %s", changeset.ID, coll.ID)
 
 		ignoreError(outJson(w, coll))
 	}
