@@ -656,9 +656,14 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 			running = fromScheduler.Running
 		}
 
-		var nextRun *time.Time = nil
+		var nextRun *time.Time
 		if !dbJob.NextRun.IsZero() {
-			nextRun = &dbJob.NextRun
+			// need copy because ..
+			nextRunCopy := dbJob.NextRun
+
+			// .. otherwise we'd take an address of "dbJob.NextRun" which is mutable due
+			// to how Go's range works
+			nextRun = &nextRunCopy
 		}
 
 		jobs = append(jobs, stoservertypes.SchedulerJob{
