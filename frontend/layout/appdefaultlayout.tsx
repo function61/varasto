@@ -1,6 +1,7 @@
 import { getCurrentHash } from 'f61ui/browserutils';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink } from 'f61ui/component/navigation';
+import { globalConfig } from 'f61ui/globalconfig';
 import { DefaultLayout } from 'f61ui/layout/defaultlayout';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
@@ -32,12 +33,21 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 			},
 		];
 
+		const appName = 'Varasto';
+
 		return (
 			<DefaultLayout
-				appName="Varasto"
+				appName={appName}
 				appHomepage="https://github.com/function61/varasto"
 				navLinks={navLinks}
-				logoUrl={browseRoute.buildUrl({ dir: RootFolderId, view: '' })}
+				logoNode={
+					<img
+						src={globalConfig().assetsDir + '/../logo.svg'}
+						title={appName}
+						style={{ height: '40px' }}
+					/>
+				}
+				logoClickUrl={browseRoute.buildUrl({ dir: RootFolderId, view: '' })}
 				breadcrumbs={this.props.breadcrumbs.concat({
 					title: this.props.titleElem || this.props.title,
 				})}
