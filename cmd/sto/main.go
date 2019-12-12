@@ -14,10 +14,12 @@ import (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:     os.Args[0],
-		Short:   `Varasto CLI: sto ("storage without the rage")`,
+		Short:   `Varasto CLI: sto ("STOrage without the rage")`,
 		Version: dynversion.Version,
 	}
 
+	// client's commands are at the root level somewhat unhygienically for convenience's
+	// sake (since the client CLI commands are used most often).
 	for _, entrypoint := range stoclient.Entrypoints() {
 		rootCmd.AddCommand(entrypoint)
 	}

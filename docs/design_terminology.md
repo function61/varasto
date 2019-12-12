@@ -5,7 +5,7 @@ Terminology
 |------|-------------|
 | Collection | Like a Git repository - stores concrete files and folders. Files consist of multiple blobs. Collections are change tracked by changeset, so if you accidentally deleted or modified a file you can go back in history to restore the file. |
 | Directory | Collections are stored in a hierarchy of directories. This is only in metadata sense - directory hierarchy of collections is different than directories inside collections. |
-| Blob | Each file is split into 4 MB chunks called blobs. Blobs are stored and replicated to multiple volumes. |
+| Blob | Each file is split into 4 MB chunks called blobs. A blob is identified by its content's sha-256. A blob is stored in 1 or more volumes. |
 | Volume | A place to store blobs in. A single physical disk, Google Drive, AWS S3 etc. Redundancy is achieved by storing the same blob in separate volumes. |
 | Mount | Volume is mounted in a given node, so the node has access to the volume's blobs. Depending on blob driver, same volume can be accessed from multiple nodes. |
 | Blob driver | Implements access to different types of volumes. `local-fs` stores blobs in local filesystem. `googledrive` stores in Google Drive etc. |

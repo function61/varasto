@@ -12,7 +12,7 @@ import (
 type JobLastRun struct {
 	Started  time.Time
 	Finished time.Time
-	Error    string // cannot be Go's error because it can't be marshaled into JSON
+	Error    string
 }
 
 type JobFn func(ctx context.Context, logger *log.Logger) error
@@ -187,7 +187,7 @@ func (s *Controller) startJob(ctx context.Context, job *Job) {
 	jlogl := logex.Levels(jlog)
 
 	if job.Spec.Running {
-		jlogl.Error.Println("can't re-schedule job since previous start is still running")
+		jlogl.Error.Println("can't start job since previous instance is still running")
 		return
 	}
 
