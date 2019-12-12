@@ -43,7 +43,7 @@ func adopt(wd string, parentDirectoryId string) error {
 func adoptEntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use:   "adopt [parentDirectoryId]",
-		Short: "Creates a new collection",
+		Short: "Adopts current directory as Varasto collection",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			wd, err := os.Getwd()
