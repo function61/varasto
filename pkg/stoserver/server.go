@@ -99,7 +99,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 		httpMount: "/api/thumbnails",
 		enabled:   true,
 		controller: childprocesscontroller.New(
-			[]string{os.Args[0], "thumbserver", "--addr", "domainsocket://" + thumbnailerSockAddr},
+			[]string{os.Args[0], "server", "thumbserver", "--addr", "domainsocket://" + thumbnailerSockAddr},
 			"Thumbnail generator",
 			logex.Prefix("manager(thumbserver)", logger),
 			logex.Prefix("thumbserver", logger),

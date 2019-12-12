@@ -1,4 +1,4 @@
-package stothumb
+package stothumbserver
 
 import (
 	"github.com/function61/gokit/logex"

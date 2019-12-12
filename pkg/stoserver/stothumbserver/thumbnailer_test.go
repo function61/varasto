@@ -1,4 +1,4 @@
-package stothumb
+package stothumbserver
 
 import (
 	"fmt"

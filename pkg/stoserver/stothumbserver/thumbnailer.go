@@ -1,4 +1,4 @@
-package stothumb
+package stothumbserver
 
 // below side effects have to be imported to transparently support their decoding
 

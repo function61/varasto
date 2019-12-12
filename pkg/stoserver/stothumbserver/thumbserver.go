@@ -1,5 +1,5 @@
 // Thumbnailer server
-package stothumb
+package stothumbserver
 
 import (
 	"context"
