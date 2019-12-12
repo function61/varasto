@@ -92,7 +92,7 @@ Guides for storing different types of content:
 
 Developers:
 
-- [Design of codebase](docs/design_codebase.md)
+- [Codebase layout](docs/design_codebase.md)
 - [How to build & develop](https://github.com/function61/turbobob/blob/master/docs/external-how-to-build-and-dev.md)
 - [Code documentation on GoDoc.org](https://godoc.org/github.com/function61/varasto)
 

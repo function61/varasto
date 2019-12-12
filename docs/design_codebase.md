@@ -1,5 +1,5 @@
-Design of codebase
-==================
+Codebase layout
+===============
 
 
 Drawing
@@ -11,8 +11,7 @@ Drawing
 Example of implementing an entire feature
 -----------------------------------------
 
-It might be easier to understand the codebase, if you can view an example concrete commit
-that adds an entire feature. Here's one for
+To easier understand the codebase and its layout, let's look at a commit that implements
 [adding tagging support to collections](https://github.com/function61/varasto/commit/5117244c57547f21b51cfa548151359ed436dd69).
 
 Points of interest in the commit:
