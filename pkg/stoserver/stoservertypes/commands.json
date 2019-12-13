@@ -372,7 +372,7 @@
 		"title": "Change desired volumes",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true },
-			{ "key": "DesiredVolumes" }
+			{ "key": "DesiredVolumes", "placeholder": "[2,7]" }
 		]
 	},
 	{
