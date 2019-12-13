@@ -2,10 +2,10 @@
 [![Download](https://img.shields.io/badge/Download-bintray%20latest-blue.svg?style=for-the-badge)](https://bintray.com/function61/dl/varasto/_latestVersion#files)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-5272B4.svg?style=for-the-badge)](https://godoc.org/github.com/function61/varasto)
 
-![Varasto logo](docs/logo-readme.png)
-
 All your files in one simple, encrypted place - with built-in backups and configurable
 ransomware protection. Files are stored in multiple locations to minimize risk of data loss.
+
+![Varasto vision](docs/vision.png)
 
 See [screenshots](docs/screenshots.md) to get a better picture.
 
