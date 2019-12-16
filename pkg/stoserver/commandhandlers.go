@@ -754,11 +754,11 @@ func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, c
 				return err
 			}
 		}
+
 		privKeyPem, err := stodb.CfgNodeTlsCertKey.GetRequired(tx)
 		if err != nil {
 			return err
 		}
-
 
 		// validate that cert & private key:
 		//   1) parse
