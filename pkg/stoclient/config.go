@@ -3,11 +3,13 @@ package stoclient
 import (
 	"fmt"
 	"github.com/function61/eventkit/httpcommandclient"
+	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 )
@@ -17,17 +19,28 @@ const (
 )
 
 type ClientConfig struct {
-	ServerAddr    string `json:"server_addr"`
-	AuthToken     string `json:"auth_token"`
-	FuseMountPath string `json:"fuse_mount_path"`
+	ServerAddr                string `json:"server_addr"`
+	AuthToken                 string `json:"auth_token"`
+	FuseMountPath             string `json:"fuse_mount_path"`
+	TlsInsecureSkipValidation bool   `json:"tls_insecure_skip_validation"`
 }
 
 func (c *ClientConfig) CommandClient() *httpcommandclient.Client {
-	return httpcommandclient.New(c.ServerAddr+"/command/", c.AuthToken)
+	return httpcommandclient.New(c.ServerAddr+"/command/", c.AuthToken, c.HttpClient())
 }
 
 func (c *ClientConfig) UrlBuilder() *stoservertypes.RestClientUrlBuilder {
 	return stoservertypes.NewRestClientUrlBuilder(c.ServerAddr)
+}
+
+func (c *ClientConfig) HttpClient() *http.Client {
+	client := http.DefaultClient
+
+	if c.TlsInsecureSkipValidation {
+		client = ezhttp.InsecureTlsClient
+	}
+
+	return client
 }
 
 func writeConfig(conf *ClientConfig) error {

@@ -3,6 +3,7 @@ package stoserver
 import (
 	"crypto/rand"
 	"crypto/rsa"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -736,6 +737,38 @@ func (c *cHandlers) getSubsystem(id stoservertypes.SubsystemId) *subsystem {
 	default:
 		return nil
 	}
+}
+
+func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		node, err := stodb.Read(tx).Node(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		node.TlsCert = cmd.TlsCertificate
+
+		// changing private key
+		if cmd.TlsCertificatePrivateKey != "" {
+			if err := stodb.CfgNodeTlsCertKey.Set(cmd.TlsCertificatePrivateKey, tx); err != nil {
+				return err
+			}
+		}
+
+		// validate that cert & private key:
+		//   1) parse
+		//   2) match each other
+		privKeyPem, err := stodb.CfgNodeTlsCertKey.GetRequired(tx)
+		if err != nil {
+			return err
+		}
+
+		if _, err := tls.X509KeyPair([]byte(node.TlsCert), []byte(privKeyPem)); err != nil {
+			return err
+		}
+
+		return stodb.NodeRepository.Update(node, tx)
+	})
 }
 
 func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {

@@ -6,9 +6,10 @@ import (
 )
 
 type Node struct {
-	ID   string
-	Addr string
-	Name string
+	ID      string
+	Addr    string
+	Name    string
+	TlsCert string
 }
 
 type Client struct {

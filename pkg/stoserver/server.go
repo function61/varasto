@@ -1,8 +1,11 @@
 package stoserver
 
 import (
+	"bytes"
 	"context"
 	"crypto/rsa"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/dynversion"
@@ -199,6 +202,9 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	srv := http.Server{
 		Addr:    "0.0.0.0:8066", // 0.0.0.0 = listen on all interfaces
 		Handler: router,
+		TLSConfig: &tls.Config{
+			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},
+		},
 	}
 
 	for _, mount := range serverConfig.ClusterWideMounts {
@@ -219,7 +225,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	go func(stop *stopper.Stopper) {
 		defer stop.Done()
 
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+		if err := srv.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
 			logl.Error.Fatalf("ListenAndServe: %v", err)
 		}
 	}(workers.Stopper())
@@ -260,6 +266,7 @@ type ServerConfig struct {
 	Scheduler              *scheduler.Controller
 	ThumbServer            *subsystem
 	FuseProjector          *subsystem
+	TlsCertificate         wrappedKeypair
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
@@ -345,6 +352,16 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		}
 	}
 
+	tlsCertKey, err := stodb.CfgNodeTlsCertKey.GetRequired(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	wrappedKeypair, err := mkWrappedKeypair([]byte(selfNode.TlsCert), []byte(tlsCertKey))
+	if err != nil {
+		return nil, err
+	}
+
 	return &ServerConfig{
 		File:                   *scf,
 		SelfNodeId:             selfNode.ID,
@@ -353,6 +370,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		ClientsAuthTokens:      authTokens,
 		LogTail:                logTail,
 		ReplicationControllers: map[int]*storeplication.Controller{},
+		TlsCertificate:         *wrappedKeypair,
 	}, nil
 }
 
@@ -593,4 +611,25 @@ func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeId int, s
 	}
 
 	return nil
+}
+
+// for some reason tls.Certificate doesn't have cert in parsed form. ".Leaf" would be it,
+// but it's documented as nil with successful X509KeyPair()
+type wrappedKeypair struct {
+	keypair tls.Certificate
+	cert    x509.Certificate
+}
+
+func mkWrappedKeypair(certPem, keyPem []byte) (*wrappedKeypair, error) {
+	keypair, err := tls.X509KeyPair(certPem, keyPem)
+	if err != nil {
+		return nil, err
+	}
+
+	cert, err := cryptoutil.ParsePemX509Certificate(bytes.NewBuffer(certPem))
+	if err != nil {
+		return nil, err
+	}
+
+	return &wrappedKeypair{keypair, *cert}, nil
 }

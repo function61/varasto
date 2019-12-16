@@ -76,3 +76,32 @@ func temperatureToHealthStatus(tempC int) stoservertypes.HealthStatus {
 		return stoservertypes.HealthStatusFail
 	}
 }
+
+func serverCertHealth(
+	notAfter time.Time,
+	healthName string,
+	now time.Time,
+) stohealth.HealthChecker {
+	timeLeft := notAfter.Sub(now)
+	timeLeftHuman := fmt.Sprintf("Valid for %s", duration.Humanize(timeLeft))
+
+	day := 24 * time.Hour // naive day
+
+	switch {
+	case timeLeft < 7*day:
+		return stohealth.NewStaticHealthNode(
+			healthName,
+			stoservertypes.HealthStatusFail,
+			timeLeftHuman)
+	case timeLeft < 30*day:
+		return stohealth.NewStaticHealthNode(
+			healthName,
+			stoservertypes.HealthStatusWarn,
+			timeLeftHuman)
+	default:
+		return stohealth.NewStaticHealthNode(
+			healthName,
+			stoservertypes.HealthStatusPass,
+			timeLeftHuman)
+	}
+}

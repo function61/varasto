@@ -119,7 +119,8 @@ func blobExists(blobRef stotypes.BlobRef, clientConfig ClientConfig) (bool, erro
 	resp, err := ezhttp.Get(
 		ctx,
 		clientConfig.UrlBuilder().GetBlobMetadata(blobRef.AsHex()),
-		ezhttp.AuthBearer(clientConfig.AuthToken))
+		ezhttp.AuthBearer(clientConfig.AuthToken),
+		ezhttp.Client(clientConfig.HttpClient()))
 
 	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {
 		return false, nil
@@ -235,7 +236,8 @@ func uploadChangeset(changeset stotypes.CollectionChangeset, collection stotypes
 		clientConfig.UrlBuilder().CommitChangeset(collection.ID),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),
-		ezhttp.RespondsJson(&updatedCollection, false))
+		ezhttp.RespondsJson(&updatedCollection, false),
+		ezhttp.Client(clientConfig.HttpClient()))
 	if err != nil {
 		return nil, fmt.Errorf("error committing: %v", errSample(err, res))
 	}

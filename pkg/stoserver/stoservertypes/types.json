@@ -51,6 +51,7 @@
 		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
 		{ "key": "CfgNetworkShareBaseUrl", "value": "networkshare_baseurl" },
 		{ "key": "CfgUbackupConfig", "value": "ubackup_config" },
+		{ "key": "CfgNodeTlsCertKey", "value": "node_tls_cert_key" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [
@@ -259,7 +260,8 @@
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
 				"Addr": {"_": "string"},
-				"Name": {"_": "string"}
+				"Name": {"_": "string"},
+				"TlsCert": {"_": "TlsCertDetails"}
 			}}
 		},
 		{
@@ -407,6 +409,15 @@
 				"Size": {"_": "integer"},
 				"Timestamp": {"_": "datetime"},
 				"Description": {"_": "string"}
+			}}
+		},
+		{
+			"name": "TlsCertDetails",
+			"type": {"_": "object", "fields": {
+				"Identity": {"_": "string"},
+				"PublicKeyAlgorithm": {"_": "string"},
+				"Issuer": {"_": "string"},
+				"NotAfter": {"_": "datetime"}
 			}}
 		},
 		{

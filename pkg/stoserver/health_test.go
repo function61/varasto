@@ -2,8 +2,10 @@ package stoserver
 
 import (
 	"github.com/function61/gokit/assert"
+	"github.com/function61/varasto/pkg/stoserver/stohealth"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"testing"
+	"time"
 )
 
 func TestTemperatureToHealthStatus(t *testing.T) {
@@ -114,4 +116,28 @@ func TestTemperatureToHealthStatus(t *testing.T) {
 	assert.Assert(t, temp(98) == fail)
 	assert.Assert(t, temp(99) == fail)
 	assert.Assert(t, temp(100) == fail)
+}
+
+func TestServerCertHealth(t *testing.T) {
+	t0 := time.Date(2019, 12, 16, 0, 0, 0, 0, time.UTC)
+
+	nowBeforeT0 := func(dur time.Duration) time.Time {
+		return t0.Add(-dur)
+	}
+
+	day := 24 * time.Hour // naive
+
+	check := func(checker stohealth.HealthChecker, expected stoservertypes.HealthStatus) {
+		t.Helper()
+
+		actual, err := checker.CheckHealth()
+		assert.Assert(t, err == nil)
+
+		assert.EqualString(t, string(actual.Health), string(expected))
+	}
+
+	check(serverCertHealth(t0, "", nowBeforeT0(35*day)), stoservertypes.HealthStatusPass)
+	check(serverCertHealth(t0, "", nowBeforeT0(20*day)), stoservertypes.HealthStatusWarn)
+	check(serverCertHealth(t0, "", nowBeforeT0(5*day)), stoservertypes.HealthStatusFail)
+	check(serverCertHealth(t0, "", nowBeforeT0(-5*day)), stoservertypes.HealthStatusFail)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/guts"
 	"github.com/function61/gokit/appuptime"
+	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
@@ -731,10 +732,22 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	panicIfError(stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
+		cert, err := cryptoutil.ParsePemX509Certificate(strings.NewReader(dbObject.TlsCert))
+		panicIfError(err)
+
+		publicKeyHumanReadableDescription, err := cryptoutil.PublicKeyHumanReadableDescription(cert.PublicKey)
+		panicIfError(err)
+
 		ret = append(ret, stoservertypes.Node{
 			Id:   dbObject.ID,
 			Addr: dbObject.Addr,
 			Name: dbObject.Name,
+			TlsCert: stoservertypes.TlsCertDetails{
+				Identity:           cryptoutil.Identity(*cert),
+				Issuer:             cryptoutil.Issuer(*cert),
+				PublicKeyAlgorithm: publicKeyHumanReadableDescription,
+				NotAfter:           cert.NotAfter,
+			},
 		})
 	}
 
@@ -1410,6 +1423,10 @@ func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChe
 
 	return stohealth.NewHealthFolder(
 		"Varasto",
+		serverCertHealth(
+			conf.TlsCertificate.cert.NotAfter,
+			"TLS certificate",
+			time.Now()),
 		stohealth.NewLastIntegrityVerificationJob(db),
 		stohealth.NewHealthFolder(
 			"Temperatures",

@@ -1,4 +1,9 @@
 import { Result } from 'component/result';
+import { CommandLink } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
+import { Info } from 'f61ui/component/info';
+import { Timestamp } from 'f61ui/component/timestamp';
+import { NodeInstallTlsCert } from 'generated/stoserver/stoservertypes_commands';
 import { getNodes } from 'generated/stoserver/stoservertypes_endpoints';
 import { Node } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
@@ -41,6 +46,9 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 						<th>Id</th>
 						<th>Addr</th>
 						<th>Name</th>
+						<th>TLS cert</th>
+						<th>TLS cert expires</th>
+						<th />
 					</tr>
 				</thead>
 				<tbody>
@@ -49,6 +57,22 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 							<td>{node.Id}</td>
 							<td>{node.Addr}</td>
 							<td>{node.Name}</td>
+							<td>
+								{node.TlsCert.Identity}{' '}
+								<Info
+									text={`Issuer: ${node.TlsCert.Issuer}\nAlgo: ${
+										node.TlsCert.PublicKeyAlgorithm
+									}`}
+								/>
+							</td>
+							<td>
+								<Timestamp ts={node.TlsCert.NotAfter} />
+							</td>
+							<td>
+								<Dropdown>
+									<CommandLink command={NodeInstallTlsCert(node.Id)} />
+								</Dropdown>
+							</td>
 						</tr>
 					))}
 				</tbody>

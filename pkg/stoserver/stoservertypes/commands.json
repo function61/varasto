@@ -384,6 +384,18 @@
 		"fields": []
 	},
 	{
+		"command": "node.InstallTlsCert",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "update",
+		"title": "Install TLS cert",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "TlsCertificate", "title": "Certificate", "type": "multiline", "placeholder": "-----BEGIN CERTIFICATE-----\n..." },
+			{ "key": "TlsCertificatePrivateKey", "optional": true, "title": "Private key", "type": "multiline", "placeholder": "-----BEGIN EC PRIVATE KEY-----\n..." }
+		]
+	},
+	{
 		"command": "kek.GenerateOrImport",
 		"chain": "public",
 		"ctor": [],

@@ -108,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:9f0a493da5e7f1845f17b68e1c7e61929a2273ec5eccdfeb26b6cacf9192b0c0"
+  digest = "1:636c72f64325e6c5b7c3626df579a0d66718440a9b1cba3ce91ba82237b21eea"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -121,11 +121,11 @@
     "httpcommandclient",
   ]
   pruneopts = "UT"
-  revision = "bb22db71b71c8d03714ab1cf742ee5893af28db9"
+  revision = "925e0fd8690560fe916bf3b8f7eb3f7f442d66ed"
 
 [[projects]]
   branch = "master"
-  digest = "1:cb82539f186ae9edc02f756f76574cc83f8333c67c0000c1ca765020a76849b1"
+  digest = "1:7d576930f495f03a4fa84ec5976f19e399e6af3d31b2513928331d2e5e7d8dfe"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
@@ -153,7 +153,7 @@
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "3a66cb618f0c3792b7664b31d54c06cf83fd259a"
+  revision = "5d16f7dc5e0fdd76d7959b4d66d95a53b0c6a0d8"
 
 [[projects]]
   branch = "master"
@@ -266,6 +266,14 @@
   pruneopts = "UT"
   revision = "e6d60cf7ba1f42d86d54cdf5508611c4aafb3970"
   version = "v0.0.1"
+
+[[projects]]
+  digest = "1:808cdddf087fb64baeae67b8dfaee2069034d9704923a3cb8bd96a995421a625"
+  name = "github.com/patrickmn/go-cache"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "a3647f8e31d79543b2d0f0ae2fe5c379d72cedc0"
+  version = "v2.1.0"
 
 [[projects]]
   branch = "master"

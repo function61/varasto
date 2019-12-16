@@ -3,6 +3,7 @@ package stodb
 import (
 	"fmt"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/sslca"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -35,10 +36,23 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 		return err
 	}
 
+	hostname := "localhost"
+
+	privKeyPem, err := sslca.GenEcP256PrivateKeyPem()
+	if err != nil {
+		return err
+	}
+
+	certPem, err := sslca.SelfSignedServerCert(hostname, "Varasto self-signed", privKeyPem)
+	if err != nil {
+		return err
+	}
+
 	newNode := &stotypes.Node{
-		ID:   stoutils.NewNodeId(),
-		Addr: "localhost:8066",
-		Name: "dev",
+		ID:      stoutils.NewNodeId(),
+		Addr:    hostname + ":8066",
+		Name:    "dev",
+		TlsCert: string(certPem),
 	}
 
 	logl.Info.Printf("generated nodeId: %s", newNode.ID)
@@ -56,6 +70,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 			DesiredVolumes: []int{},
 		}, tx),
 		CfgNodeId.Set(newNode.ID, tx),
+		CfgNodeTlsCertKey.Set(string(privKeyPem), tx),
 	}
 
 	if err := allOk(results); err != nil {
