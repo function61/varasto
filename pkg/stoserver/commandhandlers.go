@@ -748,21 +748,21 @@ func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, c
 
 		node.TlsCert = cmd.TlsCertificate
 
-		// changing private key
+		// changing private key? (does not necessarily change when cert is renewed)
 		if cmd.TlsCertificatePrivateKey != "" {
 			if err := stodb.CfgNodeTlsCertKey.Set(cmd.TlsCertificatePrivateKey, tx); err != nil {
 				return err
 			}
 		}
-
-		// validate that cert & private key:
-		//   1) parse
-		//   2) match each other
 		privKeyPem, err := stodb.CfgNodeTlsCertKey.GetRequired(tx)
 		if err != nil {
 			return err
 		}
 
+
+		// validate that cert & private key:
+		//   1) parse
+		//   2) match each other
 		if _, err := tls.X509KeyPair([]byte(node.TlsCert), []byte(privKeyPem)); err != nil {
 			return err
 		}
