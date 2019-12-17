@@ -19,5 +19,8 @@ type Driver interface {
 
 	Mountable(ctx context.Context) error
 
+	// if blob is stored in multiple volumes, disk access controller fetches from the volume
+	// (that is mounted) with the lowest routing cost.
+	// currently 10 for local disks, 20 for cloud services.
 	RoutingCost() int
 }
