@@ -81,25 +81,6 @@ func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 	return nil
 }
 
-func (g *googledrive) Mountable(ctx context.Context) error {
-	anyFilesInFolderQuery := fmt.Sprintf("'%s' in parents", g.varastoDirectoryId)
-
-	// just try if a folder query works. it'll 404 if the id is invalid (there seems to
-	// be some kind of checksum or something). unfortunately we don't get a failure for
-	// non-existing folders (at least deleted one listing succeeded)
-	<-g.reqThrottle
-	_, err := g.srv.Files.List().PageSize(2).
-		Fields("files(id, name)").
-		Q(anyFilesInFolderQuery).
-		Context(ctx).
-		Do()
-	if err != nil {
-		return fmt.Errorf("List call failed: %v", err)
-	}
-
-	return nil
-}
-
 func (g *googledrive) RoutingCost() int {
 	return 20
 }

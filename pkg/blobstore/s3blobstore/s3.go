@@ -73,14 +73,6 @@ func (g *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 	return nil
 }
 
-func (g *s3blobstore) Mountable(ctx context.Context) error {
-	_, err := g.client.ListObjectsWithContext(ctx, &s3.ListObjectsInput{
-		Bucket:  &g.bucket,
-		MaxKeys: aws.Int64(1), // we'll just want to see that the access key works
-	})
-	return err
-}
-
 func (s *s3blobstore) RoutingCost() int {
 	return 20
 }

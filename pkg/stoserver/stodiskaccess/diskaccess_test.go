@@ -74,18 +74,18 @@ func (t *testDbAccess) WriteBlobCreated(meta *BlobMeta, size int) error {
 	return nil
 }
 
-type testSaga struct {
+type testData struct {
 	blobStorage  *testingBlobStorage
 	testDbAccess *testDbAccess
 	diskAccess   *Controller
 }
 
-func setupDefault() *testSaga {
+func setupDefault() *testData {
 	return setup(rootEncryptionKeyA)
 }
 
-func setup(encKey []byte) *testSaga {
-	blobStorage := newTestingBlobStorage(10)
+func setup(encKey []byte) *testData {
+	blobStorage := createVolume("2v2IQMfhcpc", 10)
 
 	tda := &testDbAccess{
 		encKey,
@@ -93,9 +93,9 @@ func setup(encKey []byte) *testSaga {
 
 	diskAccess := New(tda)
 
-	diskAccess.Define(1, blobStorage)
+	panicIfError(mount(1, blobStorage, diskAccess))
 
-	return &testSaga{blobStorage, tda, diskAccess}
+	return &testData{blobStorage, tda, diskAccess}
 }
 
 func TestWriteToUnknownVolume(t *testing.T) {
@@ -238,14 +238,12 @@ func TestRoutingCost(t *testing.T) {
 		3 => 20
 	*/
 	test := setupDefault()
-	test.diskAccess.Define(2, newTestingBlobStorage(30))
-	test.diskAccess.Define(3, newTestingBlobStorage(20))
+	panicIfError(mount(2, createVolume("6P5rgMCeGsA", 30), test.diskAccess))
+	panicIfError(mount(3, createVolume("xGili5d64vw", 20), test.diskAccess))
 
 	bestVolumeId := func(volumeIds []int) int {
 		best, err := test.diskAccess.BestVolumeId(volumeIds)
-		if err != nil {
-			panic(err)
-		}
+		panicIfError(err)
 		return best
 	}
 
@@ -260,8 +258,8 @@ func TestReplication(t *testing.T) {
 	test := setupDefault()
 	firstStore := test.blobStorage
 
-	secondBlobStore := newTestingBlobStorage(10)
-	test.diskAccess.Define(2, secondBlobStore)
+	secondBlobStore := createVolume("6P5rgMCeGsA", 10)
+	panicIfError(mount(2, secondBlobStore, test.diskAccess))
 
 	contentToStore := "The quick brown fox jumps over the lazy dog"
 
@@ -284,12 +282,12 @@ func TestReplication(t *testing.T) {
 		bytes.Equal(firstStore.files[sha256OfQuickBrownFox], secondBlobStore.files[sha256OfQuickBrownFox]))
 }
 
-func TestReplicateRottenData(t *testing.T) {
+func TestTryReplicateRottenData(t *testing.T) {
 	test := setupDefault()
 	firstStore := test.blobStorage
 
-	secondBlobStore := newTestingBlobStorage(10)
-	test.diskAccess.Define(2, secondBlobStore)
+	secondBlobStore := createVolume("6P5rgMCeGsA", 10)
+	panicIfError(mount(2, secondBlobStore, test.diskAccess))
 
 	contentToStore := "The quick brown fox jumps over the lazy dog"
 
@@ -327,6 +325,41 @@ func TestScrubbing(t *testing.T) {
 	assert.EqualString(t, err.Error(), "hashVerifyReader: digest mismatch")
 }
 
+func TestTryMountIncorrectVolume(t *testing.T) {
+	ctx := context.TODO()
+
+	test := setupDefault()
+
+	secondBlobStore := createVolume("6P5rgMCeGsA", 10)
+
+	// volume is not yet initialized
+	assert.EqualString(
+		t,
+		test.diskAccess.Mount(ctx, 2, secondBlobStore.uuid, secondBlobStore).Error(),
+		"volume descriptor not found")
+
+	assert.Assert(t, test.diskAccess.Initialize(ctx, secondBlobStore.uuid, secondBlobStore) == nil)
+
+	// cannot re-initialize
+	assert.EqualString(
+		t,
+		test.diskAccess.Initialize(ctx, secondBlobStore.uuid, secondBlobStore).Error(),
+		"cannot initialize because verifyOnDiskVolumeUuid: <nil>")
+
+	// now try mounting with wrong UUID
+	assert.EqualString(
+		t,
+		test.diskAccess.Mount(ctx, 2, "wrongUuid", secondBlobStore).Error(),
+		"unexpected volume UUID: 6P5rgMCeGsA")
+
+	// correct UUID works
+	assert.Assert(t, test.diskAccess.Mount(ctx, 2, secondBlobStore.uuid, secondBlobStore) == nil)
+}
+
+func TestVolumeDescriptorRef(t *testing.T) {
+	assert.EqualString(t, volumeDescriptorRef.AsHex(), "0000000000000000000000000000000000000000000000000000000000000000")
+}
+
 func md5Hex(input []byte) string {
 	sum := md5.Sum(input)
 	return hex.EncodeToString(sum[:])
@@ -338,19 +371,35 @@ func sha256Hex(input []byte) string {
 }
 
 type testingBlobStorage struct {
+	uuid        string
 	files       map[string][]byte
 	routingCost int
 }
 
-func newTestingBlobStorage(routingCost int) *testingBlobStorage {
+func mount(
+	volId int,
+	tbs *testingBlobStorage,
+	dam *Controller,
+) error {
+	ctx := context.TODO()
+
+	if err := dam.Initialize(ctx, tbs.uuid, tbs); err != nil {
+		return err
+	}
+
+	if err := dam.Mount(ctx, volId, tbs.uuid, tbs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func createVolume(uuid string, routingCost int) *testingBlobStorage {
 	return &testingBlobStorage{
+		uuid:        uuid,
 		files:       map[string][]byte{},
 		routingCost: routingCost,
 	}
-}
-
-func (t *testingBlobStorage) Mountable(_ context.Context) error {
-	return nil
 }
 
 func (t *testingBlobStorage) RoutingCost() int {
@@ -396,4 +445,10 @@ func TestXorSlices(t *testing.T) {
 	b := []byte{0x11, 0x01}
 
 	assert.Assert(t, bytes.Equal(xorSlices(a, b), []byte{0x10, 0x01}))
+}
+
+func panicIfError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

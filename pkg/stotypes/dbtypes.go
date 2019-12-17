@@ -40,7 +40,7 @@ type Volume struct {
 	WarrantyEnds  time.Time
 	Quota         int64
 	BlobSizeTotal int64 // @ compressed & deduplicated
-	BlobCount     int64
+	BlobCount     int64 // does not include volume descriptor blob (sha256=0000..)
 }
 
 type VolumeMount struct {

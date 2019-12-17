@@ -345,10 +345,8 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 
 		// for safety. if on Windows we're using external USB disks, their drive letters
 		// could get mixed up and we could mount the wrong volume and that would not be great.
-		if err := driver.Mountable(context.TODO()); err != nil {
-			logex.Levels(logger).Error.Printf("Volume %s not mountable: %v", volume.UUID, err)
-		} else {
-			dam.Define(volume.ID, driver)
+		if err := dam.Mount(context.TODO(), volume.ID, volume.UUID, driver); err != nil {
+			logex.Levels(logger).Error.Printf("volume %s mount: %v", volume.UUID, err)
 		}
 	}
 

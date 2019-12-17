@@ -8,8 +8,10 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"github.com/function61/gokit/hashverifyreader"
+	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -17,6 +19,12 @@ import (
 	"hash/crc32"
 	"io"
 	"io/ioutil"
+	"os"
+)
+
+var (
+	ErrVolumeDescriptorNotFound = errors.New("volume descriptor not found")
+	volumeDescriptorRef         = stotypes.BlobRef{0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}
 )
 
 type Controller struct {
@@ -24,6 +32,10 @@ type Controller struct {
 	mountedDrivers map[int]blobstore.Driver // only mounted drivers
 	routingCosts   map[int]int              // volume id => cost. lower (local disks) is better than higher (remote disks)
 	writingBlobs   *mutexmap.M
+}
+
+type volumeDescriptor struct {
+	VolumeId string `json:"volume_uuid"`
 }
 
 func New(metadataStore MetadataStore) *Controller {
@@ -35,14 +47,29 @@ func New(metadataStore MetadataStore) *Controller {
 	}
 }
 
-// call only during server boot (these are not threadsafe)
-func (d *Controller) Define(volumeId int, driver blobstore.Driver) {
-	if _, exists := d.mountedDrivers[volumeId]; exists {
-		panic("driver for volumeId already defined")
+// call only during server boot (this is not threadsafe)
+func (d *Controller) Mount(ctx context.Context, volumeId int, expectedVolumeUuid string, driver blobstore.Driver) error {
+	if err := d.Mountable(ctx, volumeId, expectedVolumeUuid, driver); err != nil {
+		return err
 	}
 
 	d.mountedDrivers[volumeId] = driver
 	d.routingCosts[volumeId] = driver.RoutingCost()
+
+	return nil
+}
+
+// mount command currently wants to check if volume would be mountable without actually mounting it
+func (d *Controller) Mountable(ctx context.Context, volumeId int, expectedVolumeUuid string, driver blobstore.Driver) error {
+	if _, exists := d.mountedDrivers[volumeId]; exists {
+		return errors.New("driver for volumeId already defined")
+	}
+
+	if err := d.verifyOnDiskVolumeUuid(ctx, driver, expectedVolumeUuid); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (d *Controller) IsMounted(volumeId int) bool {
@@ -242,6 +269,48 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
 
 	bytesRead, err := io.Copy(ioutil.Discard, verifiedReader)
 	return bytesRead, err
+}
+
+// initializes volume for Varasto use by writing a volume descriptor (see verifyOnDiskVolumeUuid() for rationale)
+func (d *Controller) Initialize(ctx context.Context, volumeUuid string, driver blobstore.Driver) error {
+	// this error is expected to happen before initialization
+	// (we check this so we know it's safe to initialize)
+	if err := d.verifyOnDiskVolumeUuid(ctx, driver, volumeUuid); err != ErrVolumeDescriptorNotFound {
+		return fmt.Errorf("cannot initialize because verifyOnDiskVolumeUuid: %v", err)
+	}
+
+	volDescriptor := &bytes.Buffer{}
+	if err := jsonfile.Marshal(volDescriptor, &volumeDescriptor{volumeUuid}); err != nil {
+		return err
+	}
+
+	return driver.RawStore(ctx, volumeDescriptorRef, volDescriptor)
+}
+
+// it's really dangerous to accidentally mount the wrong volume, so we'll keep a volume descriptor
+// file at sha256=0000.. that contains the volume UUID that we can validate at mount time.
+// might return ErrVolumeDescriptorNotFound if volume descriptor does not yet exist
+func (d *Controller) verifyOnDiskVolumeUuid(ctx context.Context, driver blobstore.Driver, expectedVolumeUuid string) error {
+	body, err := driver.RawFetch(ctx, volumeDescriptorRef)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ErrVolumeDescriptorNotFound
+		}
+
+		return err
+	}
+	defer body.Close()
+
+	descriptor := volumeDescriptor{}
+	if err := jsonfile.Unmarshal(body, &descriptor, true); err != nil {
+		return err
+	}
+
+	if descriptor.VolumeId != expectedVolumeUuid {
+		return fmt.Errorf("unexpected volume UUID: %s", descriptor.VolumeId)
+	}
+
+	return nil
 }
 
 func (d *Controller) driverFor(volumeId int) (blobstore.Driver, error) {

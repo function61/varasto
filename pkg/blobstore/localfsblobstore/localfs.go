@@ -4,7 +4,6 @@ package localfsblobstore
 import (
 	"context"
 	"encoding/base32"
-	"fmt"
 	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/logex"
@@ -61,23 +60,6 @@ func (l *localFs) RawStore(ctx context.Context, ref stotypes.BlobRef, content io
 
 func (l *localFs) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	return os.Open(l.getPath(ref))
-}
-
-func (l *localFs) Mountable(ctx context.Context) error {
-	// to ensure that we mounted correct volume, there must be a flag file in the root.
-	// without this check, we could accidentally mount the wrong volume and that would be bad.
-	flagFilename := "varasto-" + l.uuid + ".json"
-
-	exists, err := fileexists.Exists(filepath.Join(l.path, flagFilename))
-	if err != nil {
-		return err // error checking file existence
-	}
-
-	if !exists {
-		return fmt.Errorf("flag file not found: %s", flagFilename)
-	}
-
-	return nil
 }
 
 func (l *localFs) RoutingCost() int {

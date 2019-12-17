@@ -18,6 +18,7 @@ import (
 	"github.com/function61/varasto/pkg/smart"
 	"github.com/function61/varasto/pkg/stofuse/stofuseclient"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -31,7 +32,6 @@ import (
 	"time"
 )
 
-// we are currently using the command pattern very wrong!
 type cHandlers struct {
 	db           *bolt.DB
 	conf         *ServerConfig
@@ -227,8 +227,28 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 			return err
 		}
 
-		if err := driver.Mountable(ctx.Ctx); err != nil {
-			return err
+		if err := c.conf.DiskAccess.Mountable(ctx.Ctx, vol.ID, vol.UUID, driver); err != nil {
+			if err != stodiskaccess.ErrVolumeDescriptorNotFound {
+				return err
+			}
+
+			if vol.BlobCount != 0 {
+				return fmt.Errorf(
+					"volume descriptor not found which is unexpected since volume has %d blob(s)",
+					vol.BlobCount)
+			}
+
+			logex.Levels(c.logger).Info.Printf("initializing volume %s", vol.UUID)
+
+			if err := c.conf.DiskAccess.Initialize(ctx.Ctx, vol.UUID, driver); err != nil {
+				return fmt.Errorf("volume initialization failed: %v", err)
+			}
+
+			if err := c.conf.DiskAccess.Mountable(ctx.Ctx, vol.ID, vol.UUID, driver); err != nil {
+				return fmt.Errorf(
+					"volume not mountable after successful initialization: %v",
+					err)
+			}
 		}
 
 		return stodb.VolumeMountRepository.Update(mountSpec, tx)
