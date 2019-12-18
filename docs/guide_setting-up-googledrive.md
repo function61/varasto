@@ -33,7 +33,7 @@ the volume in Varasto.
 Mount Drive as volume in Varasto
 --------------------------------
 
-Now mount the volume you created in Varasto, specifying `googledrive` as the blob driver type.
+Now mount the volume you created in Varasto, specifying the `Folder ID` that we obtained above.
 
 TODO: write document how to obtain the authentication details.
 

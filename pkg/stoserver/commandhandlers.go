@@ -14,6 +14,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/smart"
 	"github.com/function61/varasto/pkg/stofuse/stofuseclient"
@@ -190,14 +191,48 @@ func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDesc
 	})
 }
 
-// FIXME: name ends in 2 because conflicts with types.VolumeMount
-func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeMountLocal(cmd *stoservertypes.VolumeMountLocal, ctx *command.Ctx) error {
+	return c.mountVolume(
+		cmd.Id,
+		stoservertypes.VolumeDriverKindLocalFs,
+		cmd.Path,
+		ctx)
+}
+
+func (c *cHandlers) VolumeMountGoogleDrive(cmd *stoservertypes.VolumeMountGoogleDrive, ctx *command.Ctx) error {
+	return c.mountVolume(
+		cmd.Id,
+		stoservertypes.VolumeDriverKindGoogledrive,
+		cmd.FolderId,
+		ctx)
+}
+
+func (c *cHandlers) VolumeMountS3(cmd *stoservertypes.VolumeMountS3, ctx *command.Ctx) error {
+	return c.mountVolume(
+		cmd.Id,
+		stoservertypes.VolumeDriverKindAwsS3,
+		(&s3blobstore.Config{
+			Bucket:          cmd.Bucket,
+			Prefix:          cmd.Prefix,
+			AccessKeyId:     cmd.AccessKeyId,
+			AccessKeySecret: cmd.AccessKeySecret,
+			RegionId:        cmd.RegionId,
+		}).Serialize(),
+		ctx)
+}
+
+func (c *cHandlers) mountVolume(
+	volId int,
+	driverKind stoservertypes.VolumeDriverKind,
+	driverOpts string,
+	ctx *command.Ctx,
+) error {
 	sameVolumeOnSameNode := func(a, b stotypes.VolumeMount) bool {
 		return a.Volume == b.Volume && a.Node == b.Node
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
-		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		vol, err := stodb.Read(tx).Volume(volId)
 		if err != nil {
 			return err
 		}
@@ -206,8 +241,8 @@ func (c *cHandlers) VolumeMount2(cmd *stoservertypes.VolumeMount2, ctx *command.
 			ID:         stoutils.NewVolumeMountId(),
 			Volume:     vol.ID,
 			Node:       c.conf.SelfNodeId,
-			Driver:     cmd.Kind,
-			DriverOpts: cmd.DriverOpts,
+			Driver:     driverKind,
+			DriverOpts: driverOpts,
 		}
 
 		allMounts := []stotypes.VolumeMount{}

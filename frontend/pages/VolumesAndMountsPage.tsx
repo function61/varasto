@@ -24,7 +24,9 @@ import {
 	VolumeCreate,
 	VolumeMarkDataLost,
 	VolumeMigrateData,
-	VolumeMount2,
+	VolumeMountGoogleDrive,
+	VolumeMountLocal,
+	VolumeMountS3,
 	VolumeSetManufacturingDate,
 	VolumeSetSerialNumber,
 	VolumeSetTechnology,
@@ -507,7 +509,15 @@ export default class VolumesAndMountsPage extends React.Component<
 					<td>
 						<Dropdown>
 							<CommandLink
-								command={VolumeMount2(obj.Id, { disambiguation: obj.Label })}
+								command={VolumeMountLocal(obj.Id, { disambiguation: obj.Label })}
+							/>
+							<CommandLink
+								command={VolumeMountGoogleDrive(obj.Id, {
+									disambiguation: obj.Label,
+								})}
+							/>
+							<CommandLink
+								command={VolumeMountS3(obj.Id, { disambiguation: obj.Label })}
 							/>
 							<CommandLink
 								command={VolumeChangeQuota(obj.Id, obj.Quota / 1024 / 1024, {

@@ -110,16 +110,43 @@
 		]
 	},
 	{
-		"command": "volume.Mount2",
+		"command": "volume.MountLocal",
 		"chain": "public",
 		"ctor": ["Id"],
 		"crudNature": "create",
-		"title": "Mount volume",
+		"title": "Mount local volume",
 		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "Kind", "type": "VolumeDriverKind" },
-			{ "key": "DriverOpts", "help": "Example: /mnt/hdd1/varasto-UalPLodNjrA/" }
+			{ "key": "Path", "placeholder": "/mnt/varasto/fry/varasto-fry" }
+		]
+	},
+	{
+		"command": "volume.MountS3",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Mount AWS S3-compliant volume",
+		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Bucket", "placeholder": "myorg-varasto-fry" },
+			{ "key": "Prefix", "placeholder": "/varasto-fry/", "help": "If you don't want prefix, use \"/\"", "validation_regex": "/$" },
+			{ "key": "RegionId", "placeholder": "eu-central-1" },
+			{ "key": "AccessKeyId", "placeholder": "AKIAUZHTE3U35WCD5EHB" },
+			{ "key": "AccessKeySecret", "placeholder": "wXQJhB..." }
+		]
+	},
+	{
+		"command": "volume.MountGoogleDrive",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "create",
+		"title": "Mount Google Drive volume",
+		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "FolderId", "title": "Folder ID", "placeholder": "1znjU234YCcLW96u6_WrZtms2vFvGy55e" }
 		]
 	},
 	{

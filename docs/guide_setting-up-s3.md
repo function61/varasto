@@ -5,8 +5,17 @@ Setting up S3
 Create S3 bucket in AWS
 -----------------------
 
-Create a bucket, I named mine `function61-varasto-test`. Choose the region carefully (can affect
-pricing and latency), as you can't easily change it later.
+Sign up for [AWS S3](https://aws.amazon.com/s3/).
+
+Create a bucket, I named mine `myorg-varasto-fry` - why?
+
+- `myorg` prefix because S3 bucket names have to be unique globally.
+
+- `fry` (my Volume name) as suffix for clarity if I ever want to have multiple Varasto S3
+  buckets with different S3 redundancy levels or other options/features.
+
+Choose the region carefully (can affect pricing, latency etc.), as you can't easily change
+the region for S3 bucket.
 
 You can create the bucket with pretty much the default options.
 
@@ -14,7 +23,7 @@ You can create the bucket with pretty much the default options.
 Create access credentials
 -------------------------
 
-Move over to [IAM](https://console.aws.amazon.com/iam/home) to create restricted access
+Move over to [IAM](https://console.aws.amazon.com/iam/home) to create highly restricted access
 key for Varasto to only be able to access the bucket (not your other AWS resources).
 
 Create new user - name doesn't matter but `varasto` would be good. Access type = `programmatic access`.
@@ -35,14 +44,14 @@ Attach inline policy in JSON (replace your bucket name!):
                 "s3:GetObject",
                 "s3:PutObjectAcl"
             ],
-            "Resource": "arn:aws:s3:::function61-varasto-test/*"
+            "Resource": "arn:aws:s3:::myorg-varasto-fry/*"
         },
         {
             "Effect": "Allow",
             "Action": [
                 "s3:ListBucket"
             ],
-            "Resource": "arn:aws:s3:::function61-varasto-test*"
+            "Resource": "arn:aws:s3:::myorg-varasto-fry*"
         }
     ]
 }
@@ -58,27 +67,23 @@ Since this volume is stored in S3, the quota is effectively unlimited. But stora
 money, so you should define the quota as the pain limit of what you're willing to pay AWS
 for storage so you won't accidentally go over it.
 
-Don't worry too much about defining the limit, since you can easily change the quota later.
+Don't worry too much about defining the quota, since you can easily change it.
 
 
 Mount the S3 bucket as volume in Varasto
 ----------------------------------------
 
-Now mount the volume in Varasto. For kind, use `aws-s3`.
+Now mount the volume in Varasto. Options:
 
-For driver options, write it as `bucket:regionId:accessKeyId:secret`.
+- `Bucket` = `myorg-varasto-fry` (replace this with the one you chose!)
 
-If your details were these:
+- `Prefix` = `/varasto/`. Can be anything you like, but I recommend a prefix if you ever get
+  any non-Varasto files in the same bucket (access logs are a good example).
 
-- `bucket = function61-varasto-test`
+- `RegionId` looks like `eu-central-1`. This is the code for the region you selected,
+  see: [region ids](https://docs.aws.amazon.com/general/latest/gr/s3.html).
 
-- `regionId = eu-central-1` (see: [region ids](https://docs.aws.amazon.com/general/latest/gr/rande.html))
-
-- `accessKeyId = AKIAUZHTE3U35WCD5EHB`
-
-- `secret = wXQJhB...`
-
-Then your driver options would be `function61-varasto-test:eu-central-1:AKIAUZHTE3U35WCD5EHB:wXQJhB...`
+- `AccessKeyId` and `AccessKeySecret` as you created them in IAM.
 
 
 Bonus reading: ransomware protection
