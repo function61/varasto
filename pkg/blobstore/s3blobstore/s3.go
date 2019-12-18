@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
@@ -15,6 +16,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 )
 
@@ -48,6 +50,10 @@ func (g *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 		Key:    aws.String(toS3BlobstoreName(ref)),
 	})
 	if err != nil {
+		if err, ok := err.(awserr.Error); ok && err.Code() == s3.ErrCodeNoSuchKey {
+			return nil, os.ErrNotExist
+		}
+
 		return nil, fmt.Errorf("s3 GetObject: %v", err)
 	}
 

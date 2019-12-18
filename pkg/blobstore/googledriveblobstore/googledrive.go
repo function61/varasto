@@ -10,10 +10,12 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"time"
 )
@@ -44,6 +46,10 @@ func New(varastoDirectoryId string, logger *log.Logger) (*googledrive, error) {
 func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	fileId, err := g.resolveFileIdByRef(ctx, ref)
 	if err != nil {
+		if err, ok := err.(*googleapi.Error); ok && err.Code == http.StatusNotFound {
+			return nil, os.ErrNotExist
+		}
+
 		return nil, err
 	}
 
