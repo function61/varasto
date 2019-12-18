@@ -18,36 +18,43 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type s3blobstore struct {
-	bucket string
-	client *s3.S3
-	logl   *logex.Leveled
+	bucket    string
+	blobNamer *s3BlobNamer
+	client    *s3.S3
+	logl      *logex.Leveled
 }
 
 func New(opts string, logger *log.Logger) (*s3blobstore, error) {
-	bucket, regionId, accessKeyId, secret, err := parseOptionsString(opts)
+	conf, err := deserializeConfig(opts)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := s3facade.Client(accessKeyId, secret, regionId)
+	if !strings.HasSuffix(conf.Prefix, "/") {
+		return nil, fmt.Errorf("prefix needs to end in '/'; got '%s'", conf.Prefix)
+	}
+
+	client, err := s3facade.Client(conf.AccessKeyId, conf.AccessKeySecret, conf.RegionId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &s3blobstore{
-		bucket: bucket,
-		client: client,
-		logl:   logex.Levels(logger),
+		bucket:    conf.Bucket,
+		blobNamer: &s3BlobNamer{conf.Prefix},
+		client:    client,
+		logl:      logex.Levels(logger),
 	}, nil
 }
 
 func (g *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	res, err := g.client.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: &g.bucket,
-		Key:    aws.String(toS3BlobstoreName(ref)),
+		Key:    g.blobNamer.Ref(ref),
 	})
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok && err.Code() == s3.ErrCodeNoSuchKey {
@@ -70,7 +77,7 @@ func (g *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 
 	if _, err := g.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket: &g.bucket,
-		Key:    aws.String(toS3BlobstoreName(ref)),
+		Key:    g.blobNamer.Ref(ref),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
 		return fmt.Errorf("s3 PutObject: %v", err)
@@ -83,17 +90,45 @@ func (s *s3blobstore) RoutingCost() int {
 	return 20
 }
 
-func toS3BlobstoreName(ref stotypes.BlobRef) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(ref))
+type s3BlobNamer struct {
+	prefix string
+}
+
+func (s *s3BlobNamer) Ref(ref stotypes.BlobRef) *string {
+	return aws.String(s.prefix + base64.RawURLEncoding.EncodeToString([]byte(ref)))
+}
+
+type Config struct {
+	Bucket          string
+	Prefix          string
+	RegionId        string
+	AccessKeyId     string
+	AccessKeySecret string
+}
+
+func (c *Config) Serialize() string {
+	return strings.Join([]string{
+		c.Bucket,
+		c.Prefix,
+		c.AccessKeyId,
+		c.AccessKeySecret,
+		c.RegionId,
+	}, ":")
 }
 
 var parseOptionsStringRe = regexp.MustCompile("^([^:]+):([^:]+):([^:]+):([^:]+)$")
 
-func parseOptionsString(serialized string) (string, string, string, string, error) {
-	match := parseOptionsStringRe.FindStringSubmatch(serialized)
-	if match == nil {
-		return "", "", "", "", errors.New("s3 options not in format bucket:region:accessKeyId:secret")
+func deserializeConfig(serialized string) (*Config, error) {
+	match := strings.Split(serialized, ":")
+	if len(match) != 5 {
+		return nil, errors.New("s3 options not in format bucket:prefix:accessKeyId:secret:region")
 	}
 
-	return match[1], match[2], match[3], match[4], nil
+	return &Config{
+		Bucket:          match[0],
+		Prefix:          match[1],
+		AccessKeyId:     match[2],
+		AccessKeySecret: match[3],
+		RegionId:        match[4],
+	}, nil
 }
