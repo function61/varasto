@@ -618,31 +618,6 @@ export default class VolumesAndMountsPage extends React.Component<
 			return loadingOrError;
 		}
 
-		const toRow = (obj: VolumeMount) => {
-			const volume = volumes.filter((vol) => vol.Id === obj.Volume);
-			const node = nodes.filter((nd) => nd.Id === obj.Node);
-
-			const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
-			const nodeName = node.length === 1 ? node[0].Name : '(error)';
-
-			return (
-				<tr key={obj.Id}>
-					<td>{onlineBadge(obj.Online)}</td>
-					<td>
-						<span title={`MountId=${obj.Id}`}>{volumeName}</span>
-					</td>
-					<td>{nodeName}</td>
-					<td>{obj.Driver}</td>
-					<td>
-						<SecretReveal secret={obj.DriverOpts} />
-					</td>
-					<td>
-						<CommandIcon command={VolumeUnmount(obj.Id)} />
-					</td>
-				</tr>
-			);
-		};
-
 		return (
 			<table className="table table-striped table-hover">
 				<thead>
@@ -655,7 +630,36 @@ export default class VolumesAndMountsPage extends React.Component<
 						<th />
 					</tr>
 				</thead>
-				<tbody>{mounts.map(toRow)}</tbody>
+				<tbody>
+					{mounts.map((mount) => {
+						const volume = volumes.filter((vol) => vol.Id === mount.Volume);
+						const node = nodes.filter((nd) => nd.Id === mount.Node);
+
+						const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
+						const nodeName = node.length === 1 ? node[0].Name : '(error)';
+
+						return (
+							<tr key={mount.Id}>
+								<td>{onlineBadge(mount.Online)}</td>
+								<td>
+									<span title={`MountId=${mount.Id}`}>{volumeName}</span>
+								</td>
+								<td>{nodeName}</td>
+								<td>{mount.Driver}</td>
+								<td>
+									<SecretReveal secret={mount.DriverOpts} />
+								</td>
+								<td>
+									<CommandIcon
+										command={VolumeUnmount(mount.Id, {
+											disambiguation: volumeName,
+										})}
+									/>
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
 			</table>
 		);
 	}
