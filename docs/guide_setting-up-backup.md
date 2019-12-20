@@ -22,7 +22,7 @@ Everything Varasto stores is encrypted on-disk, so if you lose the encryption ke
 lose the data forever. The encryption keys are stored in the metadata database in Varasto,
 so backing it up is essential.
 
-> If you don't back up your metadata database, you are OK with losing your files.
+**If you don't back up your metadata database, you are OK with losing your files.**
 
 
 File backup vs metadata backup
@@ -78,7 +78,7 @@ Automated backups
 
 Backups are most effective if they're done frequently - this implies automation. Varasto
 has scheduler that can automatically take these backups for you, and Varasto has built-in
-monitoring for scheduled tasks.
+monitoring for all scheduled tasks.
 
 It's fine to use Varasto during backing up, since the underlying database uses
 [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control).
@@ -88,9 +88,7 @@ Taking a backup manually
 ------------------------
 
 Sometimes you'll migrate servers or want to try something risky. There's also a button that
-let's you take a backup **now**.
-
-This is why we also have a "Backup database" button (look at the screenshot).
+let's you take a backup **now** (look at the screenshot).
 
 
 Restoring from backup, motivation for testing
