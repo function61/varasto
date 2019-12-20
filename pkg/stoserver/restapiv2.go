@@ -1366,12 +1366,18 @@ func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChe
 
 	now := time.Now()
 
+	volumesOverQuota := []string{}
+
 	temps := []stohealth.HealthChecker{}
 	smarts := []stohealth.HealthChecker{}
 	replicationQueues := []stohealth.HealthChecker{}
 
 	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
 		vol := record.(*stotypes.Volume)
+
+		if vol.BlobSizeTotal > vol.Quota {
+			volumesOverQuota = append(volumesOverQuota, vol.Label)
+		}
 
 		replicationController, hasReplicationController := conf.ReplicationControllers[vol.ID]
 		if hasReplicationController {
@@ -1427,6 +1433,7 @@ func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChe
 			conf.TlsCertificate.cert.NotAfter,
 			"TLS certificate",
 			time.Now()),
+		quotaHealth(volumesOverQuota, "Quotas"),
 		stohealth.NewLastIntegrityVerificationJob(db),
 		stohealth.NewHealthFolder(
 			"Temperatures",

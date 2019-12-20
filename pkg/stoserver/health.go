@@ -8,6 +8,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
+	"strings"
 	"time"
 )
 
@@ -75,6 +76,17 @@ func temperatureToHealthStatus(tempC int) stoservertypes.HealthStatus {
 	default: // too hot
 		return stoservertypes.HealthStatusFail
 	}
+}
+
+func quotaHealth(volumesOverQuota []string, healthName string) stohealth.HealthChecker {
+	if len(volumesOverQuota) == 0 {
+		return stohealth.NewStaticHealthNode(healthName, stoservertypes.HealthStatusPass, "")
+	}
+
+	return stohealth.NewStaticHealthNode(
+		healthName,
+		stoservertypes.HealthStatusFail,
+		"Volumes over quota: "+strings.Join(volumesOverQuota, ", "))
 }
 
 func serverCertHealth(
