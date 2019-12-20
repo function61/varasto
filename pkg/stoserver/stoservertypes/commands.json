@@ -142,7 +142,7 @@
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "Bucket", "placeholder": "myorg-varasto-fry" },
-			{ "key": "Prefix", "placeholder": "/varasto-fry/", "help": "If you don't want prefix, use \"/\"", "validation_regex": "/$" },
+			{ "key": "PathPrefix", "title": "Path prefix", "placeholder": "/varasto-fry/", "help": "If you don't want prefix, use \"/\"", "validation_regex": "/$" },
 			{ "key": "RegionId", "placeholder": "eu-central-1" },
 			{ "key": "AccessKeyId", "placeholder": "AKIAUZHTE3U35WCD5EHB" },
 			{ "key": "AccessKeySecret", "placeholder": "wXQJhB..." }

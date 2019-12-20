@@ -226,7 +226,7 @@ func (c *cHandlers) VolumeMountS3(cmd *stoservertypes.VolumeMountS3, ctx *comman
 		stoservertypes.VolumeDriverKindAwsS3,
 		(&s3blobstore.Config{
 			Bucket:          cmd.Bucket,
-			Prefix:          cmd.Prefix,
+			Prefix:          cmd.PathPrefix,
 			AccessKeyId:     cmd.AccessKeyId,
 			AccessKeySecret: cmd.AccessKeySecret,
 			RegionId:        cmd.RegionId,
