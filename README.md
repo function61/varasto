@@ -80,8 +80,12 @@ Using:
 - [Setting up backup](docs/guide_setting-up-backup.md)
 - [Network folders](docs/guide_network-folders.md)
 - [Setting up ransomware protection](docs/guide_ransomware-protection.md)
-- [(storage) Setting up AWS S3](docs/guide_setting-up-s3.md)
-- [(storage) Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+
+Configuring storage:
+
+- [Setting up local disk storage](docs/guide_setting-up-local-fs.md)
+- [Setting up AWS S3](docs/guide_setting-up-s3.md)
+- [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
 
 Guides for storing different types of content:
 
