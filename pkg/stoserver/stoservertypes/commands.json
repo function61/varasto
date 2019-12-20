@@ -32,6 +32,17 @@
 		]
 	},
 	{
+		"command": "volume.Rename",
+		"chain": "public",
+		"ctor": ["Id", "Name"],
+		"crudNature": "update",
+		"title": "Rename",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Name", "optional": true }
+		]
+	},
+	{
 		"command": "volume.ChangeDescription",
 		"chain": "public",
 		"ctor": ["Id", "Description"],

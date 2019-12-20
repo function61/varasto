@@ -178,6 +178,19 @@ func (c *cHandlers) VolumeSetTopology(cmd *stoservertypes.VolumeSetTopology, ctx
 	})
 }
 
+func (c *cHandlers) VolumeRename(cmd *stoservertypes.VolumeRename, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.Label = cmd.Name
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
 func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDescription, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
