@@ -39,7 +39,7 @@
 		"title": "Rename",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "Name", "optional": true }
+			{ "key": "Name" }
 		]
 	},
 	{
