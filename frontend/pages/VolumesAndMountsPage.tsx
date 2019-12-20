@@ -592,7 +592,9 @@ export default class VolumesAndMountsPage extends React.Component<
 						<th>Blob count</th>
 						<th>Free</th>
 						<th>Used</th>
-						<th style={{ width: '220px' }} />
+						<th style={{ width: '220px' }}>
+							<Info text="Quotas are soft quotas, and are currently not enforced. An alert will be raised if you go over the quota, though." />
+						</th>
 						<th />
 					</tr>
 				</thead>
