@@ -62,7 +62,7 @@ look like with with separate computers for Varasto server and Varasto FUSE proje
 
 ![](guide_network-folders_architecture.png)
 
-Even if you run server + projector on the same computer, this diagram is great for explain
+Even if you run server + projector on the same computer, this drawing is great for explaining
 the components and their interactions.
 
 
