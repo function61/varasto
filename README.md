@@ -79,7 +79,6 @@ Using:
 - [Setting up SMART monitoring](docs/guide_setting-up-smart-monitoring.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 - [Network folders](docs/guide_network-folders.md)
-- [Setting up ransomware protection](docs/guide_ransomware-protection.md)
 
 Configuring storage:
 
@@ -94,6 +93,12 @@ Guides for storing different types of content:
 - [Storing movies](docs/guide_storing-movies.md)
 - Storing podcasts (TODO)
 
+Security:
+
+- [Encryption in Varasto](docs/security_encryption/README.md)
+- [Setting up ransomware protection](docs/guide_ransomware-protection.md)
+- [Security policy](https://github.com/function61/varasto/security/policy)
+
 Developers:
 
 - [Codebase layout](docs/design_codebase.md)
@@ -102,14 +107,12 @@ Developers:
 
 Misc:
 
-- [Security policy](https://github.com/function61/varasto/security/policy)
 - [Sustainability](docs/sustainability.md) (how will this project make money)
+- Food for thought:
+    * [How to Remember Your Life by Johnny Harris](https://www.youtube.com/watch?v=GLy4VKeYxD4)
+    * [How do you organize your data?](https://www.reddit.com/r/DataHoarder/comments/9jz9ln/how_do_you_organize_your_data/)
+    * [DataHoarder subreddit](https://www.reddit.com/r/DataHoarder/)
+    * [Timeliner](https://github.com/mholt/timeliner) project archives your Twitter/Facebook
+      etc history in structural form with a
+      [fantastic description for motivation](https://github.com/mholt/timeliner#motivation-and-long-term-vision).
 
-Food for thought:
-
-- [How to Remember Your Life by Johnny Harris](https://www.youtube.com/watch?v=GLy4VKeYxD4)
-- [How do you organize your data?](https://www.reddit.com/r/DataHoarder/comments/9jz9ln/how_do_you_organize_your_data/)
-- [DataHoarder subreddit](https://www.reddit.com/r/DataHoarder/)
-- [Timeliner](https://github.com/mholt/timeliner) project archives your Twitter/Facebook
-  etc history in structural form with a
-  [fantastic motivation](https://github.com/mholt/timeliner#motivation-and-long-term-vision).
