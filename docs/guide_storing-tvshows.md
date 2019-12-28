@@ -226,6 +226,8 @@ $ cd S04/
 $ sto push bulk --rm bkaPHC-pZoM | bash
 ```
 
+(NOTE: if you want a dry run, just leave out the `| bash` part)
+
 Done - all your episodes are uploaded! Let's break down the above command!
 
 The general form of the bulk command is `push bulk <parentDirectory>`.
