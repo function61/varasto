@@ -3,7 +3,7 @@ Setting up local disk storage
 
 Contents:
 
-- [Architecture](#architecture)
+- [Overview](#overview)
 - [Which filesystem to store Varasto data on top of?](#which-filesystem-to-store-varasto-data-on-top-of)
 - [Creating & mounting a volume](#creating---mounting-a-volume)
 - [Choose a naming scheme for your volumes](#choose-a-naming-scheme-for-your-volumes)
@@ -13,8 +13,8 @@ Contents:
 - [Why call it a volume and not a disk?](#why-call-it-a-volume-and-not-a-disk)
 
 
-Architecture
-------------
+Conceptual overview
+-------------------
 
 Create one volume in Varasto for each disk you want to use with Varasto.
 
@@ -37,13 +37,13 @@ filesystem is the current safe choice without paying too much overhead with extr
 Creating & mounting a volume
 ----------------------------
 
-Create a volume in Varasto which is basically just its name and quota. The UI has helpful tips.
+Create a volume in Varasto which is basically just its name and a quota. The UI has helpful tips.
 
 I chose `Fry` for my volume name.
 
-In this example I'm using Linux, and I'll have a dedicated partition mounted at `/mnt/fry`.
+In this example I'm using Linux, and I have a dedicated partition at `/mnt/fry`.
 
-We could have Varasto place its data at the partition's root, but it's a good idea to
+We could have Varasto place its data at the root of the partition, but it's a good idea to
 create a directory under which Varasto places its data, so that if/when any non-Varasto
 files are placed on the partition, you know exactly which are Varasto's files.
 
@@ -58,7 +58,7 @@ It's now an empty directory.
 Now we are ready to mount that directory as volume in Varasto! From Varasto choose
 `Fry > Mount local volume`. Enter the directory you created as path: `/mnt/fry/varasto-fry`.
 
-That's it! Now that the volume is mounted, Varasto can now write files in there.
+That's it! Now that the volume is mounted, Varasto can write files there.
 
 
 Choose a naming scheme for your volumes
@@ -144,6 +144,14 @@ $ tree /mnt/fry/varasto-fry
     `-- g5
         `-- dt8hr0to76a4236tmtuaaer6qith92crjir214snsihdlfmu0
 ```
+
+Each filename is a hash of its content (except the volume descriptor). This is known as a
+[CAS (Content Addressable Storage)](https://en.wikipedia.org/wiki/Content-addressable_storage).
+A CAS-based provides deduplication and integrity checking "for free".
+
+This same CAS-concept is used for all Varasto volume drivers like cloud disks, but the some
+details may vary (e.g. most cloud drivers tend not to require subdirectory structure as
+they don't slow down if there are millions of files in a single directory).
 
 The reason Varasto creates subdirectories is so that we won't end up having too many files
 in any one directory.
