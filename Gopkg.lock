@@ -108,7 +108,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:636c72f64325e6c5b7c3626df579a0d66718440a9b1cba3ce91ba82237b21eea"
+  digest = "1:3e806ce60e57b2d356d59ef1946a1bf04ac3329a29fc99e6ca8a993e0d773eee"
   name = "github.com/function61/eventkit"
   packages = [
     "codegen",
@@ -121,7 +121,7 @@
     "httpcommandclient",
   ]
   pruneopts = "UT"
-  revision = "925e0fd8690560fe916bf3b8f7eb3f7f442d66ed"
+  revision = "ecac633ee91705d7012c7f18bfb2e696b6418e76"
 
 [[projects]]
   branch = "master"
@@ -541,6 +541,7 @@
     "bazil.org/fuse/fs",
     "github.com/asdine/storm/codec/msgpack",
     "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/awserr",
     "github.com/aws/aws-sdk-go/service/s3",
     "github.com/disintegration/imageorient",
     "github.com/djherbis/times",
@@ -592,6 +593,7 @@
     "golang.org/x/oauth2",
     "golang.org/x/oauth2/google",
     "google.golang.org/api/drive/v3",
+    "google.golang.org/api/googleapi",
     "google.golang.org/api/option",
   ]
   solver-name = "gps-cdcl"
