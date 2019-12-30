@@ -17,7 +17,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -115,8 +114,6 @@ func (c *Config) Serialize() string {
 		c.RegionId,
 	}, ":")
 }
-
-var parseOptionsStringRe = regexp.MustCompile("^([^:]+):([^:]+):([^:]+):([^:]+)$")
 
 func deserializeConfig(serialized string) (*Config, error) {
 	match := strings.Split(serialized, ":")
