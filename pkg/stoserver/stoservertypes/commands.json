@@ -4,10 +4,14 @@
 		"chain": "public",
 		"ctor": [],
 		"crudNature": "create",
-		"title": "Create volume",
+		"title": "Create a volume",
 		"fields": [
 			{ "key": "Name" },
-			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes (MiB)" }
+			{ "key": "Quota", "type": "integer", "unit": "MiB", "help": "1 GiB = 1024 MiB. 1 TiB = 1048576 MiB\nDon't worry about this - you can change this later." }
+		],
+		"info": [
+			"A volume is just metadata and thus creating it doesn't create any files yet or require knowing its data location.",
+			"You decide where the volume's files are stored when you mount it. First mounting of volume writes the volume ID in the mounted location so you can't accidentally mount the wrong volume in the future. I.e. first mount of volume \"locks it\" to the actual storage location."
 		]
 	},
 	{
@@ -28,7 +32,7 @@
 		"title": "Change quota",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "Quota", "type": "integer", "help": "Quota in megabytes (MiB)" }
+			{ "key": "Quota", "type": "integer", "unit": "MiB", "help": "1 GiB = 1024 MiB. 1 TiB = 1048576 MiB" }
 		]
 	},
 	{
