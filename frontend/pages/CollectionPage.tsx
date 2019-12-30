@@ -1,12 +1,12 @@
 import { AssetImg } from 'component/assetimg';
 import { collectionDropdown } from 'component/collectiondropdown';
 import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
+import { FileUploadArea } from 'component/fileupload';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
-import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert } from 'f61ui/component/alerts';
 import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
@@ -15,21 +15,16 @@ import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandInlineForm } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
-import { dateObjToDateTime } from 'f61ui/types';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionMoveFilesIntoAnotherCollection,
 	CollectionPullMetadata,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
-	commitChangeset,
 	downloadFileUrl,
-	generateIds,
 	getCollectiotAtRev,
 	getConfig,
 	getDirectory,
-	uploadFileUrl,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CfgNetworkShareBaseUrl,
@@ -39,8 +34,8 @@ import {
 	Directory,
 	DirectoryOutput,
 	DirectoryType,
-	File as File2,
-	MetadataImdbId, // conflicts with HTML's "File" interface
+	File as File2, // conflicts with HTML's "File" interface
+	MetadataImdbId,
 	RootPathDotBase64FIXME,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -286,13 +281,11 @@ export default class CollectionPage extends React.Component<
 						</Panel>
 
 						<Panel heading="Upload">
-							<input
-								type="file"
-								id="upload"
-								multiple={true}
-								onChange={(e) => {
-									this.fileChange(e);
-								}}
+							<FileUploadArea
+								collectionId={this.props.id}
+								collectionRevision={
+									this.state.collectionOutputFixme!.Collection.Head
+								}
 							/>
 						</Panel>
 
@@ -419,61 +412,6 @@ export default class CollectionPage extends React.Component<
 				</div>
 			</div>
 		);
-	}
-
-	private fileChange(e: React.ChangeEvent<HTMLInputElement>) {
-		if (!e.target.files || e.target.files.length === 0) {
-			return;
-		}
-
-		// is not an array, so convert to one
-		const files: File[] = [];
-		// tslint:disable-next-line:prefer-for-of
-		for (let i = 0; i < e.target.files.length; ++i) {
-			files.push(e.target.files[i]);
-		}
-
-		shouldAlwaysSucceed(this.uploadAllFiles(files));
-	}
-
-	private async uploadAllFiles(files: File[]) {
-		const createdFiles: File2[] = [];
-		for (const file of files) {
-			createdFiles.push(await this.uploadOneFile(file));
-		}
-
-		await commitChangeset(this.props.id, {
-			ID: (await generateIds()).Changeset,
-			Parent: this.state.collectionOutputFixme!.Collection.Head,
-			Created: dateObjToDateTime(new Date()),
-			FilesCreated: createdFiles,
-			FilesUpdated: [],
-			FilesDeleted: [],
-		});
-
-		reloadCurrentPage();
-	}
-
-	private async uploadOneFile(file: File): Promise<File2> {
-		const uploadEndpoint = makeQueryParams(
-			uploadFileUrl(this.state.collectionOutputFixme!.Collection.Id),
-			{
-				mtime: file.lastModified.toString(),
-				filename: file.name, // spec says this is "without path information"
-			},
-		);
-
-		const result: File2 = await fetch(uploadEndpoint, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/octet-stream',
-			},
-			body: file,
-		})
-			.then(httpMustBeOk)
-			.then((response) => response.json());
-
-		return result;
 	}
 
 	private renderBreadcrumbs(
