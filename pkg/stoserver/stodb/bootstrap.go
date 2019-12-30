@@ -9,6 +9,7 @@ import (
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
 	"log"
+	"time"
 )
 
 // opens BoltDB database
@@ -18,6 +19,8 @@ func Open(dbLocation string) (*bolt.DB, error) {
 
 func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
+
+	bootstrapTimestamp := time.Now()
 
 	tx, err := db.Begin(true)
 	if err != nil {
@@ -68,6 +71,12 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 			ID:             "default",
 			Name:           "Default replication policy",
 			DesiredVolumes: []int{},
+		}, tx),
+		ClientRepository.Update(&stotypes.Client{
+			ID:        stoutils.NewClientId(),
+			Created:   bootstrapTimestamp,
+			Name:      "System",
+			AuthToken: stoutils.NewApiKeyTokenId(),
 		}, tx),
 		CfgNodeId.Set(newNode.ID, tx),
 		CfgNodeTlsCertKey.Set(string(privKeyPem), tx),
