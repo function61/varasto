@@ -6,7 +6,7 @@ import {
 	Sensitivity,
 	sensitivityLabel,
 } from 'component/sensitivity';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
@@ -260,27 +260,27 @@ function subsystemStatusLabel(alive: boolean, enabled: boolean): React.ReactNode
 	}
 }
 
-function healthStatusToIcon(input: HealthStatus): JSX.Element {
-	switch (input) {
+function healthStatusToIcon(health: HealthStatus): JSX.Element {
+	switch (health) {
 		case HealthStatus.Fail:
 			return (
 				<DangerLabel>
-					<span className="glyphicon glyphicon-fire" />
+					<Glyphicon icon="fire" />
 				</DangerLabel>
 			);
 		case HealthStatus.Warn:
 			return (
 				<WarningLabel>
-					<span className="glyphicon glyphicon-warning-sign" />
+					<Glyphicon icon="warning-sign" />
 				</WarningLabel>
 			);
 		case HealthStatus.Pass:
 			return (
 				<SuccessLabel>
-					<span className="glyphicon glyphicon-ok" />
+					<Glyphicon icon="ok" />
 				</SuccessLabel>
 			);
 		default:
-			throw unrecognizedValue(input);
+			throw unrecognizedValue(health);
 	}
 }

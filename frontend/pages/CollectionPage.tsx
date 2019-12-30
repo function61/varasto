@@ -8,7 +8,7 @@ import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
 import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert } from 'f61ui/component/alerts';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
@@ -182,7 +182,7 @@ export default class CollectionPage extends React.Component<
 				<tr>
 					<td />
 					<td>
-						<span className="glyphicon glyphicon-folder-open" />
+						<Glyphicon icon="folder-open" />
 					</td>
 					<td>
 						<a

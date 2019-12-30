@@ -10,7 +10,7 @@ import {
 } from 'component/sensitivity';
 import { TabController } from 'component/tabcontroller';
 import { CollectionTagView } from 'component/tags';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
@@ -202,12 +202,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			const dirIsForMovies = output.Directory.Type === DirectoryType.Movies;
 			const warning =
 				dirIsForMovies && !(MetadataImdbId in metadataKvsToKv(coll.Metadata)) ? (
-					<div>
-						<span
-							title="Metadata missing"
-							className="glyphicon glyphicon-exclamation-sign"
-						/>
-					</div>
+					<div>{metadataMissingIcon()}</div>
 				) : null;
 
 			return (
@@ -221,7 +216,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						/>
 					</td>
 					<td>
-						<span title="Collection" className="glyphicon glyphicon-duplicate" />
+						<Glyphicon title="Collection" icon="duplicate" />
 					</td>
 					<td>
 						{sensitivityAuthorize(coll.Sensitivity) ? (
@@ -288,18 +283,15 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 			const dirIsForSeries = output.Directory.Type === DirectoryType.Series;
 			const warning =
-				dirIsForSeries && !(MetadataImdbId in metadataKvsToKv(dir.Metadata)) ? (
-					<span
-						title="Metadata missing"
-						className="glyphicon glyphicon-exclamation-sign"
-					/>
-				) : null;
+				dirIsForSeries && !(MetadataImdbId in metadataKvsToKv(dir.Metadata))
+					? metadataMissingIcon()
+					: null;
 
 			return (
 				<tr>
 					<td />
 					<td>
-						<span title="Directory" className="glyphicon glyphicon-folder-open" />
+						<Glyphicon title="Directory" icon="folder-open" />
 					</td>
 					<td>{content}</td>
 					<td>{warning}</td>
@@ -503,7 +495,7 @@ const mkSensitivityBadge = (sens: Sensitivity) => (
 	// link to the page where we can upgrade sensitivity
 	<a href={serverInfoRoute.buildUrl({})}>
 		<span className="badge margin-left">
-			<span className="glyphicon glyphicon-lock" />
+			<Glyphicon icon="lock" />
 			&nbsp;Level: {sensitivityLabel(sens)}
 		</span>
 	</a>
@@ -563,4 +555,8 @@ function directoryTypeToEmoji(type: DirectoryType): string {
 		default:
 			throw unrecognizedValue(type);
 	}
+}
+
+function metadataMissingIcon() {
+	return <Glyphicon title="Metadata missing" icon="exclamation-sign" />;
 }

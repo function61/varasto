@@ -1,6 +1,6 @@
 import { DangerLabel, SuccessLabel } from 'component/labels';
 import { Result } from 'component/result';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -111,7 +111,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 									&nbsp;
 									{job.Running && (
 										<SuccessLabel>
-											<span className="glyphicon glyphicon-off">&nbsp;</span>
+											<Glyphicon icon="off" />
 											running
 										</SuccessLabel>
 									)}

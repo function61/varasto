@@ -5,7 +5,7 @@ import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
 import { InfoAlert } from 'f61ui/component/alerts';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
@@ -841,11 +841,11 @@ function volumeTechnologyToDisplay(tech: VolumeTechnology): string {
 function onlineBadge(online: boolean): React.ReactNode {
 	return online ? (
 		<SuccessLabel title="Online">
-			<span className="glyphicon glyphicon-off" />
+			<Glyphicon icon="off" />
 		</SuccessLabel>
 	) : (
 		<DangerLabel title="Offline">
-			<span className="glyphicon glyphicon-off" />
+			<Glyphicon icon="off" />
 		</DangerLabel>
 	);
 }

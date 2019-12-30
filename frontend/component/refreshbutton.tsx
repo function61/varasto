@@ -1,3 +1,4 @@
+import { Glyphicon } from 'f61ui/component/bootstrap';
 import * as React from 'react';
 
 interface RefreshButtonProps {
@@ -7,11 +8,9 @@ interface RefreshButtonProps {
 export class RefreshButton extends React.Component<RefreshButtonProps, {}> {
 	render() {
 		return (
-			<span
-				onClick={this.props.refresh}
-				className="glyphicon glyphicon-refresh"
-				style={{ cursor: 'pointer' }}
-			/>
+			<a onClick={this.props.refresh} style={{ cursor: 'pointer' }}>
+				<Glyphicon icon="refresh" title="Refresh" />
+			</a>
 		);
 	}
 }
