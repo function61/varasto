@@ -27,7 +27,7 @@ func SelfSignedServerCert(hostname string, organisationName string, privateKeyPe
 	}
 
 	notBefore := time.Now().Add(time.Hour * -1) // account for clock drift
-	notAfter := notBefore.AddDate(20, 0, 0)     // years
+	notAfter := notBefore.AddDate(10, 0, 0)     // years
 
 	certTemplate := &x509.Certificate{
 		SerialNumber: generateSerialNumber(),
