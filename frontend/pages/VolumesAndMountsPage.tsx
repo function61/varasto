@@ -1,4 +1,4 @@
-import { DocLink } from 'component/doclink';
+import { DocGitHubMaster, DocLink } from 'component/doclink';
 import { DangerLabel, SuccessLabel, WarningLabel } from 'component/labels';
 import { thousandSeparate } from 'component/numberformatter';
 import { RefreshButton } from 'component/refreshbutton';
@@ -27,6 +27,7 @@ import {
 	VolumeMountGoogleDrive,
 	VolumeMountLocal,
 	VolumeMountS3,
+	VolumeRename,
 	VolumeSetManufacturingDate,
 	VolumeSetSerialNumber,
 	VolumeSetTechnology,
@@ -297,14 +298,14 @@ export default class VolumesAndMountsPage extends React.Component<
 					<tr>
 						<td colSpan={99}>
 							<div>{loadingOrError}</div>
-							{volumesWithSmart.length === 0 ? (
+							{volumesWithSmart.length === 0 && (
 								<div>
 									<InfoAlert>
 										No SMART-reporting volumes found. Read docs first:{' '}
 										<DocLink doc={DocRef.DocsGuideSettingUpSmartMonitoringMd} />
 									</InfoAlert>
 								</div>
-							) : null}
+							)}
 							<CommandButton command={NodeSmartScan()} />
 						</td>
 					</tr>
@@ -509,15 +510,29 @@ export default class VolumesAndMountsPage extends React.Component<
 					<td>
 						<Dropdown>
 							<CommandLink
-								command={VolumeMountLocal(obj.Id, { disambiguation: obj.Label })}
+								command={VolumeMountLocal(obj.Id, {
+									disambiguation: obj.Label,
+									helpUrl: DocGitHubMaster(DocRef.DocsGuideSettingUpLocalFsMd),
+								})}
 							/>
 							<CommandLink
 								command={VolumeMountGoogleDrive(obj.Id, {
 									disambiguation: obj.Label,
+									helpUrl: DocGitHubMaster(
+										DocRef.DocsGuideSettingUpGoogledriveMd,
+									),
 								})}
 							/>
 							<CommandLink
-								command={VolumeMountS3(obj.Id, { disambiguation: obj.Label })}
+								command={VolumeMountS3(obj.Id, {
+									disambiguation: obj.Label,
+									helpUrl: DocGitHubMaster(DocRef.DocsGuideSettingUpS3Md),
+								})}
+							/>
+							<CommandLink
+								command={VolumeRename(obj.Id, obj.Label, {
+									disambiguation: obj.Label,
+								})}
 							/>
 							<CommandLink
 								command={VolumeChangeQuota(obj.Id, obj.Quota / 1024 / 1024, {

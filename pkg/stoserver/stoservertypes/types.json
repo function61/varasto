@@ -116,6 +116,9 @@
 				"docs/guide_storing-tvshows.md",
 				"docs/guide_storing-movies.md",
 				"docs/guide_network-folders.md",
+				"docs/guide_setting-up-local-fs.md",
+				"docs/guide_setting-up-s3.md",
+				"docs/guide_setting-up-googledrive.md",
 				"docs/guide_setting-up-backup.md"
 			]
 		}
