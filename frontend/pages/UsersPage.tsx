@@ -1,3 +1,4 @@
+import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
 import { Panel } from 'f61ui/component/bootstrap';
@@ -11,7 +12,7 @@ import {
 	KekGenerateOrImport,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getApiKeys, getKeyEncryptionKeys } from 'generated/stoserver/stoservertypes_endpoints';
-import { ApiKey, KeyEncryptionKey } from 'generated/stoserver/stoservertypes_types';
+import { ApiKey, DocRef, KeyEncryptionKey } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
@@ -50,6 +51,8 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 						<div>
 							Key encryption keys &nbsp;
 							<Info text="Key encryption key is used to asymmetrically encrypt the files' symmetric encryption keys." />
+							&nbsp;
+							<DocLink doc={DocRef.DocsSecurityEncryptionREADMEMd} />
 						</div>
 					}>
 					{this.renderKeyEncryptionKeys()}

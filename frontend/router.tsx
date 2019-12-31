@@ -3,6 +3,7 @@ import BrowsePage from 'pages/BrowsePage';
 import CollectionPage from 'pages/CollectionPage';
 import ContentMetadataPage from 'pages/ContentMetadataPage';
 import FuseServerPage from 'pages/FuseServerPage';
+import GettingStartedPage from 'pages/GettingStartedPage';
 import LogsPage from 'pages/LogsPage';
 import MetadataBackupPage from 'pages/MetadataBackupPage';
 import NodesPage from 'pages/NodesPage';
@@ -24,6 +25,7 @@ export const router = makeRouter(r.browseRoute, (opts) => (
 	.registerRoute(r.volumesAndMountsRoute, (opts) => <VolumesAndMountsPage view={opts.view} />)
 	.registerRoute(r.usersRoute, () => <UsersPage />)
 	.registerRoute(r.logsRoute, () => <LogsPage />)
+	.registerRoute(r.gettingStartedRoute, (opts) => <GettingStartedPage view={opts.v} />)
 	.registerRoute(r.metadataBackupRoute, (opts) => <MetadataBackupPage view={opts.v} />)
 	.registerRoute(r.contentMetadataRoute, () => <ContentMetadataPage />)
 	.registerRoute(r.collectionRoute, (opts) => (
