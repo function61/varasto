@@ -8,7 +8,9 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
+	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -51,11 +53,21 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 		return err
 	}
 
+	// if we're not inside Docker, we need to use SMART via Docker image because its
+	// automation friendly JSON interface is not in mainstream OSes yet
+	smartBackend := stoservertypes.SmartBackendSmartCtlViaDocker
+	if maybeRunningInsideDocker() {
+		// when we're in Docker, we guess we're using the official Varasto image which
+		// has the exact correct version of smartctl and so we can invoke it directly
+		smartBackend = stoservertypes.SmartBackendSmartCtl
+	}
+
 	newNode := &stotypes.Node{
-		ID:      stoutils.NewNodeId(),
-		Addr:    hostname + ":8066",
-		Name:    "dev",
-		TlsCert: string(certPem),
+		ID:           stoutils.NewNodeId(),
+		Addr:         hostname + ":8066",
+		Name:         "dev",
+		TlsCert:      string(certPem),
+		SmartBackend: smartBackend,
 	}
 
 	logl.Info.Printf("generated nodeId: %s", newNode.ID)
@@ -110,4 +122,16 @@ func allOk(errs []error) error {
 
 func ignoreError(err error) {
 	// no-op
+}
+
+// if false, we might not be running in Docker (also any error)
+// if true, we are most probably running in Docker
+func maybeRunningInsideDocker() bool {
+	// https://stackoverflow.com/a/20012536
+	initCgroups, err := ioutil.ReadFile("/proc/1/cgroup")
+	if err != nil {
+		return false
+	}
+
+	return strings.Contains(string(initCgroups), "docker")
 }

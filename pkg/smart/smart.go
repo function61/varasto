@@ -7,9 +7,9 @@ import (
 	"os/exec"
 )
 
-type backend func(device string) ([]byte, error)
+type Backend func(device string) ([]byte, error)
 
-func Scan(device string, back backend) (*SmartCtlJsonReport, error) {
+func Scan(device string, back Backend) (*SmartCtlJsonReport, error) {
 	smartCtlOutput, err := back(device)
 	if err != nil {
 		return nil, fmt.Errorf("%v, output: %s", err, smartCtlOutput)
@@ -29,7 +29,7 @@ func SmartCtlBackend(device string) ([]byte, error) {
 	FROM alpine:edge
 	RUN apk add --update smartmontools
 */
-func SmartCtlDockerBackend(device string) ([]byte, error) {
+func SmartCtlViaDockerBackend(device string) ([]byte, error) {
 	// disks in /dev are visible with --privileged but /dev/disk/by-uuid et al. are not
 	// maybe related: https://github.com/moby/moby/issues/16160
 	stdout, err := exec.Command(

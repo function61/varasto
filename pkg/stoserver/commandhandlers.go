@@ -866,8 +866,13 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 		return err
 	}
 
+	smartBackend, err := getSmartBackend(c.conf.SelfNodeSmartBackend)
+	if err != nil {
+		return fmt.Errorf("getSmartBackend: %v", err)
+	}
+
 	for _, scan := range scans {
-		report, err := smart.Scan(scan.smartId, smart.SmartCtlDockerBackend)
+		report, err := smart.Scan(scan.smartId, smartBackend)
 		if err != nil {
 			return fmt.Errorf("volume %d (%s) error scanning SMART: %v", scan.volId, scan.smartId, err)
 		}
@@ -997,4 +1002,15 @@ func validateUniqueNameWithinSiblings(dirId string, name string, tx *bolt.Tx) er
 	}
 
 	return nil
+}
+
+func getSmartBackend(typ stoservertypes.SmartBackend) (smart.Backend, error) {
+	switch stoservertypes.SmartBackendExhaustive7712fd(typ) {
+	case stoservertypes.SmartBackendSmartCtlViaDocker:
+		return smart.SmartCtlViaDockerBackend, nil
+	case stoservertypes.SmartBackendSmartCtl:
+		return smart.SmartCtlBackend, nil
+	default:
+		return nil, fmt.Errorf("unsupported SmartBackend: %s", typ)
+	}
 }

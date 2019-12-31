@@ -6,10 +6,11 @@ import (
 )
 
 type Node struct {
-	ID      string
-	Addr    string
-	Name    string
-	TlsCert string
+	ID           string
+	Addr         string
+	Name         string
+	TlsCert      string
+	SmartBackend stoservertypes.SmartBackend
 }
 
 type Client struct {

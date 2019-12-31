@@ -258,6 +258,7 @@ type subsystem struct {
 type ServerConfig struct {
 	File                   ServerConfigFile
 	SelfNodeId             string
+	SelfNodeSmartBackend   stoservertypes.SmartBackend
 	ClusterWideMounts      map[int]stotypes.VolumeMount
 	DiskAccess             *stodiskaccess.Controller // only for mounts on self node
 	ClientsAuthTokens      map[string]bool
@@ -363,6 +364,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	return &ServerConfig{
 		File:                   *scf,
 		SelfNodeId:             selfNode.ID,
+		SelfNodeSmartBackend:   selfNode.SmartBackend,
 		ClusterWideMounts:      clusterWideMountsMapped,
 		DiskAccess:             dam,
 		ClientsAuthTokens:      authTokens,

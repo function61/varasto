@@ -109,6 +109,14 @@
 			]
 		},
 		{
+			"name": "SmartBackend",
+			"type": "string",
+			"stringMembers": [
+				"SmartCtl",
+				"SmartCtlViaDocker"
+			]
+		},
+		{
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [

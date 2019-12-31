@@ -17,6 +17,7 @@ func (c *cHandlers) DatabaseMigrate(cmd *stoservertypes.DatabaseMigrate, ctx *co
 		2: migration2,
 		3: migration3,
 		4: migration4,
+		5: migration5,
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
@@ -212,4 +213,14 @@ func migration4(tx *bolt.Tx) error {
 	*/
 
 	return nil
+}
+
+func migration5(tx *bolt.Tx) error {
+	return stodb.NodeRepository.Each(func(record interface{}) error {
+		node := record.(*stotypes.Node)
+
+		node.SmartBackend = stoservertypes.SmartBackendSmartCtlViaDocker
+
+		return stodb.NodeRepository.Update(node, tx)
+	}, tx)
 }
