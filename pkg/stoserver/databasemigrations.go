@@ -17,8 +17,6 @@ func (c *cHandlers) DatabaseMigrate(cmd *stoservertypes.DatabaseMigrate, ctx *co
 		2: migration2,
 		3: migration3,
 		4: migration4,
-		5: migration5,
-		6: migration6,
 	}
 
 	return c.db.Update(func(tx *bolt.Tx) error {
@@ -212,44 +210,6 @@ func migration4(tx *bolt.Tx) error {
 			return err
 		}
 	*/
-
-	return nil
-}
-
-func migration5(tx *bolt.Tx) error {
-	kek := &stotypes.KeyEncryptionKey{}
-	if err := stodb.KeyEncryptionKeyRepository.OpenByPrimaryKey([]byte("0EWz"), kek, tx); err != nil {
-		return err
-	}
-
-	kek.Bits = 4096
-
-	return stodb.KeyEncryptionKeyRepository.Update(kek, tx)
-}
-
-func migration6(tx *bolt.Tx) error {
-	for _, job := range []stotypes.ScheduledJob{
-		{
-			ID:          "ocKgpTHU3Sk",
-			Description: "SMART poller",
-			Schedule:    "@every 5m",
-			Kind:        stoservertypes.ScheduledJobKindSmartpoll,
-			Enabled:     true,
-		},
-		{
-			ID:          "h-cPYsYtFzM",
-			Description: "Metadata backup",
-			Schedule:    "@midnight",
-			Kind:        stoservertypes.ScheduledJobKindMetadatabackup,
-			Enabled:     true,
-		},
-	} {
-		job := job // pin
-
-		if err := stodb.ScheduledJobRepository.Update(&job, tx); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
