@@ -78,7 +78,7 @@ func configFilePath() (string, error) {
 func configInitEntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use:   "config-init [serverAddr] [authToken] [fuseMountPath]",
-		Short: "Initialize configuration, use https://localhost:8066 for dev",
+		Short: "Initialize configuration, use https://localhost:4486 for dev",
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			serverAddr := args[0]

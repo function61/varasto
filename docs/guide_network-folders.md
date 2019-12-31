@@ -100,7 +100,7 @@ Your config would look about like this:
 $ sto config-print
 path: /home/joonas/varastoclient-config.json
 {
-	"server_addr": "http://localhost:8066",
+	"server_addr": "https://localhost:4486",
 	"auth_token": "qZKcP...",
 	"fuse_mount_path": "/mnt/varasto"
 }

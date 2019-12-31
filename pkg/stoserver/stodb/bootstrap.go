@@ -65,7 +65,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 
 	newNode := &stotypes.Node{
 		ID:           stoutils.NewNodeId(),
-		Addr:         hostname + ":8066",
+		Addr:         hostname + ":4486",
 		Name:         "dev",
 		TlsCert:      string(certPem),
 		SmartBackend: smartBackend,
@@ -138,7 +138,7 @@ func BootstrapRepos(tx *bolt.Tx) error {
 
 func configureClientConfig(authToken string) error {
 	return stoclient.WriteConfig(&stoclient.ClientConfig{
-		ServerAddr: "https://localhost:8066/",
+		ServerAddr: "https://localhost:4486/",
 		AuthToken:  authToken,
 		// FuseMountPath: "...",
 		TlsInsecureSkipValidation: true, // localhost address, no worries

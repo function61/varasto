@@ -200,7 +200,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	}
 
 	srv := http.Server{
-		Addr:    "0.0.0.0:8066", // 0.0.0.0 = listen on all interfaces
+		Addr:    "0.0.0.0:4486", // 0.0.0.0 = listen on all interfaces
 		Handler: router,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},
