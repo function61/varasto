@@ -24,7 +24,9 @@ func Export(tx *bolt.Tx, output io.Writer) error {
 		return err
 	}
 
-	if _, err := outputBuffered.Write([]byte(makeBackupHeader(nodeId) + "\n")); err != nil {
+	backupHeader := backupHeaderJson{NodeId: nodeId, SchemaVersion: stodb.CurrentSchemaVersion}
+
+	if _, err := outputBuffered.Write([]byte(makeBackupHeader(backupHeader) + "\n")); err != nil {
 		return err
 	}
 
@@ -146,9 +148,16 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 	if !scanner.Scan() {
 		return fmt.Errorf("file seems empty: %v", scanner.Err())
 	}
-	_, err := parseBackupHeader(scanner.Text())
+	snapshotMetadata, err := parseBackupHeader(scanner.Text())
 	if err != nil {
 		return err
+	}
+
+	if snapshotMetadata.SchemaVersion != stodb.CurrentSchemaVersion {
+		return fmt.Errorf(
+			"snapshot schema version %d while DB requires %d",
+			snapshotMetadata.SchemaVersion,
+			stodb.CurrentSchemaVersion)
 	}
 
 	for scanner.Scan() {
@@ -188,19 +197,35 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 	return nil
 }
 
-func makeBackupHeader(nodeId string) string {
-	return fmt.Sprintf("# Varasto-backup-v1(nodeId=%s)", nodeId)
+func makeBackupHeader(details backupHeaderJson) string {
+	detailsJson, err := json.Marshal(&details)
+	if err != nil {
+		panic(err)
+	}
+
+	return "# Varasto-DB-snapshot" + string(detailsJson)
 }
 
-var backupHeaderRe = regexp.MustCompile(`# Varasto-backup-v1\(nodeId=([^\)]+)\)`)
+type backupHeaderJson struct {
+	NodeId        string `json:"node_id"`
+	SchemaVersion int    `json:"schema_version"`
+}
+
+var backupHeaderRe = regexp.MustCompile(`# Varasto-DB-snapshot(\{.+)`)
 
 // returns nodeId
-func parseBackupHeader(backupHeader string) (string, error) {
+func parseBackupHeader(backupHeader string) (*backupHeaderJson, error) {
 	matches := backupHeaderRe.FindStringSubmatch(backupHeader)
 	if matches == nil {
-		return "", errors.New("failed to recognize backup header. did you remember to decrypt the backup file?")
+		return nil, errors.New("failed to recognize backup header. did you remember to decrypt the backup file?")
 	}
-	return matches[1], nil
+
+	details := &backupHeaderJson{}
+	if err := json.Unmarshal([]byte(matches[1]), details); err != nil {
+		return nil, err
+	}
+
+	return details, nil
 }
 
 func ignoreError(err error) {

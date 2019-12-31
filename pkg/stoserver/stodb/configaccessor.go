@@ -15,12 +15,10 @@ func ConfigAccessor(key string) *configAccessor {
 	return &configAccessor{key}
 }
 
-// returns blorm.ErrBucketNotFound if bootstrap required
 func (c *configAccessor) GetOptional(tx *bolt.Tx) (string, error) {
 	return c.getWithRequired(false, tx)
 }
 
-// returns blorm.ErrBucketNotFound if bootstrap required
 // returns descriptive error message if value not set
 func (c *configAccessor) GetRequired(tx *bolt.Tx) (string, error) {
 	return c.getWithRequired(true, tx)

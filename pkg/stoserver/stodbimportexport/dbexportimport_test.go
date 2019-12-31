@@ -6,12 +6,13 @@ import (
 )
 
 func TestBackupHeaderWritingAndParsing(t *testing.T) {
-	backupHeader := makeBackupHeader("RH7j")
+	backupHeader := makeBackupHeader(backupHeaderJson{NodeId: "RH7j", SchemaVersion: 314})
 
-	assert.EqualString(t, backupHeader, "# Varasto-backup-v1(nodeId=RH7j)")
+	assert.EqualString(t, backupHeader, `# Varasto-DB-snapshot{"node_id":"RH7j","schema_version":314}`)
 
-	nodeId, err := parseBackupHeader(backupHeader)
-
+	details, err := parseBackupHeader(backupHeader)
 	assert.Assert(t, err == nil)
-	assert.EqualString(t, nodeId, "RH7j")
+
+	assert.EqualString(t, details.NodeId, "RH7j")
+	assert.Assert(t, details.SchemaVersion == 314)
 }

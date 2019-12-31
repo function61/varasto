@@ -123,6 +123,10 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 }
 
 func BootstrapRepos(tx *bolt.Tx) error {
+	if err := writeSchemaVersion(tx); err != nil {
+		return err
+	}
+
 	for _, repo := range RepoByRecordType {
 		if err := repo.Bootstrap(tx); err != nil {
 			return err

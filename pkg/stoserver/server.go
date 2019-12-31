@@ -278,6 +278,10 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
+	if err := stodb.ValidateSchemaVersion(tx); err != nil {
+		return nil, err
+	}
+
 	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
 	if err != nil {
 		return nil, err
