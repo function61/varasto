@@ -721,7 +721,7 @@ func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.
 			ID:        stoutils.NewClientId(),
 			Created:   ctx.Meta.Timestamp,
 			Name:      cmd.Name,
-			AuthToken: stoutils.NewApiKeyTokenId(),
+			AuthToken: stoutils.NewApiKeySecret(),
 		}, tx)
 	})
 }

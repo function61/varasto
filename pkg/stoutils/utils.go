@@ -29,7 +29,7 @@ var NewClientId = shortId
 var NewIntegrityVerificationJobId = shortId
 var NewEncryptionKeyId = longId
 var NewKeyEncryptionKeyId = shortId
-var NewApiKeyTokenId = cryptoLongId
+var NewApiKeySecret = cryptoLongId
 
 func shortId() string {
 	return randomBase64UrlWithoutLeadingDash(3)

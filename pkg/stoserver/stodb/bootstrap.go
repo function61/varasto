@@ -72,6 +72,8 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 
 	logl.Info.Printf("generated nodeId: %s", newNode.ID)
 
+	systemAuthToken := stoutils.NewApiKeySecret()
+
 	results := []error{
 		NodeRepository.Update(newNode, tx),
 		DirectoryRepository.Update(stotypes.NewDirectory(
@@ -88,7 +90,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 			ID:        stoutils.NewClientId(),
 			Created:   bootstrapTimestamp,
 			Name:      "System",
-			AuthToken: stoutils.NewApiKeyTokenId(),
+			AuthToken: systemAuthToken,
 		}, tx),
 		ScheduledJobRepository.Update(&stotypes.ScheduledJob{
 			ID:          "ocKgpTHU3Sk",
