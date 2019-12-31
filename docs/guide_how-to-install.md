@@ -1,17 +1,39 @@
 How to install
 ==============
 
-NOTE: the installation will become much simpler in the future!
+The recommended way to use Varasto is via **Docker on a Linux PC**. All other combinations
+like manual install, Windows or the likes of Raspberry Pi might work but are unsupported
+while Varasto is in beta.
+
+Contents:
+
+- [Linux (Docker)](#linux-docker)
+- [Linux (manual)](#linux-manual)
+- [Windows](#windows)
+- [After Varasto is started](#after-varasto-is-started) (see this after you've installed!)
 
 
 Linux (Docker)
 --------------
 
-This will become the primary installation method, but it's not finished yet.
+Find out which version to install from [Docker Hub](https://hub.docker.com/r/fn61/varasto):
+
+```
+$ docker run --name varasto -p 4486:4486 fn61/varasto:VERSION
+```
+
+NOTE: `-v /dev/disk:/dev/disk:ro --privileged` is required if you want to use SMART or FUSE.
+The `/dev/disk` is required for SMART to access the raw block devices (not just the partition
+mount point).
+
+NOTE: you'll also have to mount the disks that you plan to use with Varasto. If you just want
+to test drive Varasto, you can use `/varasto-db/volume-test/` as your data directory.
+
+Troubleshooting: if you can't access Varasto's web UI, see `$ docker logs varasto`.
 
 
-Linux
------
+Linux (manual)
+--------------
 
 Download suitable binary from the Bintray link (in README). Don't worry about `public.tar.gz`
 (it's downloaded+extracted automatically if it's missing).
@@ -49,7 +71,6 @@ Run to enable on boot & to start now:
 
 Just follow above instructions (again, you might need `sudo`).
 
-Now you can navigate your browser to `http://localhost:8066/`
 
 
 Windows
@@ -57,3 +78,18 @@ Windows
 
 Follow same instructions as for Linux, but there's no autostart yet (the systemd thing),
 so you have to just run the .exe file directly from command line.
+
+In the future I think we should research targeting
+[Windows Subsystem for Linux](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)
+(present since Win10) via Docker to have less moving parts.
+
+
+After Varasto is started
+------------------------
+
+Now you can navigate your browser to `https://localhost:4486/#/gettingStarted/v/welcome`
+
+There's a "getting started" wizard which will guide you through the setup.
+
+You'll have to approve the "insecure certificate" warning.
+

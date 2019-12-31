@@ -55,5 +55,12 @@
 		"linux-amd64": true,
 		"linux-arm": true,
 		"windows-amd64": true
-	}
+	},
+	"docker_images": [
+		{
+			"image": "fn61/varasto",
+			"dockerfile_path": "Dockerfile",
+			"auth_type": "creds_from_env"
+		}
+	]
 }
