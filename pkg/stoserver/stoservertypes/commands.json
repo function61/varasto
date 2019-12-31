@@ -414,8 +414,17 @@
 		"title": "Change desired volumes",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true },
-			{ "key": "DesiredVolumes", "placeholder": "[2,7]" }
-		]
+			{ "key": "Volume1", "type": "integer", "optional": true, "title": "First volume", "placeholder": "1" },
+			{ "key": "Volume2", "type": "integer", "optional": true, "title": "Second volume", "placeholder": "4" },
+			{ "key": "Volume3", "type": "integer", "optional": true, "title": "Third volume", "placeholder": "7" },
+			{ "key": "Volume4", "type": "integer", "optional": true, "title": "Fourth volume" },
+			{ "key": "Volume5", "type": "integer", "optional": true, "title": "Fifth volume" },
+			{ "key": "Volume6", "type": "integer", "optional": true, "title": "Sixth volume" },
+			{ "key": "Volume7", "type": "integer", "optional": true, "title": "Seventh volume" },
+			{ "key": "Volume8", "type": "integer", "optional": true, "title": "Eighth volume" },
+			{ "key": "Volume9", "type": "integer", "optional": true, "title": "Ninth volume" }
+		],
+		"info": ["You'll usually pick just 1-3 even though we have so many boxes (UI limitation..)"]
 	},
 	{
 		"command": "node.SmartScan",

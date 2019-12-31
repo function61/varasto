@@ -749,14 +749,21 @@ func (c *cHandlers) IntegrityverificationjobStop(cmd *stoservertypes.Integrityve
 func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bolt.Tx) error {
 		desiredVolumes := []int{}
-		if err := json.Unmarshal([]byte(cmd.DesiredVolumes), &desiredVolumes); err != nil {
-			return err
-		}
 
-		// verify that each volume exists
-		for _, desiredVolume := range desiredVolumes {
-			if _, err := stodb.Read(tx).Volume(desiredVolume); err != nil {
-				return fmt.Errorf("desiredVolume %d: %v", desiredVolume, err)
+		for _, desiredVolumeId := range []int{cmd.Volume1, cmd.Volume2, cmd.Volume3, cmd.Volume4, cmd.Volume5, cmd.Volume6, cmd.Volume7, cmd.Volume8, cmd.Volume9} {
+			if desiredVolumeId == 0 { // null value for int
+				continue
+			}
+
+			// verify that each volume exists
+			if _, err := stodb.Read(tx).Volume(desiredVolumeId); err != nil {
+				return fmt.Errorf("desiredVolume %d: %v", desiredVolumeId, err)
+			}
+
+			if sliceutil.ContainsInt(desiredVolumes, desiredVolumeId) {
+				return fmt.Errorf("volume %d specified twice", desiredVolumeId)
+			} else {
+				desiredVolumes = append(desiredVolumes, desiredVolumeId)
 			}
 		}
 
