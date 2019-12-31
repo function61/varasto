@@ -47,16 +47,11 @@ We could have Varasto place its data at the root of the partition, but it's a go
 create a directory under which Varasto places its data, so that if/when any non-Varasto
 files are placed on the partition, you know exactly which are Varasto's files.
 
-To be super clear, I recommend naming the directory `varasto-<volume name>`:
-
-```
-$ mkdir /mnt/fry/varasto-fry
-```
-
-It's now an empty directory.
+I recommend naming the data directory `varasto-<volume name>` to be super clear.
 
 Now we are ready to mount that directory as volume in Varasto! From Varasto choose
-`Fry > Mount local volume`. Enter the directory you created as path: `/mnt/fry/varasto-fry`.
+`Fry > Mount local volume`. Enter as path: `/mnt/fry/varasto-fry` (dir will be created
+if not exists).
 
 That's it! Now that the volume is mounted, Varasto can write files there.
 
