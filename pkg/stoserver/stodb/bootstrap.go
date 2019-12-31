@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/sslca"
+	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -114,6 +115,10 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 		return err
 	}
 
+	if err := configureClientConfig(systemAuthToken); err != nil {
+		return err
+	}
+
 	return tx.Commit()
 }
 
@@ -125,6 +130,15 @@ func BootstrapRepos(tx *bolt.Tx) error {
 	}
 
 	return nil
+}
+
+func configureClientConfig(authToken string) error {
+	return stoclient.WriteConfig(&stoclient.ClientConfig{
+		ServerAddr: "https://localhost:8066/",
+		AuthToken:  authToken,
+		// FuseMountPath: "...",
+		TlsInsecureSkipValidation: true, // localhost address, no worries
+	})
 }
 
 func allOk(errs []error) error {

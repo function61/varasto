@@ -43,7 +43,7 @@ func (c *ClientConfig) HttpClient() *http.Client {
 	return client
 }
 
-func writeConfig(conf *ClientConfig) error {
+func WriteConfig(conf *ClientConfig) error {
 	confPath, err := configFilePath()
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func configInitEntrypoint() *cobra.Command {
 				FuseMountPath: fuseMountPath,
 			}
 
-			if err := writeConfig(conf); err != nil {
+			if err := WriteConfig(conf); err != nil {
 				panic(err)
 			}
 		},
