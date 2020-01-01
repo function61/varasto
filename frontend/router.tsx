@@ -2,6 +2,7 @@ import { makeRouter } from 'f61ui/typescript-safe-router/saferouter';
 import BrowsePage from 'pages/BrowsePage';
 import CollectionPage from 'pages/CollectionPage';
 import ContentMetadataPage from 'pages/ContentMetadataPage';
+import DownloadClientAppPage from 'pages/DownloadClientAppPage';
 import FuseServerPage from 'pages/FuseServerPage';
 import GettingStartedPage from 'pages/GettingStartedPage';
 import LogsPage from 'pages/LogsPage';
@@ -28,6 +29,7 @@ export const router = makeRouter(r.browseRoute, (opts) => (
 	.registerRoute(r.gettingStartedRoute, (opts) => <GettingStartedPage view={opts.v} />)
 	.registerRoute(r.metadataBackupRoute, (opts) => <MetadataBackupPage view={opts.v} />)
 	.registerRoute(r.contentMetadataRoute, () => <ContentMetadataPage />)
+	.registerRoute(r.downloadClientAppRoute, () => <DownloadClientAppPage />)
 	.registerRoute(r.collectionRoute, (opts) => (
 		<CollectionPage
 			id={opts.id}

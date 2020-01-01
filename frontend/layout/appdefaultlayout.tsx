@@ -6,7 +6,7 @@ import { DefaultLayout } from 'f61ui/layout/defaultlayout';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
-import { browseRoute, serverInfoRoute } from 'routes';
+import { browseRoute, downloadClientAppRoute, serverInfoRoute } from 'routes';
 
 interface AppDefaultLayoutProps {
 	title: string;
@@ -23,11 +23,19 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 		const navLinks: NavLink[] = [
 			{
 				title: 'Browse',
+				glyphicon: 'folder-open',
 				url: browseRoute.buildUrl({ dir: RootFolderId, view: '' }),
 				active: browseRoute.matchUrl(hash) !== null,
 			},
 			{
+				title: 'Download client app',
+				glyphicon: 'download-alt',
+				url: downloadClientAppRoute.buildUrl({}),
+				active: downloadClientAppRoute.matchUrl(hash) !== null,
+			},
+			{
 				title: 'Settings',
+				glyphicon: 'cog',
 				url: serverInfoRoute.buildUrl({}),
 				active: serverInfoRoute.matchUrl(hash) !== null,
 			},
