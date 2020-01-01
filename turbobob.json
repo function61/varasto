@@ -13,7 +13,7 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20191122_1713_315df733",
+			"uses": "docker://fn61/buildkit-golang:20200101_1326_bf030ba8",
 			"mount_source": "",
 			"mount_destination": "/go/src/github.com/function61/varasto",
 			"workdir": "/go/src/github.com/function61/varasto",
@@ -54,6 +54,7 @@
 	"os_arches": {
 		"linux-amd64": true,
 		"linux-arm": true,
+		"darwin-amd64": true,
 		"windows-amd64": true
 	},
 	"docker_images": [
