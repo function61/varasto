@@ -19,16 +19,16 @@ Varasto as the authoritative store.
 Status & timeline
 -----------------
 
-| Date               | Status      |
-|--------------------|-------------|
-| Before 31 Dec 2019 | Heavy development, everything subject to change. Not recommended for any data you're willing to lose since data migration scripts won't be made |
-| After 31 Dec 2019  | MVP version with rough edges but minimal data loss risk - recommended for early adopters willing to report bugs and feature suggestions to development |
-| After 29 Feb 2020  | General availability for all users |
+**Current status**: beta testers are invited/appreciated in helping out in finding pain
+points in rapid iteration to improve the system!
 
-Currently *under heavy development*. Works so robustly (blobs currently cannot be
-deleted so if metadata DB is properly backed up, you can't lose data) that I'm already
-moving *all my files in*, but I wouldn't yet recommend this for anybody else. Also proper
-access controls are nowhere to be found.
+| Date                | No probable data loss | No rough edges     | Note | 
+|---------------------|-----------------------|--------------------|------|
+| ~~before jan 2020~~ | ☐  | ☐  | |
+| **jan - mar 2020**  | ☑ | ☐  | <- we're here. Gathering user experiences from beta testers |
+| apr 2020 onwards    | ☑ | ☑ | General availability |
+
+1st of April is target for "this should work well enough without major rough edges".
 
 
 Features
