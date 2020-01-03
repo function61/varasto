@@ -31,6 +31,7 @@ type Volume struct {
 	UUID          string
 	Label         string
 	Description   string
+	Notes         string
 	SerialNumber  string
 	Technology    string
 	SmartId       string

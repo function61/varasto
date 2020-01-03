@@ -20,6 +20,7 @@ import {
 	IntegrityverificationjobStop,
 	NodeSmartScan,
 	VolumeChangeDescription,
+	VolumeChangeNotes,
 	VolumeChangeQuota,
 	VolumeCreate,
 	VolumeMarkDataLost,
@@ -500,8 +501,11 @@ export default class VolumesAndMountsPage extends React.Component<
 					<td>
 						<span className="label label-default">
 							{volumeTechnologyToDisplay(obj.Technology)}
-						</span>{' '}
+						</span>
+						&nbsp;
 						{obj.Description}
+						&nbsp;
+						{obj.Notes && <Glyphicon icon="pencil" title={obj.Notes} />}
 					</td>
 					<td>{blobCount(obj)}</td>
 					<td>{free(obj)}</td>
@@ -550,6 +554,11 @@ export default class VolumesAndMountsPage extends React.Component<
 								})}
 							/>
 							<CommandLink
+								command={VolumeChangeNotes(obj.Id, obj.Notes, {
+									disambiguation: obj.Label,
+								})}
+							/>
+							<CommandLink
 								command={VolumeSetTechnology(obj.Id, obj.Technology, {
 									disambiguation: obj.Label,
 								})}
@@ -584,6 +593,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				Quota: 0,
 				BlobSizeTotal: 0,
 				Description: '',
+				Notes: '',
 				Label: '',
 				Uuid: '',
 				SerialNumber: '',

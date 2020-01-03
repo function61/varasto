@@ -205,6 +205,19 @@ func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDesc
 	})
 }
 
+func (c *cHandlers) VolumeChangeNotes(cmd *stoservertypes.VolumeChangeNotes, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.Notes = cmd.Notes
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
 func (c *cHandlers) VolumeMountLocal(cmd *stoservertypes.VolumeMountLocal, ctx *command.Ctx) error {
 	return c.mountVolume(
 		cmd.Id,

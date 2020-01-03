@@ -58,6 +58,17 @@
 		]
 	},
 	{
+		"command": "volume.ChangeNotes",
+		"chain": "public",
+		"ctor": ["Id", "Notes"],
+		"crudNature": "update",
+		"title": "Change notes",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Notes", "type": "multiline", "optional": true }
+		]
+	},
+	{
 		"command": "volume.SetTopology",
 		"chain": "public",
 		"ctor": ["Id", "Enclosure", "Slot"],

@@ -296,6 +296,7 @@
 				"Technology": {"_": "VolumeTechnology"},
 				"Uuid": {"_": "string"},
 				"Description": {"_": "string"},
+				"Notes": {"_": "string"},
 				"Label": {"_": "string"},
 				"Smart": {"_": "VolumeSmartAttrs"},
 				"SerialNumber": {"_": "string"},
