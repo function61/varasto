@@ -5,7 +5,7 @@ Contents:
 
 - [Motivation](#motivation)
 - [OS limitations](#os-limitations)
-- [Architecture / how does it work?](#architecture---how-does-it-work-)
+- [Architecture / how does it work?](#architecture--how-does-it-work)
 - [Setting up FUSE projector on the same computer as Varasto server](#setting-up-fuse-projector-on-the-same-computer-as-varasto-server)
 - [Setting up FUSE projector on a different computer than Varasto server](#setting-up-fuse-projector-on-a-different-computer-than-varasto-server)
 - [Testing that FUSE projector is working](#testing-that-fuse-projector-is-working)
