@@ -3,12 +3,12 @@ Setting up local disk storage
 
 Contents:
 
-- [Overview](#overview)
+- [Conceptual overview](#conceptual-overview)
 - [Which filesystem to store Varasto data on top of?](#which-filesystem-to-store-varasto-data-on-top-of)
-- [Creating & mounting a volume](#creating---mounting-a-volume)
+- [Creating & mounting a volume](#creating--mounting-a-volume)
 - [Choose a naming scheme for your volumes](#choose-a-naming-scheme-for-your-volumes)
 - [Do I need a dedicated partition for Varasto volume?](#do-i-need-a-dedicated-partition-for-varasto-volume)
-- [But is ext4 / NTFS safe for my precious data?](#but-is-ext4---ntfs-safe-for-my-precious-data)
+- [But is ext4 / NTFS safe for my precious data?](#but-is-ext4--ntfs-safe-for-my-precious-data)
 - [More details for nerds](#more-details-for-nerds)
 - [Why call it a volume and not a disk?](#why-call-it-a-volume-and-not-a-disk)
 
@@ -25,10 +25,10 @@ Which filesystem to store Varasto data on top of?
 -------------------------------------------------
 
 Varasto is not a filesystem in the traditional sense, even though it does very similar things.
+Varasto only needs to write files and directories under a directory that you choose - that's it.
 
 Varasto's local disk storage works with any filesystem that your OS supports. Use ext4,
-NTFS, etc. - whatever you like! Varasto only needs to write files and directories under a
-directory that you choose - that's it.
+NTFS, etc. - whatever you like!
 
 For Linux we recommend ext4 and for Windows we recommend NTFS. Basically whichever
 filesystem is the current safe choice without paying too much overhead with extra features.
