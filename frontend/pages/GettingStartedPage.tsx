@@ -17,6 +17,7 @@ import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 import {
 	browseRoute,
+	downloadClientAppRoute,
 	gettingStartedRoute,
 	replicationPoliciesRoute,
 	usersRoute,
@@ -397,6 +398,13 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 	private cloningCollection(currSection: section): React.ReactNode {
 		return (
 			<div>
+				<WarningAlert>
+					NOTE: Remember to install client app first:{' '}
+					<a href={downloadClientAppRoute.buildUrl({})} target="_blank">
+						links &amp; instructions
+					</a>
+				</WarningAlert>
+
 				<p>
 					The example collection that you created and added files to. Click{' '}
 					<SmallWell>Details &raquo; Clone command &raquo; Clipboard icon</SmallWell> to
