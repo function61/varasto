@@ -2,12 +2,14 @@
 package stoserver
 
 import (
+	"context"
 	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/varasto/pkg/logtee"
+	"github.com/function61/varasto/pkg/restartcontroller"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/function61/varasto/pkg/stoserver/stothumbserver"
 	"github.com/spf13/cobra"
@@ -15,30 +17,46 @@ import (
 	"os"
 )
 
+func serverMain() error {
+	logTail := logtee.NewStringTail(50)
+
+	// writes to upstream all end up in the sink, but logTail.Snapshot() only
+	// returns the last "capacity" lines
+	rootLogger := logex.StandardLoggerTo(logtee.NewLineSplitterTee(os.Stderr, func(line string) {
+		logTail.Write(line)
+	}))
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	go func(logger *log.Logger) {
+		logex.Levels(logger).Info.Printf(
+			"Got %s; stopping",
+			<-ossignal.InterruptOrTerminate())
+
+		cancel()
+	}(logex.Prefix("main", rootLogger))
+
+	restartable := restartcontroller.New(logex.Prefix("restartcontroller", rootLogger))
+
+	return restartable.Run(ctx, func(ctx context.Context) error {
+		// a short wrapper to adapt context-based cancellation to stopper-based cancellation
+		workers := stopper.NewManager()
+		go func() {
+			<-ctx.Done()
+			workers.StopAllWorkersAndWait()
+		}()
+
+		return runServer(rootLogger, logTail, workers.Stopper(), restartable)
+	})
+}
+
 func Entrypoint() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "server",
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			logTail := logtee.NewStringTail(50)
-
-			// writes to upstream all end up in the sink, but logTail.Snapshot() only
-			// returns the last "capacity" lines
-			rootLogger := logex.StandardLoggerTo(logtee.NewLineSplitterTee(os.Stderr, func(line string) {
-				logTail.Write(line)
-			}))
-
-			workers := stopper.NewManager()
-			go func(logger *log.Logger) {
-				logex.Levels(logger).Info.Printf(
-					"Got %s; stopping",
-					<-ossignal.InterruptOrTerminate())
-
-				workers.StopAllWorkersAndWait()
-			}(logex.Prefix("main", rootLogger))
-
-			panicIfError(runServer(rootLogger, logTail, workers.Stopper()))
+			panicIfError(serverMain())
 		},
 	}
 

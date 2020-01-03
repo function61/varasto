@@ -21,6 +21,7 @@ import (
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/childprocesscontroller"
 	"github.com/function61/varasto/pkg/logtee"
+	"github.com/function61/varasto/pkg/restartcontroller"
 	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
@@ -36,6 +37,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"strings"
+	"time"
 )
 
 var (
@@ -47,8 +49,15 @@ type ServerConfigFile struct {
 	DisableReplicationController bool   `json:"disable_replication_controller"`
 }
 
-func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Stopper) error {
+func runServer(
+	logger *log.Logger,
+	logTail *logtee.StringTail,
+	stop *stopper.Stopper,
+	restarter *restartcontroller.Controller,
+) error {
 	defer stop.Done()
+
+	confReloader := &configReloader{restarter}
 
 	logl := logex.Levels(logger)
 
@@ -175,7 +184,7 @@ func runServer(logger *log.Logger, logTail *logtee.StringTail, stop *stopper.Sto
 	if err != nil {
 		return err
 	}
-	chandlers := &cHandlers{db, serverConfig, ivController, logger} // Bing
+	chandlers := &cHandlers{db, serverConfig, ivController, logger, confReloader} // Bing
 
 	registerCommandEndpoints(
 		router,
@@ -636,4 +645,20 @@ func mkWrappedKeypair(certPem, keyPem []byte) (*wrappedKeypair, error) {
 	}
 
 	return &wrappedKeypair{keypair, *cert}, nil
+}
+
+// wrapping restarter to implement config reloading by sending (delayed) restart signal
+// to the server
+type configReloader struct {
+	restarter *restartcontroller.Controller
+}
+
+func (r *configReloader) ReloadConfig() {
+	go func() {
+		time.Sleep(3 * time.Second)
+
+		if err := r.restarter.Restart(); err != nil {
+			panic(err)
+		}
+	}()
 }

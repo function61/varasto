@@ -130,7 +130,6 @@
 		"ctor": ["Id"],
 		"crudNature": "create",
 		"title": "Mount local volume",
-		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "Path", "placeholder": "/mnt/varasto/fry/varasto-fry" }
@@ -142,7 +141,6 @@
 		"ctor": ["Id"],
 		"crudNature": "create",
 		"title": "Mount AWS S3-compliant volume",
-		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "Bucket", "placeholder": "myorg-varasto-fry" },
@@ -158,7 +156,6 @@
 		"ctor": ["Id"],
 		"crudNature": "create",
 		"title": "Mount Google Drive volume",
-		"additional_confirmation": "Temporary technical limitation: mount will be offline until you restart Varasto",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "FolderId", "title": "Folder ID", "placeholder": "1znjU234YCcLW96u6_WrZtms2vFvGy55e" }

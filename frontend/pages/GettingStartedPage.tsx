@@ -312,11 +312,6 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 					</tbody>
 				</table>
 
-				<WarningAlert>
-					NOTE: Currently, you have to restart Varasto after mounting to make the mount
-					online.
-				</WarningAlert>
-
 				{this.phaseNavBar(currSection)}
 			</div>
 		);

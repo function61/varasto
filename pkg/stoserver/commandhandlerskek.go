@@ -46,9 +46,9 @@ func (c *cHandlers) KekGenerateOrImport(cmd *stoservertypes.KekGenerateOrImport,
 		PrivateKey:  string(cryptoutil.MarshalPemBytes(x509.MarshalPKCS1PrivateKey(privateKey), cryptoutil.PemTypeRsaPrivateKey)),
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.KeyEncryptionKeyRepository.Update(&kek, tx)
-	})
+	}))
 }
 
 func generateKek() (string, error) {

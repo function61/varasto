@@ -34,10 +34,11 @@ import (
 )
 
 type cHandlers struct {
-	db           *bolt.DB
-	conf         *ServerConfig
-	ivController *stointegrityverifier.Controller
-	logger       *log.Logger
+	db             *bolt.DB
+	conf           *ServerConfig
+	ivController   *stointegrityverifier.Controller
+	logger         *log.Logger
+	configReloader *configReloader
 }
 
 func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.Ctx) error {
@@ -244,7 +245,7 @@ func (c *cHandlers) mountVolume(
 		return a.Volume == b.Volume && a.Node == b.Node
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(volId)
 		if err != nil {
 			return err
@@ -300,18 +301,18 @@ func (c *cHandlers) mountVolume(
 		}
 
 		return stodb.VolumeMountRepository.Update(mountSpec, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) VolumeUnmount(cmd *stoservertypes.VolumeUnmount, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
 		mount, err := stodb.Read(tx).VolumeMount(cmd.Id)
 		if err != nil {
 			return err
 		}
 
 		return stodb.VolumeMountRepository.Delete(mount, tx)
-	})
+	}))
 }
 
 // "copy any blobs that were on this volume, to another volume"
@@ -716,22 +717,22 @@ func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *
 }
 
 func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),
 			Created:   ctx.Meta.Timestamp,
 			Name:      cmd.Name,
 			AuthToken: stoutils.NewApiKeySecret(),
 		}, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) ApikeyRemove(cmd *stoservertypes.ApikeyRemove, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
 		return stodb.ClientRepository.Delete(&stotypes.Client{
 			ID: cmd.Id,
 		}, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) IntegrityverificationjobResume(cmd *stoservertypes.IntegrityverificationjobResume, ctx *command.Ctx) error {
@@ -815,7 +816,7 @@ func (c *cHandlers) getSubsystem(id stoservertypes.SubsystemId) *subsystem {
 }
 
 func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
 		node, err := stodb.Read(tx).Node(cmd.Id)
 		if err != nil {
 			return err
@@ -843,7 +844,7 @@ func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, c
 		}
 
 		return stodb.NodeRepository.Update(node, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {
@@ -936,6 +937,17 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 
 		return nil
 	})
+}
+
+// helper for reloading config if underlying operation succeeded
+func (c *cHandlers) confreload(err error) error {
+	if err == nil {
+		logex.Levels(c.logger).Info.Println("reloading config in a few seconds")
+
+		c.configReloader.ReloadConfig()
+	}
+
+	return err
 }
 
 func registerCommandEndpoints(
