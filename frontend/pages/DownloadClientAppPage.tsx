@@ -1,15 +1,23 @@
-import { Panel } from 'f61ui/component/bootstrap';
+import { DocLink } from 'component/doclink';
+import { InfoAlert } from 'f61ui/component/alerts';
+import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
+import { DocRef } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 
 export default class DownloadClientAppPage extends React.Component<{}, {}> {
 	render() {
-		const title = 'Download client app';
 		return (
-			<AppDefaultLayout title={title} breadcrumbs={[]}>
-				<Panel heading={title}>
+			<AppDefaultLayout title="Download client app" breadcrumbs={[]}>
+				<Panel
+					heading={
+						<div>
+							Client apps for different platforms &nbsp;
+							<Info text="This page you're viewing is Varasto's server UI. Varasto also has a client components that you can install on each of your devices to keep your content synchronized with Varasto server." />
+						</div>
+					}>
 					<table className="table table-striped table-hover">
 						<thead>
 							<tr>
@@ -63,6 +71,11 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							</tr>
 						</tbody>
 					</table>
+
+					<InfoAlert>
+						Once you have downloaded the client app, follow installation instructions:{' '}
+						<DocLink doc={DocRef.DocsClientREADMEMd} />
+					</InfoAlert>
 				</Panel>
 			</AppDefaultLayout>
 		);
@@ -72,6 +85,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 function bintrayLink(binaryName: string): React.ReactNode {
 	return (
 		<a
+			className="btn btn-default"
 			href={
 				'https://bintray.com/function61/dl/download_file?file_path=varasto%2F' +
 				version +
@@ -79,7 +93,9 @@ function bintrayLink(binaryName: string): React.ReactNode {
 				binaryName
 			}
 			target="_blank">
-			Download
+			{binaryName}
+			&nbsp;
+			<Glyphicon icon="download-alt" />
 		</a>
 	);
 }
