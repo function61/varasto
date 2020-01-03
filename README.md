@@ -75,7 +75,8 @@ Design:
 
 Using:
 
-- [How to install](docs/guide_how-to-install.md)
+- [How to install](docs/guide_how-to-install.md) (server)
+- [Varasto client](docs/client/README.md) - download & configuration
 - [Setting up SMART monitoring](docs/guide_setting-up-smart-monitoring.md)
 - [Setting up backup](docs/guide_setting-up-backup.md)
 - [Network folders](docs/guide_network-folders.md)

@@ -122,6 +122,7 @@
 			"stringMembers": [
 				"README.md",
 				"docs/security_encryption/README.md",
+				"docs/client/README.md",
 				"docs/guide_setting-up-smart-monitoring.md",
 				"docs/guide_storing-tvshows.md",
 				"docs/guide_storing-movies.md",
