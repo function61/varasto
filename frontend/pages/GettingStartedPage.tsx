@@ -50,7 +50,17 @@ interface GettingStartedPageProps {
 	view: string;
 }
 
-export default class GettingStartedPage extends React.Component<GettingStartedPageProps, {}> {
+interface GettingStartedPageState {
+	careAboutKek?: string;
+	mountType?: string;
+}
+
+export default class GettingStartedPage extends React.Component<
+	GettingStartedPageProps,
+	GettingStartedPageState
+> {
+	state: GettingStartedPageState = {};
+
 	render() {
 		let preceded = true;
 
@@ -122,7 +132,11 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 					We have worked really hard to make an easy-to-use, self-guiding and an enjoyable
 					user experience.
 				</p>
-				<p>This will be a guided tour of setting up Varasto and learning to use it.</p>
+				<p>This will be a guided tour of:</p>
+				<ul>
+					<li>setting up Varasto and</li>
+					<li>(optionally) learning to use it with tutorials</li>
+				</ul>
 				<h3>Pro-tip: info tooltips</h3>
 				<p>
 					Every time you see icon like this:{' '}
@@ -159,69 +173,95 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 	private createKek(currSection: section): React.ReactNode {
 		const kekCreateUrl = usersRoute.buildUrl({});
 
-		const iDontCareAboutKek = 'I know and care about the key encryption key';
+		const iDontCareAboutKek = 'I don´t know or care what this key is';
+
+		const kekCareQuestionChange = (value: string) => {
+			this.setState({ careAboutKek: value });
+		};
 
 		return (
 			<div>
-				<p>We need to configure a key encryption key.</p>
+				<p>We need to configure a key encryption key ("KEK").</p>
 
 				<p>
 					Please read at least the <SmallWell>Summary</SmallWell> section of docs:{' '}
 					<DocLink doc={DocRef.DocsSecurityEncryptionREADMEMd} />
 				</p>
 
-				<h3>I don't know or care what this key is</h3>
-
-				<p>Don't worry, Varasto will create and manage one for you!</p>
-
-				<p>Do this: </p>
-
-				<ul>
-					<li>
-						Go to{' '}
-						<a href={kekCreateUrl} target="_blank">
-							manage KEKs
-						</a>
-					</li>
-					<li>
-						Click{' '}
-						<SmallWell>
-							Key encryption keys &raquo; {KekGenerateOrImport().title}
-						</SmallWell>
-					</li>
-					<li>
-						Leave <SmallWell>Import existing</SmallWell> blank
-					</li>
-				</ul>
-
-				<h3>{iDontCareAboutKek}</h3>
-
 				<p>
-					If you have a KEK you want to use that is managed outside of Varasto, and you'd
-					like to import only the public key to Varasto, that's planned but not yet
-					implemented. :(
+					Do you know what a key encryption key is, and do you have an existing one you
+					want to use with Varasto?
 				</p>
 
-				<p>
-					Until{' '}
-					<a href="https://github.com/function61/varasto/issues/133" target="_blank">
-						this
-					</a>{' '}
-					gets implemented, Varasto still needs access to the private key. Your options
-					are:
-				</p>
-
-				<ul>
-					<li>
-						Let Varasto create a new KEK by following the section{' '}
-						<SmallWell>{iDontCareAboutKek}</SmallWell>. Once Varasto gets "public key
-						only" support, you can easily migrate all your previous data to another KEK
-						public key.
-					</li>
-					<li>Import your existing private KEK key to Varasto</li>
-				</ul>
+				{mkRadio(
+					'kekCareQuestion',
+					'no',
+					kekCareQuestionChange,
+					'I don´t know what a KEK is or I don´t want to import one - let Varasto generate it for me!',
+				)}
+				{mkRadio(
+					'kekCareQuestion',
+					'yes',
+					kekCareQuestionChange,
+					'I have an existing KEK I want to import into Varasto!',
+				)}
 
 				<hr />
+
+				{this.state.careAboutKek === 'no' && (
+					<div>
+						<p>Here's how to generate a new KEK in Varasto:</p>
+
+						<ul>
+							<li>
+								Go to{' '}
+								<a href={kekCreateUrl} target="_blank">
+									manage KEKs
+								</a>
+							</li>
+							<li>
+								Click{' '}
+								<SmallWell>
+									Key encryption keys &raquo; {KekGenerateOrImport().title}
+								</SmallWell>
+							</li>
+							<li>
+								Leave <SmallWell>Import existing</SmallWell> blank
+							</li>
+						</ul>
+					</div>
+				)}
+
+				{this.state.careAboutKek === 'yes' && (
+					<div>
+						<p>
+							If you have a KEK you want to use that is managed outside of Varasto,
+							and you'd like to import only the public key to Varasto, that's planned
+							but not yet implemented. :(
+						</p>
+
+						<p>
+							Until{' '}
+							<a
+								href="https://github.com/function61/varasto/issues/133"
+								target="_blank">
+								this
+							</a>{' '}
+							gets implemented, Varasto still needs access to the private key. Your
+							options are:
+						</p>
+
+						<ul>
+							<li>
+								Let Varasto create a new KEK by following the section{' '}
+								<SmallWell>{iDontCareAboutKek}</SmallWell>. Once Varasto gets
+								"public key only" support, you can easily migrate all your previous
+								data to another KEK public key.
+							</li>
+							<li>Import your existing private KEK key to Varasto</li>
+						</ul>
+					</div>
+				)}
 
 				{this.phaseNavBar(currSection)}
 			</div>
@@ -266,51 +306,54 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 	}
 
 	private mountFirstVolume(currSection: section): React.ReactNode {
+		const mountTypeChange = (value: string) => {
+			this.setState({ mountType: value });
+		};
+
 		return (
 			<div>
 				<p>It's time to mount the volume(s) that you created.</p>
 
 				<p>When you mount a volume, you'll decide where the data is actually stored.</p>
 
+				<p>I would like to mount a:</p>
+
+				{mkRadio('mountType', 'localDisk', mountTypeChange, 'A local disk or a directory')}
+
+				{mkRadio('mountType', 's3', mountTypeChange, 'AWS S3')}
+
+				{mkRadio('mountType', 'googleDrive', mountTypeChange, 'Google Drive (& G Suite)')}
+
+				<hr />
+
 				<p>
 					Go to{' '}
 					<a href={volumesAndMountsRoute.buildUrl({ view: '' })} target="_blank">
 						Volumes &amp; mounts
 					</a>
-					. From there choose depending on: I want to store my data in ...
+					. From there choose:
 				</p>
 
-				<table className="table">
-					<thead>
-						<tr>
-							<th>... a local disk</th>
-							<th>... a cloud service</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td>
-								<SmallWell>Volume &raquo; {VolumeMountLocal(0).title}</SmallWell>{' '}
-								<DocLink doc={DocRef.DocsGuideSettingUpLocalFsMd} />
-							</td>
-							<td>
-								AWS S3:{' '}
-								<SmallWell>Volume &raquo; {VolumeMountS3(0).title}</SmallWell>{' '}
-								<DocLink doc={DocRef.DocsGuideSettingUpS3Md} />
-							</td>
-						</tr>
-						<tr>
-							<td />
-							<td>
-								Google Drive (&amp; G Suite):{' '}
-								<SmallWell>
-									Volume &raquo; {VolumeMountGoogleDrive(0).title}
-								</SmallWell>{' '}
-								<DocLink doc={DocRef.DocsGuideSettingUpGoogledriveMd} />
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				{this.state.mountType === 'localDisk' && (
+					<div>
+						<SmallWell>Volume &raquo; {VolumeMountLocal(0).title}</SmallWell>{' '}
+						<DocLink doc={DocRef.DocsGuideSettingUpLocalFsMd} />
+					</div>
+				)}
+
+				{this.state.mountType === 's3' && (
+					<div>
+						<SmallWell>Volume &raquo; {VolumeMountS3(0).title}</SmallWell>{' '}
+						<DocLink doc={DocRef.DocsGuideSettingUpS3Md} />
+					</div>
+				)}
+
+				{this.state.mountType === 'googleDrive' && (
+					<div>
+						<SmallWell>Volume &raquo; {VolumeMountGoogleDrive(0).title}</SmallWell>{' '}
+						<DocLink doc={DocRef.DocsGuideSettingUpGoogledriveMd} />
+					</div>
+				)}
 
 				{this.phaseNavBar(currSection)}
 			</div>
@@ -450,6 +493,7 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 
 		return (
 			<div>
+				<hr />
 				{hasPrevious && (
 					<a href="javascript:history.back()" className="btn btn-default">
 						Previous
@@ -501,4 +545,27 @@ export default class GettingStartedPage extends React.Component<GettingStartedPa
 				throw unrecognizedValue(currSection);
 		}
 	}
+}
+
+function mkRadio(
+	name: string,
+	value: string,
+	selected: (value: string) => void,
+	label: React.ReactNode,
+): React.ReactNode {
+	return (
+		<div>
+			<label>
+				<input
+					type="radio"
+					name={name}
+					value={value}
+					onChange={(e) => {
+						selected(e.target.value);
+					}}
+				/>
+				&nbsp; {label}
+			</label>
+		</div>
+	);
 }
