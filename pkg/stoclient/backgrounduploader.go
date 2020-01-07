@@ -199,14 +199,14 @@ func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscove
 	ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
 
-	if res, err := ezhttp.Post(
+	if _, err := ezhttp.Post(
 		ctx,
 		b.clientConfig.UrlBuilder().UploadBlob(job.ref.AsHex(), job.collectionId, boolToStr(job.maybeCompressible)),
 		ezhttp.AuthBearer(b.clientConfig.AuthToken),
 		ezhttp.SendBody(bytes.NewBuffer(job.content), "application/octet-stream"),
 		ezhttp.Client(b.clientConfig.HttpClient()),
 	); err != nil {
-		return fmt.Errorf("error uploading blob %s: %v", job.ref.AsHex(), errSample(err, res))
+		return fmt.Errorf("blob %s: %v", job.ref.AsHex(), err)
 	}
 
 	notifyProgress()

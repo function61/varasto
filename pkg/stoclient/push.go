@@ -231,15 +231,15 @@ func uploadChangeset(changeset stotypes.CollectionChangeset, collection stotypes
 	defer cancel()
 
 	updatedCollection := &stotypes.Collection{}
-	res, err := ezhttp.Post(
+	if _, err := ezhttp.Post(
 		ctx,
 		clientConfig.UrlBuilder().CommitChangeset(collection.ID),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false),
-		ezhttp.Client(clientConfig.HttpClient()))
-	if err != nil {
-		return nil, fmt.Errorf("error committing: %v", errSample(err, res))
+		ezhttp.Client(clientConfig.HttpClient()),
+	); err != nil {
+		return nil, fmt.Errorf("CommitChangeset: %v", err)
 	}
 
 	return updatedCollection, nil
@@ -327,13 +327,4 @@ func push(ctx context.Context, wd *workdirLocation) error {
 
 func backslashesToForwardSlashes(in string) string {
 	return strings.Replace(in, `\`, "/", -1)
-}
-
-func errSample(err error, response *http.Response) error {
-	sample := []byte("(no response)")
-	if response != nil {
-		sample, _ = ioutil.ReadAll(io.LimitReader(response.Body, 256))
-	}
-
-	return fmt.Errorf("%v: %s", err, sample)
 }
