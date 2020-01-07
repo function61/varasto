@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -19,7 +20,7 @@ const (
 )
 
 type ClientConfig struct {
-	ServerAddr                string `json:"server_addr"`
+	ServerAddr                string `json:"server_addr"` // example: "https://localhost:4486"
 	AuthToken                 string `json:"auth_token"`
 	FuseMountPath             string `json:"fuse_mount_path"`
 	TlsInsecureSkipValidation bool   `json:"tls_insecure_skip_validation"`
@@ -61,6 +62,12 @@ func ReadConfig() (*ClientConfig, error) {
 	conf := &ClientConfig{}
 	if err := jsonfile.Read(confPath, conf, true); err != nil {
 		return nil, fmt.Errorf("Varasto client config: %v", err)
+	}
+
+	if strings.HasSuffix(conf.ServerAddr, "/") {
+		return nil, fmt.Errorf(
+			"Varasto client config: server_addr must not end in '/'; got %s",
+			conf.ServerAddr)
 	}
 
 	return conf, nil

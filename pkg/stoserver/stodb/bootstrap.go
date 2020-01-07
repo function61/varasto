@@ -138,7 +138,7 @@ func BootstrapRepos(tx *bolt.Tx) error {
 
 func configureClientConfig(authToken string) error {
 	return stoclient.WriteConfig(&stoclient.ClientConfig{
-		ServerAddr: "https://localhost:4486/",
+		ServerAddr: "https://localhost:4486",
 		AuthToken:  authToken,
 		// FuseMountPath: "...",
 		TlsInsecureSkipValidation: true, // localhost address, no worries
