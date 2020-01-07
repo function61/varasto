@@ -35,7 +35,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
+	"path"
 	"runtime"
 	"sort"
 	"strconv"
@@ -307,7 +307,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 
 	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, fileKey))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, path.Base(fileKey)))
 
 	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
 		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeId.Ref, coll.EncryptionKeys, refAndVolumeId.VolumeId)
@@ -1043,7 +1043,7 @@ func (h *handlers) DownloadUbackupStoredBackup(rctx *httpauth.RequestContext, w 
 	}
 
 	w.Header().Set("Content-Type", "application/octet-stream")
-	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filepath.Base(id)))
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, path.Base(id)))
 
 	if err := downloadBackup(id, w, *conf, h.logger); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
