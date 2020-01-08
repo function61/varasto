@@ -1,29 +1,20 @@
-package stotypes
+package stoserver
 
 import (
-	"crypto/rsa"
 	"github.com/function61/gokit/assert"
-	"github.com/function61/gokit/cryptoutil"
-	"strings"
+	"github.com/function61/varasto/pkg/stotypes"
 	"testing"
 )
 
-func TestEncryptAndDecryptKeyEnvelope(t *testing.T) {
-	privateKey1, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(strings.NewReader(testPrivateKey1))
-	assert.Assert(t, err == nil)
+func TestEncryptAndDecryptKek(t *testing.T) {
+	ks123 := keyStoreWith(testPrivateKey1, testPrivateKey2, testPrivateKey3)
+	ks2 := keyStoreWith(testPrivateKey2)
+	ks3 := keyStoreWith(testPrivateKey3)
 
-	privateKey2, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(strings.NewReader(testPrivateKey2))
-	assert.Assert(t, err == nil)
-
-	privateKey3, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(strings.NewReader(testPrivateKey3))
-	assert.Assert(t, err == nil)
-
-	pubKeys := []rsa.PublicKey{
-		privateKey1.PublicKey,
-		privateKey2.PublicKey,
-	}
-
-	kenv, err := EncryptEnvelope("dummyKeyId", []byte("my secret message"), pubKeys)
+	kenv, err := ks123.EncryptDek("dummyKeyId", []byte("my secret message"), []string{
+		"SHA256:NAgdE9bxrBpJu0S2ehoWW+IE/t+w0pIJ6HvRrgkwuOI", // pubKey1
+		"SHA256:LU4ylKik0FBhdx1CUYDJcBpwRGwm85cF+Xz/VesODkA", // pubKey2
+	})
 	assert.Assert(t, err == nil)
 
 	assert.EqualString(t, kenv.KeyId, "dummyKeyId")
@@ -34,8 +25,8 @@ func TestEncryptAndDecryptKeyEnvelope(t *testing.T) {
 	assert.Assert(t, len(kenv.Slots[0].KeyEncrypted) == 128)
 	assert.Assert(t, len(kenv.Slots[1].KeyEncrypted) == 128)
 
-	tryDecryption := func(key *rsa.PrivateKey) string {
-		decrypted, err := DecryptKek(*kenv, key)
+	tryDecryption := func(store *keyStore) string {
+		decrypted, err := store.DecryptDek(*kenv)
 		if err != nil {
 			return err.Error()
 		} else {
@@ -43,20 +34,32 @@ func TestEncryptAndDecryptKeyEnvelope(t *testing.T) {
 		}
 	}
 
-	assert.EqualString(t, tryDecryption(privateKey1), "my secret message")
-	assert.EqualString(t, tryDecryption(privateKey2), "my secret message")
-	assert.EqualString(t, tryDecryption(privateKey3), "key slot not found for SHA256:ToUnMHKdU4jKDIjztM5qOH1bOJJbOj4WQ8n98Fl5Tj0")
+	assert.EqualString(t, tryDecryption(ks123), "my secret message")
+	assert.EqualString(t, tryDecryption(ks2), "my secret message")
+	assert.EqualString(t, tryDecryption(ks3), "don't have any private key to slots of DEK dummyKeyId")
 
-	assert.Assert(t, FindKeyById("foo", []KeyEnvelope{*kenv}) == nil)
-	assert.Assert(t, FindKeyById("dummyKeyId", []KeyEnvelope{*kenv}) != nil)
+	assert.Assert(t, findDekEnvelope("foo", []stotypes.KeyEnvelope{*kenv}) == nil)
+	assert.Assert(t, findDekEnvelope("dummyKeyId", []stotypes.KeyEnvelope{*kenv}) != nil)
 }
 
 func TestEncryptEmptyKeyIdOrNoPublicKeys(t *testing.T) {
-	_, err := EncryptEnvelope("", []byte("my secret message"), nil)
-	assert.EqualString(t, err.Error(), "empty keyId")
+	ks := keyStoreWith(testPrivateKey1)
 
-	_, err = EncryptEnvelope("foo", []byte("my secret message"), []rsa.PublicKey{})
-	assert.EqualString(t, err.Error(), "no publicKeys given")
+	_, err := ks.EncryptDek("", []byte("my secret message"), nil)
+	assert.EqualString(t, err.Error(), "empty dekId")
+
+	_, err = ks.EncryptDek("foo", []byte("my secret message"), []string{})
+	assert.EqualString(t, err.Error(), "no kekPubKeyFingerprints given")
+}
+
+func keyStoreWith(privateKeys ...string) *keyStore {
+	ks := newKeyStore()
+
+	for _, privateKey := range privateKeys {
+		panicIfError(ks.RegisterPrivateKey(privateKey))
+	}
+
+	return ks
 }
 
 var (

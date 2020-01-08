@@ -134,7 +134,7 @@ type KeyEncryptionKey struct {
 	Bits        int
 	Created     time.Time
 	Label       string
-	Fingerprint string
+	Fingerprint string // for public key
 	PublicKey   string
 	PrivateKey  string
 }
@@ -181,4 +181,14 @@ func NewDirectory(id string, parent string, name string, typ string) *Directory 
 		Metadata: map[string]string{},
 		Type:     typ,
 	}
+}
+
+type KeySlot struct {
+	KekFingerprint string `json:"kek_fingerprint"`
+	KeyEncrypted   []byte `json:"key_encrypted"`
+}
+
+type KeyEnvelope struct {
+	KeyId string    `json:"key_id"`
+	Slots []KeySlot `json:"slots"`
 }

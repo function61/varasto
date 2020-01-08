@@ -7,8 +7,26 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+/*	Schema versions
+
+	v0
+	==
+	  Changes: no versioning in use
+	Migration: n/a
+
+	v1
+	==
+	  Changes: started schema versioning, added SMART backend type detection to bootstrap
+	Migration: change backup header to signature v1, add your desired SMART backend to Node JSON
+
+	v2
+	==
+	  Changes: added index to DEK to bring back deduplication
+	Migration: change backup header to signature v1, import
+*/
+
 const (
-	CurrentSchemaVersion = 1
+	CurrentSchemaVersion = 2
 )
 
 var (

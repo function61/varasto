@@ -68,15 +68,17 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 
 				// if destination collection doesn't have encryption key for this blob,
 				// copy it over
-				if stotypes.FindKeyById(blob.EncryptionKeyId, collDst.EncryptionKeys) == nil {
-					keyToCopy := stotypes.FindKeyById(blob.EncryptionKeyId, collSrc.EncryptionKeys)
-					if keyToCopy == nil {
-						return fmt.Errorf(
-							"cannot find key envelope %s from source collection",
-							blob.EncryptionKeyId)
+				if findDekEnvelope(blob.EncryptionKeyId, collDst.EncryptionKeys) == nil {
+					dekEnvelope, err := copyAndReEncryptDekFromAnotherCollection(
+						blob.EncryptionKeyId,
+						extractKekPubKeyFingerprints(collSrc),
+						tx,
+						c.conf.KeyStore)
+					if err != nil {
+						return fmt.Errorf("copyAndReEncryptDekFromAnotherCollection: %v", err)
 					}
 
-					collDst.EncryptionKeys = append(collDst.EncryptionKeys, *keyToCopy)
+					collDst.EncryptionKeys = append(collDst.EncryptionKeys, *dekEnvelope)
 				}
 			}
 		}

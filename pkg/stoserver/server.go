@@ -3,7 +3,6 @@ package stoserver
 import (
 	"bytes"
 	"context"
-	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -36,7 +35,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -277,6 +275,7 @@ type ServerConfig struct {
 	ThumbServer            *subsystem
 	FuseProjector          *subsystem
 	TlsCertificate         wrappedKeypair
+	KeyStore               *keyStore
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
@@ -328,23 +327,20 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		authTokens[client.AuthToken] = true
 	}
 
-	keksParsed := map[string]*rsa.PrivateKey{}
-
 	keks := []stotypes.KeyEncryptionKey{}
 	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
 		return nil, err
 	}
 
+	ks := newKeyStore()
+
 	for _, kek := range keks {
-		privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(strings.NewReader(kek.PrivateKey))
-		if err != nil {
+		if err := ks.RegisterPrivateKey(kek.PrivateKey); err != nil {
 			return nil, err
 		}
-
-		keksParsed[kek.Fingerprint] = privateKey
 	}
 
-	dam := stodiskaccess.New(&dbbma{db, keksParsed})
+	dam := stodiskaccess.New(&dbbma{db, ks})
 
 	for _, mountedVolume := range myMounts {
 		volume, err := stodb.Read(tx).Volume(mountedVolume.Volume)
@@ -382,6 +378,7 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 		DiskAccess:             dam,
 		ClientsAuthTokens:      authTokens,
 		LogTail:                logTail,
+		KeyStore:               ks,
 		ReplicationControllers: map[int]*storeplication.Controller{},
 		TlsCertificate:         *wrappedKeypair,
 	}, nil
@@ -417,8 +414,8 @@ func readServerConfigFile() (*ServerConfigFile, error) {
 }
 
 type dbbma struct {
-	db   *bolt.DB
-	keks map[string]*rsa.PrivateKey
+	db       *bolt.DB
+	keyStore *keyStore
 }
 
 func (d *dbbma) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
@@ -448,29 +445,19 @@ func (d *dbbma) QueryCollectionEncryptionKeyForNewBlobs(coll string) (string, []
 			return fmt.Errorf("collection not found: %v", err)
 		}
 
-		// first should always exist
+		// first is special and should always exist. the following are for deduplicated content
 		kenv = &coll.EncryptionKeys[0]
 		return nil
 	}); err != nil {
 		return "", nil, err
 	}
 
-	// search for the first key slot that we have a decryption key for
-	for _, slot := range kenv.Slots {
-		decrypionKey, found := d.keks[slot.KekFingerprint]
-		if !found {
-			continue
-		}
-
-		encryptionKey, err := stotypes.DecryptKek(*kenv, decrypionKey)
-		if err != nil {
-			return "", nil, err
-		}
-
-		return kenv.KeyId, encryptionKey, nil
+	dek, err := d.keyStore.DecryptDek(*kenv)
+	if err != nil {
+		return "", nil, err
 	}
 
-	return "", nil, fmt.Errorf("no key decryption key found for key id %s", kenv.KeyId)
+	return kenv.KeyId, dek, nil
 }
 
 func (d *dbbma) QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error) {
@@ -511,25 +498,12 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 	// we are given a list of key envelopes. the first one is for new blobs written to this
 	// collection, and the following are for when blobs get deduplicated into this collection -
 	// source collection's key envelopes are copied into target collection's key envelopes
-	kenv := stotypes.FindKeyById(blob.EncryptionKeyId, encryptionKeys)
+	kenv := findDekEnvelope(blob.EncryptionKeyId, encryptionKeys)
 	if kenv == nil {
 		return nil, fmt.Errorf("(should not happen) encryption key envelope not found for: %s", ref.AsHex())
 	}
 
-	var kdc *rsa.PrivateKey
-	for _, slot := range kenv.Slots {
-		var found bool
-		kdc, found = d.keks[slot.KekFingerprint]
-		if found {
-			break
-		}
-	}
-
-	if kdc == nil {
-		return nil, fmt.Errorf("no decryption key found for key %s", kenv.KeyId)
-	}
-
-	encryptionKey, err := stotypes.DecryptKek(*kenv, kdc)
+	dek, err := d.keyStore.DecryptDek(*kenv)
 	if err != nil {
 		return nil, err
 	}
@@ -539,7 +513,7 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 		RealSize:      blob.Size,
 		SizeOnDisk:    blob.SizeOnDisk,
 		IsCompressed:  blob.IsCompressed,
-		EncryptionKey: encryptionKey,
+		EncryptionKey: dek,
 		ExpectedCrc32: blob.Crc32,
 	}, nil
 }

@@ -77,6 +77,14 @@ var CollectionRepository = register("Collection", blorm.NewSimpleRepo(
 	func() interface{} { return &stotypes.Collection{} },
 	func(record interface{}) []byte { return []byte(record.(*stotypes.Collection).ID) }))
 
+var CollectionsByDataEncryptionKeyIndex = blorm.NewValueIndex("dek", CollectionRepository, func(record interface{}, index func(val []byte)) {
+	coll := record.(*stotypes.Collection)
+
+	for _, dekEnvelopes := range coll.EncryptionKeys {
+		index([]byte(dekEnvelopes.KeyId))
+	}
+})
+
 var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRepository, func(record interface{}, index func(val []byte)) {
 	coll := record.(*stotypes.Collection)
 

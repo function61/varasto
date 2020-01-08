@@ -2,7 +2,6 @@ package stoserver
 
 import (
 	"crypto/rand"
-	"crypto/rsa"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
@@ -10,7 +9,6 @@ import (
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
-	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -527,7 +525,7 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			return errors.New("replicationPolicy doesn't specify any volumes")
 		}
 
-		kekPublicKeys := []rsa.PublicKey{}
+		kekPubKeyFingerprints := []string{}
 
 		keks := []stotypes.KeyEncryptionKey{}
 		if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
@@ -535,26 +533,17 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 		}
 
 		for _, kek := range keks {
-			pubKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPublicKey(strings.NewReader(kek.PublicKey))
-			if err != nil {
-				return err
-			}
-
-			kekPublicKeys = append(kekPublicKeys, *pubKey)
+			kekPubKeyFingerprints = append(kekPubKeyFingerprints, kek.Fingerprint)
 		}
 
-		if len(kekPublicKeys) == 0 {
-			return fmt.Errorf("no public keys found for encrypting %s", cmd.Name)
-		}
-
-		encryptionKey := [32]byte{}
-		if _, err := rand.Read(encryptionKey[:]); err != nil {
+		dek := [32]byte{}
+		if _, err := rand.Read(dek[:]); err != nil {
 			return err
 		}
 
 		// pack encryption key in an envelope protected with public key crypto,
 		// so Varasto can store data without being able to access it itself
-		encryptionKeyEnveloped, err := stotypes.EncryptEnvelope(stoutils.NewEncryptionKeyId(), encryptionKey[:], kekPublicKeys)
+		dekEnvelopes, err := c.conf.KeyStore.EncryptDek(stoutils.NewEncryptionKeyId(), dek[:], kekPubKeyFingerprints)
 		if err != nil {
 			return err
 		}
@@ -566,7 +555,7 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 			Name:           cmd.Name,
 			DesiredVolumes: replicationPolicy.DesiredVolumes,
 			Head:           stotypes.NoParentId,
-			EncryptionKeys: []stotypes.KeyEnvelope{*encryptionKeyEnveloped},
+			EncryptionKeys: []stotypes.KeyEnvelope{*dekEnvelopes},
 			Changesets:     []stotypes.CollectionChangeset{},
 			Metadata:       map[string]string{},
 			Tags:           []string{},

@@ -502,7 +502,8 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 			toDbFiles(changeset.FilesCreated),
 			toDbFiles(changeset.FilesUpdated),
 			changeset.FilesDeleted),
-		h.db)
+		h.db,
+		h.conf)
 
 	// FIXME: add "produces" to here because commitChangesetInternal responds with updated collection
 	if coll != nil {
@@ -512,7 +513,14 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 	}
 }
 
-func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionId string, changeset stotypes.CollectionChangeset, db *bolt.DB) *stotypes.Collection {
+func commitChangesetInternal(
+	w http.ResponseWriter,
+	r *http.Request,
+	collectionId string,
+	changeset stotypes.CollectionChangeset,
+	db *bolt.DB,
+	serverConf *ServerConfig,
+) *stotypes.Collection {
 	tx, errTxBegin := db.Begin(true)
 	if errTxBegin != nil {
 		http.Error(w, errTxBegin.Error(), http.StatusInternalServerError)
@@ -562,10 +570,23 @@ func commitChangesetInternal(w http.ResponseWriter, r *http.Request, collectionI
 				blob.Volumes,
 				coll.DesiredVolumes)
 
-			// FIXME: temporary limitation
-			if stotypes.FindKeyById(blob.EncryptionKeyId, coll.EncryptionKeys) == nil {
-				http.Error(w, "deduplicating Blob? EncryptionKeyId not in coll.EncryptionKeys", http.StatusInternalServerError)
-				return nil
+			// blob got deduplicated from somewhere, and thus it uses a DEK that our collection
+			// currently doesn't have a copy of?
+			if findDekEnvelope(blob.EncryptionKeyId, coll.EncryptionKeys) == nil {
+				env, err := copyAndReEncryptDekFromAnotherCollection(
+					blob.EncryptionKeyId,
+					extractKekPubKeyFingerprints(coll),
+					tx,
+					serverConf.KeyStore)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return nil
+				}
+
+				// inject copy of DEK re-encrypted for target collection's DEKs
+				coll.EncryptionKeys = append(coll.EncryptionKeys, *env)
+
+				panicIfError(stodb.CollectionRepository.Update(coll, tx))
 			}
 
 			panicIfError(stodb.BlobRepository.Update(blob, tx))
