@@ -36,7 +36,7 @@ NOTE: Seeing the below diagram will make following this easier!
 | DEK (Data Encryption Key)      | Encryption key used to encrypt actual files |
 | KEK (Key Encryption Key)       | Encryption key used to encrypt other encryption keys - DEKs in our case |
 | HSM (Hardware Security Module) | Varasto can optionally use a HSM to securely store KEKs in a way that the KEK cannot be stolen |
-| Key envelope                   | DEK is encrypted/wrapped inside an envelope in a way that only the KEK can decrypt the DEK. I.e. KEK controls access to data. |
+| Key envelope                   | DEK is encrypted/wrapped inside an envelope in a way that only the KEK can decrypt the DEK. I.e. KEK (and by extension, optionally the HSM) controls access to data. |
 
 You can read more about above concepts at
 [Google KMS](https://cloud.google.com/kms/docs/envelope-encryption). (Google has nice docs
@@ -128,7 +128,7 @@ nature stores each unique content blob only once.
 
 ### KEK
 
-KEKs use public key crypto (RSA or ECDSA) to asymmetrically wrap ("key envelope") the DEKs.
+KEKs use public key crypto (RSA-OAEP or ECDSA) to asymmetrically wrap ("key envelope") the DEKs.
 This means that if you store the private portion of the KEK outside of Varasto (a HSM maybe),
 Varasto itself can't even access the files that you store.
 
