@@ -1,6 +1,6 @@
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
-import { Panel } from 'f61ui/component/bootstrap';
+import { DangerLabel, DefaultLabel, Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
@@ -165,16 +165,30 @@ export default class ReplicationPoliciesPage extends React.Component<
 								</td>
 								<td>{r.Description}</td>
 								<td>{thousandSeparate(r.TotalBlobs)}</td>
-								<td>{r.DesiredReplicas}</td>
-								<td title={r.Presence}>
-									{r.FullReplicas.map((id) => {
-										const vol = volumes.filter((v) => v.Id === id);
+								<td>{r.DesiredReplicaCount}</td>
+								<td>
+									{r.ReplicaStatuses.map((rs) => {
+										const vol = volumes.filter((v) => v.Id === rs.Volume);
 										const volLabel =
 											vol.length === 1 ? vol[0].Label : '(error)';
 
-										return (
-											<span className="label label-default">{volLabel}</span>
-										);
+										if (rs.BlobCount === r.DesiredReplicaCount) {
+											return (
+												<span className="margin-left">
+													<DefaultLabel title={rs.BlobCount.toString()}>
+														{volLabel}
+													</DefaultLabel>
+												</span>
+											);
+										} else {
+											return (
+												<span className="margin-left">
+													<DangerLabel title={rs.BlobCount.toString()}>
+														{volLabel}
+													</DangerLabel>
+												</span>
+											);
+										}
 									})}
 								</td>
 							</tr>

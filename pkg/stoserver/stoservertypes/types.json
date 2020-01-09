@@ -436,21 +436,27 @@
 			}}
 		},
 		{
+			"name": "ReconciliationReport",
+			"type": {"_": "object", "fields": {
+				"TotalItems": {"_": "integer"},
+				"Items": {"_": "list", "of": {"_": "ReconcilableItem"}}
+			}}
+		},
+		{
 			"name": "ReconcilableItem",
 			"type": {"_": "object", "fields": {
 				"CollectionId": {"_": "string"},
 				"Description": {"_": "string"},
 				"TotalBlobs": {"_": "integer"},
-				"DesiredReplicas": {"_": "integer"},
-				"FullReplicas": {"_": "list", "of": {"_": "integer"}},
-				"Presence": {"_": "string"}
+				"DesiredReplicaCount": {"_": "integer"},
+				"ReplicaStatuses": {"_": "list", "of": {"_": "ReconcilableItemReplicaStatus"}}
 			}}
 		},
 		{
-			"name": "ReconciliationReport",
+			"name": "ReconcilableItemReplicaStatus",
 			"type": {"_": "object", "fields": {
-				"TotalItems": {"_": "integer"},
-				"Items": {"_": "list", "of": {"_": "ReconcilableItem"}}
+				"Volume": {"_": "integer"},
+				"BlobCount": {"_": "integer"}
 			}}
 		},
 		{

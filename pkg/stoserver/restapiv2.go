@@ -1263,10 +1263,14 @@ func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseW
 }
 
 func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ReconciliationReport {
+	httpErr := func(err error, errCode int) *stoservertypes.ReconciliationReport { // shorthand
+		http.Error(w, err.Error(), errCode)
+		return nil
+	}
+
 	tx, err := h.db.Begin(false)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+		return httpErr(err, http.StatusInternalServerError)
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
@@ -1287,7 +1291,7 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 
 			coll, err := stodb.Read(tx).Collection(ctr.collectionId)
 			if err != nil {
-				panic(err)
+				return httpErr(err, http.StatusNotFound)
 			}
 
 			path := []string{coll.Name}
@@ -1296,7 +1300,7 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 			for dirId != "" {
 				dir, err := stodb.Read(tx).Directory(dirId)
 				if err != nil {
-					panic(err)
+					return httpErr(err, http.StatusNotFound)
 				}
 
 				path = append([]string{dir.Name}, path...)
@@ -1304,25 +1308,23 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 				dirId = dir.Parent
 			}
 
-			presenceItems := []string{}
-
-			fullReplicas := []int{}
+			replicaStatuses := []stoservertypes.ReconcilableItemReplicaStatus{}
 
 			for volId, blobCount := range ctr.presence {
-				if ctr.blobCount == blobCount {
-					fullReplicas = append(fullReplicas, volId)
-				}
-
-				presenceItems = append(presenceItems, fmt.Sprintf("%d[%d blobs]", volId, blobCount))
+				replicaStatuses = append(replicaStatuses, stoservertypes.ReconcilableItemReplicaStatus{
+					Volume:    volId,
+					BlobCount: blobCount,
+				})
 			}
 
+			sort.Slice(replicaStatuses, func(i, j int) bool { return replicaStatuses[i].Volume < replicaStatuses[j].Volume })
+
 			nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
-				CollectionId:    ctr.collectionId,
-				Description:     strings.Join(path, " » "),
-				TotalBlobs:      ctr.blobCount,
-				DesiredReplicas: ctr.desiredReplicas,
-				FullReplicas:    fullReplicas,
-				Presence:        strings.Join(presenceItems, " "),
+				CollectionId:        ctr.collectionId,
+				Description:         strings.Join(path, " » "),
+				TotalBlobs:          ctr.blobCount,
+				DesiredReplicaCount: ctr.desiredReplicas,
+				ReplicaStatuses:     replicaStatuses,
 			})
 		}
 	}
