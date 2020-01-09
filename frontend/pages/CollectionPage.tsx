@@ -8,7 +8,7 @@ import { Result } from 'component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
 import { InfoAlert } from 'f61ui/component/alerts';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
@@ -103,11 +103,13 @@ export default class CollectionPage extends React.Component<
 				titleElem={
 					<span>
 						{ret.title}
-						{collectionOutput.Collection.Description ? (
-							<span className="label label-default margin-left">
-								{collectionOutput.Collection.Description}
+						{collectionOutput.Collection.Description && (
+							<span className="margin-left">
+								<DefaultLabel>
+									{collectionOutput.Collection.Description}
+								</DefaultLabel>
 							</span>
-						) : null}
+						)}
 					</span>
 				}
 				breadcrumbs={ret.breadcrumbs}>

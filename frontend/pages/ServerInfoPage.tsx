@@ -1,4 +1,3 @@
-import { DangerLabel, SuccessLabel, WarningLabel } from 'component/labels';
 import { Result } from 'component/result';
 import {
 	changeSensitivity,
@@ -6,7 +5,13 @@ import {
 	Sensitivity,
 	sensitivityLabel,
 } from 'component/sensitivity';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import {
+	DangerLabel,
+	Glyphicon,
+	Panel,
+	SuccessLabel,
+	WarningLabel,
+} from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';

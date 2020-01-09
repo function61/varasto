@@ -1,6 +1,5 @@
-import { DangerLabel, SuccessLabel } from 'component/labels';
 import { Result } from 'component/result';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { DangerLabel, Glyphicon, Panel, SuccessLabel } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';

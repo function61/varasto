@@ -1,6 +1,6 @@
 import { DocLink } from 'component/doclink';
 import { WarningAlert } from 'f61ui/component/alerts';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
 import { unrecognizedValue } from 'f61ui/utils';
 import {
@@ -80,7 +80,7 @@ export default class GettingStartedPage extends React.Component<
 				<span>
 					{preceded && <Glyphicon icon="ok" />}
 					&nbsp;
-					{category && <span className="label label-default">{category}</span>}
+					{category && <DefaultLabel>{category}</DefaultLabel>}
 					&nbsp;
 					{title}
 				</span>

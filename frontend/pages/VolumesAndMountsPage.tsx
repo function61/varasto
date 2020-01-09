@@ -1,11 +1,17 @@
 import { DocGitHubMaster, DocLink } from 'component/doclink';
-import { DangerLabel, SuccessLabel, WarningLabel } from 'component/labels';
 import { thousandSeparate } from 'component/numberformatter';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
 import { InfoAlert } from 'f61ui/component/alerts';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import {
+	DangerLabel,
+	DefaultLabel,
+	Glyphicon,
+	Panel,
+	SuccessLabel,
+	WarningLabel,
+} from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
@@ -499,9 +505,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				<tr key={obj.Id}>
 					<td title={`Uuid=${obj.Uuid} Id=${obj.Id}`}>{obj.Label}</td>
 					<td>
-						<span className="label label-default">
-							{volumeTechnologyToDisplay(obj.Technology)}
-						</span>
+						<DefaultLabel>{volumeTechnologyToDisplay(obj.Technology)}</DefaultLabel>
 						&nbsp;
 						{obj.Description}
 						&nbsp;

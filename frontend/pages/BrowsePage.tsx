@@ -10,7 +10,7 @@ import {
 } from 'component/sensitivity';
 import { TabController } from 'component/tabcontroller';
 import { CollectionTagView } from 'component/tags';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
@@ -126,11 +126,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				titleElem={
 					<span>
 						{output.Directory.Name}
-						{output.Directory.Description ? (
-							<span className="label label-default margin-left">
-								{output.Directory.Description}
+						{output.Directory.Description && (
+							<span className="margin-left">
+								<DefaultLabel>{output.Directory.Description}</DefaultLabel>
 							</span>
-						) : null}
+						)}
 					</span>
 				}
 				breadcrumbs={breadcrumbs}>
@@ -229,11 +229,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 									})}>
 									{coll.Name}
 								</a>
-								{coll.Description ? (
-									<span className="label label-default margin-left">
-										{coll.Description}
+								{coll.Description && (
+									<span className="margin-left">
+										<DefaultLabel>{coll.Description}</DefaultLabel>
 									</span>
-								) : null}
+								)}
 								{coll.Sensitivity > Sensitivity.FamilyFriendly
 									? mkSensitivityBadge(coll.Sensitivity)
 									: null}
@@ -265,12 +265,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					<a href={browseRoute.buildUrl({ dir: dir.Id, view: this.props.view })}>
 						{dir.Name}
 					</a>
-					{dir.Description ? (
-						<span className="label label-default margin-left">{dir.Description}</span>
-					) : null}
-					{dir.Sensitivity > Sensitivity.FamilyFriendly
-						? mkSensitivityBadge(dir.Sensitivity)
-						: null}
+					{dir.Description && (
+						<span className="margin-left">
+							<DefaultLabel>{dir.Description}</DefaultLabel>
+						</span>
+					)}
+					{dir.Sensitivity > Sensitivity.FamilyFriendly &&
+						mkSensitivityBadge(dir.Sensitivity)}
 				</div>
 			) : (
 				<div>
@@ -368,14 +369,14 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			const badges = [];
 
 			if (MetadataReleaseDate in metadata) {
-				badges.push(
-					<span className="label label-default">📅 {metadata[MetadataReleaseDate]}</span>,
-				);
+				badges.push(<DefaultLabel>📅 {metadata[MetadataReleaseDate]}</DefaultLabel>);
 			}
 
 			if (coll.Description) {
 				badges.push(
-					<span className="label label-default margin-left">{coll.Description}</span>,
+					<span className="margin-left">
+						<DefaultLabel>{coll.Description}</DefaultLabel>
+					</span>,
 				);
 			}
 

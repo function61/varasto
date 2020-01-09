@@ -1,4 +1,4 @@
-import { Glyphicon } from 'f61ui/component/bootstrap';
+import { DefaultLabel, Glyphicon } from 'f61ui/component/bootstrap';
 import { CommandIcon } from 'f61ui/component/CommandButton';
 import { CollectionTag, CollectionUntag } from 'generated/stoserver/stoservertypes_commands';
 import { CollectionSubset } from 'generated/stoserver/stoservertypes_types';
@@ -15,10 +15,12 @@ export class CollectionTagView extends React.Component<CollectionTagViewProps, {
 		return (
 			<span>
 				{coll.Tags.map((tag) => (
-					<span className="label label-default margin-left">
-						<Glyphicon icon="tag" />
-						&nbsp;
-						{tag}
+					<span className="margin-left">
+						<DefaultLabel>
+							<Glyphicon icon="tag" />
+							&nbsp;
+							{tag}
+						</DefaultLabel>
 					</span>
 				))}
 			</span>
@@ -37,21 +39,25 @@ export class CollectionTagEditor extends React.Component<CollectionTagEditorProp
 		return (
 			<span>
 				{coll.Tags.map((tag) => (
-					<span className="label label-default margin-left">
-						<Glyphicon icon="tag" />
-						&nbsp;
-						{tag}
-						&nbsp;
-						<CommandIcon
-							command={CollectionUntag(coll.Id, tag, { disambiguation: tag })}
-						/>
+					<span className="margin-left">
+						<DefaultLabel>
+							<Glyphicon icon="tag" />
+							&nbsp;
+							{tag}
+							&nbsp;
+							<CommandIcon
+								command={CollectionUntag(coll.Id, tag, { disambiguation: tag })}
+							/>
+						</DefaultLabel>
 					</span>
 				))}
-				<span className="label label-default margin-left">
-					<Glyphicon icon="tag" />
-					<span className="margin-left">
-						<CommandIcon command={CollectionTag(coll.Id)} />
-					</span>
+				<span className="margin-left">
+					<DefaultLabel>
+						<Glyphicon icon="tag" />
+						<span className="margin-left">
+							<CommandIcon command={CollectionTag(coll.Id)} />
+						</span>
+					</DefaultLabel>
 				</span>
 			</span>
 		);

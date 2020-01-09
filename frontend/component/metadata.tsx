@@ -1,4 +1,4 @@
-import { Panel } from 'f61ui/component/bootstrap';
+import { DefaultLabel, Panel } from 'f61ui/component/bootstrap';
 import { globalConfig } from 'f61ui/globalconfig';
 import {
 	MetadataBackdrop,
@@ -47,26 +47,22 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 			hours = Math.round(hours - (hours % 1));
 
 			badges.push(
-				<span className="label label-default margin-left">
+				<DefaultLabel>
 					🕒 {hours}h {minutes}m
-				</span>,
+				</DefaultLabel>,
 			);
 		}
 
 		if (MetadataVideoRevenueDollars in metadata) {
 			badges.push(
-				<span className="label label-default margin-left">
+				<DefaultLabel>
 					💵 {Math.round(+metadata[MetadataVideoRevenueDollars] / 10000) / 100} million
-				</span>,
+				</DefaultLabel>,
 			);
 		}
 
 		if (MetadataReleaseDate in metadata) {
-			badges.push(
-				<span className="label label-default margin-left">
-					📅 {metadata[MetadataReleaseDate]}
-				</span>,
-			);
+			badges.push(<DefaultLabel>📅 {metadata[MetadataReleaseDate]}</DefaultLabel>);
 		}
 
 		return (
@@ -76,7 +72,9 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 					<div>
 						{overview}
 						&nbsp;
-						{badges}
+						{badges.map((badge) => (
+							<span className="margin-left">{badge}</span>
+						))}
 						{this.maybeUrl(
 							'thetvdb.com',
 							'https://www.thetvdb.com/dereferrer/series/{key}',
@@ -112,8 +110,8 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 		const url = template.replace('{key}', key);
 
 		return (
-			<a href={url} target="_blank">
-				<span className="label label-default margin-left">🔗 {label}</span>
+			<a href={url} target="_blank" className="margin-left">
+				<DefaultLabel>🔗 {label}</DefaultLabel>
 			</a>
 		);
 	}
