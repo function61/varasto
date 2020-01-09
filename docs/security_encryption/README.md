@@ -128,9 +128,12 @@ nature stores each unique content blob only once.
 
 ### KEK
 
-KEKs use public key crypto (RSA-OAEP or ECDSA) to asymmetrically wrap ("key envelope") the DEKs.
+KEKs use public key crypto (RSA-OAEP) to asymmetrically wrap ("key envelope") the DEKs.
 This means that if you store the private portion of the KEK outside of Varasto (a HSM maybe),
 Varasto itself can't even access the files that you store.
+
+EC support is being researched but
+[might not be feasible](https://blog.filippo.io/using-ed25519-keys-for-encryption/).
 
 
 Limitations of Varasto's crypto design
