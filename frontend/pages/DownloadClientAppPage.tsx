@@ -1,9 +1,9 @@
 import { DocLink } from 'component/doclink';
-import { InfoAlert, DangerAlert } from 'f61ui/component/alerts';
+import { DangerAlert, InfoAlert } from 'f61ui/component/alerts';
 import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
 import { DocRef } from 'generated/stoserver/stoservertypes_types';
-import { version, isDevVersion } from 'generated/version';
+import { isDevVersion, version } from 'generated/version';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 
@@ -18,7 +18,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<Info text="This page you're viewing is Varasto's server UI. Varasto also has a client components that you can install on each of your devices to keep your content synchronized with Varasto server." />
 						</div>
 					}>
-					{isDevVersion() && (
+					{isDevVersion && (
 						<DangerAlert>
 							You're using dev version, so the download links are broken (they are
 							version-specific links). Visit the GitHub page instead.
