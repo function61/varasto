@@ -513,6 +513,8 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 	}
 }
 
+// returns the updated collection struct or nil if errored (in this case http error is
+// output automatically)
 func commitChangesetInternal(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -521,30 +523,33 @@ func commitChangesetInternal(
 	db *bolt.DB,
 	serverConf *ServerConfig,
 ) *stotypes.Collection {
+	httpErr := func(errStr string, errCode int) *stotypes.Collection { // shorthand
+		http.Error(w, errStr, errCode)
+		return nil
+	}
+
 	tx, errTxBegin := db.Begin(true)
 	if errTxBegin != nil {
-		http.Error(w, errTxBegin.Error(), http.StatusInternalServerError)
-		return nil
+		return httpErr(errTxBegin.Error(), http.StatusInternalServerError)
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	coll, err := stodb.Read(tx).Collection(collectionId)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err.Error(), http.StatusNotFound)
+	}
 
 	if collectionHasChangesetId(changeset.ID, coll) {
-		http.Error(w, "changeset ID already in collection", http.StatusBadRequest)
-		return nil
+		return httpErr("changeset ID already in collection", http.StatusBadRequest)
 	}
 
 	if changeset.Parent != stotypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
-		http.Error(w, "parent changeset not found", http.StatusBadRequest)
-		return nil
+		return httpErr("parent changeset not found", http.StatusBadRequest)
 	}
 
 	if changeset.Parent != coll.Head {
 		// TODO: force push or rebase support?
-		http.Error(w, "commit does not target current head. would result in dangling heads!", http.StatusBadRequest)
-		return nil
+		return httpErr("commit does not target current head. would result in dangling heads!", http.StatusBadRequest)
 	}
 
 	createdAndUpdated := append(changeset.FilesCreated, changeset.FilesUpdated...)
@@ -553,14 +558,12 @@ func commitChangesetInternal(
 		for _, refHex := range file.BlobRefs {
 			ref, err := stotypes.BlobRefFromHex(refHex)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return nil
+				return httpErr(err.Error(), http.StatusBadRequest)
 			}
 
 			blob, err := stodb.Read(tx).Blob(*ref)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
-				return nil
+				return httpErr(fmt.Sprintf("blob %s not found", ref.AsHex()), http.StatusBadRequest)
 			}
 
 			// FIXME: if same changeset mentions same blob many times, we update the old blob
@@ -579,28 +582,35 @@ func commitChangesetInternal(
 					tx,
 					serverConf.KeyStore)
 				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return nil
+					return httpErr(err.Error(), http.StatusInternalServerError)
 				}
 
 				// inject copy of DEK re-encrypted for target collection's DEKs
 				coll.EncryptionKeys = append(coll.EncryptionKeys, *env)
 
-				panicIfError(stodb.CollectionRepository.Update(coll, tx))
+				// TODO: is this update required? we'll update coll later anyway..
+				if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
+					return httpErr(err.Error(), http.StatusInternalServerError)
+				}
 			}
 
-			panicIfError(stodb.BlobRepository.Update(blob, tx))
+			if err := stodb.BlobRepository.Update(blob, tx); err != nil {
+				return httpErr(err.Error(), http.StatusInternalServerError)
+			}
 		}
 	}
 
 	// update head pointer & calc Created timestamp
 	if err := appendAndValidateChangeset(changeset, coll); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return nil
+		return httpErr(err.Error(), http.StatusBadRequest)
 	}
 
-	panicIfError(stodb.CollectionRepository.Update(coll, tx))
-	panicIfError(tx.Commit())
+	if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
+		return httpErr(err.Error(), http.StatusInternalServerError)
+	}
+	if err := tx.Commit(); err != nil {
+		return httpErr(err.Error(), http.StatusInternalServerError)
+	}
 
 	return coll
 }
