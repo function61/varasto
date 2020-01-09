@@ -108,6 +108,7 @@ Developers:
 
 Misc:
 
+- [Subscribe to Varasto news & updates](https://buttondown.email/varasto) via email or RSS
 - [Sustainability](docs/sustainability.md) (how will this project make money)
 - Food for thought:
     * [How to Remember Your Life by Johnny Harris](https://www.youtube.com/watch?v=GLy4VKeYxD4)
