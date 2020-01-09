@@ -226,7 +226,7 @@ export default class CollectionPage extends React.Component<
 				file.Path,
 			);
 
-			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&amp;file=${
+			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&file=${
 				file.Sha256
 			}`;
 
