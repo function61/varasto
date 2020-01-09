@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
@@ -105,17 +106,28 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 }
 
 func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.DirectoryOutput {
+	httpErr := func(err error, errCode int) *stoservertypes.DirectoryOutput { // shorthand
+		http.Error(w, err.Error(), errCode)
+		return nil
+	}
+
 	dirId := mux.Vars(r)["id"]
 
 	tx, err := h.db.Begin(false)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dir, err := stodb.Read(tx).Directory(dirId)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusNotFound)
+	}
 
 	parentDirs, err := getParentDirs(*dir, tx)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 
 	parentDirsConverted := []stoservertypes.Directory{}
 
@@ -124,7 +136,9 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 
 	dbColls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 
 	colls := []stoservertypes.CollectionSubset{}
 	for _, dbColl := range dbColls {
@@ -133,7 +147,9 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	sort.Slice(colls, func(i, j int) bool { return colls[i].Name < colls[j].Name })
 
 	dbSubDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 
 	subDirs := []stoservertypes.Directory{}
 	for _, dbSubDir := range dbSubDirs {
@@ -438,27 +454,28 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 }
 
 func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.BlobMetadata {
+	httpErr := func(err error, errCode int) *stoservertypes.BlobMetadata { // shorthand
+		http.Error(w, err.Error(), errCode)
+		return nil
+	}
+
 	ref, err := stotypes.BlobRefFromHex(mux.Vars(r)["ref"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return nil
+		return httpErr(err, http.StatusBadRequest)
 	}
 
 	tx, err := h.db.Begin(false)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+		return httpErr(err, http.StatusInternalServerError)
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	blob, err := stodb.Read(tx).Blob(*ref)
 	if err != nil {
 		if err == blorm.ErrNotFound {
-			http.Error(w, "blob not found", http.StatusNotFound)
-			return nil
+			return httpErr(errors.New("blob not found"), http.StatusNotFound)
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return nil
+			return httpErr(err, http.StatusInternalServerError)
 		}
 	}
 
@@ -754,21 +771,34 @@ func (h *handlers) GetKeyEncryptionKeys(rctx *httpauth.RequestContext, w http.Re
 }
 
 func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Node {
+	httpErr := func(err error, errCode int) *[]stoservertypes.Node { // shorthand
+		http.Error(w, err.Error(), errCode)
+		return nil
+	}
+
 	ret := []stoservertypes.Node{}
 
 	tx, err := h.db.Begin(false)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.Node{}
-	panicIfError(stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx))
+	if err := stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx); err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 
 	for _, dbObject := range dbObjects {
 		cert, err := cryptoutil.ParsePemX509Certificate(strings.NewReader(dbObject.TlsCert))
-		panicIfError(err)
+		if err != nil {
+			return httpErr(err, http.StatusInternalServerError)
+		}
 
 		publicKeyHumanReadableDescription, err := cryptoutil.PublicKeyHumanReadableDescription(cert.PublicKey)
-		panicIfError(err)
+		if err != nil {
+			return httpErr(err, http.StatusInternalServerError)
+		}
 
 		ret = append(ret, stoservertypes.Node{
 			Id:   dbObject.ID,
