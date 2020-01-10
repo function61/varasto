@@ -472,13 +472,19 @@ export default class GettingStartedPage extends React.Component<
 	private done(currSection: section): React.ReactNode {
 		return (
 			<div>
-				<p>We're done! 🎉</p>
-
-				<p>You're awesome for reaching this far!</p>
+				<p>Done! 🎉 You're awesome for reaching this far! 💪</p>
 
 				<p>
 					For advanced help, check out the main documentation!{' '}
 					<DocLink doc={DocRef.READMEMd} />
+				</p>
+
+				<p>
+					Consider subscribing to{' '}
+					<a href="https://buttondown.email/varasto" target="_blank">
+						Varasto mailing list
+					</a>{' '}
+					by email (or RSS) to stay on top of news &amp; updates!
 				</p>
 
 				{this.phaseNavBar(currSection)}
