@@ -1,10 +1,11 @@
-// Currently, you need to store a gdrive-credentials.json (gdrive-token.json will be computed)
-// in the same directory as you run Varasto from
+// Writes your blobs to Google Drive
 package googledriveblobstore
 
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -13,7 +14,6 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -27,14 +27,29 @@ type googledrive struct {
 	reqThrottle        chan interface{}
 }
 
-func New(varastoDirectoryId string, logger *log.Logger) (*googledrive, error) {
-	gdrive, err := authDance()
+func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
+	opts, err := deserializeConfig(optsSerialized)
 	if err != nil {
 		return nil, err
 	}
 
+	// if modifying scope, delete your cached access token
+	config, err := google.ConfigFromJSON([]byte(opts.GoogleCredentialsJson), drive.DriveScope)
+	if err != nil {
+		return nil, fmt.Errorf("google.ConfigFromJSON: %v", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
+	defer cancel()
+	client := getClient(ctx, config)
+
+	gdrive, err := drive.NewService(context.TODO(), option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("drive.NewService: %v", err)
+	}
+
 	return &googledrive{
-		varastoDirectoryId: varastoDirectoryId,
+		varastoDirectoryId: opts.VarastoDirectoryId,
 		logl:               logex.Levels(logger),
 		srv:                gdrive,
 		// default quota seems to be "1 000 queries per 100 seconds per user", so that makes
@@ -120,28 +135,43 @@ func toGoogleDriveName(ref stotypes.BlobRef) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(ref))
 }
 
-func authDance() (*drive.Service, error) {
-	b, err := ioutil.ReadFile("gdrive-credentials.json")
-	if err != nil {
-		return nil, fmt.Errorf("Unable to read client secret file: %v", err)
+type Config struct {
+	VarastoDirectoryId    string
+	GoogleCredentialsJson string
+}
+
+func (c *Config) Serialize() (string, error) {
+	if err := c.validate(); err != nil {
+		return "", err
 	}
 
-	// If modifying these scopes, delete your previously saved token.json.
-	// config, err := google.ConfigFromJSON(b, drive.DriveMetadataReadonlyScope)
-	config, err := google.ConfigFromJSON(b, drive.DriveScope)
+	asJson, err := json.Marshal(&c)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to parse client secret file to config: %v", err)
-	}
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
-	defer cancel()
-	client := getClient(ctx, config)
-
-	srv, err := drive.NewService(context.TODO(), option.WithHTTPClient(client))
-	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve Drive client: %v", err)
+		return "", err
 	}
 
-	return srv, nil
+	return string(asJson), nil
+}
+
+func (c *Config) validate() error {
+	if c.VarastoDirectoryId == "" || c.GoogleCredentialsJson == "" {
+		return errors.New("VarastoDirectoryId or GoogleCredentialsJson empty")
+	}
+
+	return nil
+}
+
+func deserializeConfig(serialized string) (*Config, error) {
+	c := &Config{}
+	if err := json.Unmarshal([]byte(serialized), c); err != nil {
+		return nil, err
+	}
+
+	if err := c.validate(); err != nil {
+		return nil, err
+	}
+
+	return c, nil
 }
 
 // https://github.com/golang/go/wiki/RateLimiting

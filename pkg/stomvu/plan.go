@@ -1,3 +1,4 @@
+// "Move utils" - logic for moving files to hierarchies sensible for TV shows, photo albums etc.
 package stomvu
 
 import (

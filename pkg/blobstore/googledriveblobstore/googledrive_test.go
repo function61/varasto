@@ -11,3 +11,19 @@ func TestToGoogleDriveName(t *testing.T) {
 
 	assert.EqualString(t, toGoogleDriveName(*ref), "16j7swfXgJRpypq8sAguT41WUeRtPNt2LQLQvzfJ5ZI")
 }
+
+func TestSerializeAndDeserializeConfig(t *testing.T) {
+	serialized, err := (&Config{
+		VarastoDirectoryId:    "vdi",
+		GoogleCredentialsJson: "stfu",
+	}).Serialize()
+	assert.Assert(t, err == nil)
+
+	assert.EqualString(t, serialized, `{"VarastoDirectoryId":"vdi","GoogleCredentialsJson":"stfu"}`)
+
+	parsed, err := deserializeConfig(serialized)
+	assert.Assert(t, err == nil)
+
+	assert.EqualString(t, parsed.VarastoDirectoryId, "vdi")
+	assert.EqualString(t, parsed.GoogleCredentialsJson, "stfu")
+}

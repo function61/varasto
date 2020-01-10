@@ -169,7 +169,8 @@
 		"title": "Mount Google Drive volume",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "FolderId", "title": "Folder ID", "placeholder": "1znjU234YCcLW96u6_WrZtms2vFvGy55e" }
+			{ "key": "FolderId", "title": "Folder ID", "placeholder": "1znjU234YCcLW96u6_WrZtms2vFvGy55e" },
+			{ "key": "CredentialsJson", "type": "multiline", "title": "credentials.json from Google", "placeholder": "{\"installed\":{\"client_id\":\"...}" }
 		]
 	},
 	{

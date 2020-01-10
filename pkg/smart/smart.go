@@ -1,3 +1,4 @@
+// Access SMART data of disks
 package smart
 
 import (

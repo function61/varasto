@@ -12,6 +12,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/smart"
@@ -225,10 +226,18 @@ func (c *cHandlers) VolumeMountLocal(cmd *stoservertypes.VolumeMountLocal, ctx *
 }
 
 func (c *cHandlers) VolumeMountGoogleDrive(cmd *stoservertypes.VolumeMountGoogleDrive, ctx *command.Ctx) error {
+	configSerialized, err := (&googledriveblobstore.Config{
+		VarastoDirectoryId:    cmd.FolderId,
+		GoogleCredentialsJson: cmd.CredentialsJson,
+	}).Serialize()
+	if err != nil {
+		return err
+	}
+
 	return c.mountVolume(
 		cmd.Id,
 		stoservertypes.VolumeDriverKindGoogledrive,
-		cmd.FolderId,
+		configSerialized,
 		ctx)
 }
 
