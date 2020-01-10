@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"errors"
+	"fmt"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -9,6 +10,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
+	"sort"
 	"strings"
 )
 
@@ -21,15 +23,35 @@ func (r *ReplicationPolicyV2) Satisfied(currentReplicas int) bool {
 }
 
 type ReconciliationCompletionReport struct {
-	NrCollectionsWithCompliantPolicy  int
+	TotalCollections                  int
 	CollectionsWithNonCompliantPolicy []collectionToReconcile
 }
 
 type collectionToReconcile struct {
-	collectionId    string
-	blobCount       int
-	desiredReplicas int
-	presence        map[int]int
+	collectionId                   string
+	blobCount                      int
+	desiredReplicas                int
+	problemRedundancy              bool
+	problemDesiredReplicasOutdated bool
+	presence                       map[int]int
+}
+
+func (c *collectionToReconcile) anyProblems() bool {
+	return c.problemRedundancy || c.problemDesiredReplicasOutdated
+}
+
+func (c *collectionToReconcile) volsWithFullReplicas() []int {
+	volsWithFullReplicas := []int{}
+
+	for volId, blobCount := range c.presence {
+		if blobCount == c.blobCount {
+			volsWithFullReplicas = append(volsWithFullReplicas, volId)
+		}
+	}
+
+	sort.Ints(volsWithFullReplicas)
+
+	return volsWithFullReplicas
 }
 
 var latestReconciliationReport *ReconciliationCompletionReport
@@ -83,6 +105,62 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 			return stodb.BlobRepository.Update(blob, tx)
 		}, tx)
 	})
+}
+
+func (c *cHandlers) DatabaseReconcileOutOfSyncDesiredVolumes(cmd *stoservertypes.DatabaseReconcileOutOfSyncDesiredVolumes, ctx *command.Ctx) error {
+	collIds := strings.Split(cmd.Id, ",")
+
+	if latestReconciliationReport == nil {
+		return errors.New("latestReconciliationReport nil")
+	}
+
+	processColl := func(coll *stotypes.Collection, tx *bolt.Tx) error {
+		for idx, item := range latestReconciliationReport.CollectionsWithNonCompliantPolicy {
+			if item.collectionId != coll.ID {
+				continue
+			}
+
+			coll.DesiredVolumes = item.volsWithFullReplicas()
+
+			if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
+				return err
+			}
+
+			item.problemDesiredReplicasOutdated = false
+
+			if !item.anyProblems() {
+				// remove
+				latestReconciliationReport.CollectionsWithNonCompliantPolicy = append(
+					latestReconciliationReport.CollectionsWithNonCompliantPolicy[:idx],
+					latestReconciliationReport.CollectionsWithNonCompliantPolicy[idx+1:]...)
+			}
+
+			return nil
+		}
+
+		return fmt.Errorf("coll %s not found from latestReconciliationReport", coll.ID)
+	}
+
+	if err := c.db.Update(func(tx *bolt.Tx) error {
+		q := stodb.Read(tx)
+
+		for _, collId := range collIds {
+			coll, err := q.Collection(collId)
+			if err != nil {
+				return err
+			}
+
+			if err := processColl(coll, tx); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.DatabaseReconcileReplicationPolicy, ctx *command.Ctx) error {
@@ -150,7 +228,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	rcr := NewReconciliationCompletionReport()
+	report := NewReconciliationCompletionReport()
 
 	replicationPolicyForCollection := func(coll *stotypes.Collection) ReplicationPolicyV2 {
 		// TODO
@@ -160,9 +238,11 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 
 	visitCollection := func(coll *stotypes.Collection) error {
+		report.TotalCollections++
+
 		policy := replicationPolicyForCollection(coll)
 
-		ctr := collectionToReconcile{
+		collReport := collectionToReconcile{
 			collectionId:    coll.ID,
 			desiredReplicas: policy.Replicas,
 			presence:        map[int]int{},
@@ -170,7 +250,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		}
 
 		if err := eachBlobOfCollection(coll, func(ref stotypes.BlobRef) error {
-			ctr.blobCount++
+			collReport.blobCount++
 
 			blob, err := stodb.Read(tx).Blob(ref)
 			if err != nil {
@@ -181,9 +261,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 
 			for _, vol := range volsAndPendings {
 				// null value (when not found from map) conveniently works out for us
-				presence := ctr.presence[vol]
-				presence++
-				ctr.presence[vol] = presence
+				collReport.presence[vol] = collReport.presence[vol] + 1
 			}
 
 			return nil
@@ -191,28 +269,27 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			return err
 		}
 
-		fullReplicas := 0
-
-		for _, blobCount := range ctr.presence {
-			if blobCount == ctr.blobCount {
-				fullReplicas++
-			}
-		}
+		volsWithFullReplicas := collReport.volsWithFullReplicas()
 
 		// empty collections (blobCount=0) are stupid but technically they're fully replicated
-		if ctr.blobCount > 0 && !policy.Satisfied(fullReplicas) {
-			rcr.CollectionsWithNonCompliantPolicy = append(rcr.CollectionsWithNonCompliantPolicy, ctr)
-		} else {
-			rcr.NrCollectionsWithCompliantPolicy++
+		if collReport.blobCount > 0 && !policy.Satisfied(len(volsWithFullReplicas)) {
+			collReport.problemRedundancy = true
+		}
+
+		if !intSliceContentsEqual(volsWithFullReplicas, coll.DesiredVolumes) {
+			collReport.problemDesiredReplicasOutdated = true
+		}
+
+		if collReport.anyProblems() {
+			report.CollectionsWithNonCompliantPolicy = append(report.CollectionsWithNonCompliantPolicy, collReport)
 		}
 
 		return nil
 	}
 
-	var iterateDirectoryRecursively func(string) error
-
-	iterateDirectoryRecursively = func(id string) error {
-		colls, err := stodb.Read(tx).CollectionsByDirectory(id)
+	// start from root and recurse to subdirs
+	if err := iterateDirectoriesRecursively(stoservertypes.RootFolderId, tx, func(dirId string) error {
+		colls, err := stodb.Read(tx).CollectionsByDirectory(dirId)
 		if err != nil {
 			return err
 		}
@@ -224,26 +301,12 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			}
 		}
 
-		subDirs, err := stodb.Read(tx).SubDirectories(id)
-		if err != nil {
-			return err
-		}
-
-		for _, subDir := range subDirs {
-			if err := iterateDirectoryRecursively(subDir.ID); err != nil {
-				return err
-			}
-		}
-
 		return nil
-	}
-
-	// start from root and recurse to subdirs
-	if err := iterateDirectoryRecursively(stoservertypes.RootFolderId); err != nil {
+	}); err != nil {
 		return err
 	}
 
-	latestReconciliationReport = rcr
+	latestReconciliationReport = report
 
 	return nil
 }
@@ -336,4 +399,40 @@ func eachBlobOfCollection(coll *stotypes.Collection, visit func(ref stotypes.Blo
 	}
 
 	return nil
+}
+
+func iterateDirectoriesRecursively(id string, tx *bolt.Tx, visitor func(dirIr string) error) error {
+	if err := visitor(id); err != nil {
+		return err
+	}
+
+	subDirs, err := stodb.Read(tx).SubDirectories(id)
+	if err != nil {
+		return err
+	}
+
+	for _, subDir := range subDirs {
+		if err := iterateDirectoriesRecursively(subDir.ID, tx, visitor); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func intSliceContentsEqual(a []int, b []int) bool {
+	sort.Ints(a)
+	sort.Ints(b)
+
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+
+	return true
 }

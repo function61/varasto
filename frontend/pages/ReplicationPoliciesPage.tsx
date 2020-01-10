@@ -6,6 +6,7 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	DatabaseDiscoverReconcilableReplicationPolicies,
+	DatabaseReconcileOutOfSyncDesiredVolumes,
 	DatabaseReconcileReplicationPolicy,
 	ReplicationpolicyChangeDesiredVolumes,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -144,9 +145,13 @@ export default class ReplicationPoliciesPage extends React.Component<
 								<input type="checkbox" onChange={masterCheckedChange} />
 							</th>
 							<th>Collection</th>
-							<th>Blob count</th>
-							<th>Desired replicas</th>
-							<th>Current replicas</th>
+							<th>Blobs</th>
+							<th>Problems</th>
+							<th colSpan={2}>
+								Replicas
+								<br />
+								Desired &nbsp; &nbsp;Reality
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -165,6 +170,12 @@ export default class ReplicationPoliciesPage extends React.Component<
 								</td>
 								<td>{r.Description}</td>
 								<td>{thousandSeparate(r.TotalBlobs)}</td>
+								<td>
+									{r.ProblemRedundancy && <DangerLabel>redundancy</DangerLabel>}
+									{r.ProblemDesiredReplicasOutdated && (
+										<DangerLabel>desiredVolsOutOfSync</DangerLabel>
+									)}
+								</td>
 								<td>{r.DesiredReplicaCount}</td>
 								<td>
 									{r.ReplicaStatuses.map((rs) => {
@@ -172,7 +183,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 										const volLabel =
 											vol.length === 1 ? vol[0].Label : '(error)';
 
-										if (rs.BlobCount === r.DesiredReplicaCount) {
+										if (rs.BlobCount === r.TotalBlobs) {
 											return (
 												<span className="margin-left">
 													<DefaultLabel title={rs.BlobCount.toString()}>
@@ -198,11 +209,18 @@ export default class ReplicationPoliciesPage extends React.Component<
 						<tr>
 							<td colSpan={2}>
 								{this.state.selectedCollIds.length > 0 && (
-									<CommandButton
-										command={DatabaseReconcileReplicationPolicy(
-											this.state.selectedCollIds.join(','),
-										)}
-									/>
+									<div>
+										<CommandButton
+											command={DatabaseReconcileReplicationPolicy(
+												this.state.selectedCollIds.join(','),
+											)}
+										/>
+										<CommandButton
+											command={DatabaseReconcileOutOfSyncDesiredVolumes(
+												this.state.selectedCollIds.join(','),
+											)}
+										/>
+									</div>
 								)}
 							</td>
 							<td colSpan={99}>

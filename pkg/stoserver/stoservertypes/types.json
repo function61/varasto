@@ -447,6 +447,8 @@
 			"type": {"_": "object", "fields": {
 				"CollectionId": {"_": "string"},
 				"Description": {"_": "string"},
+				"ProblemRedundancy": {"_": "boolean"},
+				"ProblemDesiredReplicasOutdated": {"_": "boolean"},
 				"TotalBlobs": {"_": "integer"},
 				"DesiredReplicaCount": {"_": "integer"},
 				"ReplicaStatuses": {"_": "list", "of": {"_": "ReconcilableItemReplicaStatus"}}

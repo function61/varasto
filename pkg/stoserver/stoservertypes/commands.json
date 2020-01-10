@@ -486,10 +486,20 @@
 		"chain": "public",
 		"ctor": ["Id"],
 		"crudNature": "update",
-		"title": "Reconcile replication policy",
+		"title": "Replicate to volume",
 		"fields": [
 			{ "key": "Id", "max_length": 4096, "hideIfDefaultValue": true },
 			{ "key": "Volume", "type": "integer" }
+		]
+	},
+	{
+		"command": "database.ReconcileOutOfSyncDesiredVolumes",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "update",
+		"title": "Fix desiredOutOfSync",
+		"fields": [
+			{ "key": "Id", "max_length": 4096, "hideIfDefaultValue": true }
 		]
 	},
 	{

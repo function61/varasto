@@ -1320,11 +1320,13 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 			sort.Slice(replicaStatuses, func(i, j int) bool { return replicaStatuses[i].Volume < replicaStatuses[j].Volume })
 
 			nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
-				CollectionId:        ctr.collectionId,
-				Description:         strings.Join(path, " » "),
-				TotalBlobs:          ctr.blobCount,
-				DesiredReplicaCount: ctr.desiredReplicas,
-				ReplicaStatuses:     replicaStatuses,
+				CollectionId:                   ctr.collectionId,
+				Description:                    strings.Join(path, " » "),
+				TotalBlobs:                     ctr.blobCount,
+				DesiredReplicaCount:            ctr.desiredReplicas,
+				ReplicaStatuses:                replicaStatuses,
+				ProblemRedundancy:              ctr.problemRedundancy,
+				ProblemDesiredReplicasOutdated: ctr.problemDesiredReplicasOutdated,
 			})
 		}
 	}
