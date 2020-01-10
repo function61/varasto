@@ -6,7 +6,7 @@ import { DefaultLayout } from 'f61ui/layout/defaultlayout';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
-import { browseRoute, downloadClientAppRoute, serverInfoRoute } from 'routes';
+import { browseRoute, downloadClientAppRoute, gettingStartedRoute, serverInfoRoute } from 'routes';
 
 interface AppDefaultLayoutProps {
 	title: string;
@@ -32,6 +32,12 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 				glyphicon: 'download-alt',
 				url: downloadClientAppRoute.buildUrl({}),
 				active: downloadClientAppRoute.matchUrl(hash) !== null,
+			},
+			{
+				title: 'Help',
+				glyphicon: 'book',
+				url: gettingStartedRoute.buildUrl({ v: 'welcome' }),
+				active: gettingStartedRoute.matchUrl(hash) !== null,
 			},
 			{
 				title: 'Settings',
