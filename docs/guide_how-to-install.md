@@ -2,15 +2,26 @@ How to install
 ==============
 
 The recommended way to use Varasto is via **Docker on a Linux PC**. All other combinations
-like manual install, Windows or the likes of Raspberry Pi might work but are unsupported
-while Varasto is in beta.
+like manual install on Linux, Windows or the likes of Raspberry Pi might work but are
+unsupported while Varasto is in beta.
 
 Contents:
 
+- [Limitations of beta version](#limitations-of-beta-version)
 - [Linux (Docker)](#linux-docker)
 - [Linux (manual)](#linux-manual)
 - [Windows](#windows)
 - [After Varasto is started](#after-varasto-is-started) (see this after you've installed!)
+
+
+Limitations of beta version
+---------------------------
+
+Varasto is in MVP stage - several important features are not implemented. Such as:
+
+- Security or access controls (only run this in your LAN)
+- Anything mentioned in the
+  ["General availability" milestone](https://github.com/function61/varasto/milestone/3)
 
 
 Linux (Docker)
@@ -19,7 +30,7 @@ Linux (Docker)
 Find out which version to install from [Docker Hub](https://hub.docker.com/r/fn61/varasto):
 
 ```
-$ docker run --name varasto -p 4486:4486 fn61/varasto:VERSION
+$ docker run -d --name varasto -p 4486:4486 fn61/varasto:VERSION
 ```
 
 NOTE: `-v /dev/disk:/dev/disk:ro --privileged` is required if you want to use SMART or FUSE.

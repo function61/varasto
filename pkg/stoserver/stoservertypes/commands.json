@@ -11,7 +11,8 @@
 		],
 		"info": [
 			"A volume is just metadata and thus creating it doesn't create any files yet or require knowing its data location.",
-			"You decide where the volume's files are stored when you mount it. First mounting of volume writes the volume ID in the mounted location so you can't accidentally mount the wrong volume in the future. I.e. first mount of volume \"locks it\" to the actual storage location."
+			"You decide where the volume's files are stored when you mount it. First mounting of volume writes the volume ID in the mounted location so you can't accidentally mount the wrong volume in the future. I.e. first mount of volume \"locks it\" to the actual storage location.",
+			"If you're creating this volume for a cloud account with 'unlimited' space, just define an arbitrary quota that you're confortable with - you can change it later."
 		]
 	},
 	{
