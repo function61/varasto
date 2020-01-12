@@ -109,7 +109,7 @@ func (g *googledrive) RoutingCost() int {
 func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobRef) (string, error) {
 	// https://twitter.com/joonas_fi/status/1108008997238595590
 	exactFilenameInExactFolderQuery := fmt.Sprintf(
-		"name = '%s' and '%s' in parents",
+		"name = '%s' and '%s' in parents and trashed = false",
 		toGoogleDriveName(ref),
 		g.varastoDirectoryId)
 
