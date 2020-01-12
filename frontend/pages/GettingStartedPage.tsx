@@ -37,7 +37,7 @@ class SmallWell extends React.Component<SmallWellProps, {}> {
 type section =
 	| 'welcome'
 	| 'createUser'
-	| 'createKek'
+	| 'setUpEncryption'
 	| 'createFirstVolume'
 	| 'mountFirstVolume'
 	| 'defaultReplicationPolicy'
@@ -93,7 +93,7 @@ export default class GettingStartedPage extends React.Component<
 			<SettingsLayout title="Getting started" breadcrumbs={[]}>
 				{panel(null, 'Welcome to Varasto!', 'welcome', this.welcome)}
 				{panel(null, 'Create user', 'createUser', this.createUser)}
-				{panel(null, 'Create key encryption key', 'createKek', this.createKek)}
+				{panel(null, 'Set up encryption', 'setUpEncryption', this.setUpEncryption)}
 				{panel(null, 'Create first volume', 'createFirstVolume', this.createFirstVolume)}
 				{panel(null, 'Mount first volume', 'mountFirstVolume', this.mountFirstVolume)}
 				{panel(
@@ -170,7 +170,7 @@ export default class GettingStartedPage extends React.Component<
 		);
 	}
 
-	private createKek(currSection: section): React.ReactNode {
+	private setUpEncryption(currSection: section): React.ReactNode {
 		const kekCreateUrl = usersRoute.buildUrl({});
 
 		const iDontCareAboutKek = 'I don´t know or care what this key is';
@@ -530,8 +530,8 @@ export default class GettingStartedPage extends React.Component<
 			case 'welcome':
 				return 'createUser';
 			case 'createUser':
-				return 'createKek';
-			case 'createKek':
+				return 'setUpEncryption';
+			case 'setUpEncryption':
 				return 'createFirstVolume';
 			case 'createFirstVolume':
 				return 'mountFirstVolume';
