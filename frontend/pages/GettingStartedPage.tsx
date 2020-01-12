@@ -351,7 +351,7 @@ export default class GettingStartedPage extends React.Component<
 				{this.state.mountType === 'googleDrive' && (
 					<div>
 						<SmallWell>Volume &raquo; {VolumeMountGoogleDrive(0).title}</SmallWell>{' '}
-						<DocLink doc={DocRef.DocsGuideSettingUpGoogledriveMd} />
+						<DocLink doc={DocRef.DocsGoogledriveREADMEMd} />
 					</div>
 				)}
 

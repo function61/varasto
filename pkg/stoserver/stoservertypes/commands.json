@@ -169,8 +169,16 @@
 		"title": "Mount Google Drive volume",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "FolderId", "title": "Folder ID", "placeholder": "1znjU234YCcLW96u6_WrZtms2vFvGy55e" },
-			{ "key": "CredentialsJson", "type": "multiline", "title": "credentials.json from Google", "placeholder": "{\"installed\":{\"client_id\":\"...}" }
+			{ "key": "FolderId", "title": "Drive folder ID", "placeholder": "1znjU234YCcLW96u6_WrZtms2vFvGy55e" },
+			{ "key": "ClientId", "title": "Client ID", "placeholder": "27661..-...apps.googleusercontent.com" },
+			{ "key": "ClientSecret", "title": "Client secret", "placeholder": "EhFl_eV.." },
+			{ "key": "AuthCode", "title": "Authorization code", "placeholder": "(Leave blank first)", "help": "This authorizes Varasto to access your Google Drive files", "optional": true }
+		],
+		"info": [
+			"Read the documentation first!",
+			"1) Leave 'Authorization code' blank & submit this form",
+			"2) You'll be asked to open new tab to authorize, and you'll get the code",
+			"3) Enter code here and submit again"
 		]
 	},
 	{

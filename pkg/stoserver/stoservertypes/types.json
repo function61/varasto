@@ -121,16 +121,16 @@
 			"type": "string",
 			"stringMembers": [
 				"README.md",
-				"docs/security_encryption/README.md",
 				"docs/client/README.md",
-				"docs/guide_setting-up-smart-monitoring.md",
-				"docs/guide_storing-tvshows.md",
-				"docs/guide_storing-movies.md",
+				"docs/googledrive/README.md",
 				"docs/guide_network-folders.md",
+				"docs/guide_setting-up-backup.md",
 				"docs/guide_setting-up-local-fs.md",
 				"docs/guide_setting-up-s3.md",
-				"docs/guide_setting-up-googledrive.md",
-				"docs/guide_setting-up-backup.md"
+				"docs/guide_setting-up-smart-monitoring.md",
+				"docs/guide_storing-movies.md",
+				"docs/guide_storing-tvshows.md",
+				"docs/security_encryption/README.md"
 			]
 		}
 	],

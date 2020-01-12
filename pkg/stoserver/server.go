@@ -384,7 +384,11 @@ func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logg
 	}, nil
 }
 
-func getDriver(volume stotypes.Volume, mount stotypes.VolumeMount, logger *log.Logger) (blobstore.Driver, error) {
+func getDriver(
+	volume stotypes.Volume,
+	mount stotypes.VolumeMount,
+	logger *log.Logger,
+) (blobstore.Driver, error) {
 	switch stoservertypes.VolumeDriverKindExhaustive42cc85(mount.Driver) {
 	case stoservertypes.VolumeDriverKindLocalFs:
 		return localfsblobstore.New(

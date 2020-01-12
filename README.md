@@ -85,7 +85,7 @@ Configuring storage:
 
 - [Setting up local disk storage](docs/guide_setting-up-local-fs.md)
 - [Setting up AWS S3](docs/guide_setting-up-s3.md)
-- [Setting up Google Drive](docs/guide_setting-up-googledrive.md)
+- [Setting up Google Drive](docs/googledrive/README.md)
 
 Guides for storing different types of content:
 

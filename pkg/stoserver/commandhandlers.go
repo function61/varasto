@@ -226,19 +226,42 @@ func (c *cHandlers) VolumeMountLocal(cmd *stoservertypes.VolumeMountLocal, ctx *
 }
 
 func (c *cHandlers) VolumeMountGoogleDrive(cmd *stoservertypes.VolumeMountGoogleDrive, ctx *command.Ctx) error {
+	oauth2Config := googledriveblobstore.Oauth2Config(cmd.ClientId, cmd.ClientSecret)
+
+	if cmd.AuthCode == "" {
+		authCodeUrl := googledriveblobstore.Oauth2AuthCodeUrl(oauth2Config)
+
+		// this is very much a hack
+		ctx.CreatedRecordId(authCodeUrl)
+		return nil
+	}
+
+	oauth2Token, err := oauth2Config.Exchange(ctx.Ctx, cmd.AuthCode)
+	if err != nil {
+		return err
+	}
+
 	configSerialized, err := (&googledriveblobstore.Config{
-		VarastoDirectoryId:    cmd.FolderId,
-		GoogleCredentialsJson: cmd.CredentialsJson,
+		VarastoDirectoryId: cmd.FolderId,
+		ClientId:           cmd.ClientId,
+		ClientSecret:       cmd.ClientSecret,
+		Token:              oauth2Token,
 	}).Serialize()
 	if err != nil {
 		return err
 	}
 
-	return c.mountVolume(
+	if err := c.mountVolume(
 		cmd.Id,
 		stoservertypes.VolumeDriverKindGoogledrive,
 		configSerialized,
-		ctx)
+		ctx); err != nil {
+		return err
+	}
+
+	// this is very much a hack
+	ctx.CreatedRecordId("mounted-ok")
+	return nil
 }
 
 func (c *cHandlers) VolumeMountS3(cmd *stoservertypes.VolumeMountS3, ctx *command.Ctx) error {

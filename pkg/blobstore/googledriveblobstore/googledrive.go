@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stotypes"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
@@ -20,30 +21,28 @@ import (
 	"time"
 )
 
+const (
+	oauth2OutOfBandRedirectUrlForOfflineApps = "urn:ietf:wg:oauth:2.0:oob" // = user will manually enter code to application
+)
+
 type googledrive struct {
-	varastoDirectoryId string
+	varastoDirectoryId string // ID of directory for storing Varasto blobs
 	logl               *logex.Leveled
 	srv                *drive.Service
 	reqThrottle        chan interface{}
 }
 
 func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
+	ctx := context.TODO()
+
 	opts, err := deserializeConfig(optsSerialized)
 	if err != nil {
 		return nil, err
 	}
 
-	// if modifying scope, delete your cached access token
-	config, err := google.ConfigFromJSON([]byte(opts.GoogleCredentialsJson), drive.DriveScope)
-	if err != nil {
-		return nil, fmt.Errorf("google.ConfigFromJSON: %v", err)
-	}
+	client := Oauth2Config(opts.ClientId, opts.ClientSecret).Client(ctx, opts.Token)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 10*time.Second)
-	defer cancel()
-	client := getClient(ctx, config)
-
-	gdrive, err := drive.NewService(context.TODO(), option.WithHTTPClient(client))
+	gdrive, err := drive.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return nil, fmt.Errorf("drive.NewService: %v", err)
 	}
@@ -135,9 +134,25 @@ func toGoogleDriveName(ref stotypes.BlobRef) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(ref))
 }
 
+func Oauth2Config(clientId string, clientSecret string) *oauth2.Config {
+	return &oauth2.Config{
+		ClientID:     clientId,
+		ClientSecret: clientSecret,
+		Endpoint:     google.Endpoint,
+		RedirectURL:  oauth2OutOfBandRedirectUrlForOfflineApps,
+		Scopes:       []string{drive.DriveScope},
+	}
+}
+
+func Oauth2AuthCodeUrl(conf *oauth2.Config) string {
+	return conf.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+}
+
 type Config struct {
-	VarastoDirectoryId    string
-	GoogleCredentialsJson string
+	VarastoDirectoryId string        `json:"directory_id"`
+	ClientId           string        `json:"oauth2_client_id"`
+	ClientSecret       string        `json:"oauth2_client_secret"`
+	Token              *oauth2.Token `json:"oauth2_token"`
 }
 
 func (c *Config) Serialize() (string, error) {
@@ -154,8 +169,8 @@ func (c *Config) Serialize() (string, error) {
 }
 
 func (c *Config) validate() error {
-	if c.VarastoDirectoryId == "" || c.GoogleCredentialsJson == "" {
-		return errors.New("VarastoDirectoryId or GoogleCredentialsJson empty")
+	if c.ClientId == "" || c.ClientSecret == "" || c.VarastoDirectoryId == "" || c.Token == nil {
+		return errors.New("none of the config fields can be empty")
 	}
 
 	return nil

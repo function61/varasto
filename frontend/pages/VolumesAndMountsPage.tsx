@@ -3,6 +3,7 @@ import { thousandSeparate } from 'component/numberformatter';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'component/result';
 import { TabController } from 'component/tabcontroller';
+import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert } from 'f61ui/component/alerts';
 import {
 	DangerLabel,
@@ -526,9 +527,21 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeMountGoogleDrive(obj.Id, {
 									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(
-										DocRef.DocsGuideSettingUpGoogledriveMd,
-									),
+									helpUrl: DocGitHubMaster(DocRef.DocsGoogledriveREADMEMd),
+									redirect: (createdRecordId): string => {
+										if (createdRecordId === 'mounted-ok') {
+											reloadCurrentPage();
+										} else {
+											if (
+												confirm(
+													'You´ll now be redirected to Google to authorize your account to access Google Drive',
+												)
+											) {
+												window.open(createdRecordId, '_blank');
+											}
+										}
+										return '';
+									},
 								})}
 							/>
 							<CommandLink
