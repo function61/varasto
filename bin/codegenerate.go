@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/function61/eventkit/codegen"
 	"github.com/function61/eventkit/codegen/codegentemplates"
 	"github.com/function61/gokit/dynversion/precompilationversion"
@@ -13,12 +14,13 @@ import (
 //go:generate rm ../frontend/generated/stofuse/stofusetypes_endpoints.ts
 
 func main() {
-	if err := mainInternal(); err != nil {
-		panic(err)
+	if err := mainLogic(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
-func mainInternal() error {
+func mainLogic() error {
 	// normalize to root of the project
 	if err := os.Chdir(".."); err != nil {
 		return err
