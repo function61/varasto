@@ -199,7 +199,7 @@ export default class CollectionPage extends React.Component<
 		const changesetToItem = (changeset: ChangesetSubset) => {
 			return (
 				<tr>
-					<td>{changeset.Id === collOutput.ChangesetId ? '*' : ''}</td>
+					<td>{changeset.Id === collOutput.ChangesetId ? '→' : ''}</td>
 					<td>
 						<a
 							href={collectionRoute.buildUrl({
