@@ -1,6 +1,7 @@
 import { collectionDropdown } from 'component/collectiondropdown';
 import { DocLink } from 'component/doclink';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
+import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'component/result';
 import {
 	createSensitivityAuthorizer,
@@ -465,9 +466,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<tr>
 							<th>Content</th>
 							<td>
-								{output.Directories.length} subdirectories
+								{thousandSeparate(output.Directories.length)} subdirectories
 								<br />
-								{output.Collections.length} collections
+								{thousandSeparate(output.Collections.length)} collections
 							</td>
 						</tr>
 					</tbody>
