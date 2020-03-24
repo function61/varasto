@@ -15,16 +15,16 @@ func ConfigAccessor(key string) *configAccessor {
 	return &configAccessor{key}
 }
 
-func (c *configAccessor) GetOptional(tx *bolt.Tx) (string, error) {
+func (c *configAccessor) GetOptional(tx *bbolt.Tx) (string, error) {
 	return c.getWithRequired(false, tx)
 }
 
 // returns descriptive error message if value not set
-func (c *configAccessor) GetRequired(tx *bolt.Tx) (string, error) {
+func (c *configAccessor) GetRequired(tx *bbolt.Tx) (string, error) {
 	return c.getWithRequired(true, tx)
 }
 
-func (c *configAccessor) getWithRequired(required bool, tx *bolt.Tx) (string, error) {
+func (c *configAccessor) getWithRequired(required bool, tx *bbolt.Tx) (string, error) {
 	conf := &stotypes.Config{}
 	if err := configRepository.OpenByPrimaryKey([]byte(c.key), conf, tx); err != nil && err != blorm.ErrNotFound {
 		return "", err
@@ -37,7 +37,7 @@ func (c *configAccessor) getWithRequired(required bool, tx *bolt.Tx) (string, er
 	return conf.Value, nil
 }
 
-func (c *configAccessor) Set(value string, tx *bolt.Tx) error {
+func (c *configAccessor) Set(value string, tx *bbolt.Tx) error {
 	return configRepository.Update(&stotypes.Config{
 		Key:   c.key,
 		Value: value,

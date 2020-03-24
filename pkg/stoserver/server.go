@@ -278,7 +278,7 @@ type ServerConfig struct {
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
-func readConfigFromDatabase(db *bolt.DB, scf *ServerConfigFile, logger *log.Logger, logTail *logtee.StringTail) (*ServerConfig, error) {
+func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Logger, logTail *logtee.StringTail) (*ServerConfig, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
@@ -417,7 +417,7 @@ func readServerConfigFile() (*ServerConfigFile, error) {
 }
 
 type dbbma struct {
-	db       *bolt.DB
+	db       *bbolt.DB
 	keyStore *keyStore
 }
 
@@ -442,7 +442,7 @@ func (d *dbbma) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
 func (d *dbbma) QueryCollectionEncryptionKeyForNewBlobs(coll string) (string, []byte, error) {
 	var kenv *stotypes.KeyEnvelope
 
-	if err := d.db.View(func(tx *bolt.Tx) error {
+	if err := d.db.View(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(coll)
 		if err != nil {
 			return fmt.Errorf("collection not found: %v", err)
@@ -569,7 +569,7 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 	return tx.Commit()
 }
 
-func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeId int, size int64, tx *bolt.Tx) error {
+func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeId int, size int64, tx *bbolt.Tx) error {
 	if sliceutil.ContainsInt(blob.Volumes, volumeId) {
 		return fmt.Errorf(
 			"race condition: someone already replicated %s to %d",

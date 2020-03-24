@@ -53,13 +53,13 @@ type Index interface {
 
 type setIndexApi interface {
 	// return StopIteration if you want to stop mid-iteration (nil error will be returned by Query() )
-	Query(start []byte, fn func(id []byte) error, tx *bolt.Tx) error
+	Query(start []byte, fn func(id []byte) error, tx *bbolt.Tx) error
 	Index
 }
 
 type byValueIndexApi interface {
 	// return StopIteration if you want to stop mid-iteration (nil error will be returned by Query() )
-	Query(val []byte, start []byte, fn func(id []byte) error, tx *bolt.Tx) error
+	Query(val []byte, start []byte, fn func(id []byte) error, tx *bbolt.Tx) error
 	Index
 }
 
@@ -82,7 +82,7 @@ func (s *setIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
 	return []qualifiedIndexRef{}
 }
 
-func (s *setIndex) Query(start []byte, fn func(id []byte) error, tx *bolt.Tx) error {
+func (s *setIndex) Query(start []byte, fn func(id []byte) error, tx *bbolt.Tx) error {
 	// " " is required because empty key is not supported
 	return indexQueryShared(s.name, []byte(" "), start, fn, tx)
 }
@@ -113,12 +113,12 @@ func (b *byValueIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef 
 	return qualifiedRefs
 }
 
-func (b *byValueIndex) Query(value []byte, start []byte, fn func(id []byte) error, tx *bolt.Tx) error {
+func (b *byValueIndex) Query(value []byte, start []byte, fn func(id []byte) error, tx *bbolt.Tx) error {
 	return indexQueryShared(b.name, value, start, fn, tx)
 }
 
 // used both by byValueIndex and by setIndex
-func indexQueryShared(indexName string, value []byte, start []byte, fn func(id []byte) error, tx *bolt.Tx) error {
+func indexQueryShared(indexName string, value []byte, start []byte, fn func(id []byte) error, tx *bbolt.Tx) error {
 	// the nil part is not used by indexBucketRefForQuery()
 	bucket := indexBucketRefForQuery(mkIndexRef(indexName, value, nil), tx)
 	if bucket == nil { // index doesn't exist => not matching entries
@@ -166,7 +166,7 @@ func indexRefExistsIn(ir qualifiedIndexRef, coll []qualifiedIndexRef) bool {
 	return false
 }
 
-func indexBucketRefForQuery(ref qualifiedIndexRef, tx *bolt.Tx) *bolt.Bucket {
+func indexBucketRefForQuery(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
 	// directories:by_parent
 	lvl1 := tx.Bucket([]byte(ref.indexName))
 	if lvl1 == nil {
@@ -176,7 +176,7 @@ func indexBucketRefForQuery(ref qualifiedIndexRef, tx *bolt.Tx) *bolt.Bucket {
 	return lvl1.Bucket(ref.valAndId.val)
 }
 
-func indexBucketRefForWrite(ref qualifiedIndexRef, tx *bolt.Tx) *bolt.Bucket {
+func indexBucketRefForWrite(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
 	// directories:by_parent
 	lvl1, err := tx.CreateBucketIfNotExists([]byte(ref.indexName))
 	if err != nil {

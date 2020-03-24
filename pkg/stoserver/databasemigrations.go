@@ -12,7 +12,7 @@ import (
 )
 
 func (c *cHandlers) DatabaseMigrate(cmd *stoservertypes.DatabaseMigrate, ctx *command.Ctx) error {
-	migrations := map[int]func(*bolt.Tx) error{
+	migrations := map[int]func(*bbolt.Tx) error{
 		1: migration1,
 		2: migration2,
 		3: migration3,
@@ -20,7 +20,7 @@ func (c *cHandlers) DatabaseMigrate(cmd *stoservertypes.DatabaseMigrate, ctx *co
 		5: migration5,
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		migration, found := migrations[cmd.Phase]
 		if !found {
 			return fmt.Errorf("migration not found for phase: %d", cmd.Phase)
@@ -30,7 +30,7 @@ func (c *cHandlers) DatabaseMigrate(cmd *stoservertypes.DatabaseMigrate, ctx *co
 	})
 }
 
-func migration1(tx *bolt.Tx) error {
+func migration1(tx *bbolt.Tx) error {
 	now := time.Now()
 
 	if err := stodb.DirectoryRepository.Each(func(record interface{}) error {
@@ -88,11 +88,11 @@ func migration1(tx *bolt.Tx) error {
 	return nil
 }
 
-func migration2(tx *bolt.Tx) error {
+func migration2(tx *bbolt.Tx) error {
 	return stodb.KeyEncryptionKeyRepository.Bootstrap(tx)
 }
 
-func migration3(tx *bolt.Tx) error {
+func migration3(tx *bbolt.Tx) error {
 	kenvs := map[string]stotypes.KeyEnvelope{}
 
 	// 1st pass => collect all kenvs
@@ -148,7 +148,7 @@ func migration3(tx *bolt.Tx) error {
 	return nil
 }
 
-func migration4(tx *bolt.Tx) error {
+func migration4(tx *bbolt.Tx) error {
 	/*
 		// collId => encryptionKeyId
 		visitedCollections := map[string]string{}
@@ -215,7 +215,7 @@ func migration4(tx *bolt.Tx) error {
 	return nil
 }
 
-func migration5(tx *bolt.Tx) error {
+func migration5(tx *bbolt.Tx) error {
 	return stodb.NodeRepository.Each(func(record interface{}) error {
 		node := record.(*stotypes.Node)
 

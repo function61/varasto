@@ -22,7 +22,7 @@ func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMet
 		return err
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		collection, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
@@ -80,7 +80,7 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *stoservertypes.DirectoryPullMetad
 		return err
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Directory)
 		if err != nil {
 			return err
@@ -110,7 +110,7 @@ func (c *cHandlers) DirectoryPullMetadata(cmd *stoservertypes.DirectoryPullMetad
 
 // this is for serie episodes
 func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.CollectionRefreshMetadataAutomatically, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		// Collection is validated as non-empty
 		collIds := strings.Split(cmd.Collection, ",")
 
@@ -244,7 +244,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 }
 
 func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMovieDbApikey, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		if cmd.Apikey != "" { // allow clearing this without testing
 			// validate the API key by trying to use the API
 			client := themoviedbapi.New(cmd.Apikey)

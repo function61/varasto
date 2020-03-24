@@ -120,7 +120,7 @@ func sha256FingerprintForPublicKey(publicKey *rsa.PublicKey) (string, error) {
 func copyAndReEncryptDekFromAnotherCollection(
 	dekId string,
 	kekPubKeyFingerprints []string,
-	tx *bolt.Tx,
+	tx *bbolt.Tx,
 	ks *keyStore,
 ) (*stotypes.KeyEnvelope, error) {
 	var newEnvelope *stotypes.KeyEnvelope

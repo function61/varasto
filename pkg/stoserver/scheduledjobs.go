@@ -91,7 +91,7 @@ func scheduledJobRunner(kind stoservertypes.ScheduledJobKind, commandPlumbing *s
 func setupScheduledJobs(
 	chandlers interface{},
 	eventLog eventlog.Log,
-	db *bolt.DB,
+	db *bbolt.DB,
 	logger *log.Logger,
 	stop *stopper.Stopper,
 	snapshotHandlerStop *stopper.Stopper,
@@ -138,7 +138,7 @@ func setupScheduledJobs(
 	}
 
 	handleSnapshot := func(snapshot []scheduler.JobSpec) error {
-		return db.Update(func(tx *bolt.Tx) error {
+		return db.Update(func(tx *bbolt.Tx) error {
 			for _, job := range snapshot {
 				dbJob, err := stodb.Read(tx).ScheduledJob(job.Id)
 				if err != nil {

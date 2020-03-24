@@ -22,7 +22,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		hashesToMove[hash] = true
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		collSrc, err := stodb.Read(tx).Collection(cmd.Source)
 		if err != nil {
 			return err

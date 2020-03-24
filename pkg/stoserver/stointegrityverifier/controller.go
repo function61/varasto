@@ -19,7 +19,7 @@ import (
 const errorReportMaxLength = 20 * 1024
 
 type Controller struct {
-	db                  *bolt.DB
+	db                  *bbolt.DB
 	runningJobIds       map[string]*stopper.Stopper
 	diskAccess          *stodiskaccess.Controller
 	ivJobRepository     blorm.Repository
@@ -46,7 +46,7 @@ func (s *Controller) ListRunningJobs() []string {
 
 // returns controller with threadsafe APIs whose work will be safely executed in a single thread
 func NewController(
-	db *bolt.DB,
+	db *bbolt.DB,
 	ivJobRepository blorm.Repository,
 	blobRepository blorm.Repository,
 	diskAccess *stodiskaccess.Controller,
@@ -106,7 +106,7 @@ func NewController(
 	return ctrl
 }
 
-func (s *Controller) resumeJob(jobId string, db *bolt.DB, stop *stopper.Stopper) error {
+func (s *Controller) resumeJob(jobId string, db *bbolt.DB, stop *stopper.Stopper) error {
 	if _, running := s.runningJobIds[jobId]; running {
 		return errors.New("job is already running")
 	}
@@ -157,7 +157,7 @@ func (s *Controller) resumeJobWorker(
 	lastStatusUpdate := time.Now()
 
 	updateJobStatusInDb := func() error {
-		return s.db.Update(func(tx *bolt.Tx) error {
+		return s.db.Update(func(tx *bbolt.Tx) error {
 			return s.ivJobRepository.Update(job, tx)
 		})
 	}

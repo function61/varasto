@@ -45,7 +45,7 @@ import (
 )
 
 type handlers struct {
-	db           *bolt.DB
+	db           *bbolt.DB
 	conf         *ServerConfig
 	ivController *stointegrityverifier.Controller
 	logger       *log.Logger
@@ -54,7 +54,7 @@ type handlers struct {
 func defineRestApi(
 	router *mux.Router,
 	conf *ServerConfig,
-	db *bolt.DB,
+	db *bbolt.DB,
 	ivController *stointegrityverifier.Controller,
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
@@ -537,7 +537,7 @@ func commitChangesetInternal(
 	r *http.Request,
 	collectionId string,
 	changeset stotypes.CollectionChangeset,
-	db *bolt.DB,
+	db *bbolt.DB,
 	serverConf *ServerConfig,
 ) *stotypes.Collection {
 	httpErr := func(errStr string, errCode int) *stotypes.Collection { // shorthand
@@ -900,7 +900,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 	wholeFileHash := sha256.New()
 
 	var volumeId int
-	if err := h.db.View(func(tx *bolt.Tx) error {
+	if err := h.db.View(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(collectionId)
 		if err != nil {
 			return err
@@ -1220,7 +1220,7 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 	}
 
 	var volumeId int
-	if err := h.db.View(func(tx *bolt.Tx) error {
+	if err := h.db.View(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(collectionId)
 		if err != nil {
 			return err
@@ -1374,7 +1374,7 @@ func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {
 	}
 }
 
-func getParentDirs(of stotypes.Directory, tx *bolt.Tx) ([]stotypes.Directory, error) {
+func getParentDirs(of stotypes.Directory, tx *bbolt.Tx) ([]stotypes.Directory, error) {
 	parentDirs := []stotypes.Directory{}
 
 	current := &of
@@ -1405,7 +1405,7 @@ func metadataMapToKvList(kvmap map[string]string) []stoservertypes.MetadataKv {
 	return kvList
 }
 
-func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
+func doesBlobExist(ref stotypes.BlobRef, db *bbolt.DB) (bool, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return false, err
@@ -1423,7 +1423,7 @@ func doesBlobExist(ref stotypes.BlobRef, db *bolt.DB) (bool, error) {
 	return false, err // unknown error
 }
 
-func getHealthCheckerGraph(db *bolt.DB, conf *ServerConfig) (stohealth.HealthChecker, error) {
+func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthChecker, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err

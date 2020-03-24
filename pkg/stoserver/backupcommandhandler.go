@@ -52,7 +52,7 @@ func (c *cHandlers) DatabaseBackupConfigure(cmd *stoservertypes.DatabaseBackupCo
 		}
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.CfgUbackupConfig.Set(string(serializedUbConfig), tx)
 	})
 }
@@ -86,7 +86,7 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 	return ubbackup.BackupAndStore(ctx.Ctx, backup, *conf, logex.Prefix("µbackup", c.logger))
 }
 
-func ubConfigFromDb(db *bolt.DB) (*ubconfig.Config, error) {
+func ubConfigFromDb(db *bbolt.DB) (*ubconfig.Config, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err

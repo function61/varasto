@@ -10,7 +10,7 @@ import (
 )
 
 func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		job, err := stodb.Read(tx).ScheduledJob(cmd.Id)
 		if err != nil {
 			return err
@@ -27,7 +27,7 @@ func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, c
 }
 
 func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		job, err := stodb.Read(tx).ScheduledJob(cmd.Id)
 		if err != nil {
 			return err
@@ -44,7 +44,7 @@ func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable,
 }
 
 func (c *cHandlers) ScheduledjobChangeSchedule(cmd *stoservertypes.ScheduledjobChangeSchedule, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		job, err := stodb.Read(tx).ScheduledJob(cmd.Id)
 		if err != nil {
 			return err

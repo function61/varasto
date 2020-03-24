@@ -23,7 +23,7 @@ func NewSimpleRepo(bucketName string, allocator func() interface{}, idExtractor 
 	}
 }
 
-func (r *SimpleRepository) Bootstrap(tx *bolt.Tx) error {
+func (r *SimpleRepository) Bootstrap(tx *bbolt.Tx) error {
 	_, err := tx.CreateBucket(r.bucketName)
 	return err
 }
@@ -32,7 +32,7 @@ func (r *SimpleRepository) Alloc() interface{} {
 	return r.alloc()
 }
 
-func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error {
+func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -50,7 +50,7 @@ func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *b
 	return nil
 }
 
-func (r *SimpleRepository) Update(record interface{}, tx *bolt.Tx) error {
+func (r *SimpleRepository) Update(record interface{}, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -84,7 +84,7 @@ func (r *SimpleRepository) Update(record interface{}, tx *bolt.Tx) error {
 	return bucket.Put(id, data)
 }
 
-func (r *SimpleRepository) Delete(record interface{}, tx *bolt.Tx) error {
+func (r *SimpleRepository) Delete(record interface{}, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -106,11 +106,11 @@ func (r *SimpleRepository) Delete(record interface{}, tx *bolt.Tx) error {
 	return bucket.Delete(id)
 }
 
-func (r *SimpleRepository) Each(fn func(record interface{}) error, tx *bolt.Tx) error {
+func (r *SimpleRepository) Each(fn func(record interface{}) error, tx *bbolt.Tx) error {
 	return r.EachFrom([]byte(""), fn, tx)
 }
 
-func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) error, tx *bolt.Tx) error {
+func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) error, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -146,7 +146,7 @@ func (r *SimpleRepository) indexRefsForRecord(record interface{}) []qualifiedInd
 	return refs
 }
 
-func (r *SimpleRepository) updateIndices(oldIndices []qualifiedIndexRef, newIndices []qualifiedIndexRef, tx *bolt.Tx) error {
+func (r *SimpleRepository) updateIndices(oldIndices []qualifiedIndexRef, newIndices []qualifiedIndexRef, tx *bbolt.Tx) error {
 	for _, old := range oldIndices {
 		if !indexRefExistsIn(old, newIndices) {
 			if err := indexBucketRefForWrite(old, tx).Delete(old.valAndId.id); err != nil {

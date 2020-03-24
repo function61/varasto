@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func healthForScheduledJobs(tx *bolt.Tx) stohealth.HealthChecker {
+func healthForScheduledJobs(tx *bbolt.Tx) stohealth.HealthChecker {
 	jobsHealth := []stohealth.HealthChecker{}
 
 	jobs := []stotypes.ScheduledJob{}

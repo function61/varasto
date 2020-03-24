@@ -16,11 +16,11 @@ import (
 )
 
 // opens BoltDB database
-func Open(dbLocation string) (*bolt.DB, error) {
-	return bolt.Open(dbLocation, 0700, nil)
+func Open(dbLocation string) (*bbolt.DB, error) {
+	return bbolt.Open(dbLocation, 0700, nil)
 }
 
-func Bootstrap(db *bolt.DB, logger *log.Logger) error {
+func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	bootstrapTimestamp := time.Now()
@@ -32,7 +32,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	// be extra safe and scan the DB to see that it is totally empty
-	if err := tx.ForEach(func(name []byte, _ *bolt.Bucket) error {
+	if err := tx.ForEach(func(name []byte, _ *bbolt.Bucket) error {
 		return fmt.Errorf("DB not empty, found bucket: %s", name)
 	}); err != nil {
 		return err
@@ -122,7 +122,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 	return tx.Commit()
 }
 
-func BootstrapRepos(tx *bolt.Tx) error {
+func BootstrapRepos(tx *bbolt.Tx) error {
 	if err := writeSchemaVersion(tx); err != nil {
 		return err
 	}

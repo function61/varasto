@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-func Export(tx *bolt.Tx, output io.Writer) error {
+func Export(tx *bbolt.Tx, output io.Writer) error {
 	outputBuffered := bufio.NewWriterSize(output, 1024*100)
 	defer outputBuffered.Flush()
 
@@ -83,7 +83,7 @@ func Import(content io.Reader, dbLocation string) error {
 		return err
 	}
 
-	var openTx *bolt.Tx
+	var openTx *bbolt.Tx
 
 	commitOpenTx := func() error {
 		if openTx == nil {
@@ -96,7 +96,7 @@ func Import(content io.Reader, dbLocation string) error {
 	txUseCount := 0
 
 	// automatically commits every N calls
-	withTx := func(fn func(tx *bolt.Tx) error) error {
+	withTx := func(fn func(tx *bbolt.Tx) error) error {
 		txUseCount++
 
 		if (txUseCount % 2000) == 0 {
@@ -135,7 +135,7 @@ func Import(content io.Reader, dbLocation string) error {
 	return commitOpenTx()
 }
 
-func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error) error) error {
+func importDbInternal(content io.Reader, withTx func(fn func(tx *bbolt.Tx) error) error) error {
 	scanner := bufio.NewScanner(content)
 
 	// by default craps out on lines > 64k. set max line to many megabytes
@@ -183,7 +183,7 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bolt.Tx) error)
 				return err
 			}
 
-			if err := withTx(func(tx *bolt.Tx) error {
+			if err := withTx(func(tx *bbolt.Tx) error {
 				return repo.Update(record, tx)
 			}); err != nil {
 				return err

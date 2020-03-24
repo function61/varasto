@@ -33,7 +33,7 @@ import (
 )
 
 type cHandlers struct {
-	db             *bolt.DB
+	db             *bbolt.DB
 	conf           *ServerConfig
 	ivController   *stointegrityverifier.Controller
 	logger         *log.Logger
@@ -41,7 +41,7 @@ type cHandlers struct {
 }
 
 func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		max := 0
 
 		allVolumes := []stotypes.Volume{}
@@ -96,7 +96,7 @@ func (c *cHandlers) SubsystemStop(cmd *stoservertypes.SubsystemStop, ctx *comman
 }
 
 func (c *cHandlers) VolumeChangeQuota(cmd *stoservertypes.VolumeChangeQuota, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -109,7 +109,7 @@ func (c *cHandlers) VolumeChangeQuota(cmd *stoservertypes.VolumeChangeQuota, ctx
 }
 
 func (c *cHandlers) VolumeSetManufacturingDate(cmd *stoservertypes.VolumeSetManufacturingDate, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -122,7 +122,7 @@ func (c *cHandlers) VolumeSetManufacturingDate(cmd *stoservertypes.VolumeSetManu
 }
 
 func (c *cHandlers) VolumeSetWarrantyEndDate(cmd *stoservertypes.VolumeSetWarrantyEndDate, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -135,7 +135,7 @@ func (c *cHandlers) VolumeSetWarrantyEndDate(cmd *stoservertypes.VolumeSetWarran
 }
 
 func (c *cHandlers) VolumeSetSerialNumber(cmd *stoservertypes.VolumeSetSerialNumber, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -148,7 +148,7 @@ func (c *cHandlers) VolumeSetSerialNumber(cmd *stoservertypes.VolumeSetSerialNum
 }
 
 func (c *cHandlers) VolumeSetTechnology(cmd *stoservertypes.VolumeSetTechnology, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -161,7 +161,7 @@ func (c *cHandlers) VolumeSetTechnology(cmd *stoservertypes.VolumeSetTechnology,
 }
 
 func (c *cHandlers) VolumeSetTopology(cmd *stoservertypes.VolumeSetTopology, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -179,7 +179,7 @@ func (c *cHandlers) VolumeSetTopology(cmd *stoservertypes.VolumeSetTopology, ctx
 }
 
 func (c *cHandlers) VolumeRename(cmd *stoservertypes.VolumeRename, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -192,7 +192,7 @@ func (c *cHandlers) VolumeRename(cmd *stoservertypes.VolumeRename, ctx *command.
 }
 
 func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDescription, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -205,7 +205,7 @@ func (c *cHandlers) VolumeChangeDescription(cmd *stoservertypes.VolumeChangeDesc
 }
 
 func (c *cHandlers) VolumeChangeNotes(cmd *stoservertypes.VolumeChangeNotes, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -288,7 +288,7 @@ func (c *cHandlers) mountVolume(
 		return a.Volume == b.Volume && a.Node == b.Node
 	}
 
-	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(volId)
 		if err != nil {
 			return err
@@ -348,7 +348,7 @@ func (c *cHandlers) mountVolume(
 }
 
 func (c *cHandlers) VolumeUnmount(cmd *stoservertypes.VolumeUnmount, ctx *command.Ctx) error {
-	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		mount, err := stodb.Read(tx).VolumeMount(cmd.Id)
 		if err != nil {
 			return err
@@ -360,7 +360,7 @@ func (c *cHandlers) VolumeUnmount(cmd *stoservertypes.VolumeUnmount, ctx *comman
 
 // "copy any blobs that were on this volume, to another volume"
 func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		from, err := stodb.Read(tx).Volume(cmd.From)
 		if err != nil {
 			return err
@@ -390,7 +390,7 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 }
 
 func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegrity, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		job := &stotypes.IntegrityVerificationJob{
 			ID:       stoutils.NewIntegrityVerificationJobId(),
 			Started:  ctx.Meta.Timestamp,
@@ -402,7 +402,7 @@ func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegr
 }
 
 func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		if err := validateUniqueNameWithinSiblings(cmd.Parent, cmd.Name, tx); err != nil {
 			return err
 		}
@@ -418,7 +418,7 @@ func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *co
 }
 
 func (c *cHandlers) DirectoryDelete(cmd *stoservertypes.DirectoryDelete, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
@@ -447,7 +447,7 @@ func (c *cHandlers) DirectoryDelete(cmd *stoservertypes.DirectoryDelete, ctx *co
 }
 
 func (c *cHandlers) DirectoryRename(cmd *stoservertypes.DirectoryRename, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
@@ -464,7 +464,7 @@ func (c *cHandlers) DirectoryRename(cmd *stoservertypes.DirectoryRename, ctx *co
 }
 
 func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChangeDescription, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
@@ -477,7 +477,7 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChan
 }
 
 func (c *cHandlers) DirectorySetType(cmd *stoservertypes.DirectorySetType, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		dir, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
@@ -490,7 +490,7 @@ func (c *cHandlers) DirectorySetType(cmd *stoservertypes.DirectorySetType, ctx *
 }
 
 func (c *cHandlers) DirectoryChangeSensitivity(cmd *stoservertypes.DirectoryChangeSensitivity, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		if err := validateSensitivity(cmd.Sensitivity); err != nil {
 			return err
 		}
@@ -507,7 +507,7 @@ func (c *cHandlers) DirectoryChangeSensitivity(cmd *stoservertypes.DirectoryChan
 }
 
 func (c *cHandlers) DirectoryMove(cmd *stoservertypes.DirectoryMove, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		dirToMove, err := stodb.Read(tx).Directory(cmd.Id)
 		if err != nil {
 			return err
@@ -534,7 +534,7 @@ func (c *cHandlers) DirectoryMove(cmd *stoservertypes.DirectoryMove, ctx *comman
 }
 
 func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		if _, err := stodb.Read(tx).Directory(cmd.ParentDir); err != nil {
 			if err == blorm.ErrNotFound {
 				return errors.New("parent directory not found")
@@ -605,7 +605,7 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 }
 
 func (c *cHandlers) CollectionChangeSensitivity(cmd *stoservertypes.CollectionChangeSensitivity, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		if err := validateSensitivity(cmd.Sensitivity); err != nil {
 			return err
 		}
@@ -622,7 +622,7 @@ func (c *cHandlers) CollectionChangeSensitivity(cmd *stoservertypes.CollectionCh
 }
 
 func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		// check for existence
 		if _, err := stodb.Read(tx).Directory(cmd.Directory); err != nil {
 			return err
@@ -653,7 +653,7 @@ func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *comm
 }
 
 func (c *cHandlers) CollectionChangeDescription(cmd *stoservertypes.CollectionChangeDescription, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
@@ -666,7 +666,7 @@ func (c *cHandlers) CollectionChangeDescription(cmd *stoservertypes.CollectionCh
 }
 
 func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
@@ -683,7 +683,7 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 }
 
 func (c *cHandlers) CollectionTag(cmd *stoservertypes.CollectionTag, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Id)
 		if err != nil {
 			return err
@@ -702,7 +702,7 @@ func (c *cHandlers) CollectionTag(cmd *stoservertypes.CollectionTag, ctx *comman
 }
 
 func (c *cHandlers) CollectionUntag(cmd *stoservertypes.CollectionUntag, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Id)
 		if err != nil {
 			return err
@@ -736,7 +736,7 @@ func (c *cHandlers) FuseUnmountAll(cmd *stoservertypes.FuseUnmountAll, ctx *comm
 }
 
 func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
@@ -751,7 +751,7 @@ func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *
 }
 
 func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.Ctx) error {
-	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),
 			Created:   ctx.Meta.Timestamp,
@@ -762,7 +762,7 @@ func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.
 }
 
 func (c *cHandlers) ApikeyRemove(cmd *stoservertypes.ApikeyRemove, ctx *command.Ctx) error {
-	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.ClientRepository.Delete(&stotypes.Client{
 			ID: cmd.Id,
 		}, tx)
@@ -782,7 +782,7 @@ func (c *cHandlers) IntegrityverificationjobStop(cmd *stoservertypes.Integrityve
 }
 
 func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		desiredVolumes := []int{}
 
 		for _, desiredVolumeId := range []int{cmd.Volume1, cmd.Volume2, cmd.Volume3, cmd.Volume4, cmd.Volume5, cmd.Volume6, cmd.Volume7, cmd.Volume8, cmd.Volume9} {
@@ -814,19 +814,19 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 }
 
 func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuseServerBaseurl, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.CfgFuseServerBaseUrl.Set(cmd.Baseurl, tx)
 	})
 }
 
 func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.CfgNetworkShareBaseUrl.Set(cmd.Baseurl, tx)
 	})
 }
 
 func (c *cHandlers) VolumeSmartSetId(cmd *stoservertypes.VolumeSmartSetId, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -850,7 +850,7 @@ func (c *cHandlers) getSubsystem(id stoservertypes.SubsystemId) *subsystem {
 }
 
 func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, ctx *command.Ctx) error {
-	return c.confreload(c.db.Update(func(tx *bolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		node, err := stodb.Read(tx).Node(cmd.Id)
 		if err != nil {
 			return err
@@ -891,7 +891,7 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 	scans := []*smartCapableVolume{}
 
 	// list volumes that are capable of their SMART scan (for example cloud volumes obviously are not)
-	if err := c.db.View(func(tx *bolt.Tx) error {
+	if err := c.db.View(func(tx *bbolt.Tx) error {
 		return stodb.VolumeRepository.Each(func(record interface{}) error {
 			vol := record.(*stotypes.Volume)
 
@@ -949,7 +949,7 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 		return nil
 	}
 
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		for _, scan := range scans {
 			vol, err := stodb.Read(tx).Volume(scan.volId)
 			if err != nil {
@@ -1031,7 +1031,7 @@ func validateSensitivity(in int) error {
 // - is created as a sibling with non-unique name
 // - is renamed to non-unique name
 // - once unique-within-siblings item is moved into a directory where name already exists
-func validateUniqueNameWithinSiblings(dirId string, name string, tx *bolt.Tx) error {
+func validateUniqueNameWithinSiblings(dirId string, name string, tx *bbolt.Tx) error {
 	siblingDirectories, err := stodb.Read(tx).SubDirectories(dirId)
 	if err != nil {
 		return err

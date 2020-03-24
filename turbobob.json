@@ -13,10 +13,9 @@
 	"builders": [
 		{
 			"name": "default",
-			"uses": "docker://fn61/buildkit-golang:20200101_1326_bf030ba8",
-			"mount_source": "",
-			"mount_destination": "/go/src/github.com/function61/varasto",
-			"workdir": "/go/src/github.com/function61/varasto",
+			"uses": "docker://fn61/buildkit-golang:20200212_0907_06f93bc3",
+			"mount_destination": "/workspace",
+			"workdir": "/workspace",
 			"dev_pro_tips": [
 				"to mess with FUSE, 'apt install fuse', add to Docker: --privileged --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse"
 			],

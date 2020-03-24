@@ -14,16 +14,16 @@ var (
 )
 
 type Repository interface {
-	Bootstrap(tx *bolt.Tx) error
+	Bootstrap(tx *bbolt.Tx) error
 	// returns ErrNotFound if record not found
 	// returns ErrBucketNotFound if bootstrap not done for bucket
-	OpenByPrimaryKey(id []byte, record interface{}, tx *bolt.Tx) error
-	Update(record interface{}, tx *bolt.Tx) error
-	Delete(record interface{}, tx *bolt.Tx) error
+	OpenByPrimaryKey(id []byte, record interface{}, tx *bbolt.Tx) error
+	Update(record interface{}, tx *bbolt.Tx) error
+	Delete(record interface{}, tx *bbolt.Tx) error
 	// return blorm.StopIteration from "fn" to stop iteration. that error is not returned
 	// to the API caller
-	Each(fn func(record interface{}) error, tx *bolt.Tx) error
+	Each(fn func(record interface{}) error, tx *bbolt.Tx) error
 	// rules of Each() also apply here
-	EachFrom(from []byte, fn func(record interface{}) error, tx *bolt.Tx) error
+	EachFrom(from []byte, fn func(record interface{}) error, tx *bbolt.Tx) error
 	Alloc() interface{}
 }

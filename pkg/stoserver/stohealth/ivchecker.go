@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-func NewLastIntegrityVerificationJob(db *bolt.DB) HealthChecker {
+func NewLastIntegrityVerificationJob(db *bbolt.DB) HealthChecker {
 	return &lastIvJob{db}
 }
 
 type lastIvJob struct {
-	db *bolt.DB
+	db *bbolt.DB
 }
 
 // TODO: this check only checks the latest completed check, and trusts the user having

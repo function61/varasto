@@ -29,11 +29,11 @@ type Controller struct {
 	progress   *atomicInt32
 	stop       *stopper.Stopper
 	logl       *logex.Leveled
-	db         *bolt.DB
+	db         *bbolt.DB
 	diskAccess *stodiskaccess.Controller
 }
 
-func Start(toVolumeId int, db *bolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) *Controller {
+func Start(toVolumeId int, db *bbolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) *Controller {
 	c := &Controller{
 		toVolumeId: toVolumeId,
 		progress:   newAtomicInt32(0),

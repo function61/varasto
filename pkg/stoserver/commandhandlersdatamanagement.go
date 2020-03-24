@@ -63,7 +63,7 @@ func NewReconciliationCompletionReport() *ReconciliationCompletionReport {
 }
 
 func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		volToPurge, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
@@ -114,7 +114,7 @@ func (c *cHandlers) DatabaseReconcileOutOfSyncDesiredVolumes(cmd *stoservertypes
 		return errors.New("latestReconciliationReport nil")
 	}
 
-	processColl := func(coll *stotypes.Collection, tx *bolt.Tx) error {
+	processColl := func(coll *stotypes.Collection, tx *bbolt.Tx) error {
 		for idx, item := range latestReconciliationReport.CollectionsWithNonCompliantPolicy {
 			if item.collectionId != coll.ID {
 				continue
@@ -141,7 +141,7 @@ func (c *cHandlers) DatabaseReconcileOutOfSyncDesiredVolumes(cmd *stoservertypes
 		return fmt.Errorf("coll %s not found from latestReconciliationReport", coll.ID)
 	}
 
-	if err := c.db.Update(func(tx *bolt.Tx) error {
+	if err := c.db.Update(func(tx *bbolt.Tx) error {
 		q := stodb.Read(tx)
 
 		for _, collId := range collIds {
@@ -166,7 +166,7 @@ func (c *cHandlers) DatabaseReconcileOutOfSyncDesiredVolumes(cmd *stoservertypes
 func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.DatabaseReconcileReplicationPolicy, ctx *command.Ctx) error {
 	collIds := strings.Split(cmd.Id, ",")
 
-	if err := c.db.Update(func(tx *bolt.Tx) error {
+	if err := c.db.Update(func(tx *bbolt.Tx) error {
 		targetVol, err := stodb.Read(tx).Volume(cmd.Volume)
 		if err != nil {
 			return err
@@ -401,7 +401,7 @@ func eachBlobOfCollection(coll *stotypes.Collection, visit func(ref stotypes.Blo
 	return nil
 }
 
-func iterateDirectoriesRecursively(id string, tx *bolt.Tx, visitor func(dirIr string) error) error {
+func iterateDirectoriesRecursively(id string, tx *bbolt.Tx, visitor func(dirIr string) error) error {
 	if err := visitor(id); err != nil {
 		return err
 	}

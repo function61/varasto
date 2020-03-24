@@ -35,7 +35,7 @@ var (
 )
 
 // returns blorm.ErrBucketNotFound if bootstrap required
-func ValidateSchemaVersion(tx *bolt.Tx) error {
+func ValidateSchemaVersion(tx *bbolt.Tx) error {
 	metaBucket := tx.Bucket(metaBucketKey)
 	if metaBucket == nil {
 		return blorm.ErrBucketNotFound
@@ -54,7 +54,7 @@ func ValidateSchemaVersion(tx *bolt.Tx) error {
 	return nil
 }
 
-func writeSchemaVersion(tx *bolt.Tx) error {
+func writeSchemaVersion(tx *bbolt.Tx) error {
 	metaBucket, err := tx.CreateBucketIfNotExists(metaBucketKey)
 	if err != nil {
 		return err

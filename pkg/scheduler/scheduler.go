@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
-	"github.com/robfig/cron"
+	"github.com/robfig/cron/v3"
 	"log"
 	"time"
 )

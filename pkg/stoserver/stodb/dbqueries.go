@@ -6,10 +6,10 @@ import (
 )
 
 type dbQueries struct {
-	tx *bolt.Tx
+	tx *bbolt.Tx
 }
 
-func Read(tx *bolt.Tx) *dbQueries {
+func Read(tx *bbolt.Tx) *dbQueries {
 	return &dbQueries{tx}
 }
 
