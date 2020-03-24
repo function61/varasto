@@ -65,7 +65,7 @@ func Bootstrap(db *bolt.DB, logger *log.Logger) error {
 
 	newNode := &stotypes.Node{
 		ID:           stoutils.NewNodeId(),
-		Addr:         "https://"+hostname,
+		Addr:         "https://" + hostname,
 		Name:         "dev",
 		TlsCert:      string(certPem),
 		SmartBackend: smartBackend,

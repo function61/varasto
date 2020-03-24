@@ -34,10 +34,8 @@ func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMet
 		}
 
 		// store because we might lose detail when scrubbing name
-		if cmd.ScrubName {
-			if collection.Name != info.OriginalTitle {
-				collection.Metadata["previous_name"] = collection.Name
-			}
+		if cmd.ScrubName && collection.Name != info.OriginalTitle {
+			collection.Metadata["previous_name"] = collection.Name
 
 			collection.Name = info.OriginalTitle
 
