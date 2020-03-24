@@ -3,6 +3,7 @@ package stofuseclient
 
 import (
 	"context"
+
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/varasto/pkg/stofuse/stofusetypes"
 )

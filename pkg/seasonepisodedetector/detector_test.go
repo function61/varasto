@@ -1,8 +1,9 @@
 package seasonepisodedetector
 
 import (
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestSeasonDesignation(t *testing.T) {

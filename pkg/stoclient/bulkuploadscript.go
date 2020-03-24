@@ -2,10 +2,11 @@ package stoclient
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"os"
+
+	"github.com/spf13/cobra"
 )
 
 func bulkUploadScriptEntrypoint() *cobra.Command {

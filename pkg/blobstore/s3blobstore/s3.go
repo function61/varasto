@@ -7,17 +7,18 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"log"
+	"os"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stotypes"
-	"io"
-	"io/ioutil"
-	"log"
-	"os"
-	"strings"
 )
 
 type s3blobstore struct {

@@ -1,8 +1,9 @@
 package stodiskaccess
 
 import (
-	"github.com/function61/varasto/pkg/stotypes"
 	"io"
+
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 type BlobMeta struct {

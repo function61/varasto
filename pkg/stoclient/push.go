@@ -6,11 +6,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/djherbis/times"
-	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/varasto/pkg/stateresolver"
-	"github.com/function61/varasto/pkg/stotypes"
-	"github.com/function61/varasto/pkg/stoutils"
 	"io"
 	"io/ioutil"
 	"log"
@@ -20,6 +15,12 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/djherbis/times"
+	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
 )
 
 const (

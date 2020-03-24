@@ -1,10 +1,11 @@
 package stomvu
 
 import (
-	"github.com/function61/varasto/pkg/seasonepisodedetector"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+
+	"github.com/function61/varasto/pkg/seasonepisodedetector"
+	"github.com/spf13/cobra"
 )
 
 func tvEntrypoint() *cobra.Command {

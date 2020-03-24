@@ -2,13 +2,14 @@ package stoserver
 
 import (
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"log"
-	"time"
 )
 
 func (c *cHandlers) DatabaseMigrate(cmd *stoservertypes.DatabaseMigrate, ctx *command.Ctx) error {

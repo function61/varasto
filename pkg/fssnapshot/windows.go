@@ -2,13 +2,14 @@ package fssnapshot
 
 import (
 	"fmt"
-	"github.com/function61/gokit/logex"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/function61/gokit/logex"
 )
 
 // I wrote an overview of this process @ https://github.com/restic/restic/issues/340#issuecomment-442446540

@@ -3,8 +3,9 @@ package blobstore
 
 import (
 	"context"
-	"github.com/function61/varasto/pkg/stotypes"
 	"io"
+
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 type Driver interface {

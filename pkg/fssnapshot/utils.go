@@ -1,8 +1,9 @@
 package fssnapshot
 
 import (
-	"github.com/function61/gokit/cryptorandombytes"
 	"path/filepath"
+
+	"github.com/function61/gokit/cryptorandombytes"
 )
 
 func randomSnapId() string {

@@ -1,9 +1,10 @@
 package stofuse
 
 import (
+	"regexp"
+
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
-	"regexp"
 )
 
 var reservedInodeCounter = uint64(0)

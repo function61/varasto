@@ -4,8 +4,9 @@ package themoviedbapi
 import (
 	"context"
 	"fmt"
-	"github.com/function61/gokit/ezhttp"
 	"strconv"
+
+	"github.com/function61/gokit/ezhttp"
 )
 
 type Movie struct {

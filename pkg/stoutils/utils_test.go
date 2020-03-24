@@ -1,8 +1,9 @@
 package stoutils
 
 import (
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestIsMaybeCompressible(t *testing.T) {

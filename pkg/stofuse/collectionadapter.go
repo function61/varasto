@@ -1,14 +1,15 @@
 package stofuse
 
 import (
-	"bazil.org/fuse"
-	"bazil.org/fuse/fs"
 	"context"
 	"errors"
-	"github.com/function61/varasto/pkg/stateresolver"
-	"github.com/function61/varasto/pkg/stotypes"
 	"os"
 	"path/filepath"
+
+	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 func adaptCollectionToDirectory(coll *stotypes.Collection, srv *FsServer) (*CollectionAsDir, error) {

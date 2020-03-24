@@ -3,9 +3,10 @@ package stoclient
 import (
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+
+	"github.com/spf13/cobra"
 )
 
 func rm(ctx context.Context, path string) error {

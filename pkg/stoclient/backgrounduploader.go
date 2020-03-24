@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/retry"
 	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stotypes"
-	"log"
-	"time"
 )
 
 type BlobDiscoveredListener interface {

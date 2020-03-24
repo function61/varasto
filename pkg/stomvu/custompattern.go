@@ -1,11 +1,12 @@
 package stomvu
 
 import (
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
 	"regexp"
 	"time"
+
+	"github.com/spf13/cobra"
 )
 
 func customMonthlyPattern(reString string, dateformat string) func(name string) string {

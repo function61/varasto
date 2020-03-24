@@ -1,9 +1,10 @@
 package stomvu
 
 import (
-	"github.com/spf13/cobra"
 	"os"
 	"regexp"
+
+	"github.com/spf13/cobra"
 )
 
 type PhotoResult struct {

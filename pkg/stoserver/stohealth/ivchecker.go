@@ -2,11 +2,12 @@ package stohealth
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"time"
 )
 
 func NewLastIntegrityVerificationJob(db *bbolt.DB) HealthChecker {

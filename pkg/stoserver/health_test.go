@@ -1,11 +1,12 @@
 package stoserver
 
 import (
+	"testing"
+	"time"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stoserver/stohealth"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
-	"testing"
-	"time"
 )
 
 func TestTemperatureToHealthStatus(t *testing.T) {

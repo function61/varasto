@@ -1,9 +1,10 @@
 package stoserver
 
 import (
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stotypes"
-	"testing"
 )
 
 func TestEncryptAndDecryptKek(t *testing.T) {

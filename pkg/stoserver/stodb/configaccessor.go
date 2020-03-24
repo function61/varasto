@@ -2,6 +2,7 @@ package stodb
 
 import (
 	"fmt"
+
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"

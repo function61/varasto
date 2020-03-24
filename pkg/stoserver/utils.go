@@ -3,13 +3,14 @@ package stoserver
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/function61/gokit/sliceutil"
-	"github.com/function61/varasto/pkg/stotypes"
 	"mime"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"sync/atomic"
+
+	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 func panicIfError(err error) {

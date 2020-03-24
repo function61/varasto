@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"github.com/function61/gokit/fileexists"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/stopper"
-	"github.com/function61/varasto/pkg/stoclient"
-	"github.com/function61/varasto/pkg/stoutils"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/stoclient"
+	"github.com/function61/varasto/pkg/stoutils"
 )
 
 // you can ask as fast as you want for making thumbs for entire collection, but only one task

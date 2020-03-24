@@ -6,13 +6,14 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/function61/gokit/assert"
-	"github.com/function61/varasto/pkg/stotypes"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/function61/gokit/assert"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 var (

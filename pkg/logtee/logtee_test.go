@@ -3,8 +3,9 @@ package logtee
 import (
 	"bytes"
 	"fmt"
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestComposite(t *testing.T) {

@@ -1,10 +1,11 @@
 package docreference
 
 import (
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
-	"testing"
 )
 
 // tests that each docs/example.md file exist for each member of DocRef. that makes it

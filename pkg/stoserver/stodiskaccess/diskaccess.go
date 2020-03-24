@@ -10,16 +10,17 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"hash/crc32"
+	"io"
+	"io/ioutil"
+	"os"
+
 	"github.com/function61/gokit/hashverifyreader"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
-	"hash/crc32"
-	"io"
-	"io/ioutil"
-	"os"
 )
 
 var (

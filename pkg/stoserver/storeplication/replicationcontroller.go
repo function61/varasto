@@ -6,6 +6,11 @@ import (
 	"context"
 	"encoding/binary"
 	"fmt"
+	"log"
+	"sync"
+	"sync/atomic"
+	"time"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
@@ -13,10 +18,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"log"
-	"sync"
-	"sync/atomic"
-	"time"
 )
 
 type replicationJob struct {

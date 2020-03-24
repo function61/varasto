@@ -1,10 +1,11 @@
 package stodiskaccess
 
 import (
-	"github.com/function61/gokit/assert"
 	"io/ioutil"
 	"strings"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestWriteCounter(t *testing.T) {

@@ -1,14 +1,15 @@
 package stofuse
 
 import (
-	"bazil.org/fuse"
-	"bazil.org/fuse/fs"
 	"context"
-	"github.com/function61/varasto/pkg/mutexmap"
-	"github.com/function61/varasto/pkg/stoclient"
 	"os"
 	"regexp"
 	"sync"
+
+	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
+	"github.com/function61/varasto/pkg/mutexmap"
+	"github.com/function61/varasto/pkg/stoclient"
 )
 
 type byIdDir struct {

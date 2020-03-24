@@ -8,15 +8,6 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
-	"github.com/disintegration/imageorient"
-	"github.com/function61/gokit/atomicfilewrite"
-	"github.com/function61/gokit/fileexists"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/varasto/pkg/stateresolver"
-	"github.com/function61/varasto/pkg/stoclient"
-	"github.com/function61/varasto/pkg/stotypes"
-	_ "golang.org/x/image/bmp"
-	"golang.org/x/image/draw"
 	"image"
 	_ "image/gif"
 	"image/jpeg"
@@ -28,6 +19,16 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"github.com/disintegration/imageorient"
+	"github.com/function61/gokit/atomicfilewrite"
+	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stoclient"
+	"github.com/function61/varasto/pkg/stotypes"
+	_ "golang.org/x/image/bmp"
+	"golang.org/x/image/draw"
 )
 
 func makeThumbsForCollection(collectionId string, clientConfig stoclient.ClientConfig, logl *logex.Leveled) error {

@@ -4,12 +4,13 @@ package stoclient
 import (
 	"context"
 	"fmt"
-	"github.com/function61/gokit/ossignal"
-	"github.com/function61/varasto/pkg/fssnapshot"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"time"
+
+	"github.com/function61/gokit/ossignal"
+	"github.com/function61/varasto/pkg/fssnapshot"
+	"github.com/spf13/cobra"
 )
 
 func cloneEntrypoint() *cobra.Command {

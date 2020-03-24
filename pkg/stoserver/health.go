@@ -2,14 +2,15 @@ package stoserver
 
 import (
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/function61/varasto/pkg/duration"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stohealth"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"strings"
-	"time"
 )
 
 func healthForScheduledJobs(tx *bbolt.Tx) stohealth.HealthChecker {

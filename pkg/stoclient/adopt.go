@@ -2,12 +2,13 @@ package stoclient
 
 import (
 	"context"
-	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
-	"github.com/spf13/cobra"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
+	"github.com/spf13/cobra"
 )
 
 func adopt(wd string, parentDirectoryId string) error {

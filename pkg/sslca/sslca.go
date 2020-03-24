@@ -9,10 +9,11 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
-	"github.com/function61/gokit/cryptoutil"
 	"log"
 	"math/big"
 	"time"
+
+	"github.com/function61/gokit/cryptoutil"
 )
 
 func SelfSignedServerCert(hostname string, organisationName string, privateKeyPem []byte) ([]byte, error) {

@@ -2,6 +2,8 @@ package stofuse
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/stopper"
@@ -9,7 +11,6 @@ import (
 	"github.com/function61/varasto/pkg/stofuse/stofusetypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 type handlers struct {

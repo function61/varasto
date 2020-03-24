@@ -1,8 +1,9 @@
 package stofuse
 
 import (
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestEncodeAndParseDirRef(t *testing.T) {

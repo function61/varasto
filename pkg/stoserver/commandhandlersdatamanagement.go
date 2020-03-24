@@ -3,6 +3,9 @@ package stoserver
 import (
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -10,8 +13,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"sort"
-	"strings"
 )
 
 type ReplicationPolicyV2 struct {

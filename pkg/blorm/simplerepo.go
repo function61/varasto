@@ -3,6 +3,7 @@ package blorm
 import (
 	"errors"
 	"fmt"
+
 	"github.com/asdine/storm/codec/msgpack"
 	"go.etcd.io/bbolt"
 )

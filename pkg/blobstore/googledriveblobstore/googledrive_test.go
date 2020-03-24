@@ -1,10 +1,11 @@
 package googledriveblobstore
 
 import (
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stotypes"
 	"golang.org/x/oauth2"
-	"testing"
 )
 
 func TestToGoogleDriveName(t *testing.T) {

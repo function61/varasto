@@ -4,6 +4,7 @@ package stodb
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stotypes"
 )

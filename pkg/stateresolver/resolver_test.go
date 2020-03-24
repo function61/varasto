@@ -2,13 +2,14 @@ package stateresolver
 
 import (
 	"fmt"
-	"github.com/function61/gokit/assert"
-	"github.com/function61/varasto/pkg/stotypes"
-	"github.com/function61/varasto/pkg/stoutils"
 	"sort"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/function61/gokit/assert"
+	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
 )
 
 func TestComputeStateAt(t *testing.T) {

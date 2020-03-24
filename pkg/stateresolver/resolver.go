@@ -4,8 +4,9 @@ package stateresolver
 
 import (
 	"errors"
-	"github.com/function61/varasto/pkg/stotypes"
 	"sort"
+
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 type fileMap map[string]stotypes.File

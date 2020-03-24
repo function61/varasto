@@ -1,11 +1,12 @@
 package stoutils
 
 import (
-	"github.com/function61/gokit/fileexists"
-	"github.com/function61/gokit/logex"
 	"net"
 	"os"
 	"strings"
+
+	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
 )
 
 func CreateTcpOrDomainSocketListener(addr string, logl *logex.Leveled) (net.Listener, error) {

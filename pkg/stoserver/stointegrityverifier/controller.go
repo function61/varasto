@@ -5,6 +5,9 @@ package stointegrityverifier
 import (
 	"errors"
 	"fmt"
+	"log"
+	"time"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
@@ -12,8 +15,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"log"
-	"time"
 )
 
 const errorReportMaxLength = 20 * 1024

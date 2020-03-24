@@ -4,14 +4,15 @@ package localfsblobstore
 import (
 	"context"
 	"encoding/base32"
-	"github.com/function61/gokit/atomicfilewrite"
-	"github.com/function61/gokit/fileexists"
-	"github.com/function61/gokit/logex"
-	"github.com/function61/varasto/pkg/stotypes"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/function61/gokit/atomicfilewrite"
+	"github.com/function61/gokit/fileexists"
+	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 var (

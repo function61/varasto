@@ -6,6 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"sort"
+	"strings"
+	"time"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
@@ -25,11 +31,6 @@ import (
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
-	"log"
-	"net/http"
-	"sort"
-	"strings"
-	"time"
 )
 
 type cHandlers struct {

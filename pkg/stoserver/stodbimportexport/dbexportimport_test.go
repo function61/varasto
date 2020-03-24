@@ -1,8 +1,9 @@
 package stodbimportexport
 
 import (
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestBackupHeaderWritingAndParsing(t *testing.T) {

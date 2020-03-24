@@ -2,9 +2,6 @@
 package childprocesscontroller
 
 import (
-	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/stopper"
-	"github.com/function61/varasto/pkg/logtee"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,6 +9,10 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/stopper"
+	"github.com/function61/varasto/pkg/logtee"
 )
 
 type Status struct {

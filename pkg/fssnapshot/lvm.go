@@ -10,8 +10,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/function61/gokit/logex"
-	"github.com/prometheus/procfs"
 	"log"
 	"os"
 	"os/exec"
@@ -19,6 +17,9 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+
+	"github.com/function61/gokit/logex"
+	"github.com/prometheus/procfs"
 )
 
 func LvmSnapshotter(snapshotSize string, logger *log.Logger) Snapshotter {

@@ -4,6 +4,9 @@ package stoserver
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
@@ -13,8 +16,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/function61/varasto/pkg/stoserver/stothumbserver"
 	"github.com/spf13/cobra"
-	"log"
-	"os"
 )
 
 func serverMain() error {

@@ -1,9 +1,10 @@
 package mutexmap
 
 import (
-	"github.com/function61/gokit/assert"
 	"testing"
 	"time"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestMutexMap(t *testing.T) {

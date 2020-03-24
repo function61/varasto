@@ -3,13 +3,14 @@ package stoclient
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/function61/varasto/pkg/tui"
 	"github.com/mattn/go-isatty"
 	"github.com/nsf/termbox-go"
 	"github.com/olekukonko/tablewriter"
-	"os"
-	"strings"
-	"time"
 )
 
 type fileProgressEvent struct {

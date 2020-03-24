@@ -5,6 +5,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"log"
+	"net"
+	"net/http"
+	"net/http/httputil"
+	"os"
+	"time"
+
 	"github.com/function61/eventhorizon/pkg/ehevent"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/gokit/cryptoutil"
@@ -33,12 +40,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
-	"log"
-	"net"
-	"net/http"
-	"net/http/httputil"
-	"os"
-	"time"
 )
 
 var (

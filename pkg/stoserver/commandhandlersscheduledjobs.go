@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"errors"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stoserver/stodb"

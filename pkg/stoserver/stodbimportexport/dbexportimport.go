@@ -6,13 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"regexp"
+	"strings"
+
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"go.etcd.io/bbolt"
-	"io"
-	"regexp"
-	"strings"
 )
 
 func Export(tx *bbolt.Tx, output io.Writer) error {

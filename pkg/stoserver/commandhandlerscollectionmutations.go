@@ -3,6 +3,9 @@ package stoserver
 import (
 	"errors"
 	"fmt"
+	"strings"
+	"time"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -10,8 +13,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
-	"strings"
-	"time"
 )
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes.CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {

@@ -2,13 +2,14 @@ package stofuse
 
 import (
 	"context"
+	"io/ioutil"
+	"sync"
+	"time"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/mutexmap"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
-	"io/ioutil"
-	"sync"
-	"time"
 )
 
 const lruCacheSize = 10

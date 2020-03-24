@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/function61/eventkit/codegen"
 	"github.com/function61/eventkit/codegen/codegentemplates"
 	"github.com/function61/gokit/dynversion/precompilationversion"
-	"os"
 )
 
 //go:generate go run codegenerate.go

@@ -7,6 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stotypes"
 	"golang.org/x/oauth2"
@@ -14,11 +20,6 @@ import (
 	"google.golang.org/api/drive/v3"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
-	"io"
-	"log"
-	"net/http"
-	"os"
-	"time"
 )
 
 const (

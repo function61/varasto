@@ -4,16 +4,17 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/gokit/fileexists"
-	"github.com/function61/varasto/pkg/stateresolver"
-	"github.com/function61/varasto/pkg/stotypes"
-	"github.com/function61/varasto/pkg/stoutils"
 	"io"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/gokit/fileexists"
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
 )
 
 func clone(

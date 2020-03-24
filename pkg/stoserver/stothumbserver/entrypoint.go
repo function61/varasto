@@ -1,13 +1,14 @@
 package stothumbserver
 
 import (
+	"io"
+	"io/ioutil"
+	"os"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
 	"github.com/function61/gokit/stopper"
 	"github.com/spf13/cobra"
-	"io"
-	"io/ioutil"
-	"os"
 )
 
 func Entrypoint() *cobra.Command {

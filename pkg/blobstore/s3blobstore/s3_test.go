@@ -1,9 +1,10 @@
 package s3blobstore
 
 import (
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stotypes"
-	"testing"
 )
 
 func TestDeserializeConfig(t *testing.T) {

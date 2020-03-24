@@ -4,6 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log"
+	"os"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/ubackup/pkg/ubbackup"
@@ -14,9 +18,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"go.etcd.io/bbolt"
-	"io"
-	"log"
-	"os"
 )
 
 const (

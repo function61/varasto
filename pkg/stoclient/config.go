@@ -2,17 +2,18 @@ package stoclient
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/function61/eventkit/httpcommandclient"
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 const (

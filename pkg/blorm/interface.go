@@ -4,6 +4,7 @@ package blorm
 
 import (
 	"errors"
+
 	"go.etcd.io/bbolt"
 )
 

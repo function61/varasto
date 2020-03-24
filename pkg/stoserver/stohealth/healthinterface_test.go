@@ -2,9 +2,10 @@ package stohealth
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
-	"testing"
 )
 
 func TestBasic(t *testing.T) {

@@ -4,9 +4,10 @@
 package fssnapshot
 
 import (
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/prometheus/procfs"
-	"testing"
 )
 
 func TestOriginPathInSnapshot(t *testing.T) {

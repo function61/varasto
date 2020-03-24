@@ -1,8 +1,9 @@
 package stotypes
 
 import (
-	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"time"
+
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 )
 
 type Node struct {

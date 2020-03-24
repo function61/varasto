@@ -1,8 +1,9 @@
 package stomvu
 
 import (
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestCustomMonthlyPattern(t *testing.T) {

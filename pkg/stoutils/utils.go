@@ -2,12 +2,13 @@ package stoutils
 
 import (
 	"crypto/sha256"
-	"github.com/function61/gokit/cryptorandombytes"
-	"github.com/function61/gokit/hashverifyreader"
-	"github.com/function61/varasto/pkg/stotypes"
 	"io"
 	"path"
 	"strings"
+
+	"github.com/function61/gokit/cryptorandombytes"
+	"github.com/function61/gokit/hashverifyreader"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 // this should not be called from anywhere other than DiskAccessManager and varastoclient

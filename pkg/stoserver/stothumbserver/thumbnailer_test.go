@@ -2,8 +2,9 @@ package stothumbserver
 
 import (
 	"fmt"
-	"github.com/function61/gokit/assert"
 	"testing"
+
+	"github.com/function61/gokit/assert"
 )
 
 func TestGenThumbPath(t *testing.T) {

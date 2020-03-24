@@ -2,10 +2,11 @@ package stoclient
 
 import (
 	"fmt"
-	"github.com/function61/gokit/jsonfile"
-	"github.com/function61/varasto/pkg/stotypes"
 	"os"
 	"path/filepath"
+
+	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 const (

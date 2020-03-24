@@ -2,10 +2,11 @@ package stofuse
 
 import (
 	"fmt"
-	"github.com/function61/gokit/assert"
-	"github.com/function61/varasto/pkg/stotypes"
 	"strings"
 	"testing"
+
+	"github.com/function61/gokit/assert"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 func TestAlignReads(t *testing.T) {

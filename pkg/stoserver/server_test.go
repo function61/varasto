@@ -1,9 +1,10 @@
 package stoserver
 
 import (
+	"testing"
+
 	"github.com/function61/gokit/assert"
 	"github.com/function61/gokit/cryptoutil"
-	"testing"
 )
 
 func TestMkWrappedKeypair(t *testing.T) {

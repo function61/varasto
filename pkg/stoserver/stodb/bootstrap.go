@@ -2,6 +2,11 @@ package stodb
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/sslca"
 	"github.com/function61/varasto/pkg/stoclient"
@@ -9,10 +14,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
-	"io/ioutil"
-	"log"
-	"strings"
-	"time"
 )
 
 // opens BoltDB database

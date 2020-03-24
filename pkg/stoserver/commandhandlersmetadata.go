@@ -3,6 +3,9 @@ package stoserver
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
@@ -11,8 +14,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/themoviedbapi"
 	"go.etcd.io/bbolt"
-	"strconv"
-	"strings"
 )
 
 // this is for movies

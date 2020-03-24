@@ -3,6 +3,7 @@ package stodb
 import (
 	"encoding/binary"
 	"fmt"
+
 	"github.com/function61/varasto/pkg/blorm"
 	"go.etcd.io/bbolt"
 )

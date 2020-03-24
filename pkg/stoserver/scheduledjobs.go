@@ -2,6 +2,9 @@ package stoserver
 
 import (
 	"context"
+	"log"
+	"time"
+
 	"github.com/function61/eventhorizon/pkg/ehevent"
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
@@ -12,8 +15,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
-	"log"
-	"time"
 )
 
 // current middlewares has this empty too

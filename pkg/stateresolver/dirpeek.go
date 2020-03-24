@@ -1,10 +1,11 @@
 package stateresolver
 
 import (
-	"github.com/function61/gokit/sliceutil"
-	"github.com/function61/varasto/pkg/stotypes"
 	"path"
 	"strings"
+
+	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/stotypes"
 )
 
 type DirPeekResult struct {

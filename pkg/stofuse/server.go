@@ -1,16 +1,17 @@
 package stofuse
 
 import (
-	"bazil.org/fuse"
-	"bazil.org/fuse/fs"
 	"context"
 	"errors"
+	"os"
+	"time"
+
+	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/retry"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/stoclient"
-	"os"
-	"time"
 )
 
 func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, stop *stopper.Stopper, logl *logex.Leveled) error {
