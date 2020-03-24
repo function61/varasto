@@ -31,7 +31,8 @@ func SmartCtlBackend(device string) ([]byte, error) {
 	RUN apk add --update smartmontools
 */
 func SmartCtlViaDockerBackend(device string) ([]byte, error) {
-	// disks in /dev are visible with --privileged but /dev/disk/by-uuid et al. are not
+	// disks in /dev are visible without --privileged (by mapping /dev:/dev) but
+	// /dev/disk/by-uuid et al. are not
 	// maybe related: https://github.com/moby/moby/issues/16160
 	stdout, err := exec.Command(
 		"docker", "run",
