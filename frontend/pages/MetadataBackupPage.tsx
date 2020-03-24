@@ -13,8 +13,11 @@ import {
 	DatabaseBackup,
 	DatabaseBackupConfigure,
 } from 'generated/stoserver/stoservertypes_commands';
-import { getConfig, getUbackupStoredBackups } from 'generated/stoserver/stoservertypes_endpoints';
-import { downloadUbackupStoredBackupUrl } from 'generated/stoserver/stoservertypes_endpoints';
+import {
+	downloadUbackupStoredBackupUrl,
+	getConfig,
+	getUbackupStoredBackups,
+} from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CfgUbackupConfig,
 	ConfigValue,
@@ -23,7 +26,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
-import { metadataBackupRoute } from 'routes';
+import { metadataBackupUrl } from 'generated/stoserver/stoserverui_uiroutes';
 
 interface MetadataBackupPageProps {
 	view: string;
@@ -76,14 +79,14 @@ export default class MetadataBackupPage extends React.Component<
 				<TabController
 					tabs={[
 						{
-							url: metadataBackupRoute.buildUrl({
-								v: '',
+							url: metadataBackupUrl({
+								view: '',
 							}),
 							title: 'Metadata backup list',
 						},
 						{
-							url: metadataBackupRoute.buildUrl({
-								v: 'config',
+							url: metadataBackupUrl({
+								view: 'config',
 							}),
 							title: 'Metadata backup configuration',
 						},

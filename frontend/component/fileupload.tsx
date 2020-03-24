@@ -4,8 +4,7 @@ import { Glyphicon } from 'f61ui/component/bootstrap';
 import { Loading } from 'f61ui/component/loading';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
-import { unrecognizedValue } from 'f61ui/utils';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
+import { unrecognizedValue, shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	commitChangeset,
 	generateIds,
@@ -138,21 +137,21 @@ export class FileUploadArea extends React.Component<FileUploadAreaProps, FileUpl
 	private async uploadOneFile(file: File): Promise<File2> {
 		const uploadEndpoint = makeQueryParams(uploadFileUrl(this.props.collectionId), {
 			mtime: file.lastModified.toString(),
-			filename: file.name, // spec says this is "without path information"
+			filename: file.name, // spec says: "without path information"
 		});
 
 		// TODO: upload progress
 
-		const result: File2 = await fetch(uploadEndpoint, {
+		const response = await fetch(uploadEndpoint, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/octet-stream',
 			},
 			body: file,
-		})
-			.then(httpMustBeOk)
-			.then((response) => response.json());
+		});
 
-		return result;
+		await httpMustBeOk(response);
+
+		return await response.json();
 	}
 }

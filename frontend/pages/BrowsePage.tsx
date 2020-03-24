@@ -48,7 +48,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseRoute, collectionRoute, serverInfoRoute } from 'routes';
+import { browseUrl, collectionUrl, serverInfoUrl } from 'generated/stoserver/stoserverui_uiroutes';
 
 interface BrowsePageProps {
 	directoryId: string;
@@ -97,7 +97,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const breadcrumbs: Breadcrumb[] = output.Parents.map((dir) => {
 			return {
 				title: dir.Name,
-				url: browseRoute.buildUrl({ dir: dir.Id, view: this.props.view }),
+				url: browseUrl({ dir: dir.Id, view: this.props.view }),
 			};
 		});
 
@@ -149,14 +149,14 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							<TabController
 								tabs={[
 									{
-										url: browseRoute.buildUrl({
+										url: browseUrl({
 											dir: this.props.directoryId,
 											view: '',
 										}),
 										title: 'Metadata view',
 									},
 									{
-										url: browseRoute.buildUrl({
+										url: browseUrl({
 											dir: this.props.directoryId,
 											view: 'folder',
 										}),
@@ -223,7 +223,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						{sensitivityAuthorize(coll.Sensitivity) ? (
 							<div>
 								<a
-									href={collectionRoute.buildUrl({
+									href={collectionUrl({
 										id: coll.Id,
 										rev: HeadRevisionId,
 										path: RootPathDotBase64FIXME,
@@ -263,9 +263,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const directoryToRow = (dir: Directory) => {
 			const content = sensitivityAuthorize(dir.Sensitivity) ? (
 				<div>
-					<a href={browseRoute.buildUrl({ dir: dir.Id, view: this.props.view })}>
-						{dir.Name}
-					</a>
+					<a href={browseUrl({ dir: dir.Id, view: this.props.view })}>{dir.Name}</a>
 					{dir.Description && (
 						<span className="margin-left">
 							<DefaultLabel>{dir.Description}</DefaultLabel>
@@ -346,7 +344,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							<CommandButton
 								command={CollectionCreate(output.Directory.Id, {
 									redirect: (id) =>
-										collectionRoute.buildUrl({
+										collectionUrl({
 											id,
 											rev: HeadRevisionId,
 											path: RootPathDotBase64FIXME,
@@ -392,7 +390,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					}
 					footer={metadata[MetadataOverview] && <p>{metadata[MetadataOverview]}</p>}>
 					<a
-						href={collectionRoute.buildUrl({
+						href={collectionUrl({
 							id: coll.Id,
 							rev: HeadRevisionId,
 							path: RootPathDotBase64FIXME,
@@ -407,7 +405,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			return (
 				<Panel heading={dir.Name}>
 					<a
-						href={browseRoute.buildUrl({
+						href={browseUrl({
 							dir: dir.Id,
 							view: this.props.view,
 						})}>
@@ -495,7 +493,7 @@ function mergeDirectoriesAndCollectionsSorted(output: DirectoryOutput): DirOrCol
 
 const mkSensitivityBadge = (sens: Sensitivity) => (
 	// link to the page where we can upgrade sensitivity
-	<a href={serverInfoRoute.buildUrl({})}>
+	<a href={serverInfoUrl()}>
 		<span className="badge margin-left">
 			<Glyphicon icon="lock" />
 			&nbsp;Level: {sensitivityLabel(sens)}

@@ -1,4 +1,4 @@
-import { getCurrentHash } from 'f61ui/browserutils';
+import { getCurrentLocation } from 'f61ui/browserutils';
 import * as React from 'react';
 
 export interface Tab {
@@ -13,18 +13,13 @@ interface TabControllerProps {
 
 export class TabController extends React.Component<TabControllerProps, {}> {
 	render() {
-		const currentTabUrl = getCurrentHash();
-		const activeTabs = this.props.tabs.filter((tab) => tab.url === currentTabUrl);
+		const currentLoc = getCurrentLocation();
 
 		return (
 			<div>
 				<ul className="nav nav-tabs" role="tablist" style={{ marginBottom: '16px' }}>
 					{this.props.tabs.map((tab) => (
-						<li
-							role="presentation"
-							className={
-								activeTabs[0] && activeTabs[0].url === tab.url ? 'active' : ''
-							}>
+						<li role="presentation" className={tab.url === currentLoc ? 'active' : ''}>
 							<a href={tab.url}>{tab.title}</a>
 						</li>
 					))}

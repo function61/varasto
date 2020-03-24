@@ -16,13 +16,13 @@ import { DocRef, RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 import {
-	browseRoute,
-	downloadClientAppRoute,
-	gettingStartedRoute,
-	replicationPoliciesRoute,
-	usersRoute,
-	volumesAndMountsRoute,
-} from 'routes';
+	browseUrl,
+	downloadClientAppUrl,
+	gettingStartedUrl,
+	replicationPoliciesUrl,
+	usersUrl,
+	volumesAndMountsUrl,
+} from 'generated/stoserver/stoserverui_uiroutes';
 
 interface SmallWellProps {
 	children: React.ReactNode;
@@ -171,7 +171,7 @@ export default class GettingStartedPage extends React.Component<
 	}
 
 	private setUpEncryption(currSection: section): React.ReactNode {
-		const kekCreateUrl = usersRoute.buildUrl({});
+		const kekCreateUrl = usersUrl();
 
 		const iDontCareAboutKek = 'I don´t know or care what this key is';
 
@@ -293,7 +293,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={volumesAndMountsRoute.buildUrl({ view: '' })} target="_blank">
+					<a href={volumesAndMountsUrl({ view: '' })} target="_blank">
 						this page
 					</a>{' '}
 					to create your first volume. Choose{' '}
@@ -328,7 +328,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={volumesAndMountsRoute.buildUrl({ view: '' })} target="_blank">
+					<a href={volumesAndMountsUrl({ view: '' })} target="_blank">
 						Volumes &amp; mounts
 					</a>
 					. From there choose:
@@ -379,7 +379,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={replicationPoliciesRoute.buildUrl({})} target="_blank">
+					<a href={replicationPoliciesUrl()} target="_blank">
 						replication policies
 					</a>{' '}
 					to configure the default replication policy.
@@ -400,7 +400,7 @@ export default class GettingStartedPage extends React.Component<
 			<div>
 				<p>
 					Go to{' '}
-					<a href={browseRoute.buildUrl({ dir: RootFolderId, view: '' })} target="_blank">
+					<a href={browseUrl({ dir: RootFolderId, view: '' })} target="_blank">
 						browse
 					</a>{' '}
 					and click <SmallWell>{CollectionCreate('').title}</SmallWell>.
@@ -438,7 +438,7 @@ export default class GettingStartedPage extends React.Component<
 			<div>
 				<WarningAlert>
 					NOTE: Remember to install client app first:{' '}
-					<a href={downloadClientAppRoute.buildUrl({})} target="_blank">
+					<a href={downloadClientAppUrl()} target="_blank">
 						links &amp; instructions
 					</a>
 				</WarningAlert>
@@ -522,7 +522,7 @@ export default class GettingStartedPage extends React.Component<
 			return null;
 		}
 
-		return gettingStartedRoute.buildUrl({ v: nextSection });
+		return gettingStartedUrl({ section: nextSection });
 	}
 
 	private nextSection(currSection: section): section | null {

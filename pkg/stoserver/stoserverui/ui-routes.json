@@ -1,0 +1,58 @@
+[
+	{
+		"id": "browse",
+		"path": "/dir/{dir}?view={view}"
+	},
+	{
+		"id": "collection",
+		"path": "/coll/{id}?rev={rev}&path={path}"
+	},
+	{
+		"id": "gettingStarted",
+		"path": "/getting_started?section={section}"
+	},
+	{
+		"id": "downloadClientApp",
+		"path": "/download_client_app"
+	},
+	{
+		"id": "nodes",
+		"path": "/admin/nodes"
+	},
+	{
+		"id": "metadataBackup",
+		"path": "/admin/backup/metadata?view={view}"
+	},
+	{
+		"id": "users",
+		"path": "/admin/users"
+	},
+	{
+		"id": "serverInfo",
+		"path": "/admin/server_info"
+	},
+	{
+		"id": "volumesAndMounts",
+		"path": "/admin/volumesmounts?view={view}"
+	},
+	{
+		"id": "replicationPolicies",
+		"path": "/admin/replicationpolicies"
+	},
+	{
+		"id": "logs",
+		"path": "/admin/logs"
+	},
+	{
+		"id": "contentMetadata",
+		"path": "/admin/content_metadata"
+	},
+	{
+		"id": "fuseServer",
+		"path": "/admin/fuse_server"
+	},
+	{
+		"id": "scheduledJobs",
+		"path": "/admin/scheduled_jobs"
+	}
+]

@@ -60,9 +60,7 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 							<td>
 								{node.TlsCert.Identity}{' '}
 								<Info
-									text={`Issuer: ${node.TlsCert.Issuer}\nAlgo: ${
-										node.TlsCert.PublicKeyAlgorithm
-									}`}
+									text={`Issuer: ${node.TlsCert.Issuer}\nAlgo: ${node.TlsCert.PublicKeyAlgorithm}`}
 								/>
 							</td>
 							<td>

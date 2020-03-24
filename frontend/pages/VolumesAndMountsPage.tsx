@@ -20,7 +20,7 @@ import { Info } from 'f61ui/component/info';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { plainDateToDateTime } from 'f61ui/types';
+import { plainDateToDateTime, dateRFC3339 } from 'f61ui/types';
 import { unrecognizedValue } from 'f61ui/utils';
 import {
 	IntegrityverificationjobResume,
@@ -63,7 +63,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
-import { volumesAndMountsRoute } from 'routes';
+import { volumesAndMountsUrl } from 'generated/stoserver/stoserverui_uiroutes';
 
 interface VolumesAndMountsPageProps {
 	view: string;
@@ -79,10 +79,10 @@ interface VolumesAndMountsPageState {
 
 interface Enclosure {
 	name: string;
-	bays: Array<{
+	bays: {
 		slot: number;
 		volume: Volume | null;
-	}>;
+	}[];
 }
 
 export default class VolumesAndMountsPage extends React.Component<
@@ -207,37 +207,37 @@ export default class VolumesAndMountsPage extends React.Component<
 				<TabController
 					tabs={[
 						{
-							url: volumesAndMountsRoute.buildUrl({
+							url: volumesAndMountsUrl({
 								view: '',
 							}),
 							title: 'Volumes & mounts',
 						},
 						{
-							url: volumesAndMountsRoute.buildUrl({
+							url: volumesAndMountsUrl({
 								view: 'topology',
 							}),
 							title: 'Topology',
 						},
 						{
-							url: volumesAndMountsRoute.buildUrl({
+							url: volumesAndMountsUrl({
 								view: 'service',
 							}),
 							title: 'Service',
 						},
 						{
-							url: volumesAndMountsRoute.buildUrl({
+							url: volumesAndMountsUrl({
 								view: 'smart',
 							}),
 							title: 'SMART',
 						},
 						{
-							url: volumesAndMountsRoute.buildUrl({
+							url: volumesAndMountsUrl({
 								view: 'integrity',
 							}),
 							title: 'Integrity',
 						},
 						{
-							url: volumesAndMountsRoute.buildUrl({
+							url: volumesAndMountsUrl({
 								view: 'replicationStatuses',
 							}),
 							title: 'Replication',
@@ -360,7 +360,7 @@ export default class VolumesAndMountsPage extends React.Component<
 									<CommandIcon
 										command={VolumeSetManufacturingDate(
 											vol.Id,
-											manufactured ? manufactured : ('' as any),
+											manufactured ? manufactured : ('' as dateRFC3339),
 										)}
 									/>
 								</td>
@@ -373,7 +373,7 @@ export default class VolumesAndMountsPage extends React.Component<
 									<CommandIcon
 										command={VolumeSetWarrantyEndDate(
 											vol.Id,
-											warrantyEnds ? warrantyEnds : ('' as any),
+											warrantyEnds ? warrantyEnds : ('' as dateRFC3339),
 										)}
 									/>
 								</td>

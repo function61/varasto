@@ -14,6 +14,7 @@ import (
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/stopper"
 	"github.com/function61/pi-security-module/pkg/extractpublicfiles"
+	"github.com/function61/pi-security-module/pkg/f61ui"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
@@ -28,6 +29,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
+	"github.com/function61/varasto/pkg/stoserver/stoserverui"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
@@ -251,6 +253,23 @@ func runServer(
 	}
 
 	workers.StopAllWorkersAndWait()
+
+	return nil
+}
+
+func defineUi(router *mux.Router) error {
+	assetsPath := "/assets"
+
+	publicFiles := http.FileServer(http.Dir("./public/"))
+
+	router.PathPrefix(assetsPath + "/").Handler(http.StripPrefix(assetsPath+"/", publicFiles))
+	router.Handle("/favicon.ico", publicFiles)
+	router.Handle("/robots.txt", publicFiles)
+
+	uiHandler := f61ui.IndexHtmlHandler(assetsPath)
+
+	router.HandleFunc("/", uiHandler)
+	stoserverui.RegisterUiRoutes(router, uiHandler)
 
 	return nil
 }

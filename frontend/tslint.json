@@ -4,8 +4,6 @@
 		"/etc/tslint.json"
 	],
 	"linterOptions": {
-		"exclude": [
-			"f61ui/typescript-safe-router/**/*"
-		]
+		"exclude": []
 	}
 }

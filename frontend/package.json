@@ -4,14 +4,14 @@
   "description": "",
   "main": "-",
   "dependencies": {
-    "@types/bootstrap": "3.3.28",
-    "@types/jquery": "3.3.29",
-    "@types/react-dom": "16.0.10",
-    "react": "16.5.2",
-    "jquery": "3.3.1",
+    "@types/bootstrap": "3.4.0",
+    "@types/jquery": "3.3.33",
+    "@types/react-dom": "16.9.5",
+    "react": "16.13.1",
+    "jquery": "3.4.1",
     "date-fns": "2.0.0-alpha.27",
-    "react-dom": "16.5.2",
-    "bootstrap": "3.4.0"
+    "react-dom": "16.13.1",
+    "bootstrap": "3.4.1"
   },
   "devDependencies": {},
   "scripts": {

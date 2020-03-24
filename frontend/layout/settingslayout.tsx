@@ -1,10 +1,10 @@
-import { getCurrentHash } from 'f61ui/browserutils';
-import { Panel } from 'f61ui/component/bootstrap';
+import { getCurrentLocation } from 'f61ui/browserutils';
+import { Panel, GlyphiconIcon } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink, renderNavLink } from 'f61ui/component/navigation';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import * as r from 'routes';
+import * as r from 'generated/stoserver/stoserverui_uiroutes';
 
 interface SettingsLayoutProps {
 	title: string;
@@ -14,76 +14,35 @@ interface SettingsLayoutProps {
 
 export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 	render() {
-		const hash = getCurrentHash();
+		const currLoc = getCurrentLocation();
+
+		function mkLink(title: string, icon: GlyphiconIcon, url: string): NavLink {
+			return {
+				title,
+				glyphicon: icon,
+				url,
+				active: url === currLoc,
+			};
+		}
 
 		const settingsLinks: NavLink[] = [
-			{
-				title: 'Server info & health',
-				glyphicon: 'dashboard',
-				url: r.serverInfoRoute.buildUrl({}),
-				active: r.serverInfoRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Volumes & mounts',
-				glyphicon: 'hdd',
-				url: r.volumesAndMountsRoute.buildUrl({ view: '' }),
-				active: r.volumesAndMountsRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Scheduled jobs',
-				glyphicon: 'time',
-				url: r.scheduledJobsRoute.buildUrl({}),
-				active: r.scheduledJobsRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Backups',
-				glyphicon: 'cloud-upload',
-				url: r.metadataBackupRoute.buildUrl({ v: '' }),
-				active: r.metadataBackupRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Users',
-				glyphicon: 'user',
-				url: r.usersRoute.buildUrl({}),
-				active: r.usersRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Logs',
-				glyphicon: 'list-alt',
-				url: r.logsRoute.buildUrl({}),
-				active: r.logsRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Nodes',
-				glyphicon: 'th-large',
-				url: r.nodesRoute.buildUrl({}),
-				active: r.nodesRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Replication policies',
-				glyphicon: 'retweet',
-				url: r.replicationPoliciesRoute.buildUrl({}),
-				active: r.replicationPoliciesRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'Content metadata',
-				glyphicon: 'book',
-				url: r.contentMetadataRoute.buildUrl({}),
-				active: r.contentMetadataRoute.matchUrl(hash) !== null,
-			},
-			{
-				title: 'FUSE server & network folders',
-				glyphicon: 'folder-open',
-				url: r.fuseServerRoute.buildUrl({}),
-				active: r.fuseServerRoute.matchUrl(hash) !== null,
-			},
+			mkLink('Server info & health', 'dashboard', r.serverInfoUrl()),
+			mkLink('Volumes & mounts', 'hdd', r.volumesAndMountsUrl({ view: '' })),
+			mkLink('Scheduled jobs', 'time', r.scheduledJobsUrl()),
+			mkLink('Backups', 'cloud-upload', r.metadataBackupUrl({ view: '' })),
+			mkLink('Users', 'user', r.usersUrl()),
+			mkLink('Logs', 'list-alt', r.logsUrl()),
+			mkLink('Nodes', 'th-large', r.nodesUrl()),
+			mkLink('Replication policies', 'retweet', r.replicationPoliciesUrl()),
+			mkLink('Content metadata', 'book', r.contentMetadataUrl()),
+			mkLink('FUSE server & network folders', 'folder-open', r.fuseServerUrl()),
 		];
 
 		return (
 			<AppDefaultLayout
 				title={this.props.title}
 				breadcrumbs={this.props.breadcrumbs.concat({
-					url: r.serverInfoRoute.buildUrl({}),
+					url: r.serverInfoUrl(),
 					title: 'Settings',
 				})}
 				children={

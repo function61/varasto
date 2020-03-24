@@ -40,7 +40,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseRoute, collectionRoute } from 'routes';
+import { browseUrl, collectionUrl } from 'generated/stoserver/stoserverui_uiroutes';
 
 interface CollectionPageProps {
 	id: string;
@@ -183,7 +183,7 @@ export default class CollectionPage extends React.Component<
 					</td>
 					<td>
 						<a
-							href={collectionRoute.buildUrl({
+							href={collectionUrl({
 								id: this.props.id,
 								rev: this.props.rev,
 								path: btoa(subDir),
@@ -202,7 +202,7 @@ export default class CollectionPage extends React.Component<
 					<td>{changeset.Id === collOutput.ChangesetId ? '→' : ''}</td>
 					<td>
 						<a
-							href={collectionRoute.buildUrl({
+							href={collectionUrl({
 								id: collOutput.Collection.Id,
 								rev: changeset.Id,
 								path: this.props.pathBase64,
@@ -226,9 +226,7 @@ export default class CollectionPage extends React.Component<
 				file.Path,
 			);
 
-			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&file=${
-				file.Sha256
-			}`;
+			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&file=${file.Sha256}`;
 
 			return (
 				<a href={dl} target="_blank" title={file.Path} className="margin-left">
@@ -423,14 +421,14 @@ export default class CollectionPage extends React.Component<
 		const dirToBreadcrumb = (dir: Directory): Breadcrumb => {
 			return {
 				title: dir.Name,
-				url: browseRoute.buildUrl({ dir: dir.Id, view: '' }),
+				url: browseUrl({ dir: dir.Id, view: '' }),
 			};
 		};
 
 		const parentDirToBreadcrumb = (pd: string): Breadcrumb => {
 			return {
 				title: pd,
-				url: collectionRoute.buildUrl({
+				url: collectionUrl({
 					id: this.props.id,
 					rev: this.props.rev,
 					path: btoa(pd),
@@ -455,7 +453,7 @@ export default class CollectionPage extends React.Component<
 		if (areWeNavigatedToSubdir) {
 			breadcrumbs.push({
 				title: collName,
-				url: collectionRoute.buildUrl({
+				url: collectionUrl({
 					id: this.props.id,
 					rev: this.props.rev,
 					path: RootPathDotBase64FIXME,
