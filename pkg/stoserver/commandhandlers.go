@@ -987,7 +987,7 @@ func (c *cHandlers) confreload(err error) error {
 func registerCommandEndpoints(
 	router *mux.Router,
 	eventLog eventlog.Log,
-	cmdHandlers stoservertypes.CommandHandlers,
+	invoker command.Invoker,
 	mwares httpauth.MiddlewareChainMap,
 ) {
 	router.HandleFunc("/command/{commandName}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -999,7 +999,7 @@ func registerCommandEndpoints(
 			mwares,
 			commandName,
 			stoservertypes.Allocators,
-			cmdHandlers,
+			invoker,
 			eventLog)
 		if httpErr != nil {
 			if !httpErr.ErrorResponseAlreadySentByMiddleware() {

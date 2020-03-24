@@ -8,14 +8,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/function61/eventkit/event"
-	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/guts"
 	"github.com/function61/gokit/appuptime"
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
-	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
@@ -1341,22 +1338,6 @@ func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWri
 	return &stoservertypes.GeneratedIds{
 		Changeset: stoutils.NewCollectionChangesetId(),
 	}
-}
-
-// func createNonPersistingEventLog(listeners domain.EventListener) (eventlog.Log, error) {
-func createNonPersistingEventLog() (eventlog.Log, error) {
-	return eventlog.NewSimpleLogFile(
-		bytes.NewReader(nil),
-		ioutil.Discard,
-		func(e event.Event) error {
-			return nil
-			// return domain.DispatchEvent(e, listeners)
-		},
-		func(serialized string) (event.Event, error) {
-			return nil, nil
-			// return event.Deserialize(serialized, domain.Allocators)
-		},
-		logex.Discard)
 }
 
 func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {

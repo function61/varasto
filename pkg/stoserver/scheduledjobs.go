@@ -2,8 +2,8 @@ package stoserver
 
 import (
 	"context"
+	"github.com/function61/eventhorizon/pkg/ehevent"
 	"github.com/function61/eventkit/command"
-	"github.com/function61/eventkit/event"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
 	"github.com/function61/gokit/stopper"
@@ -20,8 +20,8 @@ import (
 const FIXMEsystemUserId = ""
 
 type scheduledJobCommandPlumbing struct {
-	chandlers interface{}
-	eventLog  eventlog.Log
+	invoker  command.Invoker
+	eventLog eventlog.Log
 }
 
 type smartPollerScheduledJob struct {
@@ -32,14 +32,14 @@ func (s *smartPollerScheduledJob) GetRunner() scheduler.JobFn {
 	return func(ctx context.Context, logger *log.Logger) error {
 		cmdCtx := command.NewCtx(
 			ctx,
-			event.Meta(time.Now(), FIXMEsystemUserId),
+			ehevent.Meta(time.Now(), FIXMEsystemUserId),
 			"",
 			"")
 
 		if err := httpcommand.InvokeSkippingAuthorization(
 			&stoservertypes.NodeSmartScan{},
 			cmdCtx,
-			s.commandPlumbing.chandlers,
+			s.commandPlumbing.invoker,
 			s.commandPlumbing.eventLog,
 		); err != nil {
 			return err
@@ -57,14 +57,14 @@ func (s *metadataBackupScheduledJob) GetRunner() scheduler.JobFn {
 	return func(ctx context.Context, logger *log.Logger) error {
 		cmdCtx := command.NewCtx(
 			ctx,
-			event.Meta(time.Now(), FIXMEsystemUserId),
+			ehevent.Meta(time.Now(), FIXMEsystemUserId),
 			"",
 			"")
 
 		if err := httpcommand.InvokeSkippingAuthorization(
 			&stoservertypes.DatabaseBackup{},
 			cmdCtx,
-			s.commandPlumbing.chandlers,
+			s.commandPlumbing.invoker,
 			s.commandPlumbing.eventLog,
 		); err != nil {
 			return err
@@ -89,7 +89,7 @@ func scheduledJobRunner(kind stoservertypes.ScheduledJobKind, commandPlumbing *s
 
 // FIXME: these stoppers are not handled properly if we have error setting up scheduler
 func setupScheduledJobs(
-	chandlers interface{},
+	invoker command.Invoker,
 	eventLog eventlog.Log,
 	db *bbolt.DB,
 	logger *log.Logger,
@@ -103,8 +103,8 @@ func setupScheduledJobs(
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	commandPlumbing := &scheduledJobCommandPlumbing{
-		chandlers: chandlers,
-		eventLog:  eventLog,
+		invoker:  invoker,
+		eventLog: eventLog,
 	}
 
 	dbJobs := []stotypes.ScheduledJob{}

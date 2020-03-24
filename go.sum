@@ -63,9 +63,12 @@ github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21/go.mod h1
 github.com/eapache/queue v1.1.0/go.mod h1:6eCeP0CKFpHLu8blIFXhExK/dRa7WDZfr6jVFPTqq+I=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
+github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca h1:FY7y7ZvUjrprByPMWhWMBmyr4htvTkQ5Jh8psrhrl/w=
 github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca/go.mod h1:SztwDAaqWnLPSFyVmV0zbBgRsvExr0GzrlOj9sWTC+Y=
 github.com/function61/eventkit v0.0.0-20200109105815-22803dfaed8c h1:rhq6tT02QFPzaWgll3Whp7pY/GbZIRwAlxDWeGFya54=
 github.com/function61/eventkit v0.0.0-20200109105815-22803dfaed8c/go.mod h1:l8QHtJ91dabPqLZB5CDigpL8XSVwnMsQEMERl4Y+VpU=
+github.com/function61/eventkit v0.0.0-20200320120923-f648d7f38041 h1:K787Q9OTK0bPfTVvxRKU3ATO4UdWjMIWiBOrRyQh7qQ=
+github.com/function61/eventkit v0.0.0-20200320120923-f648d7f38041/go.mod h1:z5gdLYZscHZGd7umwT3l5ouQ5M+Lee4MGOm6wediMEc=
 github.com/function61/gokit v0.0.0-20200226141201-fe205250686d/go.mod h1:jAkW2pwxa4N3qxEUDA3zDhfiJInBfF4BjsbkWAU13aU=
 github.com/function61/gokit v0.0.0-20200229115114-3eca8c87d0cc/go.mod h1:jAkW2pwxa4N3qxEUDA3zDhfiJInBfF4BjsbkWAU13aU=
 github.com/function61/gokit v0.0.0-20200307135016-6dd948616ce0 h1:gWaoRNeHdRhJ8ELIwvI1xZcxdhaOTuRHr5Y9E7djSA4=

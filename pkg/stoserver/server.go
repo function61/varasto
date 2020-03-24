@@ -5,6 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/function61/eventhorizon/pkg/ehevent"
+	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/jsonfile"
@@ -182,15 +184,16 @@ func runServer(
 		return err
 	}
 	chandlers := &cHandlers{db, serverConfig, ivController, logger, confReloader} // Bing
+	cHandlersInvoker := stoservertypes.CommandInvoker(chandlers)
 
 	registerCommandEndpoints(
 		router,
 		eventLog,
-		chandlers,
+		cHandlersInvoker,
 		mwares)
 
 	schedulerController, err := setupScheduledJobs(
-		chandlers,
+		cHandlersInvoker,
 		eventLog,
 		db,
 		logger,
@@ -250,6 +253,16 @@ func runServer(
 	workers.StopAllWorkersAndWait()
 
 	return nil
+}
+
+type discardEventLog struct{}
+
+func (d *discardEventLog) Append(_ []ehevent.Event) error {
+	return nil // ok nom nom
+}
+
+func createNonPersistingEventLog() (eventlog.Log, error) {
+	return &discardEventLog{}, nil
 }
 
 // pairs together a subprocess controller and its socket path

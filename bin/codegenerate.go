@@ -27,8 +27,8 @@ func mainLogic() error {
 	}
 
 	modules := []*codegen.Module{
-		codegen.NewModule("stoserver/stoservertypes", "pkg/stoserver/stoservertypes/types.json", "", "pkg/stoserver/stoservertypes/commands.json"),
-		codegen.NewModule("stofuse/stofusetypes", "pkg/stofuse/stofusetypes/types.json", "", ""),
+		codegen.NewModule("stoserver/stoservertypes", "pkg/stoserver/stoservertypes/types.json", "", "pkg/stoserver/stoservertypes/commands.json", ""),
+		codegen.NewModule("stofuse/stofusetypes", "pkg/stofuse/stofusetypes/types.json", "", "", ""),
 	}
 
 	opts := codegen.Opts{

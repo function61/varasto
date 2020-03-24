@@ -11,7 +11,8 @@ require (
 	github.com/disintegration/gift v1.2.0
 	github.com/disintegration/imageorient v0.0.0-20180920195336-8147d86e83ec
 	github.com/djherbis/times v1.1.0
-	github.com/function61/eventkit v0.0.0-20200109105815-22803dfaed8c
+	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
+	github.com/function61/eventkit v0.0.0-20200320120923-f648d7f38041
 	github.com/function61/gokit v0.0.0-20200307135016-6dd948616ce0
 	github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1
 	github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692
