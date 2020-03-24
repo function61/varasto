@@ -135,7 +135,7 @@ external backup programs as well.
 You can get a consistent metadata DB backup from the following REST endpoint:
 
 ```
-$ curl -H 'Authorization: Bearer ...' https://localhost:4486/api_v2/database/export > export.log
+$ curl -H 'Authorization: Bearer ...' https://localhost/api_v2/database/export > export.log
 ```
 
 You can get a bearer token by visiting `Settings > Users` and creating a new API key.

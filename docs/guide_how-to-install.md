@@ -30,7 +30,7 @@ Linux (Docker)
 Find out which version to install from [Docker Hub](https://hub.docker.com/r/fn61/varasto):
 
 ```
-$ docker run -d --name varasto -p 4486:4486 fn61/varasto:VERSION
+$ docker run -d --name varasto -p 443:443 fn61/varasto:VERSION
 ```
 
 NOTE: `-v /dev/disk:/dev/disk:ro --privileged` is required if you want to use SMART or FUSE.
@@ -98,7 +98,7 @@ In the future I think we should research targeting
 After Varasto is started
 ------------------------
 
-Now you can navigate your browser to `https://localhost:4486/#/gettingStarted/v/welcome`
+Now you can navigate your browser to `https://localhost/#/gettingStarted/v/welcome`
 
 There's a "getting started" wizard which will guide you through the setup.
 

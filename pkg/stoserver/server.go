@@ -207,7 +207,7 @@ func runServer(
 	}
 
 	srv := http.Server{
-		Addr:    "0.0.0.0:4486", // 0.0.0.0 = listen on all interfaces
+		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
 		Handler: router,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},

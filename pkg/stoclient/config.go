@@ -20,7 +20,7 @@ const (
 )
 
 type ClientConfig struct {
-	ServerAddr                string `json:"server_addr"` // example: "https://localhost:4486"
+	ServerAddr                string `json:"server_addr"` // example: "https://localhost"
 	AuthToken                 string `json:"auth_token"`
 	FuseMountPath             string `json:"fuse_mount_path"`
 	TlsInsecureSkipValidation bool   `json:"tls_insecure_skip_validation"`
@@ -85,7 +85,7 @@ func configFilePath() (string, error) {
 func configInitEntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use:   "config-init [serverAddr] [authToken] [fuseMountPath]",
-		Short: "Initialize configuration, use https://localhost:4486 for dev",
+		Short: "Initialize configuration, use https://localhost for dev",
 		Args:  cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			serverAddr := args[0]
