@@ -11,7 +11,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
-	"strings"
 )
 
 func (c *cHandlers) KekGenerateOrImport(cmd *stoservertypes.KekGenerateOrImport, ctx *command.Ctx) error {
@@ -25,7 +24,7 @@ func (c *cHandlers) KekGenerateOrImport(cmd *stoservertypes.KekGenerateOrImport,
 		}
 	}
 
-	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(strings.NewReader(data))
+	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey([]byte(data))
 	if err != nil {
 		return err
 	}

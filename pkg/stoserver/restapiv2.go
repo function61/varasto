@@ -790,7 +790,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	}
 
 	for _, dbObject := range dbObjects {
-		cert, err := cryptoutil.ParsePemX509Certificate(strings.NewReader(dbObject.TlsCert))
+		cert, err := cryptoutil.ParsePemX509Certificate([]byte(dbObject.TlsCert))
 		if err != nil {
 			return httpErr(err, http.StatusInternalServerError)
 		}
@@ -1118,7 +1118,7 @@ func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http
 		return nil
 	}
 
-	backups, err := listUbackupStoredBackups(*conf, h.logger)
+	backups, err := listUbackupStoredBackups(conf.Storage, h.logger)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil

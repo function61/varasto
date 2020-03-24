@@ -12,7 +12,6 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
 	"golang.org/x/crypto/ssh"
-	"strings"
 )
 
 type keyStore struct {
@@ -29,7 +28,7 @@ func newKeyStore() *keyStore {
 
 // not safe for concurrent use after boot
 func (k *keyStore) RegisterPrivateKey(rsaPrivKeyPemPkcs1 string) error {
-	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey(strings.NewReader(rsaPrivKeyPemPkcs1))
+	privateKey, err := cryptoutil.ParsePemPkcs1EncodedRsaPrivateKey([]byte(rsaPrivKeyPemPkcs1))
 	if err != nil {
 		return err
 	}

@@ -125,7 +125,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b82ba35b5efb734ecfa3fc8d186add3c8708347e703192fd163cdfe877023699"
+  digest = "1:79bc5e91ef9b17aa59b0d40307bd089295ab4b9feadcbaa02f97d7e190109312"
   name = "github.com/function61/gokit"
   packages = [
     "appuptime",
@@ -153,7 +153,7 @@
     "systemdinstaller",
   ]
   pruneopts = "UT"
-  revision = "06b4840bb72cc9150f694c8fc04350b4c126b138"
+  revision = "6dd948616ce00c7922a7c471d642d860a8f19df1"
 
 [[projects]]
   branch = "master"
@@ -170,7 +170,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a5d0b9052bd90be7340041c089639270ee8331e52a4e49359da60658c4636873"
+  digest = "1:63f217804f40804f687ae8eb23c7956734cb64729819911478aaf9485d69968a"
   name = "github.com/function61/ubackup"
   packages = [
     "pkg/backupfile",
@@ -180,7 +180,7 @@
     "pkg/ubtypes",
   ]
   pruneopts = "UT"
-  revision = "c62a02c584778f1b243ad4e4545909c5afaf8197"
+  revision = "577ef2e5c6926fc943ffac80e74e96362752189e"
 
 [[projects]]
   digest = "1:4c0989ca0bcd10799064318923b9bc2db6b4d6338dd75f3f2d86c3511aaaf5cf"

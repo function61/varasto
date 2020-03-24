@@ -1,7 +1,6 @@
 package stoserver
 
 import (
-	"bytes"
 	"context"
 	"crypto/tls"
 	"crypto/x509"
@@ -617,7 +616,7 @@ func mkWrappedKeypair(certPem, keyPem []byte) (*wrappedKeypair, error) {
 		return nil, err
 	}
 
-	cert, err := cryptoutil.ParsePemX509Certificate(bytes.NewBuffer(certPem))
+	cert, err := cryptoutil.ParsePemX509Certificate(certPem)
 	if err != nil {
 		return nil, err
 	}
