@@ -1,8 +1,4 @@
 {
-  "name": "app",
-  "version": "1.0.0",
-  "description": "",
-  "main": "-",
   "dependencies": {
     "@types/bootstrap": "3.4.0",
     "@types/jquery": "3.3.33",
@@ -17,6 +13,5 @@
   "scripts": {
     "test": "echo \"no test specified\" && exit 0"
   },
-  "author": "",
-  "license": "ISC"
+  "private": true
 }
