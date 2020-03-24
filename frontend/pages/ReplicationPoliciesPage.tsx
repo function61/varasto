@@ -178,7 +178,9 @@ export default class ReplicationPoliciesPage extends React.Component<
 								</td>
 								<td>{r.DesiredReplicaCount}</td>
 								<td>
-									{r.ReplicaStatuses.map((rs) => {
+									{r.ReplicaStatuses.sort(
+										(a, b) => b.BlobCount - a.BlobCount,
+									).map((rs) => {
 										const vol = volumes.filter((v) => v.Id === rs.Volume);
 										const volLabel =
 											vol.length === 1 ? vol[0].Label : '(error)';
