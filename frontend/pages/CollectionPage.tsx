@@ -8,7 +8,7 @@ import { Result } from 'component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
 import { InfoAlert } from 'f61ui/component/alerts';
-import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { DefaultLabel, AnchorButton, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
@@ -33,10 +33,12 @@ import {
 	ConfigValue,
 	Directory,
 	DirectoryOutput,
+	HeadRevisionId,
 	DirectoryType,
 	File as File2, // conflicts with HTML's "File" interface
 	MetadataImdbId,
 	RootPathDotBase64FIXME,
+	CollectionSubset,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
@@ -252,6 +254,9 @@ export default class CollectionPage extends React.Component<
 		return (
 			<div>
 				<SensitivityHeadsUp />
+
+				{inMoviesOrSeriesHierarchy && this.nextPreviousButtons(collOutput, directoryOutput)}
+
 				<div className="row">
 					<div className="col-md-8">
 						<MetadataPanel data={metadataKv} />
@@ -471,6 +476,59 @@ export default class CollectionPage extends React.Component<
 		};
 	}
 
+	private nextPreviousButtons(collOutput: CollectionOutput, directoryOutput: DirectoryOutput) {
+		// given collection ID, extracts previous/next sibling from directoryOutput
+		const nextPrevious = (
+			id: string,
+		): { prev: CollectionSubset | null; next: CollectionSubset | null } => {
+			for (let i = 0; i < directoryOutput.Collections.length; i++) {
+				if (directoryOutput.Collections[i].Id !== id) {
+					continue;
+				}
+				return {
+					prev: i > 0 ? directoryOutput.Collections[i - 1] : null,
+					next:
+						i + 1 < directoryOutput.Collections.length
+							? directoryOutput.Collections[i + 1]
+							: null,
+				};
+			}
+
+			return { prev: null, next: null };
+		};
+
+		const np = nextPrevious(collOutput.Collection.Id);
+
+		// if neither, it's no sense to show stub UI
+		if (!np.prev && !np.next) {
+			return null;
+		}
+
+		return (
+			<div
+				className="btn-group"
+				role="group"
+				aria-label="Next / previous"
+				style={{ marginBottom: '16px' }}>
+				{np.prev && (
+					<AnchorButton href={collectionUrlDefault(np.prev.Id)}>
+						<Glyphicon icon="chevron-left" />
+						&nbsp;
+						{np.prev.Name}
+					</AnchorButton>
+				)}
+				<span className="btn btn-default disabled">{collOutput.Collection.Name}</span>
+				{np.next && (
+					<AnchorButton href={collectionUrlDefault(np.next.Id)} visualStyle="primary">
+						{np.next.Name}
+						&nbsp;
+						<Glyphicon icon="chevron-right" />
+					</AnchorButton>
+				)}
+			</div>
+		);
+	}
+
 	private async fetchData() {
 		this.state.networkShareBaseUrl.load(() => getConfig(CfgNetworkShareBaseUrl));
 
@@ -499,4 +557,12 @@ function downloadUrlFIXME(collectionId: string, changesetId: string, path: strin
 // 'foo.txt' => 'foo.txt'
 function filenameFromPath(path: string): string {
 	return /\/?([^/]+)$/.exec(path)![1];
+}
+
+function collectionUrlDefault(id: string) {
+	return collectionUrl({
+		id,
+		rev: HeadRevisionId,
+		path: RootPathDotBase64FIXME,
+	});
 }
