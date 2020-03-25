@@ -83,10 +83,17 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 			"",
 			"root",
 			string(stoservertypes.DirectoryTypeGeneric)), tx),
+		VolumeRepository.Update(&stotypes.Volume{
+			ID:         1,
+			UUID:       stoutils.NewVolumeUuid(),
+			Label:      "Default volume",
+			Technology: string(stoservertypes.VolumeTechnologyDiskHdd),
+			Quota:      1 * 1024 * 1024 * 1024,
+		}, tx),
 		ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
 			ID:             "default",
 			Name:           "Default replication policy",
-			DesiredVolumes: []int{},
+			DesiredVolumes: []int{1},
 		}, tx),
 		ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),

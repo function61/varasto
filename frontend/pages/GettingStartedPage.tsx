@@ -38,7 +38,7 @@ type section =
 	| 'welcome'
 	| 'createUser'
 	| 'setUpEncryption'
-	| 'createFirstVolume'
+	| 'yourFirstVolume'
 	| 'mountFirstVolume'
 	| 'defaultReplicationPolicy'
 	| 'createFirstCollection'
@@ -94,7 +94,7 @@ export default class GettingStartedPage extends React.Component<
 				{panel(null, 'Welcome to Varasto!', 'welcome', this.welcome)}
 				{panel(null, 'Create user', 'createUser', this.createUser)}
 				{panel(null, 'Set up encryption', 'setUpEncryption', this.setUpEncryption)}
-				{panel(null, 'Create first volume', 'createFirstVolume', this.createFirstVolume)}
+				{panel(null, 'Your first volume', 'yourFirstVolume', this.yourFirstVolume)}
 				{panel(null, 'Mount first volume', 'mountFirstVolume', this.mountFirstVolume)}
 				{panel(
 					null,
@@ -268,7 +268,7 @@ export default class GettingStartedPage extends React.Component<
 		);
 	}
 
-	private createFirstVolume(currSection: section): React.ReactNode {
+	private yourFirstVolume(currSection: section): React.ReactNode {
 		return (
 			<div>
 				<p>A volume is a physical storage location for your data. That can be a:</p>
@@ -292,11 +292,16 @@ export default class GettingStartedPage extends React.Component<
 				</p>
 
 				<p>
+					A default volume with a 1 GB quota has been created for you. You can change its
+					name and quota now or later.
+				</p>
+
+				<p>
 					Go to{' '}
 					<a href={volumesAndMountsUrl({ view: '' })} target="_blank">
 						this page
 					</a>{' '}
-					to create your first volume. Choose{' '}
+					to see your first volume. If you want to create additional volumes, use{' '}
 					<SmallWell>Volumes &raquo; {VolumeCreate().title}</SmallWell>.
 				</p>
 
@@ -314,7 +319,10 @@ export default class GettingStartedPage extends React.Component<
 			<div>
 				<p>It's time to mount the volume(s) that you created.</p>
 
-				<p>When you mount a volume, you'll decide where the data is actually stored.</p>
+				<p>
+					When you mount a volume for the first time, you'll decide where the data is
+					actually stored.
+				</p>
 
 				<p>I would like to mount a:</p>
 
@@ -364,13 +372,13 @@ export default class GettingStartedPage extends React.Component<
 		return (
 			<div>
 				<p>
-					Each collection you have has a replication policy. A policy defines into which
-					volumes that collection is stored in.
+					A replication policy defines into which volumes a collection's files are stored
+					in.
 				</p>
-				<p>You can have separate policies for data with different types of importance:</p>
+				<p>You can have separate policies for data of varying types of importance:</p>
 				<ul>
-					<li>For data you're willing to lose, you can use just one volume.</li>
-					<li>For more important data, you can use two or volumes.</li>
+					<li>For data you're OK with losing, you can use just one volume.</li>
+					<li>For more important data, you can use two or more volumes.</li>
 					<li>
 						You should also consider geographic location so that your important data is
 						safe even if a fire destroys the primary location of your data.
@@ -378,16 +386,28 @@ export default class GettingStartedPage extends React.Component<
 				</ul>
 
 				<p>
+					Read more: <DocLink doc={DocRef.DocsReplicationPoliciesREADMEMd} /> (includes a
+					picture)
+				</p>
+
+				<p>
+					<b>A default policy was created for you</b>, which specifies that data is stored
+					on your default volume. After you add more volumes, you can change the
+					replication policy (even retroactively) to increase your data redundancy.
+				</p>
+
+				<p>
 					Go to{' '}
 					<a href={replicationPoliciesUrl()} target="_blank">
 						replication policies
 					</a>{' '}
-					to configure the default replication policy.
+					to see your default replication policy.
 				</p>
 
 				<p>
-					Use <SmallWell>{ReplicationpolicyChangeDesiredVolumes('0').title}</SmallWell> to
-					specify which volumes any new data should be written to.
+					If you wish to change the policy, use{' '}
+					<SmallWell>{ReplicationpolicyChangeDesiredVolumes('0').title}</SmallWell> to
+					specify which volumes your data should be written to.
 				</p>
 
 				{this.phaseNavBar(currSection)}
@@ -532,8 +552,8 @@ export default class GettingStartedPage extends React.Component<
 			case 'createUser':
 				return 'setUpEncryption';
 			case 'setUpEncryption':
-				return 'createFirstVolume';
-			case 'createFirstVolume':
+				return 'yourFirstVolume';
+			case 'yourFirstVolume':
 				return 'mountFirstVolume';
 			case 'mountFirstVolume':
 				return 'defaultReplicationPolicy';
