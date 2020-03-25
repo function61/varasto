@@ -214,6 +214,23 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 
 				coll := pair.coll
 
+				if _, hasImdbId := coll.Metadata[stoservertypes.MetadataImdbId]; !hasImdbId {
+					// unfortunately the batch GetSeasonEpisodes() can not be made to return
+					// per-episode IMDB IDs in a single call
+					externalIds, err := tmdb.GetEpisodeExternalIds(
+						ctx.Ctx,
+						tmdbTvId,
+						ep.SeasonNumber,
+						ep.EpisodeNumber)
+					if err != nil {
+						return err
+					}
+
+					if externalIds.ImdbId != "" {
+						coll.Metadata[stoservertypes.MetadataImdbId] = externalIds.ImdbId
+					}
+				}
+
 				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = tmdbTvId
 				coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.Id)
 
