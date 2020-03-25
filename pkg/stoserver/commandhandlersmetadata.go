@@ -130,17 +130,17 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 			return err
 		}
 
-		theTvDbSeriesId := ""
+		tmdbTvId := ""
 		for _, parentDir := range parentDirs {
-			theTvDbSeriesId = parentDir.Metadata[stoservertypes.MetadataTheMovieDbTvId]
-			if theTvDbSeriesId != "" {
+			tmdbTvId = parentDir.Metadata[stoservertypes.MetadataTheMovieDbTvId]
+			if tmdbTvId != "" {
 				break
 			}
 		}
-		if theTvDbSeriesId == "" {
-			theTvDbSeriesId = firstCollDirectory.Metadata[stoservertypes.MetadataTheMovieDbTvId] // one last try
+		if tmdbTvId == "" {
+			tmdbTvId = firstCollDirectory.Metadata[stoservertypes.MetadataTheMovieDbTvId] // one last try
 		}
-		if theTvDbSeriesId == "" {
+		if tmdbTvId == "" {
 			return fmt.Errorf("could not resolve %s for collection", stoservertypes.MetadataTheMovieDbTvId)
 		}
 
@@ -196,7 +196,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 		}
 
 		for _, seasonNumber := range uniqueSeasonNumbers {
-			episodes, err := tmdb.GetSeasonEpisodes(ctx.Ctx, seasonNumber, theTvDbSeriesId)
+			episodes, err := tmdb.GetSeasonEpisodes(ctx.Ctx, seasonNumber, tmdbTvId)
 			if err != nil {
 				return err
 			}
@@ -214,7 +214,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 
 				coll := pair.coll
 
-				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = theTvDbSeriesId
+				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = tmdbTvId
 				coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.Id)
 
 				if ep.Name != "" {
@@ -227,7 +227,9 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 					coll.Metadata[stoservertypes.MetadataOverview] = ep.Overview
 				}
 				if ep.StillPath != "" {
-					coll.Metadata[stoservertypes.MetadataThumbnail] = themoviedbapi.ImagePath(ep.StillPath, "original")
+					coll.Metadata[stoservertypes.MetadataThumbnail] = themoviedbapi.ImagePath(
+						ep.StillPath,
+						"original")
 				}
 
 				if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
