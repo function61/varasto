@@ -2,6 +2,7 @@
 package childprocesscontroller
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"os"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/logtee"
 )
 
@@ -39,7 +39,7 @@ func New(
 	description string,
 	controlLogger *log.Logger,
 	logger *log.Logger,
-	stop *stopper.Stopper,
+	starter func(func(context.Context) error),
 ) *Controller {
 	proc := &Controller{
 		cmd:           cmd,
@@ -51,7 +51,9 @@ func New(
 		logger:        logger,
 	}
 
-	go proc.handler(stop)
+	starter(func(ctx context.Context) error {
+		return proc.handler(ctx)
+	})
 
 	return proc
 }
@@ -91,9 +93,7 @@ func (s *Controller) setStatus(st *Status) {
 	s.status = st
 }
 
-func (s *Controller) handler(stop *stopper.Stopper) {
-	defer stop.Done()
-
+func (s *Controller) handler(ctx context.Context) error {
 	var cmd *exec.Cmd
 
 	desiredRunning := false
@@ -112,7 +112,7 @@ func (s *Controller) handler(stop *stopper.Stopper) {
 		if err := <-s.exited; err != nil {
 			s.controlLogger.Error.Printf("unclean exit: %v", err)
 		} else {
-			s.controlLogger.Info.Println("stopped")
+			s.controlLogger.Info.Println("stopped cleanly")
 		}
 
 		cmd = nil
@@ -167,13 +167,12 @@ func (s *Controller) handler(stop *stopper.Stopper) {
 			if !isRunning() {
 				startChildProcess()
 			}
-		case <-stop.Signal:
+		case <-ctx.Done():
 			if isRunning() {
 				stopSubprocess()
 			}
 
-			// stops this handler goroutine & reports completion via stopper
-			return
+			return nil // stops our controller
 		case <-s.stop:
 			desiredRunning = false
 

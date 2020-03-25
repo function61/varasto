@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/stopper"
 	"github.com/robfig/cron/v3"
 )
 
@@ -73,8 +72,12 @@ type Controller struct {
 	jobLogger       *log.Logger
 }
 
-func Start(jobs []*Job, jobLogger *log.Logger, stop *stopper.Stopper) (*Controller, error) {
-	s := &Controller{
+func New(
+	jobs []*Job,
+	jobLogger *log.Logger,
+	start func(func(context.Context) error),
+) *Controller {
+	c := &Controller{
 		make(chan *snapshotRequest),
 		make(chan string),
 		make(chan *jobResult, 1),
@@ -82,9 +85,11 @@ func Start(jobs []*Job, jobLogger *log.Logger, stop *stopper.Stopper) (*Controll
 		jobLogger,
 	}
 
-	go s.scheduler(jobs, stop)
+	start(func(ctx context.Context) error {
+		return c.run(ctx, jobs)
+	})
 
-	return s, nil
+	return c
 }
 
 func (s *Controller) Trigger(jobId string) {
@@ -102,13 +107,10 @@ func (s *Controller) Snapshot() []JobSpec {
 
 // the core of the scheduler runs single-threaded, but many interactions like task running and
 // requesting snapshot of job state are in other goroutines and communication happens via channels
-func (s *Controller) scheduler(jobs []*Job, stop *stopper.Stopper) {
-	defer stop.Done()
+func (s *Controller) run(ctx context.Context, jobs []*Job) error {
 	defer func() {
 		close(s.SnapshotReady)
 	}()
-
-	mainCtx, cancel := context.WithCancel(context.TODO())
 
 	nextEarliestCh := func() <-chan time.Time {
 		if len(jobs) == 0 {
@@ -150,7 +152,7 @@ func (s *Controller) scheduler(jobs []*Job, stop *stopper.Stopper) {
 		case now := <-nextJobBecomesRunnableCh:
 			for _, job := range jobs {
 				if !job.Spec.NextRun.After(now) {
-					s.startJob(mainCtx, job)
+					s.startJob(ctx, job)
 				}
 			}
 
@@ -162,12 +164,11 @@ func (s *Controller) scheduler(jobs []*Job, stop *stopper.Stopper) {
 		case jobId := <-s.triggerRequest:
 			for _, job := range jobs {
 				if job.Spec.Id == jobId {
-					s.startJob(mainCtx, job)
+					s.startJob(ctx, job)
 					break
 				}
 			}
-		case <-stop.Signal:
-			cancel() // notify all currently running tasks to stop
+		case <-ctx.Done():
 			for _, job := range jobs {
 				if job.Spec.Running {
 					// wait for the first of the N running stops to finish - not necessarily
@@ -176,7 +177,7 @@ func (s *Controller) scheduler(jobs []*Job, stop *stopper.Stopper) {
 				}
 			}
 
-			return // stops scheduler
+			return nil // stops scheduler
 		}
 	}
 }

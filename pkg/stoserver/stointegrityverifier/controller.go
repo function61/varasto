@@ -3,6 +3,7 @@
 package stointegrityverifier
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -31,6 +32,8 @@ type Controller struct {
 	logl                *logex.Leveled
 }
 
+// public API
+
 func (s *Controller) Resume(jobId string) {
 	s.resume <- jobId
 }
@@ -52,7 +55,7 @@ func NewController(
 	blobRepository blorm.Repository,
 	diskAccess *stodiskaccess.Controller,
 	logger *log.Logger,
-	stop *stopper.Stopper,
+	start func(fn func(context.Context) error),
 ) *Controller {
 	ctrl := &Controller{
 		db:                  db,
@@ -66,48 +69,50 @@ func NewController(
 		logl:                logex.Levels(logger),
 	}
 
-	go func() {
-		defer stop.Done()
-		defer ctrl.logl.Info.Println("stopped")
-
-		subWorkers := stopper.NewManager()
-
-		for {
-			select {
-			case <-stop.Signal:
-				subWorkers.StopAllWorkersAndWait()
-				return
-			case jobId := <-ctrl.stop:
-				stop, found := ctrl.runningJobIds[jobId]
-				if !found {
-					ctrl.logl.Error.Printf("did not find job %s", jobId)
-					continue
-				}
-
-				ctrl.logl.Info.Printf("stopping job %s", jobId)
-				stop.SignalStop()
-			case jobId := <-ctrl.resume:
-				ctrl.logl.Info.Printf("resuming job %s", jobId)
-
-				if err := ctrl.resumeJob(jobId, db, subWorkers.Stopper()); err != nil {
-					ctrl.logl.Error.Printf("resumeJob: %v", err)
-				}
-			case result := <-ctrl.opListRunningJobIds:
-				jobIds := []string{}
-
-				for id := range ctrl.runningJobIds {
-					jobIds = append(jobIds, id)
-				}
-
-				result <- jobIds
-			}
-		}
-	}()
+	start(func(ctx context.Context) error {
+		return ctrl.run(ctx)
+	})
 
 	return ctrl
 }
 
-func (s *Controller) resumeJob(jobId string, db *bbolt.DB, stop *stopper.Stopper) error {
+func (c *Controller) run(ctx context.Context) error {
+	// TODO: renovate to use context-based taskrunner
+	subWorkers := stopper.NewManager()
+
+	for {
+		select {
+		case <-ctx.Done():
+			subWorkers.StopAllWorkersAndWait()
+			return nil
+		case jobId := <-c.stop:
+			stop, found := c.runningJobIds[jobId]
+			if !found {
+				c.logl.Error.Printf("did not find job %s", jobId)
+				continue
+			}
+
+			c.logl.Info.Printf("stopping job %s", jobId)
+			stop.SignalStop()
+		case jobId := <-c.resume:
+			c.logl.Info.Printf("resuming job %s", jobId)
+
+			if err := c.resumeJob(jobId, subWorkers.Stopper()); err != nil {
+				c.logl.Error.Printf("resumeJob: %v", err)
+			}
+		case result := <-c.opListRunningJobIds:
+			jobIds := []string{}
+
+			for id := range c.runningJobIds {
+				jobIds = append(jobIds, id)
+			}
+
+			result <- jobIds
+		}
+	}
+}
+
+func (s *Controller) resumeJob(jobId string, stop *stopper.Stopper) error {
 	if _, running := s.runningJobIds[jobId]; running {
 		return errors.New("job is already running")
 	}

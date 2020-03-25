@@ -16,10 +16,11 @@ import (
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/dynversion"
+	"github.com/function61/gokit/httputils"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
-	"github.com/function61/gokit/stopper"
+	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/pi-security-module/pkg/extractpublicfiles"
 	"github.com/function61/pi-security-module/pkg/f61ui"
 	"github.com/function61/varasto/pkg/blobstore"
@@ -52,12 +53,12 @@ type ServerConfigFile struct {
 }
 
 func runServer(
+	ctx context.Context,
 	logger *log.Logger,
 	logTail *logtee.StringTail,
-	stop *stopper.Stopper,
 	restarter *restartcontroller.Controller,
 ) error {
-	defer stop.Done()
+	ctx, cancel := context.WithCancel(ctx)
 
 	confReloader := &configReloader{restarter}
 
@@ -100,7 +101,22 @@ func runServer(
 		}
 	}
 
-	workers := stopper.NewManager()
+	tasks := taskrunner.New(ctx, logger)
+
+	withErrButWaitTasks := func(err error) error {
+		// no harm in double-canceling if context was already canceled
+		cancel()
+
+		if errTaskWait := tasks.Wait(); errTaskWait != nil {
+			if err != nil {
+				return fmt.Errorf("%v; also tasks.Wait(): %v", err, errTaskWait)
+			} else {
+				return errTaskWait
+			}
+		} else {
+			return err
+		}
+	}
 
 	// upcoming:
 	// - transcoding server
@@ -117,7 +133,7 @@ func runServer(
 			"Thumbnail generator",
 			logex.Prefix("manager(thumbserver)", logger),
 			logex.Prefix("thumbserver", logger),
-			workers.Stopper()),
+			func(task func(context.Context) error) { tasks.Start("manager(thumbserver)", task) }),
 		sockPath: thumbnailerSockAddr,
 	}
 
@@ -132,7 +148,7 @@ func runServer(
 			"FUSE projector",
 			logex.Prefix("manager(fuse)", logger),
 			logex.Prefix("fuse", logger),
-			workers.Stopper()),
+			func(task func(context.Context) error) { tasks.Start("manager(fuse)", task) }),
 		sockPath: fuseProjectorSockAddr,
 	}
 
@@ -146,7 +162,7 @@ func runServer(
 		stodb.BlobRepository,
 		serverConfig.DiskAccess,
 		logex.Prefix("integrityctrl", logger),
-		workers.Stopper())
+		func(run func(context.Context) error) { tasks.Start("integrityctrl", run) })
 
 	if err := defineRestApi(
 		router,
@@ -156,7 +172,7 @@ func runServer(
 		mwares,
 		logex.Prefix("restapi", logger),
 	); err != nil {
-		return err
+		return withErrButWaitTasks(err)
 	}
 
 	mountSubsystem := func(subsys *subsystem) {
@@ -184,7 +200,7 @@ func runServer(
 
 	eventLog, err := createNonPersistingEventLog()
 	if err != nil {
-		return err
+		return withErrButWaitTasks(err)
 	}
 	chandlers := &cHandlers{db, serverConfig, ivController, logger, confReloader} // Bing
 	cHandlersInvoker := stoservertypes.CommandInvoker(chandlers)
@@ -200,18 +216,18 @@ func runServer(
 		eventLog,
 		db,
 		logger,
-		workers.Stopper(),
-		workers.Stopper())
+		func(fn func(context.Context) error) { tasks.Start("scheduler", fn) },
+		func(fn func(context.Context) error) { tasks.Start("scheduler/snapshots", fn) })
 	if err != nil {
-		return err
+		return withErrButWaitTasks(err)
 	}
 	serverConfig.Scheduler = schedulerController
 
 	if err := defineUi(router); err != nil {
-		return err
+		return withErrButWaitTasks(err)
 	}
 
-	srv := http.Server{
+	srv := &http.Server{
 		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
 		Handler: router,
 		TLSConfig: &tls.Config{
@@ -226,36 +242,30 @@ func runServer(
 			continue
 		}
 
-		serverConfig.ReplicationControllers[mount.Volume] = storeplication.Start(
+		logPrefix := fmt.Sprintf("replctrl/%d", mount.Volume)
+
+		serverConfig.ReplicationControllers[mount.Volume] = storeplication.New(
 			mount.Volume,
 			db,
 			serverConfig.DiskAccess,
-			logex.Prefix(fmt.Sprintf("replctrl/%d", mount.Volume), logger),
-			workers.Stopper())
+			logex.Prefix(logPrefix, logger),
+			func(fn func(context.Context) error) { tasks.Start(logPrefix, fn) })
 	}
 
-	go func(stop *stopper.Stopper) {
-		defer stop.Done()
+	tasks.Start("listener "+srv.Addr, func(_ context.Context) error {
+		return httputils.RemoveGracefulServerClosedError(srv.ListenAndServeTLS("", ""))
+	})
 
-		if err := srv.ListenAndServeTLS("", ""); err != http.ErrServerClosed {
-			logl.Error.Fatalf("ListenAndServe: %v", err)
-		}
-	}(workers.Stopper())
+	tasks.Start("listenershutdowner", httputils.ServerShutdownTask(srv))
 
 	logl.Info.Printf(
 		"node %s (ver. %s) started",
 		serverConfig.SelfNodeId,
 		dynversion.Version)
 
-	<-stop.Signal
-
-	if err := srv.Shutdown(context.TODO()); err != nil {
-		logl.Error.Fatalf("Shutdown: %v", err)
-	}
-
-	workers.StopAllWorkersAndWait()
-
-	return nil
+	// started cleanly until here. any of the tasks can error however, and that error
+	// will be returned here. on graceful shutdown this'll return nil
+	return tasks.Wait()
 }
 
 func defineUi(router *mux.Router) error {

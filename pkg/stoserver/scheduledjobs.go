@@ -9,7 +9,6 @@ import (
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
-	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
@@ -88,14 +87,13 @@ func scheduledJobRunner(kind stoservertypes.ScheduledJobKind, commandPlumbing *s
 	}
 }
 
-// FIXME: these stoppers are not handled properly if we have error setting up scheduler
 func setupScheduledJobs(
 	invoker command.Invoker,
 	eventLog eventlog.Log,
 	db *bbolt.DB,
 	logger *log.Logger,
-	stop *stopper.Stopper,
-	snapshotHandlerStop *stopper.Stopper,
+	startScheduler func(fn func(context.Context) error),
+	startSnapshotter func(fn func(context.Context) error),
 ) (*scheduler.Controller, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
@@ -133,51 +131,47 @@ func setupScheduledJobs(
 		jobs = append(jobs, job)
 	}
 
-	controller, err := scheduler.Start(jobs, logger, stop)
-	if err != nil {
-		return nil, err
-	}
+	schedulerController := scheduler.New(jobs, logger, startScheduler)
 
-	handleSnapshot := func(snapshot []scheduler.JobSpec) error {
-		return db.Update(func(tx *bbolt.Tx) error {
-			for _, job := range snapshot {
-				dbJob, err := stodb.Read(tx).ScheduledJob(job.Id)
-				if err != nil {
-					return err
-				}
-
-				dbJob.NextRun = job.NextRun
-				dbJob.LastRun = convertLastRunToDb(job.LastRun)
-
-				if err := stodb.ScheduledJobRepository.Update(dbJob, tx); err != nil {
-					return err
-				}
-			}
-
-			return nil
-		})
-	}
-
-	go func() {
-		defer snapshotHandlerStop.Done()
-
+	startSnapshotter(func(ctx context.Context) error {
+		// when scheduler job's state changes, it emits a snapshot that we'll save to the DB
 		for {
 			select {
-			case <-snapshotHandlerStop.Signal:
-				return
-			case snapshot, ok := <-controller.SnapshotReady:
-				if !ok {
-					return
+			case <-ctx.Done():
+				return nil
+			case snapshot, ok := <-schedulerController.SnapshotReady:
+				if !ok { // chan closed => graceful stop
+					return nil
 				}
 
-				if err := handleSnapshot(snapshot); err != nil {
-					panic(err)
+				if err := handleSnapshot(db, snapshot); err != nil {
+					return err // shuts done entire server
 				}
 			}
 		}
-	}()
+	})
 
-	return controller, nil
+	return schedulerController, nil
+}
+
+func handleSnapshot(db *bbolt.DB, snapshot []scheduler.JobSpec) error {
+	return db.Update(func(tx *bbolt.Tx) error {
+		for _, job := range snapshot {
+			dbJob, err := stodb.Read(tx).ScheduledJob(job.Id)
+			if err != nil {
+				return err
+			}
+
+			dbJob.NextRun = job.NextRun
+			dbJob.LastRun = convertLastRunToDb(job.LastRun)
+
+			if err := stodb.ScheduledJobRepository.Update(dbJob, tx); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func dbJobToJobSpec(dbJob stotypes.ScheduledJob) scheduler.JobSpec {

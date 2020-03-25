@@ -75,6 +75,10 @@ github.com/function61/gokit v0.0.0-20200226141201-fe205250686d/go.mod h1:jAkW2pw
 github.com/function61/gokit v0.0.0-20200229115114-3eca8c87d0cc/go.mod h1:jAkW2pwxa4N3qxEUDA3zDhfiJInBfF4BjsbkWAU13aU=
 github.com/function61/gokit v0.0.0-20200307135016-6dd948616ce0 h1:gWaoRNeHdRhJ8ELIwvI1xZcxdhaOTuRHr5Y9E7djSA4=
 github.com/function61/gokit v0.0.0-20200307135016-6dd948616ce0/go.mod h1:f6JhYQwMbwfAX472K/2A46CKet7BrpugMzuCobtqPQo=
+github.com/function61/gokit v0.0.0-20200325100236-8c723509d53a h1:RpMojCJd3XzN9V+RJiyMTBMx7Tjsp2IwIlGf+Nr6mv8=
+github.com/function61/gokit v0.0.0-20200325100236-8c723509d53a/go.mod h1:f6JhYQwMbwfAX472K/2A46CKet7BrpugMzuCobtqPQo=
+github.com/function61/gokit v0.0.0-20200325101145-bb450040d496 h1:ycUmDAdl4O5AI+2oGa6aouJ3LU9ydToBMXMP/3I9NNM=
+github.com/function61/gokit v0.0.0-20200325101145-bb450040d496/go.mod h1:f6JhYQwMbwfAX472K/2A46CKet7BrpugMzuCobtqPQo=
 github.com/function61/lambda-alertmanager v1.0.0/go.mod h1:9e4VH+6LqHdGh32ZYkaeo3kdWi9h2CiMPIveDbrW0tw=
 github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1 h1:/JifQnaG1jIVufKhsVrmqX4UwkG7vRhsGh0qf5lGQjw=
 github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1/go.mod h1:xEFSqRukETpU1ijzEZpY3ohSj01MzntOpL0eUHYp92M=

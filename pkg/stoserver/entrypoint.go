@@ -4,12 +4,10 @@ package stoserver
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
-	"github.com/function61/gokit/stopper"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/restartcontroller"
@@ -27,28 +25,18 @@ func serverMain() error {
 		logTail.Write(line)
 	}))
 
-	ctx, cancel := context.WithCancel(context.Background())
-
-	go func(logger *log.Logger) {
-		logex.Levels(logger).Info.Printf(
-			"Got %s; stopping",
-			<-ossignal.InterruptOrTerminate())
-
-		cancel()
-	}(logex.Prefix("main", rootLogger))
-
 	restartable := restartcontroller.New(logex.Prefix("restartcontroller", rootLogger))
 
-	return restartable.Run(ctx, func(ctx context.Context) error {
-		// a short wrapper to adapt context-based cancellation to stopper-based cancellation
-		workers := stopper.NewManager()
-		go func() {
-			<-ctx.Done()
-			workers.StopAllWorkersAndWait()
-		}()
-
-		return runServer(rootLogger, logTail, workers.Stopper(), restartable)
-	})
+	return restartable.Run(
+		ossignal.InterruptOrTerminateBackgroundCtx(rootLogger),
+		func(ctx context.Context) error {
+			// we'll pass restart API to the server so it can request us to stop restart itself
+			return runServer(
+				ctx,
+				rootLogger,
+				logTail,
+				restartable)
+		})
 }
 
 func Entrypoint() *cobra.Command {

@@ -13,7 +13,6 @@ import (
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
-	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -28,23 +27,28 @@ type replicationJob struct {
 type Controller struct {
 	toVolumeId int
 	progress   *atomicInt32
-	stop       *stopper.Stopper
 	logl       *logex.Leveled
 	db         *bbolt.DB
 	diskAccess *stodiskaccess.Controller
 }
 
-func Start(toVolumeId int, db *bbolt.DB, diskAccess *stodiskaccess.Controller, logger *log.Logger, stop *stopper.Stopper) *Controller {
+// returns controller API and a function you must call (maybe in a separate goroutine) to run the logic
+func New(
+	toVolumeId int,
+	db *bbolt.DB,
+	diskAccess *stodiskaccess.Controller,
+	logger *log.Logger,
+	start func(fn func(context.Context) error),
+) *Controller {
 	c := &Controller{
 		toVolumeId: toVolumeId,
 		progress:   newAtomicInt32(0),
-		stop:       stop,
 		logl:       logex.Levels(logger),
 		db:         db,
 		diskAccess: diskAccess,
 	}
 
-	go c.run(stop)
+	start(func(ctx context.Context) error { return c.run(ctx) })
 
 	return c
 }
@@ -53,10 +57,7 @@ func (c *Controller) Progress() int {
 	return int(c.progress.Get())
 }
 
-func (c *Controller) run(stop *stopper.Stopper) {
-	defer stop.Done()
-	defer c.logl.Info.Println("stopped")
-
+func (c *Controller) run(ctx context.Context) error {
 	continueToken := stodb.StartFromFirst
 
 	fiveSeconds := time.NewTicker(5 * time.Second)
@@ -64,16 +65,16 @@ func (c *Controller) run(stop *stopper.Stopper) {
 	for {
 		// give priority to stop signal
 		select {
-		case <-stop.Signal:
-			return
+		case <-ctx.Done():
+			return nil
 		default:
 		}
 
 		select {
-		case <-stop.Signal:
-			return
+		case <-ctx.Done():
+			return nil
 		case <-fiveSeconds.C:
-			nextContinueToken, err := c.discoverAndRunReplicationJobs(continueToken)
+			nextContinueToken, err := c.discoverAndRunReplicationJobs(ctx, continueToken)
 			if err != nil {
 				c.logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
@@ -93,7 +94,10 @@ func (c *Controller) run(stop *stopper.Stopper) {
 	}
 }
 
-func (c *Controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte, error) {
+func (c *Controller) discoverAndRunReplicationJobs(
+	ctx context.Context,
+	continueToken []byte,
+) ([]byte, error) {
 	jobs, nextContinueToken, err := c.discoverReplicationJobs(continueToken)
 	if err != nil {
 		return nextContinueToken, err
@@ -136,7 +140,7 @@ func (c *Controller) discoverAndRunReplicationJobs(continueToken []byte) ([]byte
 
 	for _, job := range jobs {
 		select {
-		case <-c.stop.Signal:
+		case <-ctx.Done():
 			return nextContinueToken, nil
 		default:
 		}
