@@ -9,7 +9,7 @@ A replication policy specifies on which volumes a collection's files should be s
 Do I need multiple policies?
 ----------------------------
 
-If you have data of varying types of importance, you can have for example:
+If you have data with varying types of importance, you can have for example:
 
 - A default replication policy that saves data to three disks
   * The default policy is specified for root directory and is used for all file collections
