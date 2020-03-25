@@ -123,6 +123,7 @@
 				"README.md",
 				"docs/client/README.md",
 				"docs/googledrive/README.md",
+				"docs/replication-policies/README.md",
 				"docs/guide_network-folders.md",
 				"docs/guide_setting-up-backup.md",
 				"docs/guide_setting-up-local-fs.md",
