@@ -59,6 +59,7 @@ func runServer(
 	restarter *restartcontroller.Controller,
 ) error {
 	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	confReloader := &configReloader{restarter}
 
@@ -263,7 +264,7 @@ func runServer(
 		serverConfig.SelfNodeId,
 		dynversion.Version)
 
-	// started cleanly until here. any of the tasks can error however, and that error
+	// got cleanly until here. any of the tasks can error however, and that error
 	// will be returned here. on graceful shutdown this'll return nil
 	return tasks.Wait()
 }
