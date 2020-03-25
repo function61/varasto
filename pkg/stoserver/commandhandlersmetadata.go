@@ -214,10 +214,6 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 
 				coll := pair.coll
 
-				if coll.Metadata == nil {
-					panic("should not be after migration")
-				}
-
 				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = theTvDbSeriesId
 				coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.Id)
 
