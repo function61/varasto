@@ -1112,8 +1112,12 @@ func (h *handlers) DownloadUbackupStoredBackup(rctx *httpauth.RequestContext, w 
 func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.UbackupStoredBackup {
 	conf, err := ubConfigFromDb(h.db)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+		if _, is := err.(*stodb.ConfigRequiredError); is {
+			return &[]stoservertypes.UbackupStoredBackup{}
+		} else {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return nil
+		}
 	}
 
 	backups, err := listUbackupStoredBackups(conf.Storage, h.logger)

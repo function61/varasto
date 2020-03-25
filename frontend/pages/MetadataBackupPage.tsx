@@ -59,21 +59,6 @@ export default class MetadataBackupPage extends React.Component<
 	}
 
 	render() {
-		const content =
-			this.props.view === '' ? (
-				<Panel
-					heading={
-						<div>
-							Metadata backup list &nbsp;
-							<DocLink doc={DocRef.DocsGuideSettingUpBackupMd} />
-						</div>
-					}>
-					{this.renderStoredBackups()}
-				</Panel>
-			) : (
-				this.renderBackupConfig()
-			);
-
 		return (
 			<SettingsLayout title="Backups" breadcrumbs={[]}>
 				<TabController
@@ -91,7 +76,19 @@ export default class MetadataBackupPage extends React.Component<
 							title: 'Metadata backup configuration',
 						},
 					]}>
-					{content}
+					{this.props.view === '' ? (
+						<Panel
+							heading={
+								<div>
+									Metadata backup list &nbsp;
+									<DocLink doc={DocRef.DocsGuideSettingUpBackupMd} />
+								</div>
+							}>
+							{this.renderStoredBackups()}
+						</Panel>
+					) : (
+						this.renderBackupConfig()
+					)}
 				</TabController>
 			</SettingsLayout>
 		);

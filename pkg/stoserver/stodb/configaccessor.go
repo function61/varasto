@@ -8,6 +8,10 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+type ConfigRequiredError struct {
+	error
+}
+
 type configAccessor struct {
 	key string
 }
@@ -32,7 +36,7 @@ func (c *configAccessor) getWithRequired(required bool, tx *bbolt.Tx) (string, e
 	}
 
 	if conf.Value == "" && required {
-		return "", fmt.Errorf("config value %s not set", c.key)
+		return "", &ConfigRequiredError{fmt.Errorf("config value %s not set", c.key)}
 	}
 
 	return conf.Value, nil
