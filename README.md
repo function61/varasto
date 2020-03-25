@@ -53,7 +53,7 @@ Features
 | ✓      | Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data |
 | ✓      | Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login if you want to show only family-friendly content |
 | ✓      | Data durability             | Transparently replicates your data to multiple disks / to offsite storage |
-| ✓      | Per-collection durability   | To save money, we support storing important files with higher redundancy than less important files |
+| ✓      | [Per-collection durability](docs/replication-policies/README.md) | To save money, we support storing important files with higher redundancy than less important files |
 | ✓      | Transactional               | File or group of files are successfully committed or none at all. Practically no other filesystem does this |
 | ✓      | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
 | ✓      | [Ransomware protection](docs/guide_ransomware-protection.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
