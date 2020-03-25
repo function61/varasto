@@ -30,7 +30,7 @@ func serverMain() error {
 	return restartable.Run(
 		ossignal.InterruptOrTerminateBackgroundCtx(rootLogger),
 		func(ctx context.Context) error {
-			// we'll pass restart API to the server so it can request us to stop restart itself
+			// we'll pass restart API to the server so it can request us to restart itself
 			return runServer(
 				ctx,
 				rootLogger,
