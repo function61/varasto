@@ -896,12 +896,15 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 		return stodb.VolumeRepository.Each(func(record interface{}) error {
 			vol := record.(*stotypes.Volume)
 
-			if vol.SmartId != "" {
-				scans = append(scans, &smartCapableVolume{
-					volId:   vol.ID,
-					smartId: vol.SmartId,
-				})
+			// skip volume if SMART collection is not enabled for it (OR it's not mounted)
+			if vol.SmartId == "" || !c.conf.DiskAccess.IsMounted(vol.ID) {
+				return nil
 			}
+
+			scans = append(scans, &smartCapableVolume{
+				volId:   vol.ID,
+				smartId: vol.SmartId,
+			})
 
 			return nil
 		}, tx)
@@ -917,7 +920,7 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 	for _, scan := range scans {
 		report, err := smart.Scan(scan.smartId, smartBackend)
 		if err != nil {
-			return fmt.Errorf("volume %d (%s) error scanning SMART: %v", scan.volId, scan.smartId, err)
+			return fmt.Errorf("vol %d (%s) SMART: %v", scan.volId, scan.smartId, err)
 		}
 
 		var temp *int
