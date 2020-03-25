@@ -9,30 +9,31 @@ import (
 	"github.com/function61/gokit/ezhttp"
 )
 
+type ExternalIds struct {
+	Id     int64  `json:"id"`
+	ImdbId string `json:"imdb_id"`
+}
+
 type Movie struct {
-	Id          int64 `json:"id"`
-	ExternalIds struct {
-		ImdbId string `json:"imdb_id"`
-	} `json:"external_ids"`
-	Title          string `json:"title"`
-	OriginalTitle  string `json:"original_title"`
-	Overview       string `json:"overview"`
-	RuntimeMinutes int    `json:"runtime"`
-	ReleaseDate    string `json:"release_date"` // yyyy-mm-dd
-	RevenueDollars int64  `json:"revenue"`
-	BackdropPath   string `json:"backdrop_path"`
+	Id             int64       `json:"id"`
+	ExternalIds    ExternalIds `json:"external_ids"`
+	Title          string      `json:"title"`
+	OriginalTitle  string      `json:"original_title"`
+	Overview       string      `json:"overview"`
+	RuntimeMinutes int         `json:"runtime"`
+	ReleaseDate    string      `json:"release_date"` // yyyy-mm-dd
+	RevenueDollars int64       `json:"revenue"`
+	BackdropPath   string      `json:"backdrop_path"`
 }
 
 type Tv struct {
-	Id           int64  `json:"id"`
-	Name         string `json:"name"`
-	Overview     string `json:"overview"`
-	BackdropPath string `json:"backdrop_path"`
-	PosterPath   string `json:"poster_path"`
-	Homepage     string `json:"homepage"`
-	ExternalIds  struct {
-		ImdbId string `json:"imdb_id"`
-	} `json:"external_ids"`
+	Id           int64       `json:"id"`
+	Name         string      `json:"name"`
+	Overview     string      `json:"overview"`
+	BackdropPath string      `json:"backdrop_path"`
+	PosterPath   string      `json:"poster_path"`
+	Homepage     string      `json:"homepage"`
+	ExternalIds  ExternalIds `json:"external_ids"`
 }
 
 type Episode struct {
@@ -103,6 +104,7 @@ func (c *Client) OpenTv(ctx context.Context, id string) (*Tv, error) {
 	return res, nil
 }
 
+// doesn't support returning external IDs, but the "get one episode" does.
 func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId string) ([]Episode, error) {
 	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
@@ -119,6 +121,27 @@ func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId s
 	}
 
 	return res.Episodes, nil
+}
+
+func (c *Client) GetEpisodeExternalIds(
+	ctx context.Context,
+	tvId string,
+	seasonNumber int,
+	episodeNumber int,
+) (*ExternalIds, error) {
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
+	defer cancel()
+
+	res := &ExternalIds{}
+
+	if _, err := ezhttp.Get(
+		ctx,
+		endpointV3("/tv/"+tvId+"/season/"+strconv.Itoa(seasonNumber)+"/episode/"+strconv.Itoa(episodeNumber)+"/external_ids?api_key="+c.apiKey),
+		ezhttp.RespondsJson(&res, true)); err != nil {
+		return nil, fmt.Errorf("GetEpisodeExternalIds: %w", err)
+	}
+
+	return res, nil
 }
 
 func (c *Client) findMovieByImdbId(ctx context.Context, imdbId string) (string, error) {
