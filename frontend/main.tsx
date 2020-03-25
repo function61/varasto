@@ -1,11 +1,13 @@
 import { boot, makeRouter } from 'f61ui/appcontroller';
 import { DangerAlert } from 'f61ui/component/alerts';
+import { navigateTo } from 'f61ui/browserutils';
 import { GlobalConfig } from 'f61ui/globalconfig';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import BrowsePage from 'pages/BrowsePage';
 import CollectionPage from 'pages/CollectionPage';
 import ContentMetadataPage from 'pages/ContentMetadataPage';
 import DownloadClientAppPage from 'pages/DownloadClientAppPage';
+import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import FuseServerPage from 'pages/FuseServerPage';
 import GettingStartedPage from 'pages/GettingStartedPage';
 import LogsPage from 'pages/LogsPage';
@@ -20,6 +22,11 @@ import * as React from 'react';
 import * as r from 'generated/stoserver/stoserverui_uiroutes';
 
 class Handlers implements r.RouteHandlers {
+	root() {
+		navigateTo(r.browseUrl({ dir: RootFolderId, view: '' }));
+		return <h1>Redirect</h1>;
+	}
+
 	browse(opts: r.BrowseOpts) {
 		return <BrowsePage key={opts.dir} directoryId={opts.dir} view={opts.view} />;
 	}

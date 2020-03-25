@@ -1,5 +1,9 @@
 [
 	{
+		"id": "root",
+		"path": "/"
+	},
+	{
 		"id": "browse",
 		"path": "/dir/{dir}?view={view}"
 	},
