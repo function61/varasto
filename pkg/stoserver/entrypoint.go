@@ -57,7 +57,7 @@ func Entrypoint() *cobra.Command {
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			panicIfError(serverMain())
+			exitIfError(serverMain())
 		},
 	}
 
@@ -67,13 +67,9 @@ func Entrypoint() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			scf, err := readServerConfigFile()
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 
-			if err := stodbimportexport.Import(os.Stdin, scf.DbLocation); err != nil {
-				panic(err)
-			}
+			exitIfError(stodbimportexport.Import(os.Stdin, scf.DbLocation))
 		},
 	})
 
@@ -89,15 +85,20 @@ func Entrypoint() *cobra.Command {
 				systemdinstaller.Docs("https://github.com/function61/varasto", "https://function61.com/"),
 				systemdinstaller.RequireNetworkOnline)
 
-			if err := systemdinstaller.Install(serviceFile); err != nil {
-				panic(err)
-			} else {
-				fmt.Println(systemdinstaller.GetHints(serviceFile))
-			}
+			exitIfError(systemdinstaller.Install(serviceFile))
+
+			fmt.Println(systemdinstaller.GetHints(serviceFile))
 		},
 	})
 
 	cmd.AddCommand(stothumbserver.Entrypoint())
 
 	return cmd
+}
+
+func exitIfError(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
 }
