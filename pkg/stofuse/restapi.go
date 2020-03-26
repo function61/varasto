@@ -5,8 +5,9 @@ import (
 	"net/http"
 
 	"github.com/function61/gokit/httpauth"
+	"github.com/function61/gokit/httputils"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/stopper"
+	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/stofuse/stofusetypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -21,7 +22,7 @@ func (h *handlers) FuseUnmountAll(rctx *httpauth.RequestContext, w http.Response
 	h.sigs.unmountAll <- nil
 }
 
-func rpcServe(addr string, sigs *sigFabric, stop *stopper.Stopper) error {
+func rpcStart(addr string, sigs *sigFabric, tasks *taskrunner.Runner) error {
 	router := mux.NewRouter()
 
 	var han stofusetypes.HttpHandlers = &handlers{sigs}
@@ -33,23 +34,15 @@ func rpcServe(addr string, sigs *sigFabric, stop *stopper.Stopper) error {
 		return err
 	}
 
-	srv := http.Server{
+	srv := &http.Server{
 		Handler: router,
 	}
 
-	go func() {
-		defer stop.Done()
+	tasks.Start("rpc "+addr, func(_ context.Context) error {
+		return httputils.RemoveGracefulServerClosedError(srv.Serve(listener))
+	})
 
-		<-stop.Signal
-
-		if err := srv.Shutdown(context.TODO()); err != nil {
-			panic(err)
-		}
-	}()
-
-	if err := srv.Serve(listener); err != http.ErrServerClosed {
-		return err
-	}
+	tasks.Start("rpcshutdowner", httputils.ServerShutdownTask(srv))
 
 	return nil
 }

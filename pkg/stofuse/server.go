@@ -10,13 +10,16 @@ import (
 	"bazil.org/fuse/fs"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/retry"
-	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/stoclient"
 )
 
-func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, stop *stopper.Stopper, logl *logex.Leveled) error {
-	defer stop.Done()
-
+func fuseServe(
+	ctx context.Context,
+	sigs *sigFabric,
+	conf stoclient.ClientConfig,
+	unmountFirst bool,
+	logl *logex.Leveled,
+) error {
 	if conf.FuseMountPath == "" {
 		return errors.New("FuseMountPath not set")
 	}
@@ -49,7 +52,7 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 	go func() {
 		for {
 			select {
-			case <-stop.Signal:
+			case <-ctx.Done():
 				break
 			case <-sigs.unmountAll:
 				byIdDir.ForgetDirs()
@@ -58,7 +61,7 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 	}()
 
 	go func() {
-		<-stop.Signal
+		<-ctx.Done()
 
 		tryUnmount := func(ctx context.Context) error {
 			// "Instead of sending a SIGINT to the process, you should unmount the filesystem
@@ -76,6 +79,8 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 		}); err != nil {
 			panic(err)
 		}
+
+		// this succeeding will unblock <-fuseConn.Ready
 	}()
 
 	varastoFsRoot, err := NewVarastoFSRoot(byIdDir, srv)
@@ -93,7 +98,7 @@ func fuseServe(sigs *sigFabric, conf stoclient.ClientConfig, unmountFirst bool, 
 	// blocks as long as server is up
 	<-fuseConn.Ready
 	if err := fuseConn.MountError; err != nil {
-		logl.Error.Fatal(err)
+		return err
 	}
 
 	return nil

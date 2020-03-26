@@ -2,6 +2,7 @@
 package stofuse
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,7 +11,7 @@ import (
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/ossignal"
-	"github.com/function61/gokit/stopper"
+	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,21 @@ func Entrypoint() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			if err := serve(addr, unmountFirst, rootLogger); err != nil {
+			ctx, cancel := context.WithCancel(ossignal.InterruptOrTerminateBackgroundCtx(
+				rootLogger))
+			defer cancel()
+
+			go func() {
+				// wait for stdin EOF (or otherwise broken pipe)
+				_, _ = io.Copy(ioutil.Discard, os.Stdin)
+
+				logex.Levels(rootLogger).Error.Println(
+					"parent process died (detected by closed stdin) - stopping")
+
+				cancel()
+			}()
+
+			if err := serve(ctx, addr, unmountFirst, rootLogger); err != nil {
 				fmt.Fprintln(os.Stderr, err)
 				os.Exit(1)
 			}
@@ -46,9 +61,7 @@ func Entrypoint() *cobra.Command {
 	return cmd
 }
 
-func serve(addr string, unmountFirst bool, logger *log.Logger) error {
-	workers := stopper.NewManager()
-
+func serve(ctx context.Context, addr string, unmountFirst bool, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	conf, err := stoclient.ReadConfig()
@@ -56,36 +69,16 @@ func serve(addr string, unmountFirst bool, logger *log.Logger) error {
 		return err
 	}
 
-	go func() {
-		// wait for stdin EOF (or otherwise broken pipe)
-		_, _ = io.Copy(ioutil.Discard, os.Stdin)
-
-		logl.Error.Println("parent process died (detected by closed stdin) - stopping")
-
-		workers.StopAllWorkersAndWait() // safe to call two times, concurrently
-	}()
-
-	go func() {
-		logl.Info.Printf("got %s; stopping", <-ossignal.InterruptOrTerminate())
-
-		workers.StopAllWorkersAndWait()
-	}()
-
+	// connects RPC API and FUSE server together
 	sigs := newSigs()
 
-	go func(stop *stopper.Stopper) {
-		logl.Info.Printf("starting to listen on %s", addr)
+	tasks := taskrunner.New(ctx, logger)
 
-		if err := rpcServe(addr, sigs, stop); err != nil {
-			panic(err)
-		}
-	}(workers.Stopper())
+	tasks.Start("fusesrv", func(ctx context.Context) error {
+		return fuseServe(ctx, sigs, *conf, unmountFirst, logl)
+	})
 
-	if err := fuseServe(sigs, *conf, unmountFirst, workers.Stopper(), logl); err != nil {
-		return err
-	}
+	rpcStart(addr, sigs, tasks)
 
-	logl.Info.Println("stopped")
-
-	return nil
+	return tasks.Wait()
 }
