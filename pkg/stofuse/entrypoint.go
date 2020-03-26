@@ -2,8 +2,10 @@
 package stofuse
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 
 	"github.com/function61/gokit/logex"
@@ -27,46 +29,12 @@ func Entrypoint() *cobra.Command {
 		Short: "Mounts a FUSE-based FS to serve collections from Varasto",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			workers := stopper.NewManager()
-
 			rootLogger := logex.StandardLogger()
-			logl := logex.Levels(rootLogger)
 
-			conf, err := stoclient.ReadConfig()
-			if err != nil {
-				panic(err)
+			if err := serve(addr, unmountFirst, rootLogger); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+				os.Exit(1)
 			}
-
-			go func() {
-				// wait for stdin EOF (or otherwise broken pipe)
-				_, _ = io.Copy(ioutil.Discard, os.Stdin)
-
-				logl.Error.Println("parent process died (detected by closed stdin) - stopping")
-
-				workers.StopAllWorkersAndWait() // safe to call two times, concurrently
-			}()
-
-			go func() {
-				logl.Info.Printf("got %s; stopping", <-ossignal.InterruptOrTerminate())
-
-				workers.StopAllWorkersAndWait()
-			}()
-
-			sigs := newSigs()
-
-			go func(stop *stopper.Stopper) {
-				logl.Info.Printf("starting to listen on %s", addr)
-
-				if err := rpcServe(addr, sigs, stop); err != nil {
-					panic(err)
-				}
-			}(workers.Stopper())
-
-			if err := fuseServe(sigs, *conf, unmountFirst, workers.Stopper(), logl); err != nil {
-				panic(err)
-			}
-
-			logl.Info.Println("stopped")
 		},
 	}
 
@@ -76,4 +44,48 @@ func Entrypoint() *cobra.Command {
 	cmd.AddCommand(serveCmd)
 
 	return cmd
+}
+
+func serve(addr string, unmountFirst bool, logger *log.Logger) error {
+	workers := stopper.NewManager()
+
+	logl := logex.Levels(logger)
+
+	conf, err := stoclient.ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		// wait for stdin EOF (or otherwise broken pipe)
+		_, _ = io.Copy(ioutil.Discard, os.Stdin)
+
+		logl.Error.Println("parent process died (detected by closed stdin) - stopping")
+
+		workers.StopAllWorkersAndWait() // safe to call two times, concurrently
+	}()
+
+	go func() {
+		logl.Info.Printf("got %s; stopping", <-ossignal.InterruptOrTerminate())
+
+		workers.StopAllWorkersAndWait()
+	}()
+
+	sigs := newSigs()
+
+	go func(stop *stopper.Stopper) {
+		logl.Info.Printf("starting to listen on %s", addr)
+
+		if err := rpcServe(addr, sigs, stop); err != nil {
+			panic(err)
+		}
+	}(workers.Stopper())
+
+	if err := fuseServe(sigs, *conf, unmountFirst, workers.Stopper(), logl); err != nil {
+		return err
+	}
+
+	logl.Info.Println("stopped")
+
+	return nil
 }
