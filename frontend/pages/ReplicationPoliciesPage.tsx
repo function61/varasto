@@ -1,5 +1,5 @@
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { DangerLabel, DefaultLabel, Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';

@@ -1,4 +1,4 @@
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import {
 	changeSensitivity,
 	getMaxSensitivityFromLocalStorage,

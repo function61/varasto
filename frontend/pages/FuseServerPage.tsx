@@ -1,5 +1,5 @@
 import { DocLink } from 'component/doclink';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { Panel, Well } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import {

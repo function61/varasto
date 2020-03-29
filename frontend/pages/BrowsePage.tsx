@@ -2,7 +2,7 @@ import { collectionDropdown } from 'component/collectiondropdown';
 import { DocLink } from 'component/doclink';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import {
 	createSensitivityAuthorizer,
 	Sensitivity,

@@ -1,6 +1,6 @@
 import { DocLink } from 'component/doclink';
 import { RefreshButton } from 'component/refreshbutton';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
 import { Panel } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';

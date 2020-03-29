@@ -1,6 +1,6 @@
 import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';

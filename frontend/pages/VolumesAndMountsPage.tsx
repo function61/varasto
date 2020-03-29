@@ -1,7 +1,7 @@
 import { DocGitHubMaster, DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { RefreshButton } from 'component/refreshbutton';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
 import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert } from 'f61ui/component/alerts';

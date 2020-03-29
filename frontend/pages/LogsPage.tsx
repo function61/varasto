@@ -1,5 +1,5 @@
 import { RefreshButton } from 'component/refreshbutton';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { Panel } from 'f61ui/component/bootstrap';
 import { getLogs } from 'generated/stoserver/stoservertypes_endpoints';
 import { SettingsLayout } from 'layout/settingslayout';

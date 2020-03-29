@@ -1,4 +1,4 @@
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';

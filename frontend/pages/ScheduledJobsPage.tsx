@@ -1,4 +1,4 @@
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { DangerLabel, Glyphicon, Panel, SuccessLabel } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';

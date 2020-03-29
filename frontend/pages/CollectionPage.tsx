@@ -4,7 +4,7 @@ import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes'
 import { FileUploadArea } from 'component/fileupload';
 import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'component/result';
+import { Result } from 'f61ui/component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
 import { InfoAlert } from 'f61ui/component/alerts';
