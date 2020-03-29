@@ -11,6 +11,7 @@ import {
 } from 'component/sensitivity';
 import { TabController } from 'component/tabcontroller';
 import { CollectionTagView } from 'component/tags';
+import { RatingViewer } from 'component/rating';
 import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
@@ -201,10 +202,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 		const collectionToRow = (coll: CollectionSubset) => {
 			const dirIsForMovies = output.Directory.Type === DirectoryType.Movies;
-			const warning =
-				dirIsForMovies && !(MetadataImdbId in metadataKvsToKv(coll.Metadata)) ? (
+			const warning = dirIsForMovies &&
+				!(MetadataImdbId in metadataKvsToKv(coll.Metadata)) && (
 					<div>{metadataMissingIcon()}</div>
-				) : null;
+				);
 
 			return (
 				<tr key={coll.Id}>
@@ -252,7 +253,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							</div>
 						)}
 					</td>
-					<td>
+					<td style={{ whiteSpace: 'nowrap' }}>
+						{dirIsForMovies && <RatingViewer rating={coll.Rating} />}
 						{warning} <CollectionTagView collection={coll} />
 					</td>
 					<td>{collectionDropdown(coll)}</td>

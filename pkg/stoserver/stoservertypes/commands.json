@@ -324,6 +324,17 @@
 		]
 	},
 	{
+		"command": "collection.Rate",
+		"chain": "public",
+		"ctor": ["Collection", "Rating"],
+		"crudNature": "update",
+		"title": "Rate",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "Rating", "type": "integer" }
+		]
+	},
+	{
 		"command": "collection.RefreshMetadataAutomatically",
 		"chain": "public",
 		"ctor": ["Collection"],

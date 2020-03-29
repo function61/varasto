@@ -87,6 +87,11 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 		encryptionKeyIds = append(encryptionKeyIds, encryptionKey.KeyId)
 	}
 
+	var rating *int
+	if coll.Rating != 0 {
+		rating = &coll.Rating
+	}
+
 	return stoservertypes.CollectionSubset{
 		Id:               coll.ID,
 		Head:             coll.Head,
@@ -99,6 +104,7 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 		EncryptionKeyIds: encryptionKeyIds,
 		Metadata:         metadataMapToKvList(coll.Metadata),
 		Tags:             coll.Tags,
+		Rating:           rating,
 		Changesets:       changesets,
 	}
 }

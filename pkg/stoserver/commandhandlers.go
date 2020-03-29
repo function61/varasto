@@ -683,6 +683,27 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 	})
 }
 
+func (c *cHandlers) CollectionRate(cmd *stoservertypes.CollectionRate, ctx *command.Ctx) error {
+	if cmd.Rating < 1 || cmd.Rating > 5 {
+		return fmt.Errorf("Rating must be 1-5; got: %d", cmd.Rating)
+	}
+
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(cmd.Collection)
+		if err != nil {
+			return err
+		}
+
+		if coll.Rating == cmd.Rating {
+			return errors.New("rating unchanged")
+		}
+
+		coll.Rating = cmd.Rating
+
+		return stodb.CollectionRepository.Update(coll, tx)
+	})
+}
+
 func (c *cHandlers) CollectionTag(cmd *stoservertypes.CollectionTag, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		coll, err := stodb.Read(tx).Collection(cmd.Id)

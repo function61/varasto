@@ -7,6 +7,7 @@ import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
+import { RatingEditor } from 'component/rating';
 import { InfoAlert } from 'f61ui/component/alerts';
 import { DefaultLabel, AnchorButton, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
@@ -280,9 +281,9 @@ export default class CollectionPage extends React.Component<
 								</tbody>
 							</table>
 
-							{noFilesOrSubdirs ? (
+							{noFilesOrSubdirs && (
 								<InfoAlert>Collection is currently empty.</InfoAlert>
-							) : null}
+							)}
 						</Panel>
 
 						<Panel heading="Upload">
@@ -294,14 +295,14 @@ export default class CollectionPage extends React.Component<
 							/>
 						</Panel>
 
-						{this.state.selectedFileHashes.length > 0 ? (
+						{this.state.selectedFileHashes.length > 0 && (
 							<CommandButton
 								command={CollectionMoveFilesIntoAnotherCollection(
 									collOutput.Collection.Id,
 									this.state.selectedFileHashes.join(','),
 								)}
 							/>
-						) : null}
+						)}
 					</div>
 					<div className="col-md-4">
 						<Panel
@@ -326,6 +327,15 @@ export default class CollectionPage extends React.Component<
 										<td>
 											<CollectionTagEditor
 												collection={collOutput.Collection}
+											/>
+										</td>
+									</tr>
+									<tr>
+										<th>Rating</th>
+										<td>
+											<RatingEditor
+												rating={collOutput.Collection.Rating}
+												collId={collOutput.Collection.Id}
 											/>
 										</td>
 									</tr>
@@ -395,11 +405,11 @@ export default class CollectionPage extends React.Component<
 								</tbody>
 							</table>
 
-							{imdbIdExpectedButMissing ? (
+							{imdbIdExpectedButMissing && (
 								<CommandInlineForm
 									command={CollectionPullMetadata(collOutput.Collection.Id)}
 								/>
-							) : null}
+							)}
 						</Panel>
 						<Panel heading="Changesets">
 							<table className="table table-striped table-hover">

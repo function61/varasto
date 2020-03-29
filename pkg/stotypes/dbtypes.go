@@ -76,6 +76,7 @@ type Collection struct {
 	EncryptionKeys []KeyEnvelope // first is for all new blobs, the following for moved/deduplicated ones
 	Changesets     []CollectionChangeset
 	Metadata       map[string]string
+	Rating         int // 1-5
 	Tags           []string
 }
 

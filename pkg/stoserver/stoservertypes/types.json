@@ -248,6 +248,7 @@
 				"DesiredVolumes": {"_": "list", "of": {"_": "integer"}},
 				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Tags": {"_": "list", "of": {"_": "string"}},
+				"Rating": {"_": "integer", "nullable": true},
 				"Changesets": {"_": "list", "of": {"_": "ChangesetSubset"}}
 			}}
 		},
