@@ -74,11 +74,15 @@ func serve(ctx context.Context, addr string, unmountFirst bool, logger *log.Logg
 
 	tasks := taskrunner.New(ctx, logger)
 
+	// do this before starting other tasks, because we're not cancelling the tasks that
+	// come after rpcStart()
+	if err := rpcStart(addr, sigs, tasks); err != nil {
+		return err
+	}
+
 	tasks.Start("fusesrv", func(ctx context.Context) error {
 		return fuseServe(ctx, sigs, *conf, unmountFirst, logl)
 	})
-
-	rpcStart(addr, sigs, tasks)
 
 	return tasks.Wait()
 }
