@@ -109,7 +109,29 @@ func (s *Controller) handler(ctx context.Context) error {
 			s.controlLogger.Error.Printf("Signal(): %v", err)
 		}
 
-		if err := <-s.exited; err != nil {
+		waitForExit := func() (bool, error) {
+			select {
+			case err := <-s.exited:
+				return true, err
+			case <-time.After(10 * time.Second):
+				return false, nil
+			}
+		}
+
+		var err error
+		for {
+			var exited bool
+
+			exited, err = waitForExit()
+			if exited {
+				break
+			} else {
+				s.controlLogger.Error.Println("not exited within 10s of interrupt")
+				// continue waiting
+			}
+		}
+
+		if err != nil {
 			s.controlLogger.Error.Printf("unclean exit: %v", err)
 		} else {
 			s.controlLogger.Info.Println("stopped cleanly")
