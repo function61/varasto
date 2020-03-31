@@ -48,7 +48,7 @@ export class RatingEditor extends React.Component<RatingEditorProps, RatingEdito
 
 		return (
 			<span
-				style={{ color: lit ? 'gold' : '#c0c0c0' }}
+				style={{ color: lit ? 'gold' : '#c0c0c0', cursor: 'pointer' }}
 				onClick={() => {
 					this.state.saveProgress.load(() =>
 						new CommandExecutor(
