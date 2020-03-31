@@ -903,6 +903,19 @@ func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, c
 	}))
 }
 
+func (c *cHandlers) NodeChangeSmartBackend(cmd *stoservertypes.NodeChangeSmartBackend, ctx *command.Ctx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
+		node, err := stodb.Read(tx).Node(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		node.SmartBackend = cmd.Backend
+
+		return stodb.NodeRepository.Update(node, tx)
+	}))
+}
+
 func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {
 	type smartCapableVolume struct {
 		volId   int

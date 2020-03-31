@@ -464,6 +464,17 @@
 		"fields": []
 	},
 	{
+		"command": "node.ChangeSmartBackend",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "update",
+		"title": "Change SMART backend",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Backend", "type": "SmartBackend" }
+		]
+	},
+	{
 		"command": "node.InstallTlsCert",
 		"chain": "public",
 		"ctor": ["Id"],
