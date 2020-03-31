@@ -48,9 +48,9 @@ func adoptEntrypoint() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			wd, err := os.Getwd()
-			panicIfError(err)
+			exitIfError(err)
 
-			panicIfError(adopt(wd, args[0]))
+			exitIfError(adopt(wd, args[0]))
 		},
 	}
 }

@@ -17,7 +17,7 @@ func bulkUploadScriptEntrypoint() *cobra.Command {
 		Short: "Generates a shell script to adopt & push all subdirectories as collections",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			panicIfError(bulkUploadScriptGenerate(args[0], rm, os.Stdout))
+			exitIfError(bulkUploadScriptGenerate(args[0], rm, os.Stdout))
 		},
 	}
 

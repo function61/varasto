@@ -40,7 +40,7 @@ func rmEntrypoint() *cobra.Command {
 		Short: "Removes a local clone of collection, but only if remote has full state",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			panicIfError(wrapWithStopSupport(func(ctx context.Context) error {
+			exitIfError(wrapWithStopSupport(func(ctx context.Context) error {
 				return rm(ctx, args[0])
 			}))
 		},

@@ -1,12 +1,16 @@
 package stoclient
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
-func panicIfError(err error) {
+func exitIfError(err error) {
 	if err != nil {
-		panic(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
 
