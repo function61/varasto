@@ -66,10 +66,16 @@ func Entrypoint() *cobra.Command {
 		Short: "Installs systemd unit file to make Varasto start on system boot",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
+			// systemd doesn't set HOME env, and at least our thumbnailer and FUSE projector
+			// need it to read Varasto client config to be able to reach the server process
+			homeDir, err := os.UserHomeDir()
+			exitIfError(err)
+
 			serviceFile := systemdinstaller.SystemdServiceFile(
 				"varasto",
 				"Varasto server",
 				systemdinstaller.Args("server"),
+				systemdinstaller.Env("HOME", homeDir),
 				systemdinstaller.Docs("https://github.com/function61/varasto", "https://function61.com/"),
 				systemdinstaller.RequireNetworkOnline)
 
