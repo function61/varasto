@@ -3,7 +3,6 @@ package stoclient
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -47,37 +46,27 @@ func cloneCollectionExistingDir(
 	revisionId string,
 	collection *stotypes.Collection,
 ) error {
-	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
-	// manage to write the statefile to disk, use normal procedure to init wd
-	halfBakedWd := &workdirLocation{
-		path: path,
-	}
-
-	manifestExists, err := fileexists.Exists(halfBakedWd.Join(localStatefile))
-	if err != nil {
+	if err := assertStatefileNotExists(path); err != nil {
 		return err
-	}
-
-	if manifestExists {
-		return fmt.Errorf("%s already exists in %s - adopting would be dangerous", localStatefile, path)
 	}
 
 	if revisionId == "" {
 		revisionId = collection.Head
 	}
 
-	halfBakedWd.manifest = &BupManifest{
-		ChangesetId: revisionId,
-		Collection:  *collection,
-	}
-
-	if err := halfBakedWd.SaveToDisk(); err != nil {
+	if err := (&workdirLocation{
+		path: path,
+		manifest: &BupManifest{
+			ChangesetId: revisionId,
+			Collection:  *collection,
+		},
+	}).SaveToDisk(); err != nil {
 		return err
 	}
 
-	// now that properly initialized halfBakedWd was saved to disk (= bootstrapped),
+	// now that properly initialized manifest was saved to disk (= bootstrapped),
 	// reload it back from disk in a normal fashion
-	wd, err := NewWorkdirLocation(halfBakedWd.path)
+	wd, err := NewWorkdirLocation(path)
 	if err != nil {
 		return err
 	}

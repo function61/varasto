@@ -11,7 +11,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func adopt(wd string, parentDirectoryId string) error {
+func adopt(fullPath string, parentDirectoryId string) error {
+	// cloneCollectionExistingDir() also checks for this, but we must do this before asking
+	// server to create a collection because we don't want it to be created and error when
+	// we begin cloning
+	if err := assertStatefileNotExists(fullPath); err != nil {
+		return err
+	}
+
 	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
 	defer cancel()
 
@@ -23,7 +30,7 @@ func adopt(wd string, parentDirectoryId string) error {
 	// TODO: maybe the struct ctor should be codegen'd?
 	collectionId, err := clientConfig.CommandClient().ExecExpectingCreatedRecordId(ctx, &stoservertypes.CollectionCreate{
 		ParentDir: parentDirectoryId,
-		Name:      filepath.Base(wd),
+		Name:      filepath.Base(fullPath),
 	})
 	if err != nil {
 		return err
@@ -38,7 +45,7 @@ func adopt(wd string, parentDirectoryId string) error {
 
 	// since we created an empty collection, there's actually nothing to download,
 	// but this does other important housekeeping
-	return cloneCollectionExistingDir(ctx, wd, "", collection)
+	return cloneCollectionExistingDir(ctx, fullPath, "", collection)
 }
 
 func adoptEntrypoint() *cobra.Command {
@@ -47,10 +54,10 @@ func adoptEntrypoint() *cobra.Command {
 		Short: "Adopts current directory as Varasto collection",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			wd, err := os.Getwd()
+			fullPath, err := os.Getwd()
 			exitIfError(err)
 
-			exitIfError(adopt(wd, args[0]))
+			exitIfError(adopt(fullPath, args[0]))
 		},
 	}
 }

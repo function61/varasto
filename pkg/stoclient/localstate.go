@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -56,4 +57,26 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 
 	loc.manifest = &BupManifest{}
 	return loc, jsonfile.Unmarshal(statefile, loc.manifest, true)
+}
+
+func statefileExists(path string) (bool, error) {
+	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
+	// manage to write the statefile to disk, use normal procedure to init wd
+	halfBakedWd := &workdirLocation{
+		path: path,
+	}
+
+	return fileexists.Exists(halfBakedWd.Join(localStatefile))
+}
+
+func assertStatefileNotExists(path string) error {
+	if exists, err := statefileExists(path); err != nil || exists {
+		if err != nil { // error doing the check
+			return err
+		}
+
+		return fmt.Errorf("%s already exists in %s - adopting would be dangerous", localStatefile, path)
+	}
+
+	return nil
 }
