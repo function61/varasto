@@ -1,6 +1,7 @@
 package stoclient
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -94,17 +95,13 @@ func configInitEntrypoint() *cobra.Command {
 			fuseMountPath := args[2]
 
 			confPath, err := configFilePath()
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 
 			exists, err := fileexists.Exists(confPath)
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 
 			if exists {
-				panic("config file already exists")
+				exitIfError(errors.New("config file already exists"))
 			}
 
 			conf := &ClientConfig{
@@ -113,9 +110,7 @@ func configInitEntrypoint() *cobra.Command {
 				FuseMountPath: fuseMountPath,
 			}
 
-			if err := WriteConfig(conf); err != nil {
-				panic(err)
-			}
+			exitIfError(WriteConfig(conf))
 		},
 	}
 }
@@ -126,17 +121,13 @@ func configPrintEntrypoint() *cobra.Command {
 		Short: "Prints path to config file & its contents",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			confPath, err := configFilePath()
-			if err != nil {
-				panic(err)
-			}
+			confPath, err := ConfigFilePath()
+			exitIfError(err)
 
 			fmt.Printf("path: %s\n", confPath)
 
 			exists, err := fileexists.Exists(confPath)
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 
 			if !exists {
 				fmt.Println(".. does not exist. run config-init to fix that")
@@ -144,14 +135,11 @@ func configPrintEntrypoint() *cobra.Command {
 			}
 
 			file, err := os.Open(confPath)
-			if err != nil {
-				panic(err)
-			}
+			exitIfError(err)
 			defer file.Close()
 
-			if _, err := io.Copy(os.Stdout, file); err != nil {
-				panic(err)
-			}
+			_, err = io.Copy(os.Stdout, file)
+			exitIfError(err)
 		},
 	}
 }
