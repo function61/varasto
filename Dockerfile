@@ -18,6 +18,6 @@ RUN mkdir -p /varasto \
 
 COPY rel/sto_linux-amd64 /varasto/sto
 
-COPY rel/public.tar.gz /varasto/
+ADD rel/public.tar.gz /varasto/
 
 RUN chmod +x /varasto/sto
