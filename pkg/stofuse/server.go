@@ -24,6 +24,10 @@ func fuseServe(
 		return errors.New("FuseMountPath not set")
 	}
 
+	if err := makeMountpointIfRequired(conf.FuseMountPath); err != nil {
+		return err
+	}
+
 	// we can't do this without the branch because if path is not mounted, it yields an error
 	// and I would feel uncomfortable trying to detect "not mounted" error vs "any other error"
 	if unmountFirst {

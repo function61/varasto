@@ -47,16 +47,21 @@ func (c *ClientConfig) HttpClient() *http.Client {
 }
 
 func WriteConfig(conf *ClientConfig) error {
-	confPath, err := configFilePath()
+	confPath, err := ConfigFilePath()
 	if err != nil {
 		return err
 	}
 
+	return WriteConfigWithPath(conf, confPath)
+}
+
+// used by bootstrap
+func WriteConfigWithPath(conf *ClientConfig, confPath string) error {
 	return jsonfile.Write(confPath, conf)
 }
 
 func ReadConfig() (*ClientConfig, error) {
-	confPath, err := configFilePath()
+	confPath, err := ConfigFilePath()
 	if err != nil {
 		return nil, fmt.Errorf("Varasto client config: %v", err)
 	}
@@ -75,7 +80,7 @@ func ReadConfig() (*ClientConfig, error) {
 	return conf, nil
 }
 
-func configFilePath() (string, error) {
+func ConfigFilePath() (string, error) {
 	usersHomeDirectory, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
@@ -94,7 +99,7 @@ func configInitEntrypoint() *cobra.Command {
 			authToken := args[1]
 			fuseMountPath := args[2]
 
-			confPath, err := configFilePath()
+			confPath, err := ConfigFilePath()
 			exitIfError(err)
 
 			exists, err := fileexists.Exists(confPath)

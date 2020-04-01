@@ -10,11 +10,16 @@ ENTRYPOINT ["sto"]
 
 CMD ["server"]
 
+# symlink /root/varastoclient-config.json to /varasto-db/.. because it's stateful.
+# this config is used for server subsystems (thumbnailing, FUSE projector) to communicate
+# with the server.
+
 RUN mkdir -p /varasto \
-	&& ln -s /varasto/sto /usr/local/bin/sto \
+	&& ln -s /varasto/sto /bin/sto \
+	&& ln -s /varasto-db/varastoclient-config.json /root/varastoclient-config.json \
 	&& apk add --update smartmontools fuse \
 	&& echo '{"db_location": "/varasto-db/varasto.db"}' > /varasto/config.json \
-	&& mkdir /tmp/fuse
+	&& mkdir /mnt/stofuse
 
 COPY rel/sto_linux-amd64 /varasto/sto
 

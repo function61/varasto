@@ -49,6 +49,14 @@ to test drive Varasto, you can use `/varasto-db/volume-test/` as your data direc
 Troubleshooting: if you can't access Varasto's web UI, see `$ docker logs varasto`.
 
 
+### FUSE considerations
+
+For FUSE, add `-v /mnt/stofuse:/mnt/stofuse` to Docker run command. Varasto will then
+expose FUSE FS via `/mnt/stofuse/stofuse` on your host.
+
+Pro-tip: for prettier paths, you can `$ ln -s /mnt/varasto/fuse /varasto`.
+
+
 Linux (manual)
 --------------
 

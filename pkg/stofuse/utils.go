@@ -1,8 +1,11 @@
 package stofuse
 
 import (
+	"fmt"
+	"os"
 	"regexp"
 
+	"github.com/function61/gokit/fileexists"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -61,4 +64,19 @@ func min(a, b int64) int64 {
 	} else {
 		return b
 	}
+}
+
+func makeMountpointIfRequired(mountpoint string) error {
+	mountpointExists, err := fileexists.Exists(mountpoint)
+	if err != nil {
+		return err
+	}
+	if !mountpointExists {
+		// intentionally does not use MkdirAll()
+		if err := os.Mkdir(mountpoint, 0755); err != nil {
+			return fmt.Errorf("failed making mount point: %w", err)
+		}
+	}
+
+	return nil
 }

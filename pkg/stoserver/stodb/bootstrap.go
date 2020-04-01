@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/sslca"
 	"github.com/function61/varasto/pkg/stoclient"
@@ -145,12 +147,49 @@ func BootstrapRepos(tx *bbolt.Tx) error {
 }
 
 func configureClientConfig(authToken string) error {
-	return stoclient.WriteConfig(&stoclient.ClientConfig{
-		ServerAddr: "https://localhost",
-		AuthToken:  authToken,
-		// FuseMountPath: "...",
+	conf := &stoclient.ClientConfig{
+		ServerAddr:                "https://localhost",
+		AuthToken:                 authToken,
+		FuseMountPath:             "/mnt/stofuse/stofuse",
 		TlsInsecureSkipValidation: true, // localhost address, no worries
-	})
+	}
+
+	confPath, err := stoclient.ConfigFilePath()
+	if err != nil {
+		return err
+	}
+
+	exists, err := fileexists.ExistsNoLinkFollow(confPath)
+	if err != nil {
+		return err
+	}
+
+	// config already exists? don't overwrite it..
+	if exists {
+		// .. but if it's a symlink to a non-existent config file then write the target.
+		// at least in our Docker install we have symlink to a stateful volume.
+		return writeConfigToDestinationIfSymlink(conf, confPath)
+	}
+
+	return stoclient.WriteConfig(conf)
+}
+
+func writeConfigToDestinationIfSymlink(conf *stoclient.ClientConfig, confPath string) error {
+	linkDest, err := os.Readlink(confPath)
+	if err != nil {
+		return nil // maybe it wasn't a link (or some other error.. TODO: currently ignored)
+	}
+
+	linkDestExists, err := fileexists.Exists(linkDest)
+	if err != nil {
+		return err
+	}
+
+	if linkDestExists {
+		return nil // don't overwrite
+	}
+
+	return stoclient.WriteConfigWithPath(conf, linkDest)
 }
 
 func allOk(errs []error) error {
