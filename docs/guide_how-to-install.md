@@ -22,6 +22,12 @@ Varasto is in MVP stage - several important features are not implemented. Such a
 - Security or access controls (only run this in your LAN)
 - Anything mentioned in the
   ["General availability" milestone](https://github.com/function61/varasto/milestone/3)
+- Also, expect that some settings like replication policies getting rewritten with
+  beta-stage updates. Nothing will get rewritten in such a way that it would result in
+  losing data.
+- Updates between beta versions can be tedious. I will release instructions, but cannot
+  promise that they won't contain manual steps like "download backup, replace this from
+  backup file, run this command to import backup".
 
 
 Linux (Docker)
@@ -98,9 +104,8 @@ In the future I think we should research targeting
 After Varasto is started
 ------------------------
 
-Now you can navigate your browser to `https://localhost/#/gettingStarted/v/welcome`
+Now you can navigate your browser to `https://localhost/` and **hit "Help" from the menu
+to reach the getting started wizard** which will help you set up everything.
 
-There's a "getting started" wizard which will guide you through the setup.
-
-You'll have to approve the "insecure certificate" warning.
+(You'll have to approve the "insecure certificate" warning.)
 
