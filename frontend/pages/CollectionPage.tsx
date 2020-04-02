@@ -529,7 +529,7 @@ export default class CollectionPage extends React.Component<
 				)}
 				<span className="btn btn-default disabled">{collOutput.Collection.Name}</span>
 				{np.next && (
-					<AnchorButton href={collectionUrlDefault(np.next.Id)} visualStyle="primary">
+					<AnchorButton href={collectionUrlDefault(np.next.Id)}>
 						{np.next.Name}
 						&nbsp;
 						<Glyphicon icon="chevron-right" />
