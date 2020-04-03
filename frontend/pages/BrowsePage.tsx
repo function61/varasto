@@ -449,12 +449,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								<ClipboardButton text={output.Directory.Id} />
 							</td>
 						</tr>
-						{output.Directory.Type !== DirectoryType.Generic ? (
+						{output.Directory.Type !== DirectoryType.Generic && (
 							<tr>
 								<th>Type</th>
 								<td>{directoryTypeToEmoji(output.Directory.Type)}</td>
 							</tr>
-						) : null}
+						)}
 						{dirHelp && (
 							<tr>
 								<th>Docs</th>
