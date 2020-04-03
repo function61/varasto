@@ -464,20 +464,23 @@ export default class VolumesAndMountsPage extends React.Component<
 											{bay.volume ? onlineBadge(isOnline(bay.volume.Id)) : ''}
 										</td>
 										<td>
-											{bay.volume ? bay.volume.Label : ''}
-											{bay.volume ? (
-												<CommandIcon
-													command={VolumeSetTopology(
-														bay.volume.Id,
-														bay.volume.Topology
-															? bay.volume.Topology.Enclosure
-															: '',
-														bay.volume.Topology
-															? bay.volume.Topology.Slot
-															: 0,
-													)}
-												/>
-											) : null}
+											{bay.volume && (
+												<span>
+													{bay.volume.Label}
+													&nbsp;
+													<CommandIcon
+														command={VolumeSetTopology(
+															bay.volume.Id,
+															bay.volume.Topology
+																? bay.volume.Topology.Enclosure
+																: '',
+															bay.volume.Topology
+																? bay.volume.Topology.Slot
+																: 0,
+														)}
+													/>
+												</span>
+											)}
 										</td>
 									</tr>
 								))}
