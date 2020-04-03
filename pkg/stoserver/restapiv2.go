@@ -419,6 +419,7 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 			Description:   dbObject.Description,
 			Notes:         dbObject.Notes,
 			SerialNumber:  dbObject.SerialNumber,
+			Zone:          dbObject.Zone,
 			Technology:    stoservertypes.VolumeTechnology(dbObject.Technology),
 			Manufactured:  mfg,
 			WarrantyEnds:  we,

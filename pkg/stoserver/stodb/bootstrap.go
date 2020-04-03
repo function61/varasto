@@ -91,6 +91,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 			Label:      "Default volume",
 			Technology: string(stoservertypes.VolumeTechnologyDiskHdd),
 			Quota:      1 * 1024 * 1024 * 1024,
+			Zone:       "Default",
 		}, tx),
 		ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
 			ID:             "default",

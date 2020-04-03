@@ -82,6 +82,17 @@
 		]
 	},
 	{
+		"command": "volume.ChangeZone",
+		"chain": "public",
+		"ctor": ["Id", "Zone"],
+		"crudNature": "update",
+		"title": "Change zone",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Zone" }
+		]
+	},
+	{
 		"command": "volume.SmartSetId",
 		"chain": "public",
 		"ctor": ["Id", "SmartId"],

@@ -62,6 +62,7 @@ func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.
 			Label:      cmd.Name,
 			Technology: string(stoservertypes.VolumeTechnologyDiskHdd),
 			Quota:      mebibytesToBytes(cmd.Quota),
+			Zone:       "Default",
 		}, tx)
 	})
 }
@@ -174,6 +175,19 @@ func (c *cHandlers) VolumeSetTopology(cmd *stoservertypes.VolumeSetTopology, ctx
 
 		vol.Enclosure = cmd.Enclosure
 		vol.EnclosureSlot = cmd.Slot
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
+func (c *cHandlers) VolumeChangeZone(cmd *stoservertypes.VolumeChangeZone, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		vol.Zone = cmd.Zone
 
 		return stodb.VolumeRepository.Update(vol, tx)
 	})

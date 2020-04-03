@@ -4,7 +4,7 @@ import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
 import { reloadCurrentPage } from 'f61ui/browserutils';
-import { InfoAlert } from 'f61ui/component/alerts';
+import { InfoAlert, WarningAlert } from 'f61ui/component/alerts';
 import {
 	DangerLabel,
 	DefaultLabel,
@@ -12,6 +12,7 @@ import {
 	Panel,
 	SuccessLabel,
 	WarningLabel,
+	Well,
 } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
@@ -32,6 +33,7 @@ import {
 	VolumeCreate,
 	VolumeMarkDataLost,
 	VolumeMigrateData,
+	VolumeChangeZone,
 	VolumeMountGoogleDrive,
 	VolumeMountLocal,
 	VolumeMountS3,
@@ -138,17 +140,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						</div>
 					);
 				case 'topology':
-					return (
-						<Panel
-							heading={
-								<div>
-									Topology view{' '}
-									<Info text="If you have a lot of disks, it's great to know where they're physically located, so if you need to detach a disk you know to detact the right one." />
-								</div>
-							}>
-							{this.renderTopologyView()}
-						</Panel>
-					);
+					return this.renderTopologyView();
 				case 'service':
 					return (
 						<Panel
@@ -216,7 +208,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							url: volumesAndMountsUrl({
 								view: 'topology',
 							}),
-							title: 'Topology',
+							title: 'Topology & zones',
 						},
 						{
 							url: volumesAndMountsUrl({
@@ -400,6 +392,48 @@ export default class VolumesAndMountsPage extends React.Component<
 			return loadingOrError;
 		}
 
+		const uniqueZones: string[] = [];
+
+		for (const vol of volumes) {
+			if (uniqueZones.indexOf(vol.Zone) === -1) {
+				uniqueZones.push(vol.Zone);
+			}
+		}
+
+		uniqueZones.sort();
+
+		return (
+			<div>
+				<Well>
+					Your disk topology{' '}
+					<Info text="If you have a lot of disks, it's great to know where they're physically located, so if you need to detach a disk you know to detact the right one." />{' '}
+					and zones{' '}
+					<Info text="Physically separate location for your volumes regarding fire/water/power/network connectivity safety." />
+					.
+				</Well>
+
+				{uniqueZones.length < 2 && (
+					<WarningAlert>
+						Looks like your volumes exist in one zone only. That means your data is not
+						safe from fire/water/other damage or available on power loss or network
+						connectivity issues. 🔥 🌊 🔌
+					</WarningAlert>
+				)}
+
+				{uniqueZones.map((zone) => {
+					const volumesForZone = volumes.filter((v) => v.Zone === zone);
+
+					return (
+						<Panel key={zone} heading={'Zone: ' + zone}>
+							{this.renderZoneTopologyView(volumesForZone, mounts)}
+						</Panel>
+					);
+				})}
+			</div>
+		);
+	}
+
+	private renderZoneTopologyView(volumes: Volume[], mounts: VolumeMount[]) {
 		const isOnline = (volId: number): boolean => {
 			const matchingMount = mounts.filter((m) => m.Volume === volId);
 
@@ -444,52 +478,57 @@ export default class VolumesAndMountsPage extends React.Component<
 
 		enclosures.sort((a, b) => (a.name < b.name ? -1 : 1));
 
-		return (
-			<div className="row">
-				{enclosures.map((enclosure) => (
-					<div className="col-md-4">
-						<table className="table table-bordered table-striped table-hover">
-							<thead>
-								<tr>
-									<th />
-									<th />
-									<th>{enclosure.name}</th>
-								</tr>
-							</thead>
-							<tbody>
-								{enclosure.bays.map((bay) => (
+		return enclosures.map((enclosure) => (
+			<div key={enclosure.name} className="col-md-4">
+				<table className="table table-bordered table-striped table-hover">
+					<thead>
+						<tr>
+							<th />
+							<th />
+							<th>{enclosure.name}</th>
+							<th />
+						</tr>
+					</thead>
+					<tbody>
+						{enclosure.bays.map((bay) => {
+							const vol = bay.volume;
+							if (!vol) {
+								return (
 									<tr>
 										<td>{bay.slot}</td>
-										<td>
-											{bay.volume ? onlineBadge(isOnline(bay.volume.Id)) : ''}
-										</td>
-										<td>
-											{bay.volume && (
-												<span>
-													{bay.volume.Label}
-													&nbsp;
-													<CommandIcon
-														command={VolumeSetTopology(
-															bay.volume.Id,
-															bay.volume.Topology
-																? bay.volume.Topology.Enclosure
-																: '',
-															bay.volume.Topology
-																? bay.volume.Topology.Slot
-																: 0,
-														)}
-													/>
-												</span>
-											)}
-										</td>
+										<td></td>
+										<td></td>
+										<td></td>
 									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				))}
+								);
+							}
+
+							return (
+								<tr>
+									<td>{bay.slot}</td>
+									<td>{onlineBadge(isOnline(vol.Id))}</td>
+									<td>{vol.Label}</td>
+									<td>
+										<Dropdown>
+											<CommandLink
+												command={VolumeSetTopology(
+													vol.Id,
+													vol.Topology ? vol.Topology.Enclosure : '',
+													vol.Topology ? vol.Topology.Slot : 0,
+												)}
+											/>
+											<CommandLink
+												command={VolumeChangeZone(vol.Id, vol.Zone)}
+											/>
+										</Dropdown>
+									</td>
+								</tr>
+							);
+						})}
+					</tbody>
+				</table>
 			</div>
-		);
+		));
 	}
 
 	private renderVolumes() {
@@ -624,6 +663,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				Id: 0,
 				Manufactured: null,
 				WarrantyEnds: null,
+				Zone: '',
 				Topology: null,
 			},
 		);
