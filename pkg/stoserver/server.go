@@ -319,6 +319,7 @@ type ServerConfig struct {
 	FuseProjector          *subsystem
 	TlsCertificate         wrappedKeypair
 	KeyStore               *keyStore
+	FailedMountNames       []string
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
@@ -346,13 +347,6 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 	clusterWideMounts := []stotypes.VolumeMount{}
 	if err := stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&clusterWideMounts), tx); err != nil {
 		return nil, err
-	}
-
-	myMounts := []stotypes.VolumeMount{}
-	for _, mount := range clusterWideMounts {
-		if mount.Node == selfNode.ID {
-			myMounts = append(myMounts, mount)
-		}
 	}
 
 	clusterWideMountsMapped := map[int]stotypes.VolumeMount{}
@@ -385,13 +379,19 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 
 	dam := stodiskaccess.New(&dbbma{db, ks})
 
-	for _, mountedVolume := range myMounts {
-		volume, err := stodb.Read(tx).Volume(mountedVolume.Volume)
+	failedMountNames := []string{}
+
+	for _, mount := range clusterWideMounts {
+		if mount.Node != selfNode.ID { // only mount vols for our node
+			continue
+		}
+
+		volume, err := stodb.Read(tx).Volume(mount.Volume)
 		if err != nil {
 			return nil, err
 		}
 
-		driver, err := getDriver(*volume, mountedVolume, logger)
+		driver, err := getDriver(*volume, mount, logger)
 		if err != nil {
 			return nil, err
 		}
@@ -400,6 +400,8 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 		// could get mixed up and we could mount the wrong volume and that would not be great.
 		if err := dam.Mount(context.TODO(), volume.ID, volume.UUID, driver); err != nil {
 			logex.Levels(logger).Error.Printf("volume %s mount: %v", volume.UUID, err)
+
+			failedMountNames = append(failedMountNames, volume.Label)
 		}
 	}
 
@@ -424,6 +426,7 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 		KeyStore:               ks,
 		ReplicationControllers: map[int]*storeplication.Controller{},
 		TlsCertificate:         *wrappedKeypair,
+		FailedMountNames:       failedMountNames,
 	}, nil
 }
 

@@ -118,3 +118,19 @@ func serverCertHealth(
 			timeLeftHuman)
 	}
 }
+
+func healthForFailedMounts(failedMountNames []string) stohealth.HealthChecker {
+	checkName := "Mounts online"
+
+	if len(failedMountNames) > 0 {
+		return stohealth.NewStaticHealthNode(
+			checkName,
+			stoservertypes.HealthStatusFail,
+			fmt.Sprintf("Volumes errored: %s", strings.Join(failedMountNames, ", ")))
+	}
+
+	return stohealth.NewStaticHealthNode(
+		checkName,
+		stoservertypes.HealthStatusPass,
+		"")
+}
