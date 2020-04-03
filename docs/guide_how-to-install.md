@@ -51,10 +51,17 @@ Troubleshooting: if you can't access Varasto's web UI, see `$ docker logs varast
 
 ### FUSE considerations
 
-For FUSE, add `-v /mnt/stofuse:/mnt/stofuse` to Docker run command. Varasto will then
-expose FUSE FS via `/mnt/stofuse/stofuse` on your host.
+For FUSE, add `-v /mnt/stofuse:/mnt/stofuse:shared` to Docker run command. Varasto will then
+expose its FS via `/mnt/stofuse/varasto` on your host. The `shared` propagation flag is
+required for container's sub-mounts to be visible to the host.
 
-Pro-tip: for prettier paths, you can `$ ln -s /mnt/varasto/fuse /varasto`.
+The reason the actual mount is under a directory is, that if you wish to map the mount as
+a Samba export via e.g. a Samba container, if we'd map `/mnt/stofuse/varasto` directly,
+re-mounting the mountpoint (e.g. FUSE projector restarts) will not get updated to wherever
+it's used. tl;dr: we might want to map `/mnt/stofuse` somewhere instead of
+`/mnt/stofuse/varasto`.
+
+Pro-tip: for prettier paths, run on your host: `$ ln -s /mnt/stofuse/varasto /varasto`.
 
 
 Linux (manual)

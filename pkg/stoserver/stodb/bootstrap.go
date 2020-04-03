@@ -150,7 +150,7 @@ func configureClientConfig(authToken string) error {
 	conf := &stoclient.ClientConfig{
 		ServerAddr:                "https://localhost",
 		AuthToken:                 authToken,
-		FuseMountPath:             "/mnt/stofuse/stofuse",
+		FuseMountPath:             "/mnt/stofuse/varasto",
 		TlsInsecureSkipValidation: true, // localhost address, no worries
 	}
 
