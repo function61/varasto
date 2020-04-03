@@ -13,7 +13,7 @@ import {
 	WarningLabel,
 } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
+import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
@@ -68,7 +68,17 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 	render() {
 		return (
 			<SettingsLayout title="Server info &amp; health" breadcrumbs={[]}>
-				<Panel heading="Server info">{this.renderInfo()}</Panel>
+				<Panel
+					heading={
+						<div>
+							Server info &nbsp;
+							<Dropdown>
+								<CommandLink command={DatabaseMigrate()} />
+							</Dropdown>
+						</div>
+					}>
+					{this.renderInfo()}
+				</Panel>
 				<Panel heading="Subsystems">{this.renderSubsystems()}</Panel>
 				<Panel heading="Health">{this.renderHealth()}</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
@@ -113,10 +123,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 				</tbody>
 				<tfoot>
 					<tr>
-						<td colSpan={99}>
-							<div>{loadingOrError}</div>
-							<CommandButton command={DatabaseMigrate()} />
-						</td>
+						<td colSpan={2}>{loadingOrError}</td>
 					</tr>
 				</tfoot>
 			</table>
