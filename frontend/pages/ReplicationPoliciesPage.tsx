@@ -66,24 +66,41 @@ export default class ReplicationPoliciesPage extends React.Component<
 	}
 
 	private renderPolicies() {
-		const [replicationpolicies, loadingOrError] = this.state.replicationpolicies.unwrap();
+		const [replicationpolicies, volumes, loadingOrError] = Result.unwrap2(
+			this.state.replicationpolicies,
+			this.state.volumes,
+		);
+
+		if (!replicationpolicies || !volumes) {
+			return loadingOrError;
+		}
 
 		return (
 			<table className="table table-striped table-hover">
 				<thead>
 					<tr>
-						<th>Id</th>
 						<th>Name</th>
 						<th>Desired volumes</th>
 						<th />
 					</tr>
 				</thead>
 				<tbody>
-					{(replicationpolicies || []).map((rp) => (
+					{replicationpolicies.map((rp) => (
 						<tr key={rp.Id}>
-							<td>{rp.Id}</td>
-							<td>{rp.Name}</td>
-							<td>{rp.DesiredVolumes.join(', ')}</td>
+							<td title={`Id= ${rp.Id}`}>{rp.Name}</td>
+							<td>
+								{rp.DesiredVolumes.map((id) => {
+									const vols = volumes.filter((v) => v.Id === id);
+
+									const volLabel = vols[0] ? vols[0].Label : '(error)';
+
+									return (
+										<span className="margin-left">
+											<DefaultLabel>{volLabel}</DefaultLabel>
+										</span>
+									);
+								})}
+							</td>
 							<td>
 								<Dropdown>
 									<CommandLink
@@ -94,11 +111,6 @@ export default class ReplicationPoliciesPage extends React.Component<
 						</tr>
 					))}
 				</tbody>
-				<tfoot>
-					<tr>
-						<td colSpan={99}>{loadingOrError}</td>
-					</tr>
-				</tfoot>
 			</table>
 		);
 	}
