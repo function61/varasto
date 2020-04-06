@@ -13,6 +13,8 @@ import {
 	SuccessLabel,
 	WarningLabel,
 	Well,
+	tableClassStripedHover,
+	tableClassStripedHoverBordered,
 } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
@@ -247,7 +249,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		const volumesWithSmart = (volumes || []).filter((vol) => !!vol.Smart.LatestReport);
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Passed</th>
@@ -318,7 +320,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		const [volumes, loadingOrError] = this.state.volumes.unwrap();
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Label</th>
@@ -480,7 +482,7 @@ export default class VolumesAndMountsPage extends React.Component<
 
 		return enclosures.map((enclosure) => (
 			<div key={enclosure.name} className="col-md-4">
-				<table className="table table-bordered table-striped table-hover">
+				<table className={tableClassStripedHoverBordered}>
 					<thead>
 						<tr>
 							<th />
@@ -669,7 +671,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		);
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Label</th>
@@ -716,7 +718,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		}
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th style={{ width: '1%' }} />
@@ -836,7 +838,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		};
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th />
@@ -863,7 +865,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		}
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Volume</th>

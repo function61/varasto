@@ -1,6 +1,6 @@
 import { DocLink } from 'component/doclink';
 import { DangerAlert, InfoAlert } from 'f61ui/component/alerts';
-import { Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, tableClassStripedHover, Panel } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
 import { DocRef } from 'generated/stoserver/stoservertypes_types';
 import { isDevVersion, version } from 'generated/version';
@@ -24,7 +24,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							version-specific links). Visit the GitHub page instead.
 						</DangerAlert>
 					)}
-					<table className="table table-striped table-hover">
+					<table className={tableClassStripedHover}>
 						<thead>
 							<tr>
 								<th>Type</th>

@@ -1,6 +1,6 @@
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { getLogs } from 'generated/stoserver/stoservertypes_endpoints';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
@@ -36,7 +36,7 @@ export default class LogsPage extends React.Component<{}, LogsPageState> {
 						}}
 					/>
 
-					<table className="table table-striped table-hover">
+					<table className={tableClassStripedHover}>
 						<thead>
 							<tr>
 								<th>Line</th>

@@ -1,6 +1,6 @@
 import { reloadCurrentPage } from 'f61ui/browserutils';
 import { DangerAlert } from 'f61ui/component/alerts';
-import { Glyphicon } from 'f61ui/component/bootstrap';
+import { Glyphicon, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { Loading } from 'f61ui/component/loading';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
@@ -44,7 +44,7 @@ export class FileUploadArea extends React.Component<FileUploadAreaProps, FileUpl
 	render() {
 		return (
 			<div>
-				<table className="table table-striped table-hover">
+				<table className={tableClassStripedHover}>
 					<tbody>
 						{this.state.uploads.map((upload) => (
 							<tr>

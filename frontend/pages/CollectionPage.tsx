@@ -9,7 +9,13 @@ import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
 import { RatingEditor } from 'component/rating';
 import { InfoAlert } from 'f61ui/component/alerts';
-import { DefaultLabel, AnchorButton, Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import {
+	DefaultLabel,
+	tableClassStripedHover,
+	AnchorButton,
+	Glyphicon,
+	Panel,
+} from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
@@ -267,7 +273,7 @@ export default class CollectionPage extends React.Component<
 						) : null}
 
 						<Panel heading="Files">
-							<table className="table table-striped table-hover">
+							<table className={tableClassStripedHover}>
 								<thead>
 									<tr>
 										<td style={{ width: '1%' }} />
@@ -312,7 +318,7 @@ export default class CollectionPage extends React.Component<
 									{collectionDropdown(collOutput.Collection)}
 								</div>
 							}>
-							<table className="table table-striped table-hover">
+							<table className={tableClassStripedHover}>
 								<tbody>
 									<tr>
 										<th>Id</th>
@@ -412,7 +418,7 @@ export default class CollectionPage extends React.Component<
 							)}
 						</Panel>
 						<Panel heading="Changesets">
-							<table className="table table-striped table-hover">
+							<table className={tableClassStripedHover}>
 								<thead>
 									<tr>
 										<td style={{ width: '1%' }} />

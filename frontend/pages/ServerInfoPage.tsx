@@ -11,6 +11,7 @@ import {
 	Panel,
 	SuccessLabel,
 	WarningLabel,
+	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandLink } from 'f61ui/component/CommandButton';
@@ -112,7 +113,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 			: [];
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<tbody>
 					{items.map((item) => (
 						<tr key={item.h}>
@@ -154,7 +155,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		}
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th />
@@ -176,7 +177,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		const [subsystemStatuses, loadingOrError] = this.state.subsystemStatuses.unwrap();
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Status</th>

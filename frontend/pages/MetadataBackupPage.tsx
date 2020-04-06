@@ -2,7 +2,7 @@ import { DocLink } from 'component/doclink';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
@@ -127,7 +127,7 @@ export default class MetadataBackupPage extends React.Component<
 						/>
 					</div>
 				}>
-				<table className="table table-striped table-hover">
+				<table className={tableClassStripedHover}>
 					<tbody>
 						<tr>
 							<th>Bucket</th>
@@ -172,7 +172,7 @@ export default class MetadataBackupPage extends React.Component<
 
 		return (
 			<div>
-				<table className="table table-striped table-hover">
+				<table className={tableClassStripedHover}>
 					<thead>
 						<tr>
 							<th>Age</th>

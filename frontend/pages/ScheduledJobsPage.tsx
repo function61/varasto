@@ -1,5 +1,11 @@
 import { Result } from 'f61ui/component/result';
-import { DangerLabel, Glyphicon, Panel, SuccessLabel } from 'f61ui/component/bootstrap';
+import {
+	DangerLabel,
+	tableClassStripedHover,
+	Glyphicon,
+	Panel,
+	SuccessLabel,
+} from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -87,7 +93,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 
 	private renderJobsTable(jobs: SchedulerJob[]) {
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Job</th>

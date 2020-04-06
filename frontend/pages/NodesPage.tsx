@@ -1,5 +1,6 @@
 import { Result } from 'f61ui/component/result';
 import { CommandLink } from 'f61ui/component/CommandButton';
+import { tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -43,7 +44,7 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 		const [nodes, loadingOrError] = this.state.nodes.unwrap();
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Id</th>

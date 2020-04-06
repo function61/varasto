@@ -12,7 +12,7 @@ import {
 import { TabController } from 'component/tabcontroller';
 import { CollectionTagView } from 'component/tags';
 import { RatingViewer } from 'component/rating';
-import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { tableClassStripedHover, DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
@@ -312,7 +312,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		};
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th style={{ width: '1%' }}>
@@ -440,7 +440,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						{directoryDropdown(output.Directory)}
 					</div>
 				}>
-				<table className="table table-striped table-hover">
+				<table className={tableClassStripedHover}>
 					<tbody>
 						<tr>
 							<th>Id</th>

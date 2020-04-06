@@ -1,7 +1,7 @@
 import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
-import { Panel } from 'f61ui/component/bootstrap';
+import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { SecretReveal } from 'f61ui/component/secretreveal';
@@ -67,7 +67,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 		const [apiKeys, loadingOrError] = this.state.apiKeys.unwrap();
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Name</th>
@@ -112,7 +112,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 		const [keyEncryptionKeys, loadingOrError] = this.state.keyEncryptionKeys.unwrap();
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Label</th>
