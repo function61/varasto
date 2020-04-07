@@ -362,8 +362,8 @@ export default class CollectionPage extends React.Component<
 										<td>{bytesToHumanReadable(collOutput.TotalSize)}</td>
 									</tr>
 									<tr>
-										<th>Desired volumes</th>
-										<td>{collOutput.Collection.DesiredVolumes.join(', ')}</td>
+										<th>Replication policy</th>
+										<td>{collOutput.Collection.ReplicationPolicy}</td>
 									</tr>
 									<tr>
 										<th>

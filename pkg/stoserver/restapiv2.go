@@ -70,14 +70,20 @@ func convertDir(dir stotypes.Directory) stoservertypes.Directory {
 		panic(err)
 	}
 
+	var replicationPolicy *string
+	if dir.ReplicationPolicy != "" {
+		replicationPolicy = &dir.ReplicationPolicy
+	}
+
 	return stoservertypes.Directory{
-		Id:          dir.ID,
-		Parent:      dir.Parent,
-		Name:        dir.Name,
-		Description: dir.Description,
-		Type:        typ,
-		Metadata:    metadataMapToKvList(dir.Metadata),
-		Sensitivity: dir.Sensitivity,
+		Id:                dir.ID,
+		Parent:            dir.Parent,
+		Name:              dir.Name,
+		Description:       dir.Description,
+		ReplicationPolicy: replicationPolicy,
+		Type:              typ,
+		Metadata:          metadataMapToKvList(dir.Metadata),
+		Sensitivity:       dir.Sensitivity,
 	}
 }
 
@@ -93,19 +99,19 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 	}
 
 	return stoservertypes.CollectionSubset{
-		Id:               coll.ID,
-		Head:             coll.Head,
-		Created:          coll.Created,
-		Directory:        coll.Directory,
-		Name:             coll.Name,
-		Description:      coll.Description,
-		DesiredVolumes:   coll.DesiredVolumes,
-		Sensitivity:      coll.Sensitivity,
-		EncryptionKeyIds: encryptionKeyIds,
-		Metadata:         metadataMapToKvList(coll.Metadata),
-		Tags:             coll.Tags,
-		Rating:           rating,
-		Changesets:       changesets,
+		Id:                coll.ID,
+		Head:              coll.Head,
+		Created:           coll.Created,
+		Directory:         coll.Directory,
+		Name:              coll.Name,
+		Description:       coll.Description,
+		ReplicationPolicy: coll.ReplicationPolicy,
+		Sensitivity:       coll.Sensitivity,
+		EncryptionKeyIds:  encryptionKeyIds,
+		Metadata:          metadataMapToKvList(coll.Metadata),
+		Tags:              coll.Tags,
+		Rating:            rating,
+		Changesets:        changesets,
 	}
 }
 
@@ -574,6 +580,11 @@ func commitChangesetInternal(
 		return httpErr("commit does not target current head. would result in dangling heads!", http.StatusBadRequest)
 	}
 
+	replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
+	if err != nil {
+		return httpErr(err.Error(), http.StatusInternalServerError)
+	}
+
 	createdAndUpdated := append(changeset.FilesCreated, changeset.FilesUpdated...)
 
 	for _, file := range createdAndUpdated {
@@ -593,7 +604,7 @@ func commitChangesetInternal(
 			blob.Referenced = true
 			blob.VolumesPendingReplication = missingFromLeftHandSide(
 				blob.Volumes,
-				coll.DesiredVolumes)
+				replicationPolicy.DesiredVolumes)
 
 			// blob got deduplicated from somewhere, and thus it uses a DEK that our collection
 			// currently doesn't have a copy of?
@@ -651,6 +662,7 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 		policies = append(policies, stoservertypes.ReplicationPolicy{
 			Id:             dbObject.ID,
 			Name:           dbObject.Name,
+			MinZones:       dbObject.MinZones,
 			DesiredVolumes: dbObject.DesiredVolumes,
 		})
 	}
@@ -911,7 +923,12 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 			return err
 		}
 
-		volumeId = coll.DesiredVolumes[0]
+		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
+		if err != nil {
+			return err
+		}
+
+		volumeId = replicationPolicy.DesiredVolumes[0]
 
 		return nil
 	}); err != nil {
@@ -1233,7 +1250,12 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 			return err
 		}
 
-		volumeId = coll.DesiredVolumes[0]
+		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
+		if err != nil {
+			return err
+		}
+
+		volumeId = replicationPolicy.DesiredVolumes[0]
 
 		return nil
 	}); err != nil {
@@ -1327,13 +1349,13 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 			sort.Slice(replicaStatuses, func(i, j int) bool { return replicaStatuses[i].Volume < replicaStatuses[j].Volume })
 
 			nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
-				CollectionId:                   ctr.collectionId,
-				Description:                    strings.Join(path, " » "),
-				TotalBlobs:                     ctr.blobCount,
-				DesiredReplicaCount:            ctr.desiredReplicas,
-				ReplicaStatuses:                replicaStatuses,
-				ProblemRedundancy:              ctr.problemRedundancy,
-				ProblemDesiredReplicasOutdated: ctr.problemDesiredReplicasOutdated,
+				CollectionId:        ctr.collectionId,
+				Description:         strings.Join(path, " » "),
+				TotalBlobs:          ctr.blobCount,
+				DesiredReplicaCount: ctr.desiredReplicas,
+				ReplicaStatuses:     replicaStatuses,
+				ProblemRedundancy:   ctr.problemRedundancy,
+				ProblemZoning:       ctr.problemZoning,
 			})
 		}
 	}

@@ -24,7 +24,12 @@ type Client struct {
 type ReplicationPolicy struct {
 	ID             string
 	Name           string
-	DesiredVolumes []int
+	DesiredVolumes []int // where the policy currently directs data (TODO: rename to CurrentVolumes?)
+	MinZones       int   // if >= 2, then data is considered fire etc. disaster safe
+}
+
+func (r *ReplicationPolicy) ReplicaCount() int {
+	return len(r.DesiredVolumes)
 }
 
 type Volume struct {
@@ -56,29 +61,30 @@ type VolumeMount struct {
 }
 
 type Directory struct {
-	ID          string
-	Parent      string
-	Name        string
-	Description string
-	Type        string
-	Metadata    map[string]string
-	Sensitivity int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
+	ID                string
+	Parent            string
+	Name              string
+	Description       string
+	Type              string
+	Metadata          map[string]string
+	Sensitivity       int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
+	ReplicationPolicy string
 }
 
 type Collection struct {
-	ID             string
-	Created        time.Time // earliest of all changesets' file create/update timestamps
-	Directory      string
-	Name           string
-	Description    string
-	Sensitivity    int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
-	DesiredVolumes []int
-	Head           string
-	EncryptionKeys []KeyEnvelope // first is for all new blobs, the following for moved/deduplicated ones
-	Changesets     []CollectionChangeset
-	Metadata       map[string]string
-	Rating         int // 1-5
-	Tags           []string
+	ID                string
+	Created           time.Time // earliest of all changesets' file create/update timestamps
+	Directory         string
+	Name              string
+	Description       string
+	Sensitivity       int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
+	ReplicationPolicy string
+	Head              string
+	EncryptionKeys    []KeyEnvelope // first is for all new blobs, the following for moved/deduplicated ones
+	Changesets        []CollectionChangeset
+	Metadata          map[string]string
+	Rating            int // 1-5
+	Tags              []string
 }
 
 type CollectionChangeset struct {

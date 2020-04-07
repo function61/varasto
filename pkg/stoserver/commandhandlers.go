@@ -596,16 +596,16 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 		}
 
 		collection := &stotypes.Collection{
-			ID:             stoutils.NewCollectionId(),
-			Created:        time.Now(),
-			Directory:      cmd.ParentDir,
-			Name:           cmd.Name,
-			DesiredVolumes: replicationPolicy.DesiredVolumes,
-			Head:           stotypes.NoParentId,
-			EncryptionKeys: []stotypes.KeyEnvelope{*dekEnvelopes},
-			Changesets:     []stotypes.CollectionChangeset{},
-			Metadata:       map[string]string{},
-			Tags:           []string{},
+			ID:                stoutils.NewCollectionId(),
+			Created:           time.Now(),
+			Directory:         cmd.ParentDir,
+			Name:              cmd.Name,
+			ReplicationPolicy: replicationPolicy.ID,
+			Head:              stotypes.NoParentId,
+			EncryptionKeys:    []stotypes.KeyEnvelope{*dekEnvelopes},
+			Changesets:        []stotypes.CollectionChangeset{},
+			Metadata:          map[string]string{},
+			Tags:              []string{},
 		}
 
 		// highly unlikely

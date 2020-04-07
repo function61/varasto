@@ -322,17 +322,31 @@ type ServerConfig struct {
 	FailedMountNames       []string
 }
 
+func validateSchemaVersionAndMigrateIfNeeded(db *bbolt.DB) error {
+	tx, err := db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	if err := stodb.ValidateSchemaVersion(tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+
 // returns blorm.ErrBucketNotFound if bootstrap needed
 func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Logger, logTail *logtee.StringTail) (*ServerConfig, error) {
+	if err := validateSchemaVersionAndMigrateIfNeeded(db); err != nil {
+		return nil, err
+	}
+
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
-
-	if err := stodb.ValidateSchemaVersion(tx); err != nil {
-		return nil, err
-	}
 
 	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
 	if err != nil {

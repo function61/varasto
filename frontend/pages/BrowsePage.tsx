@@ -27,6 +27,7 @@ import {
 	DirectoryChangeSensitivity,
 	DirectoryCreate,
 	DirectoryDelete,
+	DirectoryChangeReplicationPolicy,
 	DirectoryMove,
 	DirectoryPullMetadata,
 	DirectoryRename,
@@ -471,6 +472,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								{thousandSeparate(output.Collections.length)} collections
 							</td>
 						</tr>
+						<tr>
+							<th>Replication policy</th>
+							<td>{resolveDirReplicationPolicy(output)}</td>
+						</tr>
 					</tbody>
 				</table>
 			</Panel>
@@ -509,6 +514,9 @@ const directoryDropdown = (dir: Directory) => {
 			<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
 			<CommandLink command={DirectoryChangeDescription(dir.Id, dir.Description)} />
 			<CommandLink command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)} />
+			<CommandLink
+				command={DirectoryChangeReplicationPolicy(dir.Id, dir.ReplicationPolicy || '')}
+			/>
 			<CommandLink command={DirectoryPullMetadata(dir.Id)} />
 			<CommandLink command={DirectoryMove(dir.Id, { disambiguation: dir.Name })} />
 			<CommandLink
@@ -561,4 +569,22 @@ function directoryTypeToEmoji(type: DirectoryType): string {
 
 function metadataMissingIcon() {
 	return <Glyphicon title="Metadata missing" icon="exclamation-sign" />;
+}
+
+// if not explicitly defined, walk parents until found
+function resolveDirReplicationPolicy(output: DirectoryOutput): string {
+	if (output.Directory.ReplicationPolicy) {
+		return output.Directory.ReplicationPolicy;
+	}
+
+	const parentsReversed = output.Parents.reverse();
+
+	for (const parent of parentsReversed) {
+		if (parent.ReplicationPolicy) {
+			return parent.ReplicationPolicy;
+		}
+	}
+
+	// should not happen - at the very least the root should have policy set
+	throw new Error('unable to resolve ReplicationPolicy');
 }

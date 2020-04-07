@@ -97,6 +97,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 			ID:             "default",
 			Name:           "Default replication policy",
 			DesiredVolumes: []int{1},
+			MinZones:       1,
 		}, tx),
 		ClientRepository.Update(&stotypes.Client{
 			ID:        stoutils.NewClientId(),

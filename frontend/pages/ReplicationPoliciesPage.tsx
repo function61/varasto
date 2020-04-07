@@ -1,14 +1,24 @@
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
-import { DangerLabel, DefaultLabel, Panel } from 'f61ui/component/bootstrap';
+import { Info } from 'f61ui/component/info';
+import {
+	SuccessLabel,
+	WarningLabel,
+	DangerLabel,
+	DefaultLabel,
+	Panel,
+	tableClassStripedHover,
+} from 'f61ui/component/bootstrap';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	DatabaseDiscoverReconcilableReplicationPolicies,
-	DatabaseReconcileOutOfSyncDesiredVolumes,
 	DatabaseReconcileReplicationPolicy,
+	ReplicationpolicyCreate,
+	ReplicationpolicyRename,
 	ReplicationpolicyChangeDesiredVolumes,
+	ReplicationpolicyChangeMinZones,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
 	getReconcilableItems,
@@ -58,7 +68,17 @@ export default class ReplicationPoliciesPage extends React.Component<
 	render() {
 		return (
 			<SettingsLayout title="Replication policies" breadcrumbs={[]}>
-				<Panel heading="Policies">{this.renderPolicies()}</Panel>
+				<Panel
+					heading={
+						<div>
+							Replication policies &nbsp;
+							<Dropdown>
+								<CommandLink command={ReplicationpolicyCreate()} />
+							</Dropdown>
+						</div>
+					}>
+					{this.renderPolicies()}
+				</Panel>
 
 				<Panel heading="Reconciliation">{this.renderReconcilable()}</Panel>
 			</SettingsLayout>
@@ -76,11 +96,25 @@ export default class ReplicationPoliciesPage extends React.Component<
 		}
 
 		return (
-			<table className="table table-striped table-hover">
+			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Name</th>
-						<th>Desired volumes</th>
+						<th>
+							New data goes to{' '}
+							<Info text="Old data stays where it was written, except if you increase the replica count (derived from these volumes), old data will also be replicated to satisfy policy." />
+						</th>
+						<th>
+							Replica count{' '}
+							<Info text="This is derived from count of 'New data goes to' volumes" />
+						</th>
+						<th>
+							Zones{' '}
+							<Info text="Minimum amount of separate physical zones data should be stored in. This protects from fires, flooding etc." />
+						</th>
+						<th>
+							Data safety <Info text="Calculated from replica count &amp; zones" />
+						</th>
 						<th />
 					</tr>
 				</thead>
@@ -95,16 +129,28 @@ export default class ReplicationPoliciesPage extends React.Component<
 									const volLabel = vols[0] ? vols[0].Label : '(error)';
 
 									return (
-										<span className="margin-left">
+										<span className="margin-right">
 											<DefaultLabel>{volLabel}</DefaultLabel>
 										</span>
 									);
 								})}
 							</td>
+							<td>{replicaCount(rp)}</td>
+							<td>{rp.MinZones}</td>
+							<td>{this.dataSafety(replicaCount(rp), rp.MinZones)}</td>
 							<td>
 								<Dropdown>
 									<CommandLink
+										command={ReplicationpolicyRename(rp.Id, rp.Name)}
+									/>
+									<CommandLink
 										command={ReplicationpolicyChangeDesiredVolumes(rp.Id)}
+									/>
+									<CommandLink
+										command={ReplicationpolicyChangeMinZones(
+											rp.Id,
+											rp.MinZones,
+										)}
 									/>
 								</Dropdown>
 							</td>
@@ -114,6 +160,34 @@ export default class ReplicationPoliciesPage extends React.Component<
 			</table>
 		);
 	}
+
+	private dataSafety(replCount: number, minZones: number) {
+		if (replCount < 2) {
+			return (
+				<DangerLabel>
+					Data loss very likely{' '}
+					<Info text="Stored on one volume only (see replica count)" />
+				</DangerLabel>
+			);
+		}
+
+		if (minZones < 2) {
+			return (
+				<WarningLabel>
+					Data loss possible{' '}
+					<Info text="Fire, flood etc. can destroy your data (see zone count)" />
+				</WarningLabel>
+			);
+		}
+
+		return (
+			<SuccessLabel>
+				Data is pretty safe{' '}
+				<Info text="Stored in multiple physical zones to protect from fire, floods etc." />
+			</SuccessLabel>
+		);
+	}
+
 	private renderReconcilable() {
 		const [report, volumes, loadingOrError] = Result.unwrap2(
 			this.state.reconciliationReport,
@@ -150,7 +224,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 					replication policy.
 				</p>
 
-				<table className="table table-striped table-hover">
+				<table className={tableClassStripedHover}>
 					<thead>
 						<tr>
 							<th>
@@ -184,9 +258,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 								<td>{thousandSeparate(r.TotalBlobs)}</td>
 								<td>
 									{r.ProblemRedundancy && <DangerLabel>redundancy</DangerLabel>}
-									{r.ProblemDesiredReplicasOutdated && (
-										<DangerLabel>desiredVolsOutOfSync</DangerLabel>
-									)}
+									{r.ProblemZoning && <DangerLabel>zoning</DangerLabel>}
 								</td>
 								<td>{r.DesiredReplicaCount}</td>
 								<td>
@@ -199,18 +271,24 @@ export default class ReplicationPoliciesPage extends React.Component<
 
 										if (rs.BlobCount === r.TotalBlobs) {
 											return (
-												<span className="margin-left">
-													<DefaultLabel title={rs.BlobCount.toString()}>
+												<span className="margin-right">
+													<DefaultLabel
+														title={
+															rs.BlobCount.toString() + ' blob(s)'
+														}>
 														{volLabel}
 													</DefaultLabel>
 												</span>
 											);
 										} else {
 											return (
-												<span className="margin-left">
-													<DangerLabel title={rs.BlobCount.toString()}>
+												<span className="margin-right">
+													<WarningLabel
+														title={
+															rs.BlobCount.toString() + ' blob(s)'
+														}>
 														{volLabel}
-													</DangerLabel>
+													</WarningLabel>
 												</span>
 											);
 										}
@@ -226,11 +304,6 @@ export default class ReplicationPoliciesPage extends React.Component<
 									<div>
 										<CommandButton
 											command={DatabaseReconcileReplicationPolicy(
-												this.state.selectedCollIds.join(','),
-											)}
-										/>
-										<CommandButton
-											command={DatabaseReconcileOutOfSyncDesiredVolumes(
 												this.state.selectedCollIds.join(','),
 											)}
 										/>
@@ -259,4 +332,8 @@ export default class ReplicationPoliciesPage extends React.Component<
 		this.state.reconciliationReport.load(() => getReconcilableItems());
 		this.state.volumes.load(() => getVolumes());
 	}
+}
+
+function replicaCount(policy: ReplicationPolicy): number {
+	return policy.DesiredVolumes.length;
 }

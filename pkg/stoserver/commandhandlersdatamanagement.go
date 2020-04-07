@@ -2,8 +2,6 @@ package stoserver
 
 import (
 	"errors"
-	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/function61/eventkit/command"
@@ -12,16 +10,9 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
 	"go.etcd.io/bbolt"
 )
-
-type ReplicationPolicyV2 struct {
-	Replicas int
-}
-
-func (r *ReplicationPolicyV2) Satisfied(currentReplicas int) bool {
-	return currentReplicas >= r.Replicas
-}
 
 type ReconciliationCompletionReport struct {
 	TotalCollections                  int
@@ -29,30 +20,16 @@ type ReconciliationCompletionReport struct {
 }
 
 type collectionToReconcile struct {
-	collectionId                   string
-	blobCount                      int
-	desiredReplicas                int
-	problemRedundancy              bool
-	problemDesiredReplicasOutdated bool
-	presence                       map[int]int
+	collectionId      string
+	blobCount         int
+	desiredReplicas   int
+	problemRedundancy bool
+	problemZoning     bool
+	presence          map[int]int
 }
 
 func (c *collectionToReconcile) anyProblems() bool {
-	return c.problemRedundancy || c.problemDesiredReplicasOutdated
-}
-
-func (c *collectionToReconcile) volsWithFullReplicas() []int {
-	volsWithFullReplicas := []int{}
-
-	for volId, blobCount := range c.presence {
-		if blobCount == c.blobCount {
-			volsWithFullReplicas = append(volsWithFullReplicas, volId)
-		}
-	}
-
-	sort.Ints(volsWithFullReplicas)
-
-	return volsWithFullReplicas
+	return c.problemRedundancy || c.problemZoning
 }
 
 var latestReconciliationReport *ReconciliationCompletionReport
@@ -106,62 +83,6 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 			return stodb.BlobRepository.Update(blob, tx)
 		}, tx)
 	})
-}
-
-func (c *cHandlers) DatabaseReconcileOutOfSyncDesiredVolumes(cmd *stoservertypes.DatabaseReconcileOutOfSyncDesiredVolumes, ctx *command.Ctx) error {
-	collIds := strings.Split(cmd.Id, ",")
-
-	if latestReconciliationReport == nil {
-		return errors.New("latestReconciliationReport nil")
-	}
-
-	processColl := func(coll *stotypes.Collection, tx *bbolt.Tx) error {
-		for idx, item := range latestReconciliationReport.CollectionsWithNonCompliantPolicy {
-			if item.collectionId != coll.ID {
-				continue
-			}
-
-			coll.DesiredVolumes = item.volsWithFullReplicas()
-
-			if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
-				return err
-			}
-
-			item.problemDesiredReplicasOutdated = false
-
-			if !item.anyProblems() {
-				// remove
-				latestReconciliationReport.CollectionsWithNonCompliantPolicy = append(
-					latestReconciliationReport.CollectionsWithNonCompliantPolicy[:idx],
-					latestReconciliationReport.CollectionsWithNonCompliantPolicy[idx+1:]...)
-			}
-
-			return nil
-		}
-
-		return fmt.Errorf("coll %s not found from latestReconciliationReport", coll.ID)
-	}
-
-	if err := c.db.Update(func(tx *bbolt.Tx) error {
-		q := stodb.Read(tx)
-
-		for _, collId := range collIds {
-			coll, err := q.Collection(collId)
-			if err != nil {
-				return err
-			}
-
-			if err := processColl(coll, tx); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.DatabaseReconcileReplicationPolicy, ctx *command.Ctx) error {
@@ -222,32 +143,131 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 	return nil
 }
 
+func (c *cHandlers) ReplicationpolicyCreate(cmd *stoservertypes.ReplicationpolicyCreate, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		if cmd.MinZones < 1 {
+			return errors.New("MinZones cannot be < 1")
+		}
+
+		return stodb.ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
+			ID:             stoutils.NewReplicationPolicyId(),
+			Name:           cmd.Name,
+			DesiredVolumes: []int{},
+			MinZones:       cmd.MinZones,
+		}, tx)
+	})
+}
+
+func (c *cHandlers) ReplicationpolicyRename(cmd *stoservertypes.ReplicationpolicyRename, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		policy, err := stodb.Read(tx).ReplicationPolicy(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		policy.Name = cmd.Name
+
+		return stodb.ReplicationPolicyRepository.Update(policy, tx)
+	})
+}
+
+func (c *cHandlers) ReplicationpolicyChangeMinZones(cmd *stoservertypes.ReplicationpolicyChangeMinZones, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		policy, err := stodb.Read(tx).ReplicationPolicy(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		if cmd.MinZones < 1 {
+			return errors.New("MinZones must be >= 1")
+		}
+
+		policy.MinZones = cmd.MinZones
+
+		return stodb.ReplicationPolicyRepository.Update(policy, tx)
+	})
+}
+
+func (c *cHandlers) DirectoryChangeReplicationPolicy(cmd *stoservertypes.DirectoryChangeReplicationPolicy, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		dir, err := stodb.Read(tx).Directory(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		if cmd.ReplicationPolicy != "" { // validation
+			if _, err := stodb.Read(tx).ReplicationPolicy(cmd.ReplicationPolicy); err != nil {
+				return err
+			}
+		} else { // unsetting policy
+			if dir.Parent == "" {
+				return errors.New("cannot unset replication policy from root directory")
+			}
+		}
+
+		dir.ReplicationPolicy = cmd.ReplicationPolicy
+
+		return stodb.DirectoryRepository.Update(dir, tx)
+	})
+}
+
 func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoservertypes.DatabaseDiscoverReconcilableReplicationPolicies, ctx *command.Ctx) error {
-	tx, err := c.db.Begin(false)
+	// why write tx? we'll update out-of-date effective replication policies
+	tx, err := c.db.Begin(true)
 	if err != nil {
 		return err
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	report := NewReconciliationCompletionReport()
+	// load all policies into memory for quick access
+	policyById := map[string]*stotypes.ReplicationPolicy{}
 
-	replicationPolicyForCollection := func(coll *stotypes.Collection) ReplicationPolicyV2 {
-		// TODO
-		return ReplicationPolicyV2{
-			Replicas: 2,
-		}
+	if err := stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+		policy := record.(*stotypes.ReplicationPolicy)
+		policyById[policy.ID] = policy
+		return nil
+	}, tx); err != nil {
+		return err
 	}
 
-	visitCollection := func(coll *stotypes.Collection) error {
+	// load all volumes into memory for quick access
+	volumeById := map[int]*stotypes.Volume{}
+
+	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
+		vol := record.(*stotypes.Volume)
+		volumeById[vol.ID] = vol
+		return nil
+	}, tx); err != nil {
+		return err
+	}
+
+	fixedReplPolicies := 0
+
+	report := NewReconciliationCompletionReport()
+
+	visitCollection := func(coll *stotypes.Collection, effectiveReplPolicyId string) error {
 		report.TotalCollections++
 
-		policy := replicationPolicyForCollection(coll)
+		policy := policyById[effectiveReplPolicyId]
+		if policy == nil {
+			panic("policy not found") // should not happen
+		}
 
 		collReport := collectionToReconcile{
 			collectionId:    coll.ID,
-			desiredReplicas: policy.Replicas,
+			desiredReplicas: len(policy.DesiredVolumes),
 			presence:        map[int]int{},
 			blobCount:       0,
+		}
+
+		if coll.ReplicationPolicy != effectiveReplPolicyId {
+			coll.ReplicationPolicy = effectiveReplPolicyId
+
+			if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
+				return err
+			}
+
+			fixedReplPolicies++
 		}
 
 		if err := eachBlobOfCollection(coll, func(ref stotypes.BlobRef) error {
@@ -260,25 +280,26 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 
 			volsAndPendings := append(blob.Volumes, blob.VolumesPendingReplication...)
 
+			uniqueZones := map[string]bool{}
+
 			for _, vol := range volsAndPendings {
-				// null value (when not found from map) conveniently works out for us
+				// zero value (when not found from map) conveniently works out for us
 				collReport.presence[vol] = collReport.presence[vol] + 1
+
+				uniqueZones[volumeById[vol].Zone] = true
+			}
+
+			if len(volsAndPendings) < policy.ReplicaCount() {
+				collReport.problemRedundancy = true
+			}
+
+			if len(uniqueZones) < policy.MinZones {
+				collReport.problemZoning = true
 			}
 
 			return nil
 		}); err != nil {
 			return err
-		}
-
-		volsWithFullReplicas := collReport.volsWithFullReplicas()
-
-		// empty collections (blobCount=0) are stupid but technically they're fully replicated
-		if collReport.blobCount > 0 && !policy.Satisfied(len(volsWithFullReplicas)) {
-			collReport.problemRedundancy = true
-		}
-
-		if !intSliceContentsEqual(volsWithFullReplicas, coll.DesiredVolumes) {
-			collReport.problemDesiredReplicasOutdated = true
 		}
 
 		if collReport.anyProblems() {
@@ -289,15 +310,20 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 
 	// start from root and recurse to subdirs
-	if err := iterateDirectoriesRecursively(stoservertypes.RootFolderId, tx, func(dirId string) error {
-		colls, err := stodb.Read(tx).CollectionsByDirectory(dirId)
+	root, err := stodb.Read(tx).Directory(stoservertypes.RootFolderId)
+	if err != nil {
+		return err
+	}
+
+	if err := iterateDirectoriesRecursively(root, "", tx, func(dir *stotypes.Directory, effectiveReplPolicyId string) error {
+		colls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
 		if err != nil {
 			return err
 		}
 
 		for _, coll := range colls {
 			coll := coll // pin
-			if err := visitCollection(&coll); err != nil {
+			if err := visitCollection(&coll, effectiveReplPolicyId); err != nil {
 				return err
 			}
 		}
@@ -307,9 +333,13 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		return err
 	}
 
+	if fixedReplPolicies > 0 {
+		logex.Levels(logex.Prefix("reconciliation", c.logger)).Info.Printf("fixed %d replication policies", fixedReplPolicies)
+	}
+
 	latestReconciliationReport = report
 
-	return nil
+	return tx.Commit()
 }
 
 func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbandoned, ctx *command.Ctx) error {
@@ -402,38 +432,37 @@ func eachBlobOfCollection(coll *stotypes.Collection, visit func(ref stotypes.Blo
 	return nil
 }
 
-func iterateDirectoriesRecursively(id string, tx *bbolt.Tx, visitor func(dirIr string) error) error {
-	if err := visitor(id); err != nil {
+func iterateDirectoriesRecursively(
+	dir *stotypes.Directory,
+	effectiveReplPolicyId string,
+	tx *bbolt.Tx,
+	visitor func(dir *stotypes.Directory, effectiveReplPolicyId string) error,
+) error {
+	if dir.ReplicationPolicy != "" {
+		effectiveReplPolicyId = dir.ReplicationPolicy
+	}
+
+	if err := visitor(dir, effectiveReplPolicyId); err != nil {
 		return err
 	}
 
-	subDirs, err := stodb.Read(tx).SubDirectories(id)
+	subDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
 	if err != nil {
 		return err
 	}
 
 	for _, subDir := range subDirs {
-		if err := iterateDirectoriesRecursively(subDir.ID, tx, visitor); err != nil {
+		subDir := subDir // pin
+
+		if err := iterateDirectoriesRecursively(
+			&subDir,
+			effectiveReplPolicyId,
+			tx,
+			visitor,
+		); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func intSliceContentsEqual(a []int, b []int) bool {
-	sort.Ints(a)
-	sort.Ints(b)
-
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
 }

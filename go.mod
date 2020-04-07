@@ -11,6 +11,7 @@ require (
 	github.com/disintegration/gift v1.2.0
 	github.com/disintegration/imageorient v0.0.0-20180920195336-8147d86e83ec
 	github.com/djherbis/times v1.1.0
+	github.com/fatih/color v1.9.0 // indirect
 	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
 	github.com/function61/eventkit v0.0.0-20200324142359-89e3d9397819
 	github.com/function61/gokit v0.0.0-20200401160056-1720ecfda58e
@@ -22,12 +23,16 @@ require (
 	github.com/hashicorp/golang-lru v0.5.1
 	github.com/inconshreveable/mousetrap v1.0.0
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af
-	github.com/mattn/go-isatty v0.0.10
+	github.com/klauspost/compress v1.10.3 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/mattn/go-colorable v0.1.6 // indirect
+	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-runewidth v0.0.8
 	github.com/nsf/termbox-go v0.0.0-20190817171036-93860e161317
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/procfs v0.0.8
+	github.com/raviqqe/liche v0.0.0-20200229003944-f57a5d1c5be4 // indirect
 	github.com/robfig/cron v1.2.0
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/spf13/cobra v0.0.6
@@ -37,9 +42,9 @@ require (
 	go.opencensus.io v0.19.2
 	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a
 	golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b
+	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914
-	golang.org/x/sys v0.0.0-20200122134326-e047566fdf82
+	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.3.0
 	google.golang.org/appengine v1.4.0

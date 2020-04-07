@@ -303,6 +303,18 @@
 		]
 	},
 	{
+		"command": "directory.ChangeReplicationPolicy",
+		"chain": "public",
+		"ctor": ["Id","ReplicationPolicy"],
+		"crudNature": "update",
+		"title": "Change replication policy",
+		"additional_confirmation": "(current limitation) After changing, you'll have to go to replication policies > reconciliation",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "ReplicationPolicy", "optional": true }
+		]
+	},
+	{
 		"command": "directory.Delete",
 		"chain": "public",
 		"ctor": ["Id"],
@@ -447,6 +459,39 @@
 		]
 	},
 	{
+		"command": "replicationpolicy.Create",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "create",
+		"title": "Create replication policy",
+		"fields": [
+			{ "key": "Name" },
+			{ "key": "MinZones", "type": "integer" }
+		]
+	},
+	{
+		"command": "replicationpolicy.Rename",
+		"chain": "public",
+		"ctor": ["Id", "Name"],
+		"crudNature": "update",
+		"title": "Rename",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "Name" }
+		]
+	},
+	{
+		"command": "replicationpolicy.ChangeMinZones",
+		"chain": "public",
+		"ctor": ["Id", "MinZones"],
+		"crudNature": "update",
+		"title": "Change mininum zones",
+		"fields": [
+			{ "key": "Id", "hideIfDefaultValue": true },
+			{ "key": "MinZones", "type": "integer" }
+		]
+	},
+	{
 		"command": "replicationpolicy.ChangeDesiredVolumes",
 		"chain": "public",
 		"ctor": ["Id"],
@@ -533,16 +578,6 @@
 		"fields": [
 			{ "key": "Id", "max_length": 4096, "hideIfDefaultValue": true },
 			{ "key": "Volume", "type": "integer" }
-		]
-	},
-	{
-		"command": "database.ReconcileOutOfSyncDesiredVolumes",
-		"chain": "public",
-		"ctor": ["Id"],
-		"crudNature": "update",
-		"title": "Fix desiredOutOfSync",
-		"fields": [
-			{ "key": "Id", "max_length": 4096, "hideIfDefaultValue": true }
 		]
 	},
 	{

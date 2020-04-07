@@ -28,6 +28,7 @@ var NewVolumeUuid = longId
 var NewNodeId = shortId
 var NewClientId = shortId
 var NewIntegrityVerificationJobId = shortId
+var NewReplicationPolicyId = shortId
 var NewEncryptionKeyId = longId
 var NewKeyEncryptionKeyId = shortId
 var NewApiKeySecret = cryptoLongId
