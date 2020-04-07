@@ -40,7 +40,7 @@ Features
 | ✓      | Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
 | ✓      | Backup all your devices' data | Varasto's architecture is ideal for backing up all your PCs, mobile devices etc. |
 | ✓      | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive), all in encrypted form so you don't have to trust the cloud or have data leaks if local HDDs get stolen. |
-| ✓      | [Integrated internal database backups](docs/guide_setting-up-backup.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
+| ✓      | [Integrated internal database backups](docs/metadata-backup/README.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
 | ✓      | Compression                 | Storing well-compressible files? They'll be compressed automatically (if it compresses well) & transparently |
 | ✓      | Metadata support & tagging  | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. Can also add tags to collections. |
 | ✓      | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! Varasto is [dogfooded](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) with ~50 TB of data without any slowdowns. |
@@ -78,7 +78,7 @@ Using:
 - [How to install](docs/guide_how-to-install.md) (server)
 - [Varasto client](docs/client/README.md) - download & configuration
 - [Setting up SMART monitoring](docs/guide_setting-up-smart-monitoring.md)
-- [Setting up backup](docs/guide_setting-up-backup.md)
+- [Setting up metadata backup](docs/metadata-backup/README.md)
 - [Network folders](docs/guide_network-folders.md)
 
 Configuring storage:

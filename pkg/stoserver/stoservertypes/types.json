@@ -125,7 +125,7 @@
 				"docs/googledrive/README.md",
 				"docs/replication-policies/README.md",
 				"docs/guide_network-folders.md",
-				"docs/guide_setting-up-backup.md",
+				"docs/metadata-backup/README.md",
 				"docs/guide_setting-up-local-fs.md",
 				"docs/guide_setting-up-s3.md",
 				"docs/guide_setting-up-smart-monitoring.md",

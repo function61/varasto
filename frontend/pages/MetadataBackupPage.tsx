@@ -60,7 +60,7 @@ export default class MetadataBackupPage extends React.Component<
 
 	render() {
 		return (
-			<SettingsLayout title="Backups" breadcrumbs={[]}>
+			<SettingsLayout title="Metadata backup" breadcrumbs={[]}>
 				<TabController
 					tabs={[
 						{
@@ -81,7 +81,7 @@ export default class MetadataBackupPage extends React.Component<
 							heading={
 								<div>
 									Metadata backup list &nbsp;
-									<DocLink doc={DocRef.DocsGuideSettingUpBackupMd} />
+									<DocLink doc={DocRef.DocsMetadataBackupREADMEMd} />
 								</div>
 							}>
 							{this.renderStoredBackups()}
@@ -114,7 +114,7 @@ export default class MetadataBackupPage extends React.Component<
 			<Panel
 				heading={
 					<div>
-						Metadata backup configuration
+						Metadata backup configuration &nbsp;
 						<CommandIcon
 							command={DatabaseBackupConfigure(
 								bucket,

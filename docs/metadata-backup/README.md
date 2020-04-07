@@ -1,5 +1,5 @@
-Setting up backup
-=================
+Metadata backup
+===============
 
 Contents:
 
@@ -51,7 +51,7 @@ so your backup hosting provider can't look at your metadata.
 
 This support looks like this:
 
-![](guide_setting-up-backup_backuplist.png)
+![List of taken backup files](backuplist.png)
 
 If you don't like µbackup or you want to use another backup program,
 [that is also supported](#using-external-backup-program).

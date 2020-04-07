@@ -77,7 +77,7 @@ Backups
 
 <details><summary>Show</summary><p>
 
-![](guide_setting-up-backup_backuplist.png)
+![](metadata-backup/backuplist.png)
 
 </p></details>
 

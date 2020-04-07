@@ -8,18 +8,15 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 )
 
-// tests that each docs/example.md file exist for each member of DocRef. that makes it
-// possible for us to link to markdown view in GitHub with confidence that the URL will
-// not 404 if we move files around later and forget to update the ref
+// tests that each for each member of DocRef (e.g. "docs/example.md") a file exists. that
+// makes it possible for us to link to markdown view in GitHub with confidence that the URL
+// will not 404 if we move files around later and forget to update the ref
 func TestDocsExistForDocRefs(t *testing.T) {
 	for _, member := range stoservertypes.DocRefMembers {
 		member := member // pin
 		t.Run(string(member), func(t *testing.T) {
 			exists, err := fileexists.Exists("../../" + string(member))
-			if err != nil {
-				panic(err)
-			}
-
+			assert.Ok(t, err)
 			assert.Assert(t, exists)
 		})
 	}
@@ -28,6 +25,6 @@ func TestDocsExistForDocRefs(t *testing.T) {
 func TestGitHubMaster(t *testing.T) {
 	assert.EqualString(
 		t,
-		GitHubMaster(stoservertypes.DocRefDocsGuideSettingUpBackupMd),
-		"https://github.com/function61/varasto/blob/master/docs/guide_setting-up-backup.md")
+		GitHubMaster(stoservertypes.DocRefDocsMetadataBackupREADMEMd),
+		"https://github.com/function61/varasto/blob/master/docs/metadata-backup/README.md")
 }
