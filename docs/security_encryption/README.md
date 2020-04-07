@@ -76,9 +76,9 @@ private data and HSM-backed KEKs for your more private data.
 
 | Data security | KEK in HSM | Bulletproof auditing | Touch-to-decrypt | Convenience |
 |---------------|------------|----------------------|------------------|-------------|
-| Low           | ☐          | ☐                   | ☐               | maximum     |
-| Medium        | ☑️         | ☑️                  | ☐               | medium      |
-| High          | ☑️         | ☑️                  | ☑️              | minimum     |
+| Low           | ☐          | ☐                   | ☐               | High        |
+| Medium        | ☑️         | ☑️                  | ☐               | Medium      |
+| High          | ☑️         | ☑️                  | ☑️              | Low         |
 
 Bulletproof auditing = if your HSM is on a dedicated server with almost nothing but the
 HSM and the auditing running, it'd be pretty hard for an attacker to bypass the auditing.

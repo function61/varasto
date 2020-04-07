@@ -19,4 +19,4 @@ Instructions are found from our company-wide policy.
 Company-wide policy
 -------------------
 
-More details available via our company-wide policy at https://function61.com/security/
+More details available via our company-wide policy at [function61.com/security](https://function61.com/security/)
