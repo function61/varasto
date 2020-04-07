@@ -119,7 +119,7 @@ func serverCertHealth(
 	}
 }
 
-func healthForFailedMounts(failedMountNames []string) stohealth.HealthChecker {
+func healthNoFailedMounts(failedMountNames []string) stohealth.HealthChecker {
 	checkName := "Mounts online"
 
 	if len(failedMountNames) > 0 {

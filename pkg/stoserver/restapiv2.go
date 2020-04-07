@@ -1508,7 +1508,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 
 	return stohealth.NewHealthFolder(
 		"Varasto",
-		healthForFailedMounts(conf.FailedMountNames),
+		healthNoFailedMounts(conf.FailedMountNames),
 		serverCertHealth(
 			conf.TlsCertificate.cert.NotAfter,
 			"TLS certificate",
