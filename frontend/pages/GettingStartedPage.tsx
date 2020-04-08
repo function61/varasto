@@ -298,7 +298,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={volumesAndMountsUrl({ view: '' })} target="_blank">
+					<a href={volumesAndMountsUrl()} target="_blank">
 						this page
 					</a>{' '}
 					to see your first volume. If you want to create additional volumes, use{' '}
@@ -336,7 +336,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={volumesAndMountsUrl({ view: '' })} target="_blank">
+					<a href={volumesAndMountsUrl()} target="_blank">
 						Volumes &amp; mounts
 					</a>
 					. From there choose:

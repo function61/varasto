@@ -41,7 +41,27 @@
 	},
 	{
 		"id": "volumesAndMounts",
-		"path": "/admin/volumesmounts?view={view}"
+		"path": "/admin/volumes/mounts"
+	},
+	{
+		"id": "volumesTopologyZones",
+		"path": "/admin/volumes/topology_zones"
+	},
+	{
+		"id": "volumesService",
+		"path": "/admin/volumes/service"
+	},
+	{
+		"id": "volumesSmart",
+		"path": "/admin/volumes/smart"
+	},
+	{
+		"id": "volumesIntegrity",
+		"path": "/admin/volumes/integrity"
+	},
+	{
+		"id": "volumesReplication",
+		"path": "/admin/volumes/replication"
 	},
 	{
 		"id": "replicationPolicies",

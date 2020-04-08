@@ -67,10 +67,23 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
-import { volumesAndMountsUrl } from 'generated/stoserver/stoserverui_uiroutes';
+import {
+	volumesAndMountsUrl,
+	volumesTopologyZonesUrl,
+	volumesServiceUrl,
+	volumesSmartUrl,
+	volumesIntegrityUrl,
+	volumesReplicationUrl,
+} from 'generated/stoserver/stoserverui_uiroutes';
 
 interface VolumesAndMountsPageProps {
-	view: string;
+	view:
+		| 'volumesAndMounts'
+		| 'topology'
+		| 'service'
+		| 'smart'
+		| 'integrity'
+		| 'replicationStatuses';
 }
 
 interface VolumesAndMountsPageState {
@@ -183,7 +196,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							{this.renderSmartView()}
 						</Panel>
 					);
-				case '':
+				case 'volumesAndMounts':
 					return (
 						<div>
 							<Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>
@@ -192,7 +205,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						</div>
 					);
 				default:
-					throw new Error('unknown view');
+					throw unrecognizedValue(this.props.view);
 			}
 		})();
 
@@ -201,39 +214,27 @@ export default class VolumesAndMountsPage extends React.Component<
 				<TabController
 					tabs={[
 						{
-							url: volumesAndMountsUrl({
-								view: '',
-							}),
+							url: volumesAndMountsUrl(),
 							title: 'Volumes & mounts',
 						},
 						{
-							url: volumesAndMountsUrl({
-								view: 'topology',
-							}),
+							url: volumesTopologyZonesUrl(),
 							title: 'Topology & zones',
 						},
 						{
-							url: volumesAndMountsUrl({
-								view: 'service',
-							}),
+							url: volumesServiceUrl(),
 							title: 'Service',
 						},
 						{
-							url: volumesAndMountsUrl({
-								view: 'smart',
-							}),
+							url: volumesSmartUrl(),
 							title: 'SMART',
 						},
 						{
-							url: volumesAndMountsUrl({
-								view: 'integrity',
-							}),
+							url: volumesIntegrityUrl(),
 							title: 'Integrity',
 						},
 						{
-							url: volumesAndMountsUrl({
-								view: 'replicationStatuses',
-							}),
+							url: volumesReplicationUrl(),
 							title: 'Replication',
 						},
 					]}>
