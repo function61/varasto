@@ -3,6 +3,7 @@ package stoserver
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
@@ -15,6 +16,7 @@ import (
 )
 
 type ReconciliationCompletionReport struct {
+	Timestamp                         time.Time // of report start (because that's what the tx sees)
 	TotalCollections                  int
 	CollectionsWithNonCompliantPolicy []collectionToReconcile
 }
@@ -36,6 +38,7 @@ var latestReconciliationReport *ReconciliationCompletionReport
 
 func NewReconciliationCompletionReport() *ReconciliationCompletionReport {
 	return &ReconciliationCompletionReport{
+		Timestamp:                         time.Now(),
 		CollectionsWithNonCompliantPolicy: []collectionToReconcile{},
 	}
 }

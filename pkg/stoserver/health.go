@@ -134,3 +134,45 @@ func healthNoFailedMounts(failedMountNames []string) stohealth.HealthChecker {
 		stoservertypes.HealthStatusPass,
 		"")
 }
+
+// - not scanned since Varasto restarted => warn
+// - conflicts with policy => fail
+// - scan older than 48 hours => warn
+func halthNoReconciliationConflicts() stohealth.HealthChecker {
+	heading := "Replication policy scan"
+
+	if latestReconciliationReport == nil {
+		return stohealth.NewStaticHealthNode(
+			heading,
+			stoservertypes.HealthStatusWarn,
+			"Not ran since Varasto last started")
+	}
+
+	if len(latestReconciliationReport.CollectionsWithNonCompliantPolicy) > 0 {
+		return stohealth.NewStaticHealthNode(
+			heading,
+			stoservertypes.HealthStatusFail,
+			fmt.Sprintf(
+				"%d collection(s) conflict with its replication policy",
+				len(latestReconciliationReport.CollectionsWithNonCompliantPolicy)))
+	}
+
+	since := time.Since(latestReconciliationReport.Timestamp)
+	sinceHumanized := duration.Humanize(since)
+	scanTooOldThreshold := 48 * time.Hour
+
+	if since > scanTooOldThreshold {
+		return stohealth.NewStaticHealthNode(
+			heading,
+			stoservertypes.HealthStatusWarn,
+			fmt.Sprintf(
+				"OK %s ago (scan older than %s)",
+				sinceHumanized,
+				duration.Humanize(scanTooOldThreshold)))
+	}
+
+	return stohealth.NewStaticHealthNode(
+		heading,
+		stoservertypes.HealthStatusPass,
+		fmt.Sprintf("OK %s ago", sinceHumanized))
+}

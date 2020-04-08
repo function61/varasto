@@ -1514,6 +1514,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 			"TLS certificate",
 			time.Now()),
 		quotaHealth(volumesOverQuota, "Quotas"),
+		halthNoReconciliationConflicts(),
 		stohealth.NewLastIntegrityVerificationJob(db),
 		stohealth.NewHealthFolder(
 			"Temperatures",
