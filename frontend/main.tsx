@@ -16,6 +16,7 @@ import NodesPage from 'pages/NodesPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
 import ScheduledJobsPage from 'pages/ScheduledJobsPage';
 import ServerInfoPage from 'pages/ServerInfoPage';
+import SubsystemsPage from 'pages/SubsystemsPage';
 import UsersPage from 'pages/UsersPage';
 import VolumesAndMountsPage from 'pages/VolumesAndMountsPage';
 import * as React from 'react';
@@ -64,6 +65,10 @@ class Handlers implements r.RouteHandlers {
 
 	serverInfo() {
 		return <ServerInfoPage />;
+	}
+
+	subsystems() {
+		return <SubsystemsPage />;
 	}
 
 	volumesAndMounts(opts: r.VolumesAndMountsOpts) {
