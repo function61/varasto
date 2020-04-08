@@ -61,7 +61,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 				{this.state.baseUrl.draw((baseUrl) => (
 					<div className="form-group">
 						<label className="col-sm-2 control-label">
-							FUSE server base URL
+							FUSE server base URL &nbsp;
 							<CommandIcon command={ConfigSetFuseServerBaseurl(baseUrl.Value)} />
 						</label>
 						<div className="col-sm-10">
@@ -75,7 +75,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 				{this.state.networkShareBaseUrl.draw((networkShareBaseUrl) => (
 					<div className="form-group">
 						<label className="col-sm-2 control-label">
-							Network share base URL
+							Network share base URL &nbsp;
 							<CommandIcon
 								command={ConfigSetNetworkShareBaseUrl(networkShareBaseUrl.Value)}
 							/>
