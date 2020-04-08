@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
 )
@@ -86,11 +87,12 @@ func from2to3(tx *bbolt.Tx) error {
 		return err
 	}
 
-	if err := DirectoryRepository.Each(func(record interface{}) error {
-		dir := record.(*stotypes.Directory)
-		dir.ReplicationPolicy = "default"
-		return DirectoryRepository.Update(dir, tx)
-	}, tx); err != nil {
+	dir, err := Read(tx).Directory(stoservertypes.RootFolderId)
+	if err != nil {
+		return err
+	}
+	dir.ReplicationPolicy = "default"
+	if err := DirectoryRepository.Update(dir, tx); err != nil {
 		return err
 	}
 
