@@ -36,6 +36,10 @@
 		"path": "/admin/server_info"
 	},
 	{
+		"id": "subsystems",
+		"path": "/admin/subsystems"
+	},
+	{
 		"id": "volumesAndMounts",
 		"path": "/admin/volumesmounts?view={view}"
 	},
