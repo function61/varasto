@@ -27,8 +27,8 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 
 		const settingsLinks: NavLink[] = [
 			mkLink('Server info & health', 'dashboard', r.serverInfoUrl()),
-			mkLink('Subsystems', 'tasks', r.subsystemsUrl()),
 			mkLink('Volumes & mounts', 'hdd', r.volumesAndMountsUrl({ view: '' })),
+			mkLink('Subsystems', 'tasks', r.subsystemsUrl()),
 			mkLink('Scheduled jobs', 'time', r.scheduledJobsUrl()),
 			mkLink('Metadata backup', 'cloud-upload', r.metadataBackupUrl({ view: '' })),
 			mkLink('Users', 'user', r.usersUrl()),
