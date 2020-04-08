@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/function61/varasto/pkg/duration"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -43,27 +44,31 @@ func (h *lastIvJob) CheckHealth() (*stoservertypes.Health, error) {
 
 	since := time.Since(newest)
 
-	title := "File integrity verification"
+	status := func() stoservertypes.HealthStatus {
+		day := 24 * time.Hour // naive
 
-	sinceHumanReadable := fmt.Sprintf("%d day(s) since last check", int(since.Hours()/24))
+		switch {
+		case since > 30*day:
+			return stoservertypes.HealthStatusFail
+		case since > 14*day:
+			return stoservertypes.HealthStatusWarn
+		default:
+			return stoservertypes.HealthStatusPass
+		}
+	}()
 
-	if newest.IsZero() {
-		sinceHumanReadable = "Never checked"
-	}
-
-	if since > naiveDays(30) {
-		return mkHealth(title, stoservertypes.HealthStatusFail, sinceHumanReadable)
-	}
-
-	if since > naiveDays(14) {
-		return mkHealth(title, stoservertypes.HealthStatusWarn, sinceHumanReadable)
-	}
-
-	return mkHealth(title, stoservertypes.HealthStatusPass, sinceHumanReadable)
+	return mkHealth("File integrity verification", status, sinceHumanReadable(since))
 }
 
-func naiveDays(amount time.Duration) time.Duration {
-	return amount * 24 * time.Hour
+func sinceHumanReadable(since time.Duration) string {
+	year := float64(24 * 365) // [h], naive
+
+	// reference was zero
+	if since.Hours() > 100*year {
+		return "Never checked"
+	}
+
+	return fmt.Sprintf("%s since last check", duration.Humanize(since))
 }
 
 func ignoreError(err error) {
