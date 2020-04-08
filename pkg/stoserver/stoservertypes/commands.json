@@ -590,16 +590,6 @@
 		"fields": []
 	},
 	{
-		"command": "database.Migrate",
-		"chain": "public",
-		"ctor": [],
-		"crudNature": "update",
-		"title": "Migrate database",
-		"fields": [
-			{ "key": "Phase", "type": "integer" }
-		]
-	},
-	{
 		"command": "database.BackupConfigure",
 		"chain": "public",
 		"ctor": ["Bucket", "BucketRegion", "AccessKeyId", "AccessKeySecret", "EncryptionPublicKey", "AlertmanagerBaseUrl"],

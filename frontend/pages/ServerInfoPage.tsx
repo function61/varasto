@@ -18,11 +18,7 @@ import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
-import {
-	DatabaseMigrate,
-	SubsystemStart,
-	SubsystemStop,
-} from 'generated/stoserver/stoservertypes_commands';
+import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';
 import {
 	getHealth,
 	getServerInfo,
@@ -69,17 +65,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 	render() {
 		return (
 			<SettingsLayout title="Server info &amp; health" breadcrumbs={[]}>
-				<Panel
-					heading={
-						<div>
-							Server info &nbsp;
-							<Dropdown>
-								<CommandLink command={DatabaseMigrate()} />
-							</Dropdown>
-						</div>
-					}>
-					{this.renderInfo()}
-				</Panel>
+				<Panel heading="Server info">{this.renderInfo()}</Panel>
 				<Panel heading="Subsystems">{this.renderSubsystems()}</Panel>
 				<Panel heading="Health">{this.renderHealth()}</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
