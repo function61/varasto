@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -44,7 +45,7 @@ var (
 )
 
 // returns blorm.ErrBucketNotFound if bootstrap required
-func ValidateSchemaVersion(tx *bbolt.Tx) error {
+func ValidateSchemaVersion(tx *bbolt.Tx, logger *log.Logger) error {
 	metaBucket := tx.Bucket(metaBucketKey)
 	if metaBucket == nil {
 		return blorm.ErrBucketNotFound
@@ -64,7 +65,10 @@ func ValidateSchemaVersion(tx *bbolt.Tx) error {
 			CurrentSchemaVersion)
 	}
 
-	log.Printf("migrating from %d -> %d", schemaVersionInDb, CurrentSchemaVersion)
+	logex.Levels(logger).Info.Printf(
+		"migrating from %d -> %d",
+		schemaVersionInDb,
+		CurrentSchemaVersion)
 
 	if err := from2to3(tx); err != nil {
 		return err
