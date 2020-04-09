@@ -123,7 +123,7 @@ func healthNoFailedMounts(failedMountNames []string) stohealth.HealthChecker {
 // - not scanned since Varasto restarted => warn
 // - conflicts with policy => fail
 // - scan older than 48 hours => warn
-func halthNoReconciliationConflicts() stohealth.HealthChecker {
+func healthNoReconciliationConflicts() stohealth.HealthChecker {
 	policyHealth := staticHealthBuilder(
 		"Replication policy scan",
 		stoservertypes.HealthKindReplicationPolicies.Ptr())
