@@ -78,13 +78,16 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 
 	systemAuthToken := stoutils.NewApiKeySecret()
 
+	rootDir := stotypes.NewDirectory(
+		"root",
+		"",
+		"root",
+		string(stoservertypes.DirectoryTypeGeneric))
+	rootDir.ReplicationPolicy = "default"
+
 	results := []error{
 		NodeRepository.Update(newNode, tx),
-		DirectoryRepository.Update(stotypes.NewDirectory(
-			"root",
-			"",
-			"root",
-			string(stoservertypes.DirectoryTypeGeneric)), tx),
+		DirectoryRepository.Update(rootDir, tx),
 		VolumeRepository.Update(&stotypes.Volume{
 			ID:         1,
 			UUID:       stoutils.NewVolumeUuid(),
