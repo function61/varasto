@@ -126,6 +126,7 @@
 				"VolumeReplication",
 				"ReplicationPolicies",
 				"ScheduledJobs",
+				"Subsystems",
 				"VolumeIntegrity"
 			]
 		},

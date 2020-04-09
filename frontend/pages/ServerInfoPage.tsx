@@ -11,6 +11,7 @@ import {
 	volumesSmartUrl,
 	volumesReplicationUrl,
 	replicationPoliciesUrl,
+	subsystemsUrl,
 	volumesIntegrityUrl,
 	scheduledJobsUrl,
 	volumesAndMountsUrl,
@@ -248,6 +249,8 @@ function healthKindToLink(kind: HealthKind): string {
 			return scheduledJobsUrl();
 		case HealthKind.VolumeIntegrity:
 			return volumesIntegrityUrl();
+		case HealthKind.Subsystems:
+			return subsystemsUrl();
 		default:
 			throw unrecognizedValue(kind);
 	}

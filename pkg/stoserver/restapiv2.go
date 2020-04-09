@@ -1528,6 +1528,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 			"SMART diagnostics",
 			stoservertypes.HealthKindSmart.Ptr(),
 			smarts...),
+		healthSubsystems(conf.ThumbServer, conf.FuseProjector),
 		healthForScheduledJobs(tx),
 		stohealth.NewHealthFolder(
 			"Replication queue",

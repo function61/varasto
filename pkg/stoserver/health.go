@@ -152,6 +152,41 @@ func healthNoReconciliationConflicts() stohealth.HealthChecker {
 	return policyHealth.Pass(fmt.Sprintf("OK %s ago", sinceHumanized))
 }
 
+func healthSubsystems(subsystems ...*subsystem) stohealth.HealthChecker {
+	subsysHealths := []stohealth.HealthChecker{}
+
+	stabilityJudgingPeriod := 15 * time.Second
+
+	for _, subsys := range subsystems {
+		if !subsys.enabled { // skip those we don't even want running
+			continue
+		}
+
+		status := subsys.controller.Status()
+
+		subsysHealths = append(subsysHealths, func() stohealth.HealthChecker {
+			subsysHealth := staticHealthBuilder(status.Description, nil)
+
+			if !status.Alive {
+				return subsysHealth.Fail("Dead")
+			}
+
+			if time.Since(status.Started) < stabilityJudgingPeriod {
+				return subsysHealth.Warn(fmt.Sprintf(
+					"Started within %s - waiting to judge stability",
+					stabilityJudgingPeriod))
+			}
+
+			return subsysHealth.Pass("Running stable")
+		}())
+	}
+
+	return stohealth.NewHealthFolder(
+		"Subsystems",
+		stoservertypes.HealthKindSubsystems.Ptr(),
+		subsysHealths...)
+}
+
 type staticHealthFactory struct {
 	name string
 	kind *stoservertypes.HealthKind
