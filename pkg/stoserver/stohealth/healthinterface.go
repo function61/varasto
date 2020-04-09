@@ -12,21 +12,24 @@ type HealthChecker interface {
 type healthFolder struct {
 	title    string
 	children []HealthChecker
+	kind     *stoservertypes.HealthKind
 }
 
-func NewHealthFolder(title string, children ...HealthChecker) HealthChecker {
-	return &healthFolder{title, children}
+func NewHealthFolder(title string, kind *stoservertypes.HealthKind, children ...HealthChecker) HealthChecker {
+	return &healthFolder{title, children, kind}
 }
 
 func (h *healthFolder) CheckHealth() (*stoservertypes.Health, error) {
-	return mkHealthWithChildren(h.title, stoservertypes.HealthStatusPass, "", h.children)
+	return mkHealthWithChildren(h.title, stoservertypes.HealthStatusPass, "", h.children, h.kind)
 }
 
-func mkHealth(title string, health stoservertypes.HealthStatus, details string) (*stoservertypes.Health, error) {
-	return mkHealthWithChildren(title, health, details, []HealthChecker{})
-}
-
-func mkHealthWithChildren(title string, health stoservertypes.HealthStatus, details string, children []HealthChecker) (*stoservertypes.Health, error) {
+func mkHealthWithChildren(
+	title string,
+	health stoservertypes.HealthStatus,
+	details string,
+	children []HealthChecker,
+	kind *stoservertypes.HealthKind,
+) (*stoservertypes.Health, error) {
 	childDtos := []stoservertypes.Health{}
 
 	for _, child := range children {
@@ -43,6 +46,7 @@ func mkHealthWithChildren(title string, health stoservertypes.HealthStatus, deta
 		Health:   worstOf(childDtos, health),
 		Details:  details,
 		Children: childDtos,
+		Kind:     kind,
 	}, nil
 }
 

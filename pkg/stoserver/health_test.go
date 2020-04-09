@@ -137,8 +137,8 @@ func TestServerCertHealth(t *testing.T) {
 		assert.EqualString(t, string(actual.Health), string(expected))
 	}
 
-	check(serverCertHealth(t0, "", nowBeforeT0(35*day)), stoservertypes.HealthStatusPass)
-	check(serverCertHealth(t0, "", nowBeforeT0(20*day)), stoservertypes.HealthStatusWarn)
-	check(serverCertHealth(t0, "", nowBeforeT0(5*day)), stoservertypes.HealthStatusFail)
-	check(serverCertHealth(t0, "", nowBeforeT0(-5*day)), stoservertypes.HealthStatusFail)
+	check(serverCertHealth(t0, nowBeforeT0(35*day)), stoservertypes.HealthStatusPass)
+	check(serverCertHealth(t0, nowBeforeT0(20*day)), stoservertypes.HealthStatusWarn)
+	check(serverCertHealth(t0, nowBeforeT0(5*day)), stoservertypes.HealthStatusFail)
+	check(serverCertHealth(t0, nowBeforeT0(-5*day)), stoservertypes.HealthStatusFail)
 }

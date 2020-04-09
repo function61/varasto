@@ -1466,12 +1466,14 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 				replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
 					vol.Label,
 					stoservertypes.HealthStatusWarn,
-					fmt.Sprintf("Progress at %d %%", replicationProgress)))
+					fmt.Sprintf("Progress at %d %%", replicationProgress),
+					nil))
 			} else {
 				replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
 					vol.Label,
 					stoservertypes.HealthStatusPass,
-					"Realtime"))
+					"Realtime",
+					nil))
 			}
 		}
 
@@ -1488,7 +1490,8 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 			temps = append(temps, stohealth.NewStaticHealthNode(
 				vol.Label,
 				temperatureToHealthStatus(*report.Temperature),
-				fmt.Sprintf("%d °C", *report.Temperature)))
+				fmt.Sprintf("%d °C", *report.Temperature),
+				nil))
 		}
 
 		smartStatus := stoservertypes.HealthStatusPass
@@ -1499,7 +1502,8 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 		smarts = append(smarts, stohealth.NewStaticHealthNode(
 			vol.Label,
 			smartStatus,
-			fmt.Sprintf("Checked %s ago", duration.Humanize(now.Sub(report.Time)))))
+			fmt.Sprintf("Checked %s ago", duration.Humanize(now.Sub(report.Time))),
+			nil))
 
 		return nil
 	}, tx); err != nil {
@@ -1508,22 +1512,25 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 
 	return stohealth.NewHealthFolder(
 		"Varasto",
+		nil,
 		healthNoFailedMounts(conf.FailedMountNames),
 		serverCertHealth(
 			conf.TlsCertificate.cert.NotAfter,
-			"TLS certificate",
 			time.Now()),
-		quotaHealth(volumesOverQuota, "Quotas"),
+		quotaHealth(volumesOverQuota),
 		halthNoReconciliationConflicts(),
 		stohealth.NewLastIntegrityVerificationJob(db),
 		stohealth.NewHealthFolder(
 			"Temperatures",
+			stoservertypes.HealthKindSmart.Ptr(),
 			temps...),
 		stohealth.NewHealthFolder(
 			"SMART diagnostics",
+			stoservertypes.HealthKindSmart.Ptr(),
 			smarts...),
 		healthForScheduledJobs(tx),
 		stohealth.NewHealthFolder(
 			"Replication queue",
+			stoservertypes.HealthKindVolumeReplication.Ptr(),
 			replicationQueues...)), nil
 }

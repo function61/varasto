@@ -57,7 +57,12 @@ func (h *lastIvJob) CheckHealth() (*stoservertypes.Health, error) {
 		}
 	}()
 
-	return mkHealth("File integrity verification", status, sinceHumanReadable(since))
+	return NewStaticHealthNode(
+		"File integrity verification",
+		status,
+		sinceHumanReadable(since),
+		stoservertypes.HealthKindVolumeIntegrity.Ptr(),
+	).CheckHealth()
 }
 
 func sinceHumanReadable(since time.Duration) string {

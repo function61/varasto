@@ -24,31 +24,23 @@ func healthForScheduledJobs(tx *bbolt.Tx) stohealth.HealthChecker {
 	now := time.Now()
 
 	jobToHealth := func(job stotypes.ScheduledJob) stohealth.HealthChecker {
+		jobHealth := staticHealthBuilder(job.Description, nil)
+
 		if !job.Enabled {
-			return stohealth.NewStaticHealthNode(
-				job.Description,
-				stoservertypes.HealthStatusWarn,
-				"Job is disabled")
+			return jobHealth.Warn("Job is disabled")
 		}
 
 		if job.LastRun == nil {
-			return stohealth.NewStaticHealthNode(
-				job.Description,
-				stoservertypes.HealthStatusWarn,
-				"Never run but enabled - wait for first execution")
+			return jobHealth.Warn("Never run but enabled - wait for first execution")
 		}
 
 		if job.LastRun.Error != "" {
-			return stohealth.NewStaticHealthNode(
-				job.Description,
-				stoservertypes.HealthStatusFail,
-				"Last run failed - see scheduler for details")
+			return jobHealth.Fail("Last run failed - see scheduler for details")
 		}
 
-		return stohealth.NewStaticHealthNode(
-			job.Description,
-			stoservertypes.HealthStatusPass,
-			fmt.Sprintf("OK %s ago", duration.Humanize(now.Sub(job.LastRun.Started))))
+		return jobHealth.Pass(fmt.Sprintf(
+			"OK %s ago",
+			duration.Humanize(now.Sub(job.LastRun.Started))))
 	}
 
 	for _, job := range jobs {
@@ -57,6 +49,7 @@ func healthForScheduledJobs(tx *bbolt.Tx) stohealth.HealthChecker {
 
 	return stohealth.NewHealthFolder(
 		"Scheduled jobs",
+		stoservertypes.HealthKindScheduledJobs.Ptr(),
 		jobsHealth...)
 }
 
@@ -79,82 +72,70 @@ func temperatureToHealthStatus(tempC int) stoservertypes.HealthStatus {
 	}
 }
 
-func quotaHealth(volumesOverQuota []string, healthName string) stohealth.HealthChecker {
+func quotaHealth(volumesOverQuota []string) stohealth.HealthChecker {
+	quotasHealth := staticHealthBuilder("Quotas", stoservertypes.HealthKindVolumeMounts.Ptr())
+
 	if len(volumesOverQuota) == 0 {
-		return stohealth.NewStaticHealthNode(healthName, stoservertypes.HealthStatusPass, "")
+		return quotasHealth.Pass("")
 	}
 
-	return stohealth.NewStaticHealthNode(
-		healthName,
-		stoservertypes.HealthStatusFail,
-		"Volumes over quota: "+strings.Join(volumesOverQuota, ", "))
+	return quotasHealth.Fail("Volumes over quota: " + strings.Join(volumesOverQuota, ", "))
 }
 
 func serverCertHealth(
 	notAfter time.Time,
-	healthName string,
 	now time.Time,
 ) stohealth.HealthChecker {
 	timeLeft := notAfter.Sub(now)
-	timeLeftHuman := fmt.Sprintf("Valid for %s", duration.Humanize(timeLeft))
 
 	day := 24 * time.Hour // naive day
 
-	switch {
-	case timeLeft < 7*day:
-		return stohealth.NewStaticHealthNode(
-			healthName,
-			stoservertypes.HealthStatusFail,
-			timeLeftHuman)
-	case timeLeft < 30*day:
-		return stohealth.NewStaticHealthNode(
-			healthName,
-			stoservertypes.HealthStatusWarn,
-			timeLeftHuman)
-	default:
-		return stohealth.NewStaticHealthNode(
-			healthName,
-			stoservertypes.HealthStatusPass,
-			timeLeftHuman)
-	}
+	status := func() stoservertypes.HealthStatus {
+		switch {
+		case timeLeft < 7*day:
+			return stoservertypes.HealthStatusFail
+		case timeLeft < 30*day:
+			return stoservertypes.HealthStatusWarn
+		default:
+			return stoservertypes.HealthStatusPass
+		}
+	}()
+
+	return stohealth.NewStaticHealthNode(
+		"TLS certificate",
+		status,
+		fmt.Sprintf("Valid for %s", duration.Humanize(timeLeft)),
+		stoservertypes.HealthKindTlsCertificate.Ptr())
 }
 
 func healthNoFailedMounts(failedMountNames []string) stohealth.HealthChecker {
-	checkName := "Mounts online"
+	mountsHealth := staticHealthBuilder("Mounts online", stoservertypes.HealthKindVolumeMounts.Ptr())
 
 	if len(failedMountNames) > 0 {
-		return stohealth.NewStaticHealthNode(
-			checkName,
-			stoservertypes.HealthStatusFail,
-			fmt.Sprintf("Volumes errored: %s", strings.Join(failedMountNames, ", ")))
+		return mountsHealth.Fail(fmt.Sprintf(
+			"Volumes errored: %s",
+			strings.Join(failedMountNames, ", ")))
 	}
 
-	return stohealth.NewStaticHealthNode(
-		checkName,
-		stoservertypes.HealthStatusPass,
-		"")
+	return mountsHealth.Pass("")
 }
 
 // - not scanned since Varasto restarted => warn
 // - conflicts with policy => fail
 // - scan older than 48 hours => warn
 func halthNoReconciliationConflicts() stohealth.HealthChecker {
-	heading := "Replication policy scan"
+	policyHealth := staticHealthBuilder(
+		"Replication policy scan",
+		stoservertypes.HealthKindReplicationPolicies.Ptr())
 
 	if latestReconciliationReport == nil {
-		return stohealth.NewStaticHealthNode(
-			heading,
-			stoservertypes.HealthStatusWarn,
-			"Not ran since Varasto last started")
+		return policyHealth.Warn("Not ran since Varasto last started")
 	}
 
 	if len(latestReconciliationReport.CollectionsWithNonCompliantPolicy) > 0 {
-		return stohealth.NewStaticHealthNode(
-			heading,
-			stoservertypes.HealthStatusFail,
-			fmt.Sprintf(
-				"%d collection(s) conflict with its replication policy",
-				len(latestReconciliationReport.CollectionsWithNonCompliantPolicy)))
+		return policyHealth.Fail(fmt.Sprintf(
+			"%d collection(s) conflict with its replication policy",
+			len(latestReconciliationReport.CollectionsWithNonCompliantPolicy)))
 	}
 
 	since := time.Since(latestReconciliationReport.Timestamp)
@@ -162,17 +143,32 @@ func halthNoReconciliationConflicts() stohealth.HealthChecker {
 	scanTooOldThreshold := 48 * time.Hour
 
 	if since > scanTooOldThreshold {
-		return stohealth.NewStaticHealthNode(
-			heading,
-			stoservertypes.HealthStatusWarn,
-			fmt.Sprintf(
-				"OK %s ago (scan older than %s)",
-				sinceHumanized,
-				duration.Humanize(scanTooOldThreshold)))
+		return policyHealth.Warn(fmt.Sprintf(
+			"OK %s ago (scan older than %s)",
+			sinceHumanized,
+			duration.Humanize(scanTooOldThreshold)))
 	}
 
-	return stohealth.NewStaticHealthNode(
-		heading,
-		stoservertypes.HealthStatusPass,
-		fmt.Sprintf("OK %s ago", sinceHumanized))
+	return policyHealth.Pass(fmt.Sprintf("OK %s ago", sinceHumanized))
+}
+
+type staticHealthFactory struct {
+	name string
+	kind *stoservertypes.HealthKind
+}
+
+func staticHealthBuilder(name string, kind *stoservertypes.HealthKind) *staticHealthFactory {
+	return &staticHealthFactory{name, kind}
+}
+
+func (s *staticHealthFactory) Pass(details string) stohealth.HealthChecker {
+	return stohealth.NewStaticHealthNode(s.name, stoservertypes.HealthStatusPass, details, s.kind)
+}
+
+func (s *staticHealthFactory) Warn(details string) stohealth.HealthChecker {
+	return stohealth.NewStaticHealthNode(s.name, stoservertypes.HealthStatusWarn, details, s.kind)
+}
+
+func (s *staticHealthFactory) Fail(details string) stohealth.HealthChecker {
+	return stohealth.NewStaticHealthNode(s.name, stoservertypes.HealthStatusFail, details, s.kind)
 }

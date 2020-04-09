@@ -1,10 +1,20 @@
 import { Result } from 'f61ui/component/result';
+import { Info } from 'f61ui/component/info';
 import {
 	changeSensitivity,
 	getMaxSensitivityFromLocalStorage,
 	Sensitivity,
 	sensitivityLabel,
 } from 'component/sensitivity';
+import {
+	nodesUrl,
+	volumesSmartUrl,
+	volumesReplicationUrl,
+	replicationPoliciesUrl,
+	volumesIntegrityUrl,
+	scheduledJobsUrl,
+	volumesAndMountsUrl,
+} from 'generated/stoserver/stoserverui_uiroutes';
 import {
 	DangerLabel,
 	Glyphicon,
@@ -17,7 +27,12 @@ import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
 import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
-import { Health, HealthStatus, ServerInfo } from 'generated/stoserver/stoservertypes_types';
+import {
+	Health,
+	HealthKind,
+	HealthStatus,
+	ServerInfo,
+} from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
@@ -48,9 +63,17 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 	render() {
 		return (
-			<SettingsLayout title="Server info &amp; health" breadcrumbs={[]}>
+			<SettingsLayout title="Health &amp; server info" breadcrumbs={[]}>
+				<Panel
+					heading={
+						<div>
+							Health &nbsp;
+							<Info text="Worst health status propagates from the depth of the hierarchy to the top level. I.e. if 'Varasto' is green, all is perfect!" />
+						</div>
+					}>
+					{this.renderHealth()}
+				</Panel>
 				<Panel heading="Server info">{this.renderInfo()}</Panel>
-				<Panel heading="Health">{this.renderHealth()}</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
 			</SettingsLayout>
 		);
@@ -109,7 +132,13 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 			rows.push(
 				<tr>
 					<td>{healthStatusToIcon(node.Health)}</td>
-					<td style={{ paddingLeft: indentLevel * 32 + 'px' }}>{node.Title}</td>
+					<td style={{ paddingLeft: indentLevel * 32 + 'px' }}>
+						{node.Kind ? (
+							<a href={healthKindToLink(node.Kind)}>{node.Title}</a>
+						) : (
+							node.Title
+						)}
+					</td>
 					<td>{node.Details}</td>
 				</tr>,
 			);
@@ -200,5 +229,26 @@ function healthStatusToIcon(health: HealthStatus): JSX.Element {
 			);
 		default:
 			throw unrecognizedValue(health);
+	}
+}
+
+function healthKindToLink(kind: HealthKind): string {
+	switch (kind) {
+		case HealthKind.VolumeReplication:
+			return volumesReplicationUrl();
+		case HealthKind.Smart:
+			return volumesSmartUrl();
+		case HealthKind.VolumeMounts:
+			return volumesAndMountsUrl();
+		case HealthKind.TlsCertificate:
+			return nodesUrl();
+		case HealthKind.ReplicationPolicies:
+			return replicationPoliciesUrl();
+		case HealthKind.ScheduledJobs:
+			return scheduledJobsUrl();
+		case HealthKind.VolumeIntegrity:
+			return volumesIntegrityUrl();
+		default:
+			throw unrecognizedValue(kind);
 	}
 }

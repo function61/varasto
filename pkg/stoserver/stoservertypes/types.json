@@ -117,6 +117,19 @@
 			]
 		},
 		{
+			"name": "HealthKind",
+			"type": "string",
+			"stringMembers": [
+				"TlsCertificate",
+				"VolumeMounts",
+				"Smart",
+				"VolumeReplication",
+				"ReplicationPolicies",
+				"ScheduledJobs",
+				"VolumeIntegrity"
+			]
+		},
+		{
 			"name": "DocRef",
 			"type": "string",
 			"stringMembers": [
@@ -398,6 +411,7 @@
 				"Title": {"_": "string"},
 				"Health": {"_": "HealthStatus"},
 				"Details": {"_": "string"},
+				"Kind": {"_": "HealthKind", "nullable": true},
 				"Children": {"_": "list", "of": {"_": "Health"}}
 			}}
 		},
