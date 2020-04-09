@@ -1,4 +1,5 @@
 import { Result } from 'f61ui/component/result';
+import { DocLink } from 'component/doclink';
 import {
 	DangerLabel,
 	Panel,
@@ -7,11 +8,12 @@ import {
 	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
+import { fuseServerUrl } from 'generated/stoserver/stoserverui_uiroutes';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';
 import { getSubsystemStatuses } from 'generated/stoserver/stoservertypes_endpoints';
-import { SubsystemStatus } from 'generated/stoserver/stoservertypes_types';
+import { SubsystemStatus, DocRef } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
@@ -38,6 +40,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		return (
 			<SettingsLayout title="Subsystems" breadcrumbs={[]}>
 				<Panel heading="Subsystems">{this.renderSubsystems()}</Panel>
+				<Panel heading="Info">{this.info()}</Panel>
 			</SettingsLayout>
 		);
 	}
@@ -93,6 +96,43 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 	private fetchData() {
 		this.state.subsystemStatuses.load(() => getSubsystemStatuses());
+	}
+
+	private info() {
+		return (
+			<div>
+				<p>
+					Subsystems are semi-autonomous components of Varasto, that by default run as
+					child processes of Varasto's main server - but in advanced use cases can be ran
+					independently over HTTP on a different machine (or container) if desired.
+				</p>
+				<p>
+					We expect that most users won't care about customizing this and just use the
+					default child-process configuration.
+				</p>
+				<p>Example use cases include:</p>
+				<ul>
+					<li>
+						Shed load from one server and move thumbnailing/transcoding subsystems into
+						different servers - you can even use multiple instances behind
+						loadbalancers!
+					</li>
+					<li>
+						Normally you need to give Varasto's container privileged access so it can
+						query SMART data for your disks. You could run the SMART subsystem in a
+						different container and now you don't need to give Varasto main server's
+						container those raw disk access privileges - which reduces overall attack
+						surface.
+					</li>
+					<li>
+						<a href={fuseServerUrl()}>Network folders</a> requires FUSE projector which
+						is Linux-only. If you wish to run Varasto server on Windows, you can run
+						FUSE projector on a separate Linux server.{' '}
+						<DocLink doc={DocRef.DocsGuideNetworkFoldersMd} />
+					</li>
+				</ul>
+			</div>
+		);
 	}
 }
 
