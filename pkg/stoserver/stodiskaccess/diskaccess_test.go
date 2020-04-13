@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"crypto/sha256"
 	"encoding/hex"
 	"io"
 	"io/ioutil"
@@ -14,6 +13,7 @@ import (
 
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/minio/sha256-simd"
 )
 
 var (

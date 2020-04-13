@@ -4,13 +4,13 @@ import (
 	"crypto"
 	"crypto/rand"
 	"crypto/rsa"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/minio/sha256-simd"
 	"go.etcd.io/bbolt"
 	"golang.org/x/crypto/ssh"
 )

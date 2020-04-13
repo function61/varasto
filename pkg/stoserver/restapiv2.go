@@ -2,7 +2,6 @@ package stoserver
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -39,6 +38,7 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
+	"github.com/minio/sha256-simd"
 	"go.etcd.io/bbolt"
 )
 

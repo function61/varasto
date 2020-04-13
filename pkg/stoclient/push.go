@@ -2,7 +2,6 @@ package stoclient
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -21,6 +20,7 @@ import (
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
+	"github.com/minio/sha256-simd"
 )
 
 const (
