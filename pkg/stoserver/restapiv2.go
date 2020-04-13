@@ -277,6 +277,10 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		}
 	}
 
+	if changesetId == stoservertypes.HeadRevisionId {
+		changesetId = coll.Head
+	}
+
 	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
