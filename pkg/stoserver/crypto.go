@@ -6,24 +6,29 @@ import (
 	"crypto/rsa"
 	"errors"
 	"fmt"
+	"sync"
 
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/golang/groupcache/lru"
 	"github.com/minio/sha256-simd"
 	"go.etcd.io/bbolt"
 	"golang.org/x/crypto/ssh"
 )
 
 type keyStore struct {
-	keksPrivate map[string]*rsa.PrivateKey
-	keksPublic  map[string]*rsa.PublicKey
+	keksPrivate         map[string]*rsa.PrivateKey
+	keksPublic          map[string]*rsa.PublicKey
+	decryptedDekCache   *lru.Cache
+	decryptedDekCacheMu sync.Mutex
 }
 
 func newKeyStore() *keyStore {
 	return &keyStore{
-		keksPrivate: map[string]*rsa.PrivateKey{},
-		keksPublic:  map[string]*rsa.PublicKey{},
+		keksPrivate:       map[string]*rsa.PrivateKey{},
+		keksPublic:        map[string]*rsa.PublicKey{},
+		decryptedDekCache: lru.New(256), // DEK ID => raw encryption key
 	}
 }
 
@@ -46,6 +51,13 @@ func (k *keyStore) RegisterPrivateKey(rsaPrivKeyPemPkcs1 string) error {
 }
 
 func (k *keyStore) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
+	k.decryptedDekCacheMu.Lock()
+	defer k.decryptedDekCacheMu.Unlock() // lifetime pretty aggressive..
+
+	if cached, found := k.decryptedDekCache.Get(kenv.KeyId); found {
+		return cached.([]byte), nil
+	}
+
 	for _, slot := range kenv.Slots {
 		if privateKey, found := k.keksPrivate[slot.KekFingerprint]; found {
 			key, err := privateKey.Decrypt(rand.Reader, slot.KeyEncrypted, &rsa.OAEPOptions{
@@ -54,6 +66,8 @@ func (k *keyStore) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			k.decryptedDekCache.Add(kenv.KeyId, key)
 
 			return key, nil
 		}

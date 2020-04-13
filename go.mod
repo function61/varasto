@@ -17,6 +17,7 @@ require (
 	github.com/function61/gokit v0.0.0-20200401160056-1720ecfda58e
 	github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1
 	github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692
+	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
 	github.com/golang/protobuf v1.3.2
 	github.com/gorilla/context v1.1.1
 	github.com/gorilla/mux v1.6.2
