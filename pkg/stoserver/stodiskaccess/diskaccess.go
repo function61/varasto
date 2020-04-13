@@ -111,7 +111,28 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId
 	return d.metadataStore.WriteBlobReplicated(ref, toVolumeId)
 }
 
-func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef, content io.Reader, maybeCompressible bool) error {
+func (d *Controller) WriteBlob(
+	volumeId int,
+	collId string,
+	ref stotypes.BlobRef,
+	content io.Reader,
+	maybeCompressible bool,
+) error {
+	return d.WriteBlobNoVerify(
+		volumeId,
+		collId,
+		ref,
+		stoutils.BlobHashVerifier(content, ref),
+		maybeCompressible)
+}
+
+func (d *Controller) WriteBlobNoVerify(
+	volumeId int,
+	collId string,
+	ref stotypes.BlobRef,
+	content io.Reader,
+	maybeCompressible bool,
+) error {
 	// FIXME: this will lock for a really long time if the HTTP connection breaks (TODO: benchmark for how long).
 	// should we have some kind of timeoutreader?
 	unlock, ok := d.writingBlobs.TryLock(ref.AsHex())
@@ -140,7 +161,7 @@ func (d *Controller) WriteBlob(volumeId int, collId string, ref stotypes.BlobRef
 	}
 
 	readCounter := writeCounter{}
-	verifiedContent := readCounter.Tee(stoutils.BlobHashVerifier(content, ref))
+	verifiedContent := readCounter.Tee(content)
 
 	encryptionKeyId, encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKeyForNewBlobs(collId)
 	if err != nil {

@@ -980,7 +980,8 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 		}
 
 		if !blobExists {
-			if err := h.conf.DiskAccess.WriteBlob(
+			// do not verify sha256, as we just calculated it (turns out it's really expensive)
+			if err := h.conf.DiskAccess.WriteBlobNoVerify(
 				volumeId,
 				collectionId,
 				*blobRef,
@@ -1264,7 +1265,13 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 		return
 	}
 
-	if err := h.conf.DiskAccess.WriteBlob(volumeId, collectionId, *blobRef, r.Body, maybeCompressible); err != nil {
+	if err := h.conf.DiskAccess.WriteBlob(
+		volumeId,
+		collectionId,
+		*blobRef,
+		r.Body,
+		maybeCompressible,
+	); err != nil {
 		// FIXME: some could be StatusBadRequest
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
