@@ -333,6 +333,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 
 	w.Header().Set("Content-Type", contentTypeForFilename(fileKey))
+	w.Header().Set("Content-Length", strconv.Itoa(int(file.Size)))
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, path.Base(fileKey)))
 
 	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
