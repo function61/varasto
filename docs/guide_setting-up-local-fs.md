@@ -86,6 +86,9 @@ use those, we don't recommend them because they have overheads like:
 Varasto already implements these! You'd pay the overhead twice and get additional complexity
 without gaining anything.
 
+!!! tip
+    Varasto builds safety on top of unsafe filesystems.
+
 
 More details for nerds
 ----------------------
@@ -127,7 +130,7 @@ $ tree /mnt/fry/varasto-fry
 
 Each filename is a hash of its content (except the volume descriptor). This is known as a
 [CAS (Content Addressable Storage)](https://en.wikipedia.org/wiki/Content-addressable_storage).
-A CAS-based provides deduplication and integrity checking "for free".
+A CAS provides deduplication and integrity checking by design.
 
 This same CAS-concept is used for all Varasto volume drivers like cloud disks, but the some
 details may vary (e.g. most cloud drivers tend not to require subdirectory structure as

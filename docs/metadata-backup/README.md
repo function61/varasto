@@ -7,7 +7,8 @@ Everything Varasto stores is encrypted on-disk, so if you lose the encryption ke
 lose the data forever. The encryption keys are stored in the metadata database in Varasto,
 so backing it up is essential.
 
-**If you don't back up your metadata database, you are OK with losing your files.**
+!!! warning
+    If you don't back up your metadata database, you are OK with losing your files.
 
 
 File backup vs metadata backup
@@ -128,7 +129,7 @@ You can get a bearer token by visiting `Settings > Users` and creating a new API
 
 Summary of your options:
 
-| Option                                            | Description           |
+| Option                                            | Safety                |
 |---------------------------------------------------|-----------------------|
 | Just copy `varasto.db`                            | Dangerous             |
 | Filesystem-level snapshot, then copy `varasto.db` | You'll probably be OK |
