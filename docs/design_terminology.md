@@ -1,5 +1,5 @@
-Terminology
-===========
+Concepts
+--------
 
 | Term | Explanation |
 |------|-------------|

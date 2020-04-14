@@ -1,18 +1,3 @@
-Encryption in Varasto
-=====================
-
-Contents:
-
-- [Summary: configurable security](#summary-configurable-security)
-- [Glossary](#glossary)
-- [Overview](#overview)
-- [HSM or not?](#hsm-or-not)
-- [Why do I need at least two KEKs?](#why-do-i-need-at-least-two-keks)
-- [Algorithms used](#algorithms-used)
-- [Limitations of Varasto's crypto design](#limitations-of-varastos-crypto-design)
-- [Varasto cryptosystem's description in minimal code](#varasto-cryptosystems-description-in-minimal-code)
-- [What if my HSM gets stolen?](#what-if-my-hsm-gets-stolen)
-
 
 Summary: configurable security
 ------------------------------

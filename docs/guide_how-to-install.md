@@ -1,6 +1,3 @@
-How to install
-==============
-
 The recommended way to use Varasto is via **Docker on a Linux PC**. All other combinations
 like manual install on Linux, Windows or the likes of Raspberry Pi might work but are
 unsupported while Varasto is in beta.

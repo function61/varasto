@@ -1,6 +1,3 @@
-Replication policies
-====================
-
 What does it do?
 ----------------
 

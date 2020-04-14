@@ -1,16 +1,3 @@
-Guide: storing movies
-=====================
-
-Contents:
-
-- [End result](#end-result)
-- [Preparations](#preparations)
-- [Uploading your first movie](#uploading-your-first-movie)
-- [Removing the local copy that we just uploaded](#removing-the-local-copy-that-we-just-uploaded)
-- [Fetching metadata](#fetching-metadata)
-- [Metadata support](#metadata-support)
-
-
 End result
 ----------
 

@@ -1,18 +1,3 @@
-Metadata backup
-===============
-
-Contents:
-
-- [Motivation](#motivation)
-- [File backup vs metadata backup](#file-backup-vs-metadata-backup)
-- [Setting up](#setting-up)
-- [Automated backups](#automated-backups)
-- [Taking a backup manually](#taking-a-backup-manually)
-- [Restoring from backup, motivation for testing](#restoring-from-backup--motivation-for-testing)
-- [Restoring from backup, instructions](#restoring-from-backup--instructions)
-- [Using external backup program](#using-external-backup-program)
-
-
 Motivation
 ----------
 

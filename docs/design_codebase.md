@@ -1,7 +1,3 @@
-Codebase layout
-===============
-
-
 Drawing
 -------
 

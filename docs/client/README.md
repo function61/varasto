@@ -1,6 +1,3 @@
-Varasto client
-==============
-
 TODO: this doc is very much unfinished.
 
 These instructions mainly apply to desktop platforms. Android and iOS devices have

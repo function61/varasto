@@ -1,7 +1,3 @@
-Setting up S3
-=============
-
-
 Create S3 bucket in AWS
 -----------------------
 

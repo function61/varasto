@@ -1,18 +1,3 @@
-Setting up local disk storage
-=============================
-
-Contents:
-
-- [Conceptual overview](#conceptual-overview)
-- [Which filesystem to store Varasto data on top of?](#which-filesystem-to-store-varasto-data-on-top-of)
-- [Creating & mounting a volume](#creating--mounting-a-volume)
-- [Choose a naming scheme for your volumes](#choose-a-naming-scheme-for-your-volumes)
-- [Do I need a dedicated partition for Varasto volume?](#do-i-need-a-dedicated-partition-for-varasto-volume)
-- [But is ext4 / NTFS safe for my precious data?](#but-is-ext4--ntfs-safe-for-my-precious-data)
-- [More details for nerds](#more-details-for-nerds)
-- [Why call it a volume and not a disk?](#why-call-it-a-volume-and-not-a-disk)
-
-
 Conceptual overview
 -------------------
 

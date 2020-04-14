@@ -1,7 +1,3 @@
-Setting up SMART monitoring
-===========================
-
-
 Motivation
 ----------
 

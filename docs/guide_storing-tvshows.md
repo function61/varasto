@@ -1,17 +1,3 @@
-Guide: storing TV shows
-=======================
-
-Contents:
-
-- [End result](#end-result)
-- [Preparations](#preparations)
-- [Preparations for each TV show](#preparations-for-each-tv-show)
-- [Preparing files for uploading](#preparing-files-for-uploading)
-- [Uploading a single season](#uploading-a-single-season)
-- [Uploading multiple seasons](#uploading-multiple-seasons)
-- [Metadata support](#metadata-support)
-
-
 End result
 ----------
 

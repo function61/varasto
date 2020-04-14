@@ -1,7 +1,7 @@
-Ransomware protection
-=====================
+Summary
+-------
 
-Summary: Varasto has enough features for protecting against off-the-shelf ransomware and
+Varasto has enough features for protecting against off-the-shelf ransomware and
 even for protection against targeted attacks (= someone specifically understands and targets
 your environment), but it is not "enabled by default" because you need to take specific
 steps to enable the protection based on your tradeoffs - some steps cost money and some

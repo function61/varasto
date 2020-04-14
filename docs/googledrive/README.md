@@ -1,14 +1,3 @@
-Setting up Google Drive
-=======================
-
-Contents:
-
-- [Overview](#overview)
-- [Create a folder in Drive](#create-a-folder-in-drive)
-- [Create an API app in Google developers](#create-an-api-app-in-google-developers)
-- [Authorization code](#authorization-code)
-
-
 Overview
 --------
 
