@@ -25,10 +25,10 @@ points in rapid iteration to improve the system!
 | Date                | No probable data loss | No rough edges     | Note | 
 |---------------------|-----------------------|--------------------|------|
 | ~~before jan 2020~~ | ☐  | ☐  | |
-| **jan - mar 2020**  | ☑ | ☐  | <- we're here. Gathering user experiences from beta testers |
-| apr 2020 onwards    | ☑ | ☑ | General availability |
+| **jan - apr 2020**  | ☑ | ☐  | <- we're here. Gathering user experiences from beta testers |
+| may 2020 onwards    | ☑ | ☑ | General availability |
 
-1st of April is target for "this should work well enough without major rough edges".
+1st of May is target for "this should work well enough without major rough edges".
 
 
 Features
