@@ -34,9 +34,9 @@ func mainLogic() error {
 	}
 
 	opts := codegen.Opts{
-		BackendModulePrefix:  "github.com/function61/varasto/pkg/",
-		FrontendModulePrefix: "generated/",
-		// AutogenerateModuleDocs: true,
+		BackendModulePrefix:    "github.com/function61/varasto/pkg/",
+		FrontendModulePrefix:   "generated/",
+		AutogenerateModuleDocs: true,
 	}
 
 	if err := codegen.ProcessModules(modules, opts); err != nil {
