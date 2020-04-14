@@ -53,6 +53,7 @@
 			"mount_destination": "/workspace",
 			"commands": {
 				"publish": ["publish.sh", "rel/*"],
+				"build": ["true"],
 				"dev": ["bash"]
 			},
 			"env": {
