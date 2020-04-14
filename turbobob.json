@@ -35,6 +35,19 @@
 			}
 		},
 		{
+			"name": "docs",
+			"uses": "docker://fn61/buildkit-mkdocs:20200406_1529_aac78367",
+			"mount_destination": "/workspace",
+			"workdir": "/workspace",
+			"dev_pro_tips": [
+				"for preview: $ preview.sh"
+			],
+			"commands": {
+				"build": ["run-mkdocs.sh", "docs/", "rel/docs-website.tar.gz"],
+				"dev": ["sh"]
+			}
+		},
+		{
 			"name": "publisher",
 			"uses": "docker://fn61/buildkit-publisher:20190206_1058_d35b3939",
 			"mount_destination": "/workspace",

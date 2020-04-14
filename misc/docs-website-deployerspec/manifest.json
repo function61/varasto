@@ -1,0 +1,43 @@
+{
+  "manifest_version_major": 1,
+  "deployer_image": "fn61/edgerouter:20200218_1015_e619de47",
+  "deploy_command": [
+    "edgerouter",
+    "s3",
+    "deploy",
+    "${_.env.edgerouterAppId}",
+    "${_.version.friendly}",
+    "docs-website.tar.gz"
+  ],
+  "deploy_interactive_command": ["/bin/sh"],
+  "download_artefacts": [
+    "docs-website.tar.gz"
+  ],
+  "env_vars": [
+    {
+      "key": "edgerouterAppId",
+      "optional": false,
+      "placeholder": "hq.example.com",
+      "help": ""
+    },
+    {
+      "key": "AWS_ACCESS_KEY_ID",
+      "optional": false,
+      "placeholder": "AKI..",
+      "help": "Needs to be able to update S3 static websites and write to EventHorizon"
+    },
+    {
+      "key": "AWS_SECRET_ACCESS_KEY",
+      "optional": false,
+      "placeholder": "yPId..",
+      "help": ""
+    },
+    {
+      "key": "EVENTHORIZON_TENANT",
+      "optional": false,
+      "placeholder": "prod:1",
+      "help": ""
+    }
+  ],
+  "software_unique_id": "e364dac3-c1fc-41cd-9d22-663fab88352b"
+}
