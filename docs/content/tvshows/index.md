@@ -3,7 +3,7 @@ End result
 
 It's better to show you the end result first, so this guide is easier to understand:
 
-![](guide_storing-tvshows-endresult.png)
+![](endresult.png)
 
 (note: with Varasto you can also keep track of the episodes you've seen - look at the
 "seen" tag)
@@ -19,7 +19,7 @@ Create a directory, let's say `Media > Series`.
 Let's tell Varasto that this directory is used for storing TV series. This is not strictly
 necessary, but it allows Varasto to be smarter on how it's going to display your content:
 
-![](guide_storing-movies-directorytype.png)
+![](../movies/directorytype.png)
 
 Now you can see the directory type: 📺
 
@@ -30,11 +30,11 @@ Preparations for each TV show
 Create a directory in Varasto for this series. I created `Media > Series > Brooklyn Nine-Nine`.
 
 Now let's tell Varasto exactly which TV series this is, fetch IMDb ID according to
-[these instructions](guide_storing-movies.md#fetching-metadata), but instead of entering
+[these instructions](../movies/index.md#fetching-metadata), but instead of entering
 it for a collection like with movies we enter the metadata ID for the main series directory
 (Varasto will know that collections under this directory tree are for the same series):
 
-![](guide_storing-tvshows-enter-imdb-id.png)
+![](enter-imdb-id.png)
 
 You should now see metadata info and banner image being shown. You're done setting up a
 directory for this TV series!
@@ -200,7 +200,7 @@ Uploading a single season
 
 Let's create a directory for the season 4:
 
-![](guide_storing-tvshows-create-season-directory.png)
+![](create-season-directory.png)
 
 The directory's ID for me is `bkaPHC-pZoM`.
 
@@ -220,7 +220,7 @@ The general form of the bulk command is `push bulk <parentDirectory>`.
 
 The `--rm` switch removes the source files after they've been uploaded to Varasto. Don't
 worry, the
-[removal has safeguards](guide_storing-movies.md#removing-the-local-copy-that-we-just-uploaded)
+[removal has safeguards](../movies/index.md#removing-the-local-copy-that-we-just-uploaded)
 which make it safe. If you don't want to remove the source files, leave out the switch.
 
 The `bulk` command generates a small uploader shell script that will invoke `$ sto` commands
@@ -301,7 +301,7 @@ Metadata support
 ----------------
 
 Varasto needs an API key to be able to fetch TV show and movie metadata.
-Instructions are [here](guide_storing-movies.md#metadata-support).
+Instructions are [here](../movies/index.md#metadata-support).
 
 Fetching metadata currently happens by mass-selecting each collection and hitting
 "Refresh metadata automatically". In the future this will happen automatically.

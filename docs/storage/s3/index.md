@@ -85,7 +85,7 @@ Now mount the volume in Varasto. Options:
 Bonus reading: ransomware protection
 ------------------------------------
 
-Please read about [Ransomware protection](guide_ransomware-protection.md) first.
+Please read about [Ransomware protection](../../security/ransomware-protection/index.md) first.
 
 S3 enables us to have file overwrite protection by restricting our access keys to not being
 able to delete data. Our policy in this guide doesn't allow for data deletion.

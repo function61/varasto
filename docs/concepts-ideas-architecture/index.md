@@ -1,15 +1,54 @@
+Concepts
+--------
+
+| Term | Explanation |
+|------|-------------|
+| Collection | Like a Git repository - stores concrete files and folders. Files consist of multiple blobs. Collections are change tracked by changeset, so if you accidentally deleted or modified a file you can go back in history to restore the file at a specific time. |
+| Directory | Collections are stored in a hierarchy of directories. This is only in metadata sense - directory hierarchy of collections is different than directories inside collections. |
+| Blob | Each file is split into 4 MB chunks called blobs. A blob is identified by its content's sha-256. A blob is stored in 1 or more volumes for redundancy. |
+| Volume | A place to store blobs in. A single physical disk, Google Drive, AWS S3 etc. |
+| Mount | Volume is mounted in a given server, so the server has access to the volume's blobs. Depending on blob driver, same volume can be accessed from multiple servers. |
+| Blob driver | Implements access to different types of volumes. `local-fs` stores blobs in local filesystem. `googledrive` stores in Google Drive etc. |
+| Server | An instance of Varasto server running on a computer. You can run a cluster of Varasto servers for redundancy and/or convenience (think Varasto running behing firewall at home but also in cloud for remote access). |
+| Clone | The act of downloading a collection to your computer for modifying it. Only reading files does not necessarily require cloning as you can stream videos/audio/photos off of Varasto's UI. |
+| Push | The act of committing your local changes in a changeset and pushing that changeset to the Varasto server |
+| Changeset | A group of changes to multiple files recorded in a single point in time. |
+
+
 Architecture
 ------------
 
+### Client vs. server
+
+Varasto has a server and a client component:
+
+| Component      | What it does                                              | Dropbox analogy |
+|----------------|-----------------------------------------------------------|-------------------------|
+| Varasto server | Manages storing of the data and showing the UI            | Dropbox service/server software |
+| Varasto client | The devices that access the data stored in Varasto server | Dropbox client software |
+| Browser        | You can also access Varasto server UI without the client  | Access your files via dropbox.com |
+
+In the simplest case you have the server and a client running on the same computer:
+
+![Client and server running on one computer](one-computer-client-and-server.png)
+
+
+### Drawing
+
 ![](architecture.png)
+
+### Content-addressable storage
 
 Varasto is backed by a
 [Content-Addressable Storage](https://en.wikipedia.org/wiki/Content-addressable_storage)
-(CAS), which provides quite a few tricks like automatic integrity protection.
+(CAS), which provides quite a few tricks like automatic integrity protection and deduplication.
+
+To learn more about how Varasto stores files:
+[read more](../storage/local-fs/index.md#more-details-for-nerds).
 
 
-Ideas / goals
--------------
+Ideas
+-----
 
 - "[RAID is not a backup](https://serverfault.com/questions/2888/why-is-raid-not-a-backup)",
   so you would need backup in addition to RAID anyway. But what if we designed for backup
@@ -24,8 +63,7 @@ Ideas / goals
   are working on currently!
 - You don't need to clone collections if all you want to do is view files (such as look at
   photo albums, listen to music or watch movies) - Varasto supports streaming too.
-- Works on Linux and Windows (mostly due to Go's awesomeness)
-- Integrity is the most important thing. Hashes are verified on writing to disk and on
+- Data integrity is the most important thing. Hashes are verified on writing to disk and on
   reading from disk. There is also a scheduled job for checking integrity of your volumes.
 - Unified view of all of your data - never again have to remember which disk a particular
   thing was stored on! Got 200 terabytes of data spread across tens of disks? No problem!
@@ -52,19 +90,3 @@ Ideas / goals
   system to reach the desired goals of integrity and availability. If your hard drive ever
   crashes, would you like to try the recovery with striped RAID / parity bits on a
   specialized filesystem, or just a regular NTFS or EXT4?
-
-
-Inspired by & alternative software
-----------------------------------
-
-- [Syncthing](https://syncthing.net/)
-- [Duplicati](https://www.duplicati.com/)
-- [restic](https://restic.net/)
-- [bup](https://github.com/bup/bup)
-- [Perkeep](https://perkeep.org/doc/overview)
-- [upspin](https://upspin.io/doc/arch.md)
-- [Bazil](https://bazil.org/)
-- [MezzFS](https://medium.com/netflix-techblog/mezzfs-mounting-object-storage-in-netflixs-media-processing-platform-cda01c446ba)
-- ["The Joy of Sync", from page 6 onwards](https://www.grc.com/sn/SN-734-Notes.pdf)
-
-TODO: comparison

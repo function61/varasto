@@ -38,15 +38,15 @@ FUSE projector runs on. But we can use Samba to export that directory hierarchy 
 share.
 
 If you take a look at
-[Varasto architecture](design_architecture-ideas-goals-inspired-by-comparison-to-similar-software.md)
-drawing, you'll see that the FUSE interface is built on top of the Varasto client library,
+[Varasto architecture drawing](../../concepts-ideas-architecture/index.md#drawing),
+you'll see that the FUSE interface is built on top of the Varasto client library,
 which talks to the Varasto server over HTTP. That means that if you want, you can run the
 FUSE projector on a different computer than where the Varasto server runs.
 
 Focusing on network folders: Varasto FUSE projector + FUSE + Samba - here's how it could
 look like with with separate computers for Varasto server and Varasto FUSE projector:
 
-![](guide_network-folders_architecture.png)
+![](architecture.png)
 
 Even if you run server + projector on the same computer, this drawing is great for explaining
 the components and their interactions.

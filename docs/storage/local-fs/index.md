@@ -3,7 +3,7 @@ Conceptual overview
 
 Create one volume in Varasto for each disk you want to use with Varasto.
 
-![](guide_setting-up-local-fs-architecture.png)
+![](architecture.png)
 
 
 Which filesystem to store Varasto data on top of?
@@ -44,9 +44,10 @@ That's it! Now that the volume is mounted, Varasto can write files there.
 Choose a naming scheme for your volumes
 ---------------------------------------
 
-Decide on a naming scheme for your volumes. Don't use "Movies" or "Music" because with
-Varasto you don't need to stress about which disk is used for storing which type of data.
-I.e. name your disks, not their content.
+!!! tip "Name your disks - not their content!"
+	Don't use "Movies" or "Music" because with Varasto you don't need to stress about which
+	disk is used for storing which type of data. The data can even move between your volumes
+	as your needs change.
 
 You can name your volumes anything you like - a few examples:
 
@@ -115,8 +116,7 @@ This is the only file that Varasto writes there in un-encrypted form. This file 
 to ensure that you don't accidentally mount the wrong volume's files (which could have
 disastrous consequences because that would mess up bookkeeping).
 
-When I add content in Varasto, more files will appear in the above hierarchy. I'll add a
-file *now*. Now let's observe:
+When I add content in Varasto, more files will appear in the above hierarchy:
 
 ```
 $ tree /mnt/fry/varasto-fry

@@ -1,0 +1,55 @@
+site_name: 'Varasto docs'
+
+theme:
+  name: material
+  logo: varasto.svg
+  favicon: varasto.svg
+
+docs_dir: '.'
+
+repo_url: https://github.com/function61/varasto/
+
+markdown_extensions:
+  - codehilite
+  - admonition
+  - pymdownx.details
+  - footnotes
+  - toc:
+      permalink: true
+
+nav:
+
+- index.md
+- Screenshots: screenshots/index.md
+- Installation: install/index.md
+- Concepts, ideas & architecture: concepts-ideas-architecture/index.md
+- Comparison to similar software: comparison-to-similar-software/index.md
+- Performance: performance/index.md
+- Using:
+  - Varasto client: using/client/index.md
+  - SMART monitoring: using/smart-monitoring/index.md
+  - Metadata backup: using/metadata-backup/index.md
+  - Network folders: using/network-folders/index.md
+  - Replication policies: using/replication-policies/index.md
+- Local / remote storage:
+  - Local disk storage: storage/local-fs/index.md
+  - AWS S3: storage/s3/index.md
+  - Google Drive: storage/googledrive/index.md
+- Specially supported content:
+  # - Files (TODO): stuff.md
+  - Photos: content/photos/index.md
+  - Movies: content/movies/index.md
+  - TV shows: content/tvshows/index.md
+  # - Podcasts (TODO): stuff.md
+- Security:
+  - Encryption in Varasto: security/encryption/index.md
+  - Ransomware protection: security/ransomware-protection/index.md
+  - Security policy: security.md
+- Developers:
+  - Codebase layout: developers/codebase/index.md
+  - How to build & develop: https://github.com/function61/turbobob/blob/master/docs/external-how-to-build-and-dev.md
+  - Package documentation on GoDoc.org: https://godoc.org/github.com/function61/varasto
+  - Server API:
+    - REST endpoints: stoserver/stoservertypes/rest_endpoints.md
+    - Types: stoserver/stoservertypes/types.md
+    - Commands: stoserver/stoservertypes/commands.md

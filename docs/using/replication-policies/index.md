@@ -9,7 +9,7 @@ A replication policy specifies on which volumes a collection's files should be s
 Example from UI
 ---------------
 
-![](../screenshot_replication-policies.png)
+![](screenshot.png)
 
 
 Do I need multiple policies?

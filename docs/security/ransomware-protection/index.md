@@ -42,16 +42,16 @@ you're well and truly fucked.
 
 Here's a healthy environment:
 
-![](guide_ransomware-protection-1pc.png)
+![](1pc.png)
 
 Now it gets infected with ransomware:
 
-![](guide_ransomware-protection-1pc-infected.png)
+![](1pc-infected.png)
 
 It isn't much help if you've got two Varasto servers in same network if the ransomware
 uses an exploit to take over the second server in the same network:
 
-![](guide_ransomware-protection-2pc-infected.png)
+![](2pc-infected.png)
 
 The trick to effective ransomware protection is to have at least one copy of your data
 in a separate security boundary. By security boundary we mean that once data is written
@@ -63,10 +63,10 @@ disk that the infected computers don't have overwrite/delete access to. For exam
 could host said files on AWS S3 and have Varasto servers have restricted access keys without
 the ability to delete/overwrite data:
 
-![](guide_ransomware-protection-separate-security-boundaries.png)
+![](separate-security-boundaries.png)
 
 Read more about
-[enabling ransomware protection for volumes hosted on S3](guide_setting-up-s3.md).
+[enabling ransomware protection for volumes hosted on S3](../../storage/s3/index.md).
 
 This isn't applicable to only S3 - the principle of having data in multiple security
 boundaries holds with other services as well. Or if you're brave enough, you could have one

@@ -1,72 +1,79 @@
 
-Media: movies
--------------
+Movies
+------
 
 !!! note ""
-	![](guide_storing-movies-endresult.png)
+	![](../content/movies/endresult.png)
 
 
-Media: TV shows
----------------
+TV shows
+--------
 
 !!! note ""
-	![](guide_storing-tvshows-endresult.png)
+	![](../content/tvshows/endresult.png)
+
+
+Photos
+------
+
+!!! note ""
+	![](../content/photos/screenshot.png)
 
 
 Volumes & mounts
 ----------------
 
 !!! note ""
-	![](screenshot_volumes-and-mounts.png)
+	![](volumes-and-mounts.png)
 
 
 Disk topology view
 ------------------
 
 !!! note ""
-	![](screenshot_topology-view.png)
+	![](topology-view.png)
 
 
 Disk service view
 -----------------
 
 !!! note ""
-	![](screenshot_service-view.png)
+	![](service-view.png)
 
 
 SMART monitoring
 ----------------
 
 !!! note ""
-	![](guide_setting-up-smart-monitoring-smart.png)
+	![](../using/smart-monitoring/smart.png)
 
 
 Health monitoring
 -----------------
 
 !!! note ""
-	![](screenshot_health-monitoring.png)
+	![](health-monitoring.png)
 
 
 Backups
 -------
 
 !!! note ""
-	![](metadata-backup/backuplist.png)
+	![](../using/metadata-backup/backuplist.png)
 
 
 Clients
 -------
 
 !!! note ""
-	![](screenshot_clients.png)
+	![](clients.png)
 
 
 Replication policies
 --------------------
 
 !!! note ""
-	![](screenshot_replication-policies.png)
+	![](../using/replication-policies/screenshot.png)
 
 
 Testing rig

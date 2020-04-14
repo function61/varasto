@@ -3,7 +3,7 @@ End result
 
 You'll end up with this:
 
-![](guide_storing-movies-endresult.png)
+![](endresult.png)
 
 Note: Varasto can also track the movies that you've watched (and which year) - see the "seen" tag.
 
@@ -19,11 +19,11 @@ Let's tell Varasto that this is a directory for storing movies. You don't necess
 to do this, but Varasto can be a bit smarter about displaying the contents if it knows exact
 use for a directory.
 
-![](guide_storing-movies-directorytype.png)
+![](directorytype.png)
 
 Now you can see the assigned type. Take note of the directory's ID:
 
-![](guide_storing-movies-directoryid.png)
+![](directoryid.png)
 
 
 Uploading your first movie
@@ -59,7 +59,7 @@ $ sto adopt GD2MmBEqk9A
 
 Now we have an empty collection in Varasto:
 
-![](guide_storing-movies-adoption.png)
+![](adoption.png)
 
 Next we'll just push the contents of the directory to Varasto:
 
@@ -106,7 +106,7 @@ exactly which movie it is (Varasto is not yet smart enough to guess based on fil
 
 Go find the movie on IMDb, and copy-paste its ID to Varasto:
 
-![](guide_storing-movies-imdb-id.png)
+![](imdb-id.png)
 
 Sidenote: we'll soon might make a search that lets you search directly from Varasto.
 
@@ -114,7 +114,7 @@ Now set the ID and pull metadata. Also note that we had an ugly name for the dir
 that we uploaded the movie from, but we can let Varasto clean up the collection's name
 from the proper title in IMDb:
 
-![](guide_storing-movies-pull-metadata.png)
+![](pull-metadata.png)
 
 
 Metadata support
@@ -131,4 +131,4 @@ Varasto needs an API key to be able to fetch movie and TV show metadata.
 
 You can do this from `Settings > Content metadata > TMDb`:
 
-![](guide_storing-movies-tmdb-apikey.png)
+![](tmdb-apikey.png)

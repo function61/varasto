@@ -1,7 +1,7 @@
 Drawing
 -------
 
-![](design_codebase-drawing.png)
+![](drawing.png)
 
 
 Example of implementing an entire feature
@@ -25,12 +25,12 @@ Points of interest in the commit:
 
 Fig. 1:
 
-![](design_codebase-tageditor.png)
+![](tageditor.png)
 
 Fig. 2:
 
-![](design_codebase-tag-add-modal.png)
+![](tag-add-modal.png)
 
 Fig. 3:
 
-![](design_codebase-tag-add.png)
+![](tag-add.png)

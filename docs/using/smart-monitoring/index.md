@@ -9,9 +9,9 @@ You can also often get the temperature of the device so you can troubleshoot any
 Screenshots
 -----------
 
-![](guide_setting-up-smart-monitoring-smart.png)
+![](smart.png)
 
-![](guide_setting-up-smart-monitoring-serverhealth.png)
+![](serverhealth.png)
 
 
 Supported OSes
