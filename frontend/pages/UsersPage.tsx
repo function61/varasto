@@ -52,7 +52,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 							Key encryption keys &nbsp;
 							<Info text="Key encryption key is used to asymmetrically encrypt the files' symmetric encryption keys." />
 							&nbsp;
-							<DocLink doc={DocRef.DocsSecurityEncryptionREADMEMd} />
+							<DocLink doc={DocRef.DocsSecurityEncryptionIndexMd} />
 						</div>
 					}>
 					{this.renderKeyEncryptionKeys()}

@@ -541,9 +541,9 @@ interface HelpForDirType {
 function helpByDirectoryType(type: DirectoryType): HelpForDirType | null {
 	switch (type) {
 		case DirectoryType.Movies:
-			return { doc: DocRef.DocsGuideStoringMoviesMd, title: 'Guide: storing movies' };
+			return { doc: DocRef.DocsContentMoviesIndexMd, title: 'Guide: storing movies' };
 		case DirectoryType.Series:
-			return { doc: DocRef.DocsGuideStoringTvshowsMd, title: 'Guide: storing TV shows' };
+			return { doc: DocRef.DocsContentTvshowsIndexMd, title: 'Guide: storing TV shows' };
 		case DirectoryType.Generic:
 		case DirectoryType.Podcasts:
 			return null;

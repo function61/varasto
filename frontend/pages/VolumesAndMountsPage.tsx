@@ -189,8 +189,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						<Panel
 							heading={
 								<div>
-									SMART{' '}
-									<DocLink doc={DocRef.DocsGuideSettingUpSmartMonitoringMd} />
+									SMART <DocLink doc={DocRef.DocsUsingSmartMonitoringIndexMd} />
 								</div>
 							}>
 							{this.renderSmartView()}
@@ -305,7 +304,7 @@ export default class VolumesAndMountsPage extends React.Component<
 								<div>
 									<InfoAlert>
 										No SMART-reporting volumes found. Read docs first:{' '}
-										<DocLink doc={DocRef.DocsGuideSettingUpSmartMonitoringMd} />
+										<DocLink doc={DocRef.DocsUsingSmartMonitoringIndexMd} />
 									</InfoAlert>
 								</div>
 							)}
@@ -566,13 +565,13 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeMountLocal(obj.Id, {
 									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsGuideSettingUpLocalFsMd),
+									helpUrl: DocGitHubMaster(DocRef.DocsStorageLocalFsIndexMd),
 								})}
 							/>
 							<CommandLink
 								command={VolumeMountGoogleDrive(obj.Id, {
 									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsGoogledriveREADMEMd),
+									helpUrl: DocGitHubMaster(DocRef.DocsStorageGoogledriveIndexMd),
 									redirect: (createdRecordId): string => {
 										if (createdRecordId === 'mounted-ok') {
 											reloadCurrentPage();
@@ -592,7 +591,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeMountS3(obj.Id, {
 									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsGuideSettingUpS3Md),
+									helpUrl: DocGitHubMaster(DocRef.DocsStorageS3IndexMd),
 								})}
 							/>
 							<CommandLink

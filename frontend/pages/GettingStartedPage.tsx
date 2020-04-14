@@ -148,7 +148,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					An icon like this takes you to documentation:{' '}
-					<DocLink doc={DocRef.DocsGuideNetworkFoldersMd} />. We have written the
+					<DocLink doc={DocRef.DocsUsingNetworkFoldersIndexMd} />. We have written the
 					documentation with great love, to try to make it short enough to read but still
 					give you a good picture of how things work!
 				</p>
@@ -185,7 +185,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Please read at least the <SmallWell>Summary</SmallWell> section of docs:{' '}
-					<DocLink doc={DocRef.DocsSecurityEncryptionREADMEMd} />
+					<DocLink doc={DocRef.DocsSecurityEncryptionIndexMd} />
 				</p>
 
 				<p>
@@ -345,21 +345,25 @@ export default class GettingStartedPage extends React.Component<
 				{this.state.mountType === 'localDisk' && (
 					<div>
 						<SmallWell>Volume &raquo; {VolumeMountLocal(0).title}</SmallWell>{' '}
-						<DocLink doc={DocRef.DocsGuideSettingUpLocalFsMd} />
+						<WarningAlert>
+							Once you've selected it, be sure to read <b>important documentation</b>{' '}
+							behind this icon:&nbsp;
+							<DocLink doc={DocRef.DocsStorageLocalFsIndexMd} />
+						</WarningAlert>
 					</div>
 				)}
 
 				{this.state.mountType === 's3' && (
 					<div>
 						<SmallWell>Volume &raquo; {VolumeMountS3(0).title}</SmallWell>{' '}
-						<DocLink doc={DocRef.DocsGuideSettingUpS3Md} />
+						<DocLink doc={DocRef.DocsStorageS3IndexMd} />
 					</div>
 				)}
 
 				{this.state.mountType === 'googleDrive' && (
 					<div>
 						<SmallWell>Volume &raquo; {VolumeMountGoogleDrive(0).title}</SmallWell>{' '}
-						<DocLink doc={DocRef.DocsGoogledriveREADMEMd} />
+						<DocLink doc={DocRef.DocsStorageGoogledriveIndexMd} />
 					</div>
 				)}
 
@@ -386,8 +390,8 @@ export default class GettingStartedPage extends React.Component<
 				</ul>
 
 				<p>
-					Read more: <DocLink doc={DocRef.DocsReplicationPoliciesREADMEMd} /> (includes a
-					picture)
+					Read more: <DocLink doc={DocRef.DocsUsingReplicationPoliciesIndexMd} />{' '}
+					(includes a picture)
 				</p>
 
 				<p>

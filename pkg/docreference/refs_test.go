@@ -25,6 +25,6 @@ func TestDocsExistForDocRefs(t *testing.T) {
 func TestGitHubMaster(t *testing.T) {
 	assert.EqualString(
 		t,
-		GitHubMaster(stoservertypes.DocRefDocsMetadataBackupREADMEMd),
-		"https://github.com/function61/varasto/blob/master/docs/metadata-backup/README.md")
+		GitHubMaster(stoservertypes.DocRefREADMEMd),
+		"https://github.com/function61/varasto/blob/master/README.md")
 }

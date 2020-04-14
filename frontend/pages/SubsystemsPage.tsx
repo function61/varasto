@@ -128,7 +128,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 						<a href={fuseServerUrl()}>Network folders</a> requires FUSE projector which
 						is Linux-only. If you wish to run Varasto server on Windows, you can run
 						FUSE projector on a separate Linux server.{' '}
-						<DocLink doc={DocRef.DocsGuideNetworkFoldersMd} />
+						<DocLink doc={DocRef.DocsUsingNetworkFoldersIndexMd} />
 					</li>
 				</ul>
 			</div>

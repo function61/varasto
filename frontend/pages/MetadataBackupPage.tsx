@@ -81,7 +81,7 @@ export default class MetadataBackupPage extends React.Component<
 							heading={
 								<div>
 									Metadata backup list &nbsp;
-									<DocLink doc={DocRef.DocsMetadataBackupREADMEMd} />
+									<DocLink doc={DocRef.DocsUsingMetadataBackupIndexMd} />
 								</div>
 							}>
 							{this.renderStoredBackups()}

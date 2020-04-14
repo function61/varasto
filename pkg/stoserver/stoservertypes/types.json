@@ -135,17 +135,17 @@
 			"type": "string",
 			"stringMembers": [
 				"README.md",
-				"docs/client/README.md",
-				"docs/googledrive/README.md",
-				"docs/replication-policies/README.md",
-				"docs/guide_network-folders.md",
-				"docs/metadata-backup/README.md",
-				"docs/guide_setting-up-local-fs.md",
-				"docs/guide_setting-up-s3.md",
-				"docs/guide_setting-up-smart-monitoring.md",
-				"docs/guide_storing-movies.md",
-				"docs/guide_storing-tvshows.md",
-				"docs/security_encryption/README.md"
+				"docs/using/client/index.md",
+				"docs/using/replication-policies/index.md",
+				"docs/using/network-folders/index.md",
+				"docs/using/metadata-backup/index.md",
+				"docs/storage/local-fs/index.md",
+				"docs/storage/googledrive/index.md",
+				"docs/storage/s3/index.md",
+				"docs/using/smart-monitoring/index.md",
+				"docs/content/movies/index.md",
+				"docs/content/tvshows/index.md",
+				"docs/security/encryption/index.md"
 			]
 		}
 	],

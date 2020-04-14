@@ -46,7 +46,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 				<Panel
 					heading={
 						<div>
-							Settings <DocLink doc={DocRef.DocsGuideNetworkFoldersMd} />
+							Settings <DocLink doc={DocRef.DocsUsingNetworkFoldersIndexMd} />
 						</div>
 					}>
 					{this.renderEditForm()}
