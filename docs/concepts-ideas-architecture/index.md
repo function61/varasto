@@ -1,4 +1,4 @@
-Concepts
+Glossary
 --------
 
 | Term | Explanation |
@@ -25,7 +25,7 @@ Varasto has a server and a client component:
 | Component      | What it does                                              | Dropbox analogy |
 |----------------|-----------------------------------------------------------|-------------------------|
 | Varasto server | Manages storing of the data and showing the UI            | Dropbox service/server software |
-| Varasto client | The devices that access the data stored in Varasto server | Dropbox client software |
+| Varasto client | Used by your devices (PC, phone etc.) to access the data stored in Varasto server | Dropbox client software |
 | Browser        | You can also access Varasto server UI without the client  | Access your files via dropbox.com |
 
 In the simplest case you have the server and a client running on the same computer:
