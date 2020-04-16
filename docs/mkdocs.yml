@@ -41,8 +41,8 @@ nav:
   - AWS S3: storage/s3/index.md
   - Google Drive: storage/googledrive/index.md
   - Naming your volumes: storage/naming-your-volumes.md
-- Specially supported content:
-  # - Files (TODO): stuff.md
+- Types of content:
+  - Files: content/generic-files/index.md
   - Photos: content/photos/index.md
   - Movies: content/movies/index.md
   - TV shows: content/tvshows/index.md

@@ -1,6 +1,14 @@
 
-Movies
-------
+Different types of content
+--------------------------
+
+### Generic files
+
+!!! note ""
+	![](../content/generic-files/screenshot-web-ui.png)
+
+
+### Movies
 
 !!! note ""
 	![](../content/movies/endresult.png)
