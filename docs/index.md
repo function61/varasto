@@ -140,14 +140,14 @@ remain free to use. The paid features previously mentioned are sold under a prop
 Supported OSes
 --------------
 
-| OS      | Platform              | Varasto server | Varasto client | Network folders |
-|---------|-----------------------|----------------|----------------|-----------------|
-| Linux   | PC (x86-64)           | ☑️            | ☑️             | ☑️             |
-| Linux   | Raspberry Pi etc. (ARM) | ☑️          | ☑️             | ☑️             |
-| Windows | PC (x86-64)           | ☑️            | ☑️             | ☑️             |
-| macOS   | Mac (x86-64)          | ☑️            | ☑️             | ☑️             |
-| Android | Mobile device         | ☐             | ☐              | ☑️             |
-| iOS     | Mobile device         | ☐             | ☐              | ☑️             |
+| OS      | Architecture          | Varasto server | Varasto client | Use via network folders |
+|---------|-----------------------|----------------|----------------|------|
+| Linux   | x86-64[^1]            | ☑️            | ☑️             | ☑️  |
+| Linux   | ARM (Raspberry Pi etc.) | ☑️          | ☑️             | ☑️  |
+| Windows | x86-64[^1]            | ☑️            | ☑️             | ☑️  |
+| macOS   | x86-64[^2]            | ☑️            | ☑️             | ☑️  |
+| Android | Mobile device         | ☐             | Soon           | ☑️  |
+| iOS     | Mobile device         | ☐             | ☐              | ☑️  |
 
 
 Subscribe to Varasto news & updates
@@ -165,3 +165,6 @@ Food for thought
 - [Timeliner](https://github.com/mholt/timeliner) project archives your Twitter/Facebook
   etc history in structural form with a
   [fantastic description for motivation](https://github.com/mholt/timeliner#motivation-and-long-term-vision).
+
+[^1]: Regular PCs - they have been 64-bit for a long time
+[^2]: Macs nowadays have the same underlying CPU architecture as regular PCs
