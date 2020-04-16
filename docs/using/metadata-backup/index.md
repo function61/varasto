@@ -62,9 +62,15 @@ open the backup file after the backup is created.
 Automated backups
 -----------------
 
-Backups are most effective if they're done frequently - this implies automation. Varasto
-has scheduler that can automatically take these backups for you, and Varasto has built-in
-monitoring for all scheduled tasks.
+Backups are only effective if they're done frequently - this implies automation. Varasto
+has a scheduler that can automatically take these backups for you.
+
+### Can I trust backup uploading to keep working?
+
+The scheduler has built-in monitoring for all tasks. Uploading a backup fails? Get alerted!
+
+
+### Can I use Varasto while a backup is being created?
 
 It's fine to use Varasto during backing up, since the underlying database uses
 [MVCC](https://en.wikipedia.org/wiki/Multiversion_concurrency_control).
