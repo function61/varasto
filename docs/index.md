@@ -40,7 +40,6 @@ Features
 | Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
 | [Ransomware protection](security/ransomware-protection/index.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
 | [Integrated SMART monitoring](using/smart-monitoring/index.md) | Detect disk failures early |
-| Distributed architecture    | For high availability and other use cases, you can run a cluster of Varasto servers. |
 
 !!! tip
 	See also: [Paid features](#paid-features)
@@ -99,7 +98,7 @@ How will Varasto make money?
 | REST API                                 | ☑️  | ☑️   | Access/modify your data from external systems |
 | Have us host Varasto for you             | ☐   | ☑️   |  |
 | Realtime data API                        | ☐   | ☑️   | Realtime notifications of data changes in Varasto to external systems (push-based API) |
-| High-availability                        | ☐   | ☑️   | Run Varasto as multi-master setup so that if one node goes down, uptime is not affected |
+| High-availability (distributed architecture) | ☐ | ☑️ | Run Varasto as a multi-master setup so that if one node goes down, availability is not affected |
 | Single sign-on integration (LDAP/SAML)   | ☐   | ☑️   | Centralized login |
 | Audit trail                              | ☐   | ☑️   | Log access to data with bulletproof auditing via remote HSM service |
 | Support                                  | ☐   | ☑️   | Free users get only basic support wihout any guarantees |
