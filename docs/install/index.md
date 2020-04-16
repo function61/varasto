@@ -11,7 +11,7 @@ Server installation
 | [Linux (Docker)](linux-docker.md) | ☑️ | **Recommended, easiest option**. Only for `x86-64` (you probably have this if you're not sure) |
 | [Linux (manual installation)](linux-manual.md) | ☑️ | For users not wanting to use Docker **OR** using Raspberry Pis etc (our Docker image will support non-`x86-64` arches soon) |
 | [Windows](windows.md)             | ☐ | |
-| [Mac](mac.md)                     | ☐ | |
+| [macOS](mac.md)                     | ☐ | |
 
 
 The client?
