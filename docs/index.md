@@ -21,9 +21,8 @@ Features
 
 |                             | Details                               |
 |-----------------------------|---------------------------------------|
-| Supported OSes              | Linux, Windows (Mac might come later) |
-| Supported architectures     | amd64, ARM (= PC, Raspberry Pi etc.) |
-| Health monitoring           | Get warnings or alerts if there is anything wrong with your disks, data or Varasto. |
+| Supported OSes              | [Almost everything: PCs, mobile devices (Android, iOS), Raspberry Pis etc.](#supported-oses) |
+| [Health monitoring](screenshots/index.md#health-monitoring) | Get warnings or alerts if there is anything wrong with your disks, data or Varasto. |
 | Backup all your devices' data | Varasto's architecture is ideal for backing up all your PCs, mobile devices etc. |
 | Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive), all in encrypted form so you don't have to trust the cloud or have data leaks if local HDDs get stolen. |
 | [Integrated internal database backups](using/metadata-backup/index.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
@@ -120,6 +119,19 @@ that.
 
 The core of Varasto is, and will be, open source. All the advertised free features will
 remain free to use. The paid features previously mentioned are sold under a proprietary license.
+
+
+Supported OSes
+--------------
+
+| OS      | Platform              | Varasto server | Varasto client | Network folders |
+|---------|-----------------------|----------------|----------------|-----------------|
+| Linux   | PC (x86-64)           | ☑️            | ☑️             | ☑️             |
+| Linux   | Raspberry Pi etc. (ARM) | ☑️          | ☑️             | ☑️             |
+| Windows | PC (x86-64)           | ☑️            | ☑️             | ☑️             |
+| macOS   | Mac (x86-64)          | ☑️            | ☑️             | ☑️             |
+| Android | Mobile device         | ☐             | ☐              | ☑️             |
+| iOS     | Mobile device         | ☐             | ☐              | ☑️             |
 
 
 Subscribe to Varasto news & updates
