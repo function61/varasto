@@ -35,6 +35,7 @@ nav:
   - Varasto client: data-interfaces/client/index.md
   - Network folders: data-interfaces/network-folders/index.md
   - FUSE interface: data-interfaces/fuse/index.md
+  - API (programmatic access): data-interfaces/api/index.md
 - Operating:
   - SMART monitoring: using/smart-monitoring/index.md
   - Metadata backup: using/metadata-backup/index.md

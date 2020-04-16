@@ -31,6 +31,10 @@ Comparison
 | (OS) Android           | ☑️     | ☑️             | ☐      | ☐               |
 | (OS) iOS               | ☑️     | ☑️             | ☐      | ☐               |
 
+!!! tip
+	We also have [API for programmatic access](api/index.md), but the above summary is
+	focused on end-users.
+
 
 [^1]: Data that has very frequent changes, cannot be stored in Varasto. The only option is
       to have fast changes happen on another device and have Varasto take periodic snapshots.
