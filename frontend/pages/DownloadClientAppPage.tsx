@@ -37,17 +37,17 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<tr>
 								<td title="PC">💻</td>
 								<td>Windows</td>
-								<td>64-bit x64</td>
+								<td>64-bit x86</td>
 								<td>{bintrayLink('sto.exe')}</td>
 							</tr>
 							<tr>
 								<td title="PC">💻</td>
 								<td>Linux</td>
-								<td>64-bit x64</td>
+								<td>64-bit x86</td>
 								<td>{bintrayLink('sto_linux-amd64')}</td>
 							</tr>
 							<tr>
-								<td />
+								<td title="Single-board computer / embedded">📟</td>
 								<td>Linux</td>
 								<td>ARM (Raspberry Pi etc.)</td>
 								<td>{bintrayLink('sto_linux-arm')}</td>
@@ -64,7 +64,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<tr>
 								<td title="PC">💻</td>
 								<td>macOS</td>
-								<td>64-bit x64</td>
+								<td>64-bit x86</td>
 								<td>{bintrayLink('sto_darwin-amd64')}</td>
 							</tr>
 							<tr>
