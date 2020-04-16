@@ -1,7 +1,17 @@
 TODO: this doc is very much unfinished.
 
 These instructions mainly apply to desktop platforms. Android and iOS devices have
-different mechanisms.
+different mechanisms. There are also
+[more user friendly mechanisms](../../data-interfaces/)
+for accessing data.
+
+
+OS support
+----------
+
+| Component      | Linux | Windows | macOS | Android | iOS |
+|----------------|-------|---------|-------|---------|-----|
+| Varasto client | ☑   | ☑      | ☑   | Soon    | ☐   |
 
 
 Download Varasto client binary

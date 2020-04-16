@@ -10,17 +10,17 @@ storage space as the files will be streamed on-demand.
 OS support
 ----------
 
-| Component              | Linux | Windows | Mac | Android, iOS |
-|------------------------|-------|---------|-----|--------------|
-| Varasto FUSE projector | ☑    | ☐      | ☐  | ☐           |
+| Component              | Linux | Windows | macOS | Android, iOS |
+|------------------------|-------|---------|-------|--------------|
+| Varasto FUSE projector | ☑    | ☐      | ☐    | ☐           |
 
 
 Architecture
 ------------
 
 Varasto uses Linux-specific technology called
-[FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) to project content in Varasto
-as a regular directory hierarchy that can be accessed from the local filesystem.
+[FUSE](https://en.wikipedia.org/wiki/Filesystem_in_Userspace) to *project* content in Varasto
+as a local directory hierarchy.
 
 ??? info "Varasto architecture drawing"
 	![](../../concepts-ideas-architecture/architecture.png)

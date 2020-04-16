@@ -10,12 +10,12 @@ stream them without downloading ("cloning") them to your computer.
 OS support
 ----------
 
-| Component              | Linux | Windows | Mac | Android, iOS |
-|------------------------|-------|---------|-----|--------------|
-| Varasto server         | ☑    | ☑     | ☑ | ☐           |
-| Access network folders | ☑    | ☑     | ☑ | ☑          |
-| Serve network folders  | ☑    | ☐      | ☐  | ☐           |
-| Varasto FUSE projector | ☑    | ☐      | ☐  | ☐           |
+| Component              | Linux | Windows | macOS | Android, iOS |
+|------------------------|-------|---------|-------|--------------|
+| Varasto server         | ☑    | ☑     | ☑   | ☐           |
+| Access network folders | ☑    | ☑     | ☑   | ☑          |
+| Serve network folders  | ☑    | ☐      | ☐    | ☐           |
+| Varasto FUSE projector | ☑    | ☐      | ☐    | ☐           |
 
 `Serve network folders` requires `Varasto FUSE projector` (= their rows are identical).
 Therefore currently you need Linux to share data from Varasto as network folders.
@@ -29,7 +29,7 @@ Architecture / how does it work?
 --------------------------------
 
 Network folders are built on top of Varasto's FUSE interface -
-[read about its architecture first](../fuse-interface/index.md#architecture).
+[read about its architecture first](../fuse/index.md#architecture).
 
 As mentioned in the above document, the directory hierarchy exposed by the FUSE projector
 is only accessible on the computer the projector runs on. But we can use Samba to export
@@ -47,7 +47,7 @@ Here's how it looks if you run Varasto server and Varasto FUSE projector + Samba
 Set up FUSE projector
 ---------------------
 
-As network folders builds on top of FUSE projector, [go set it up first](../fuse-interface/index.md)!
+As network folders builds on top of FUSE projector, [go set it up first](../fuse/index.md)!
 
 !!! tip
 	Before moving on to configure Samba, test that the FUSE projector works (its page has

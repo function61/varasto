@@ -29,12 +29,15 @@ nav:
 - Concepts, ideas & architecture: concepts-ideas-architecture/index.md
 - Comparison to similar software: comparison-to-similar-software/index.md
 - Performance: performance/index.md
-- Using:
-  - Varasto client: using/client/index.md
+- Ways to access your data: 
+  - Overview: data-interfaces/index.md
+  - Web UI: data-interfaces/web-ui/index.md
+  - Varasto client: data-interfaces/client/index.md
+  - Network folders: data-interfaces/network-folders/index.md
+  - FUSE interface: data-interfaces/fuse/index.md
+- Operating:
   - SMART monitoring: using/smart-monitoring/index.md
   - Metadata backup: using/metadata-backup/index.md
-  - Network folders: using/network-folders/index.md
-  - FUSE interface: using/fuse-interface/index.md
   - Replication policies: using/replication-policies/index.md
 - Local / remote storage:
   - Local disk storage: storage/local-fs/index.md

@@ -1,6 +1,6 @@
 
-Different types of content
---------------------------
+Web UI
+------
 
 ### Generic files
 
@@ -26,36 +26,30 @@ Different types of content
 	![](../content/photos/screenshot.png)
 
 
-Ways to access your data
-------------------------
-
-### From web UI
-
-Screenshots for [Different types of content](#different-types-of-content) demonstrate
-the web UI.
-
+Other ways to access your data
+------------------------------
 
 ### As network folders
 
-You can access the [network folders](../using/network-folders/index.md) ("samba shares")
-through Windows, Linux, Mac, apps for Android, iOS etc..
+You can access the [network folders](../data-interfaces/network-folders/) ("samba shares")
+through Windows, Linux, macOS, apps for Android, iOS etc..
 
 !!! note ""
-	![](../using/network-folders/screenshot.png)
+	![](../data-interfaces/network-folders/screenshot.png)
 
 
 ### Via FUSE filesystem
 
 Linux users can treat all content in Varasto as if it was their local filesystem, even
 when Varasto's content wouldn't fit in that computer's storage (the files will be streamed
-on-demand). [Read more](../using/network-folders/index.md#architecture-how-does-it-work).
+on-demand). [Read more](../data-interfaces/network-folders/#architecture-how-does-it-work).
 
 !!! note ""
-	![](../using/fuse-interface/shell.png)
+	![](../data-interfaces/fuse/shell.png)
 
 ### Cloning of collection
 
-See [short video & read more](../using/client/index.md).
+See [short video & read more](../data-interfaces/client/).
 
 
 Administration

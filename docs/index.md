@@ -47,7 +47,7 @@ You get all of this for free:
 | [Metadata support & tagging](content/movies/index.md) | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. Can also add tags to collections. |
 | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! Varasto is [dogfooded](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) with ~50 TB of data without any slowdowns. |
 | [Thumbnails for photos](content/photos/index.md) | Automatic thumbnailing of photos/pictures |
-| [Data access methods](concepts-ideas-architecture/index.md#ways-to-access-your-data) | 1) Clone collection to your computer 2) Open/stream files from web UI 3) Via network folders 4) Linux FUSE interface |
+| [Data access methods](data-interfaces/) | 1) Clone collection to your computer 2) Open/stream files from web UI 3) Via network folders 4) Linux FUSE interface |
 | Data integrity              | Sha256 hashes verified on file write/read - detects [bit rot](https://en.wikipedia.org/wiki/Data_degradation) immediately |
 | Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data |
 | Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login if you want to show only family-friendly content |
