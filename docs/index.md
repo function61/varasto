@@ -19,6 +19,8 @@ See [screenshots](screenshots/index.md) to get a better picture.
 Features
 --------
 
+You get all of this for free:
+
 |                             | Details                               |
 |-----------------------------|---------------------------------------|
 | Supported OSes              | [Almost everything: PCs, mobile devices (Android, iOS), Raspberry Pis etc.](#supported-oses) |
@@ -48,7 +50,7 @@ Features
 Upcoming features
 -----------------
 
-These features are not ready, but are prioritized and on the roadmap:
+These (also free) features are not ready, but are prioritized and on the roadmap:
 
 |                      | Details                               |
 |----------------------|---------------------------------------|
@@ -94,7 +96,7 @@ How will Varasto make money?
 |                                          | Free | Paid | Info |
 |------------------------------------------|------|------|------|
 | Host Varasto yourself                    | ☑️  | ☑️   |      |
-| All the advertized [features](#features) | ☑️  | ☑️   |      |
+| All the advertized [free features](#features) | ☑️  | ☑️   |      |
 | REST API                                 | ☑️  | ☑️   | Access/modify your data from external systems |
 | Have us host Varasto for you             | ☐   | ☑️   |  |
 | Realtime data API                        | ☐   | ☑️   | Realtime notifications of data changes in Varasto to external systems (push-based API) |
