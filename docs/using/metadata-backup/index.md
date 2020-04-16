@@ -129,8 +129,8 @@ You can get a bearer token by visiting `Settings > Users` and creating a new API
 
 Summary of your options:
 
-| Option                                            | Safety                |
-|---------------------------------------------------|-----------------------|
-| Just copy `varasto.db`                            | Dangerous             |
-| Filesystem-level snapshot, then copy `varasto.db` | You'll probably be OK |
-| Consistent snapshot from API                      | Safest option         |
+| Option                                            | Consistency | Safety                |
+|---------------------------------------------------|-------------|-----------------------|
+| Just copy live `varasto.db`                       | Inconsistent | Dangerous            |
+| Filesystem-level snapshot, then copy `varasto.db` | Crash-like  | You'll probably be OK |
+| Consistent snapshot from API                      | Fully       | Safest option         |
