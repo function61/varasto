@@ -40,6 +40,7 @@ nav:
   - SMART monitoring: using/smart-monitoring/index.md
   - Metadata backup: using/metadata-backup/index.md
   - Replication policies: using/replication-policies/index.md
+  - When a disk fails: using/when-a-disk-fails/index.md
 - Local / remote storage:
   - Local disk storage: storage/local-fs/index.md
   - AWS S3: storage/s3/index.md
