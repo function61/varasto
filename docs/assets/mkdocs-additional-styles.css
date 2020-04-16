@@ -1,0 +1,5 @@
+
+/* Fix bad color in table heading links */
+.md-typeset thead a {
+	color: hsl(231, 43%, 72%);
+}

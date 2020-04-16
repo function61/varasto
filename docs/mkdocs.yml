@@ -17,6 +17,9 @@ markdown_extensions:
   - toc:
       permalink: true
 
+extra_css:
+  - assets/mkdocs-additional-styles.css
+
 nav:
 
 - index.md
