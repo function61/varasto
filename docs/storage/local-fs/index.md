@@ -26,6 +26,9 @@ Create a volume in Varasto which is basically just its name and a quota. The UI 
 
 I chose `Fry` for my volume name.
 
+!!! tip
+	Read: [Naming your volumes](../naming-your-volumes.md)
+
 In this example I'm using Linux, and I have a dedicated partition at `/mnt/fry`.
 
 We could have Varasto place its data at the root of the partition, but it's a good idea to
@@ -39,24 +42,6 @@ Now we are ready to mount that directory as volume in Varasto! From Varasto choo
 if not exists).
 
 That's it! Now that the volume is mounted, Varasto can write files there.
-
-
-Choose a naming scheme for your volumes
----------------------------------------
-
-!!! tip "Name your disks - not their content!"
-	Don't use "Movies" or "Music" because with Varasto you don't need to stress about which
-	disk is used for storing which type of data. The data can even move between your volumes
-	as your needs change.
-
-You can name your volumes anything you like - a few examples:
-
-- Your favourite TV show characters (I used Futurama)
-- "Disk A", "Disk B", ... etc.
-- Disk serial number
-
-If you only have one disk or don't have a lot of disks, don't worry about this and just
-use anything you like. You can rename volumes later if your needs change.
 
 
 Do I need a dedicated partition for Varasto volume?

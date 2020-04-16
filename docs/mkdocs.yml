@@ -40,6 +40,7 @@ nav:
   - Local disk storage: storage/local-fs/index.md
   - AWS S3: storage/s3/index.md
   - Google Drive: storage/googledrive/index.md
+  - Naming your volumes: storage/naming-your-volumes.md
 - Specially supported content:
   # - Files (TODO): stuff.md
   - Photos: content/photos/index.md
