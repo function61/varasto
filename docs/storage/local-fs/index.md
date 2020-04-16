@@ -12,17 +12,27 @@ Which filesystem to store Varasto data on top of?
 Varasto is not a filesystem in the traditional sense, even though it does very similar things.
 Varasto only needs to write files and directories under a directory that you choose - that's it.
 
-Varasto's local disk storage works with any filesystem that your OS supports. Use ext4,
-NTFS, etc. - whatever you like!
+Varasto's local disk storage works with any filesystem that your OS supports. Use
+whichever one you like! Our recommendations:
 
-For Linux we recommend ext4 and for Windows we recommend NTFS. Basically whichever
-filesystem is the current safe choice without paying too much overhead with extra features.
+| OS      | Recommended FS |
+|---------|----------------|
+| Linux   | ext4           |
+| Windows | NTFS           |
+| Mac     | Whichever is the default |
+
+Rationale: basically whichever one is the current safe choice without paying too much
+overhead with extra features.
+
+!!! info "Why not a safer filesystem?"
+	Read: [But is ext4 / NTFS safe for my precious data?](#but-is-ext4-ntfs-safe-for-my-precious-data)
 
 
 Creating & mounting a volume
 ----------------------------
 
-Create a volume in Varasto which is basically just its name and a quota. The UI has helpful tips.
+Create a volume in Varasto which is basically just its name and a quota. The UI has
+helpful advice.
 
 I chose `Fry` for my volume name.
 
@@ -38,8 +48,11 @@ files are placed on the partition, you know exactly which are Varasto's files.
 I recommend naming the data directory `varasto-<volume name>` to be super clear.
 
 Now we are ready to mount that directory as volume in Varasto! From Varasto choose
-`Fry > Mount local volume`. Enter as path: `/mnt/fry/varasto-fry` (dir will be created
-if not exists).
+`Fry > Mount local volume`. Enter as path: `/mnt/fry/varasto-fry`.
+
+!!! tip
+	The directory will be created at mount-time if it does not exist (but for safety only
+	if the volume is mounted for the first time).
 
 That's it! Now that the volume is mounted, Varasto can write files there.
 
@@ -61,8 +74,13 @@ easily move the data later to a separate partition/disk without reinstalling Var
 But is ext4 / NTFS safe for my precious data?
 ---------------------------------------------
 
-There are "safer" alternatives for Linux like ZFS or Btrfs and for Windows ReFS. While you can
-use those, we don't recommend them because they have overheads like:
+| OS      | "Unsafe" FS | "Safer" FS |
+|---------|-------------|------------|
+| Linux   | ext4        | ZFS, Btrfs |
+| Windows | NTFS        | ReFS       |
+
+There are "safer" alternatives to `ext4` and `NTFS`. While you can use those, we don't
+recommend them because they have overheads like:
 
 - integrity verification
 - configurable replication
@@ -81,7 +99,7 @@ More details for nerds
 
 When Varasto mounts a volume for the first time, it writes the volume ID in a "volume descriptor" file:
 
-```
+```console
 $ tree /mnt/fry/varasto-fry
 `-- 0
     `-- 00
@@ -90,7 +108,7 @@ $ tree /mnt/fry/varasto-fry
 
 We can inspect its content:
 
-```
+```console
 $ cat /mnt/fry/varasto-fry/0/00/0000000000000000000000000000000000000000000000000
 {
     "volume_uuid": "VaLnZHPzHaY"
@@ -103,7 +121,7 @@ disastrous consequences because that would mess up bookkeeping).
 
 When I add content in Varasto, more files will appear in the above hierarchy:
 
-```
+```console
 $ tree /mnt/fry/varasto-fry
 |-- 0
 |   `-- 00
@@ -113,17 +131,17 @@ $ tree /mnt/fry/varasto-fry
         `-- dt8hr0to76a4236tmtuaaer6qith92crjir214snsihdlfmu0
 ```
 
-Each filename is a hash of its content (except the volume descriptor). This is known as a
-[CAS (Content Addressable Storage)](https://en.wikipedia.org/wiki/Content-addressable_storage).
-A CAS provides deduplication and integrity checking by design.
+!!! info
+	The reason Varasto creates subdirectories is so that we won't end up having too many
+	files in any one directory (most filesystems would slow down).
 
-This same CAS-concept is used for all Varasto volume drivers like cloud disks, but the some
-details may vary (e.g. most cloud drivers tend not to require subdirectory structure as
-they don't slow down if there are millions of files in a single directory).
+Each filename is a hash of its content (except the volume descriptor). Read more about
+[our Content-Addressable-Storage](../../concepts-ideas-architecture/index.md#content-addressable-storage)
+("CAS").
 
-The reason Varasto creates subdirectories is so that we won't end up having too many files
-in any one directory.
-
+This same CAS-concept is used for all Varasto blob drivers like cloud disks, but some
+details may vary - e.g. most cloud drivers tend not to benefit from a subdirectory
+structure due to how their service is architected.
 
 Why call it a volume and not a disk?
 ------------------------------------
