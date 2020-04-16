@@ -16,6 +16,21 @@ TODO: video
 See [screenshots](screenshots/index.md) to get a better picture.
 
 
+Status & timeline
+-----------------
+
+**Current status**: beta testers are invited/appreciated in helping out in finding pain
+points in rapid iteration to improve the system!
+
+| Date                | No probable data loss | No rough edges     | Note | 
+|---------------------|-----------------------|--------------------|------|
+| ~~before jan 2020~~ | ☐  | ☐  | |
+| **jan - apr 2020**  | ☑ | ☐  | <- we're here. Gathering user experiences from beta testers |
+| may 2020 onwards    | ☑ | ☑ | General availability |
+
+1st of May is target for "this should work well enough without major rough edges".
+
+
 Features
 --------
 
