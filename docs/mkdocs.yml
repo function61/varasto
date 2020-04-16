@@ -24,8 +24,8 @@ extra_css:
 nav:
 
 - index.md
-- Screenshots: screenshots/index.md
 - Installation: install/index.md
+- Screenshots: screenshots/index.md
 - Concepts, ideas & architecture: concepts-ideas-architecture/index.md
 - Comparison to similar software: comparison-to-similar-software/index.md
 - Performance: performance/index.md
