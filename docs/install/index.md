@@ -6,12 +6,12 @@
 Server installation
 -------------------
 
-| Installation                | Fully supported | Notes |
+| Installation                | Fully supported[^1] | Notes |
 |-----------------------------|-----------------|-------|
 | [Linux (Docker)](linux-docker.md) | ☑️ | **Recommended, easiest option**. Only for `x86-64` (you probably have this if you're not sure) |
-| [Linux (manual installation)](linux-manual.md) | ☑️ | For Raspberry Pis etc |
+| [Linux (manual installation)](linux-manual.md) | ☑️ | For users not wanting to use Docker **OR** using Raspberry Pis etc (our Docker image will support non-`x86-64` arches soon) |
 | [Windows](windows.md)             | ☐ | |
-| Mac                               | ☐ | Docker works on Mac so you may have success using the `Linux (Docker)` guide |
+| [Mac](mac.md)                     | ☐ | |
 
 
 Server vs. client?
@@ -44,3 +44,4 @@ Varasto currently has these limitations:
   backup file, run this command to import backup".
 
 
+[^1]: Extensively tested by us and most likely to work as intended.

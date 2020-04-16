@@ -1,8 +1,9 @@
 Windows
 =======
 
-Follow same instructions as for Linux, but there's no autostart yet (the systemd thing),
-so you have to just run the .exe file directly from command line.
+Follow same instructions as for [Linux (manual installation)](linux-manual.md), but
+there's no autostart yet (the systemd thing), so you have to just run the .exe file
+directly from command line.
 
 In the future I think we should research targeting
 [Windows Subsystem for Linux](https://en.wikipedia.org/wiki/Windows_Subsystem_for_Linux)
