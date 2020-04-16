@@ -142,18 +142,3 @@ Each filename is a hash of its content (except the volume descriptor). Read more
 This same CAS-concept is used for all Varasto blob drivers like cloud disks, but some
 details may vary - e.g. most cloud drivers tend not to benefit from a subdirectory
 structure due to how their service is architected.
-
-Why call it a volume and not a disk?
-------------------------------------
-
-Volume is more accurate, consider this:
-
-| Volume name  | Storage location                 |
-|--------------|----------------------------------|
-| Disk A       | Local disk A                     |
-| Disk B       | Local disk B                     |
-| Cloud        | example@gmail.com's Google Drive |
-
-It would be weird calling the "Cloud" volume a disk, since it's a software service and
-even under the covers Google actually stores your data into multiple disks so it'd still
-be "a group of disks"..

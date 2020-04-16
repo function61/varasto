@@ -6,7 +6,7 @@ Concepts
 | Collection | Like a Git repository - stores concrete files and folders. Files consist of multiple blobs. Collections are change tracked by changeset, so if you accidentally deleted or modified a file you can go back in history to restore the file at a specific time. |
 | Directory | Collections are stored in a hierarchy of directories. This is only in metadata sense - directory hierarchy of collections is different than directories inside collections. |
 | Blob | Each file is split into 4 MB chunks called blobs. A blob is identified by its content's sha-256. A blob is stored in 1 or more volumes for redundancy. |
-| Volume | A place to store blobs in. A single physical disk, Google Drive, AWS S3 etc. |
+| Volume | A place to store blobs in. A single physical disk, Google Drive, AWS S3 etc. Volume is a more suitable term than "Disk" because cloud services aren't disks. |
 | Mount | Volume is mounted in a given server, so the server has access to the volume's blobs. Depending on blob driver, same volume can be accessed from multiple servers. |
 | Blob driver | Implements access to different types of volumes. `local-fs` stores blobs in local filesystem. `googledrive` stores in Google Drive etc. |
 | Server | An instance of Varasto server running on a computer. You can run a cluster of Varasto servers for redundancy and/or convenience (think Varasto running behing firewall at home but also in cloud for remote access). |
