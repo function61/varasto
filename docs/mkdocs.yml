@@ -13,6 +13,7 @@ markdown_extensions:
   - codehilite
   - admonition
   - pymdownx.details
+  - pymdownx.tabbed
   - footnotes
   - toc:
       permalink: true
@@ -33,6 +34,7 @@ nav:
   - SMART monitoring: using/smart-monitoring/index.md
   - Metadata backup: using/metadata-backup/index.md
   - Network folders: using/network-folders/index.md
+  - FUSE interface: using/fuse-interface/index.md
   - Replication policies: using/replication-policies/index.md
 - Local / remote storage:
   - Local disk storage: storage/local-fs/index.md
