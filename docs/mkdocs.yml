@@ -2,8 +2,8 @@ site_name: 'Varasto docs'
 
 theme:
   name: material
-  logo: varasto.svg
-  favicon: varasto.svg
+  logo: assets/varasto.svg
+  favicon: assets/favicon.svg # otherwise same as varasto.svg but different color
 
 docs_dir: '.'
 
