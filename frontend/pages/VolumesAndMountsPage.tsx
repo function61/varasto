@@ -1,5 +1,8 @@
 import { DocGitHubMaster, DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
+import IntegrityVerificationJobsView, {
+	volumeTechnologyBadge,
+} from 'pages/views/IntegrityVerificationJobsView';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
@@ -7,11 +10,9 @@ import { reloadCurrentPage } from 'f61ui/browserutils';
 import { InfoAlert, WarningAlert } from 'f61ui/component/alerts';
 import {
 	DangerLabel,
-	DefaultLabel,
 	Glyphicon,
 	Panel,
 	SuccessLabel,
-	WarningLabel,
 	Well,
 	tableClassStripedHover,
 	tableClassStripedHoverBordered,
@@ -26,8 +27,6 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { plainDateToDateTime, dateRFC3339 } from 'f61ui/types';
 import { unrecognizedValue } from 'f61ui/utils';
 import {
-	IntegrityverificationjobResume,
-	IntegrityverificationjobStop,
 	NodeSmartScan,
 	VolumeChangeDescription,
 	VolumeChangeNotes,
@@ -147,9 +146,13 @@ export default class VolumesAndMountsPage extends React.Component<
 				case 'integrity':
 					return (
 						<div>
-							<Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>
-
-							<Panel heading="Data integrity verification jobs">
+							<Panel
+								heading={
+									<div>
+										Data integrity verification jobs &nbsp;
+										<Info text="Showing only latest scan result by default" />
+									</div>
+								}>
 								{this.renderIvJobs()}
 							</Panel>
 						</div>
@@ -550,7 +553,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				<tr key={obj.Id}>
 					<td title={`Uuid=${obj.Uuid} Id=${obj.Id}`}>{obj.Label}</td>
 					<td>
-						<DefaultLabel>{volumeTechnologyToDisplay(obj.Technology)}</DefaultLabel>
+						{volumeTechnologyBadge(obj.Technology)}
 						&nbsp;
 						{obj.Description}
 						&nbsp;
@@ -773,84 +776,14 @@ export default class VolumesAndMountsPage extends React.Component<
 			return loadingOrError;
 		}
 
-		/*
-			stopped = !isCompleted AND !running
-			running = !isCompleted AND running
-			pass = isCompleted AND errors == 0
-			fail = isCompleted AND errors > 0
-		*/
-		const jobStatus = (obj: IntegrityVerificationJob): React.ReactNode => {
-			const completed = obj.Completed;
-
-			if (completed === null) {
-				if (!obj.Running) {
-					return <WarningLabel>Stopped</WarningLabel>;
-				}
-
-				// since the blobref is a SHA256, and its properties is uniform random distribution,
-				// and since our b-tree based database table scans are alphabetical order, we
-				// can deduce progress of scan by just looking at four first hexits:
-				//
-				// 0000 =>   0 %
-				// 8000 =>  50 %
-				// ffff => 100 %
-				const lastCompletedBlobRefFourFirstHexits = obj.LastCompletedBlobRef.substr(0, 4);
-
-				const progress = (parseInt(lastCompletedBlobRefFourFirstHexits, 16) / 65535) * 100;
-
-				return <ProgressBar progress={progress} />;
-			}
-
-			if (obj.ErrorsFound > 0) {
-				return <DangerLabel>Failed</DangerLabel>;
-			}
-
-			return (
-				<SuccessLabel>
-					Pass <Timestamp ts={completed} />
-				</SuccessLabel>
-			);
-		};
-
-		const toRow = (obj: IntegrityVerificationJob) => {
-			const volume = volumes.filter((vol) => vol.Id === obj.VolumeId);
-			const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
-
-			return (
-				<tr key={obj.Id}>
-					<td>{jobStatus(obj)}</td>
-					<td>{volumeName}</td>
-					<td title={obj.Id}>
-						<Timestamp ts={obj.Created} />
-					</td>
-					<td>{bytesToHumanReadable(obj.BytesScanned)}</td>
-					<td title={'Errors found: ' + thousandSeparate(obj.ErrorsFound)}>
-						{obj.Report}
-					</td>
-					<td>
-						<Dropdown>
-							<CommandLink command={IntegrityverificationjobResume(obj.Id)} />
-							<CommandLink command={IntegrityverificationjobStop(obj.Id)} />
-						</Dropdown>
-					</td>
-				</tr>
-			);
-		};
-
 		return (
-			<table className={tableClassStripedHover}>
-				<thead>
-					<tr>
-						<th />
-						<th>Volume</th>
-						<th>Created</th>
-						<th>Scanned</th>
-						<th>Report</th>
-						<th style={{ width: '1%' }} />
-					</tr>
-				</thead>
-				<tbody>{ivJobs.map(toRow)}</tbody>
-			</table>
+			<IntegrityVerificationJobsView
+				jobs={ivJobs}
+				volumes={volumes}
+				refresh={() => {
+					this.loadIvJobs();
+				}}
+			/>
 		);
 	}
 
@@ -896,32 +829,23 @@ export default class VolumesAndMountsPage extends React.Component<
 			</table>
 		);
 	}
-
 	private fetchData() {
 		this.state.volumes.load(() => getVolumes());
 		this.state.mounts.load(() => getVolumeMounts());
 		this.state.nodes.load(() => getNodes());
 		this.state.ivJobs.load(() => getIntegrityVerificationJobs());
 
+		// refreshable, used from >1 places
+		this.loadIvJobs();
 		this.loadReplicationStatuses();
 	}
 
-	// used from >1 places
+	private loadIvJobs() {
+		this.state.ivJobs.load(() => getIntegrityVerificationJobs());
+	}
+
 	private loadReplicationStatuses() {
 		this.state.replicationStatuses.load(() => getReplicationStatuses());
-	}
-}
-
-function volumeTechnologyToDisplay(tech: VolumeTechnology): string {
-	switch (tech) {
-		case VolumeTechnology.DiskHdd:
-			return 'HDD';
-		case VolumeTechnology.DiskSsd:
-			return 'SSD';
-		case VolumeTechnology.Cloud:
-			return '☁';
-		default:
-			throw unrecognizedValue(tech);
 	}
 }
 
