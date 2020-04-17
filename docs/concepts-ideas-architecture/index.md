@@ -41,7 +41,20 @@ In the simplest case you have the server and a client running on the same comput
 
 Varasto is backed by a
 [Content-Addressable Storage](https://en.wikipedia.org/wiki/Content-addressable_storage)
-(CAS), which provides quite a few tricks like automatic integrity protection and deduplication.
+(CAS), which provides quite a few tricks like automatic integrity verification and deduplication:
+
+=== "Write first file"
+	![](cas-write-first-file.png)
+
+=== "Write second file"
+	![](cas-write-second-file.png)
+
+=== "Deduplication"
+	![](cas-deduplication.png)
+
+=== "Integrity violation"
+	![](cas-integrity-violation.png)
+
 
 To learn more about how Varasto stores files:
 [read more](../storage/local-fs/index.md#more-details-for-nerds).
