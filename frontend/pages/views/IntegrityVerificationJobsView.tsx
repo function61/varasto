@@ -199,11 +199,13 @@ export default class IntegirtyVerificationJobsView extends React.Component<
 	pass = isCompleted AND errors == 0
 	fail = isCompleted AND errors > 0
 */
-function jobStatus(obj: IntegrityVerificationJob): React.ReactNode {
-	const completed = obj.Completed;
+function jobStatus(job: IntegrityVerificationJob): React.ReactNode {
+	const completed = job.Completed;
+
+	const anyErrors = job.ErrorsFound > 0;
 
 	if (completed === null) {
-		if (!obj.Running) {
+		if (!job.Running) {
 			return <WarningLabel>Stopped</WarningLabel>;
 		}
 
@@ -214,14 +216,14 @@ function jobStatus(obj: IntegrityVerificationJob): React.ReactNode {
 		// 0000 =>   0 %
 		// 8000 =>  50 %
 		// ffff => 100 %
-		const lastCompletedBlobRefFourFirstHexits = obj.LastCompletedBlobRef.substr(0, 4);
+		const lastCompletedBlobRefFourFirstHexits = job.LastCompletedBlobRef.substr(0, 4);
 
 		const progress = (parseInt(lastCompletedBlobRefFourFirstHexits, 16) / 65535) * 100;
 
-		return <ProgressBar progress={progress} />;
+		return <ProgressBar progress={progress} colour={anyErrors ? 'danger' : undefined} />;
 	}
 
-	if (obj.ErrorsFound > 0) {
+	if (anyErrors) {
 		return <DangerLabel>Failed</DangerLabel>;
 	}
 
