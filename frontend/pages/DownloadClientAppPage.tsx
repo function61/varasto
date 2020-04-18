@@ -29,7 +29,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<tr>
 								<th>Type</th>
 								<th>OS</th>
-								<th>Hardware</th>
+								<th>Architecture</th>
 								<th>Download</th>
 							</tr>
 						</thead>
@@ -37,13 +37,13 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<tr>
 								<td title="PC">💻</td>
 								<td>Windows</td>
-								<td>64-bit x86</td>
+								<td>x86 64-bit</td>
 								<td>{bintrayLink('sto.exe')}</td>
 							</tr>
 							<tr>
 								<td title="PC">💻</td>
 								<td>Linux</td>
-								<td>64-bit x86</td>
+								<td>x86 64-bit</td>
 								<td>{bintrayLink('sto_linux-amd64')}</td>
 							</tr>
 							<tr>
@@ -55,7 +55,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<tr>
 								<td title="Mobile">📱</td>
 								<td>Android</td>
-								<td>Any</td>
+								<td></td>
 								<td>
 									Coming soon{' '}
 									<Info text="If you're feeling adventurous you can try Linux/ARM on Android from command line" />
@@ -64,7 +64,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 							<tr>
 								<td title="PC">💻</td>
 								<td>macOS</td>
-								<td>64-bit x86</td>
+								<td>x86 64-bit</td>
 								<td>{bintrayLink('sto_darwin-amd64')}</td>
 							</tr>
 							<tr>
