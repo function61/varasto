@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -47,6 +48,11 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		volToPurge, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
+			return err
+		}
+
+		// make sure no new data will be landing on this volume
+		if err := noReplicationPolicyPlacesNewDataToVolume(volToPurge.ID, tx); err != nil {
 			return err
 		}
 
@@ -468,4 +474,18 @@ func iterateDirectoriesRecursively(
 	}
 
 	return nil
+}
+
+func noReplicationPolicyPlacesNewDataToVolume(volId int, tx *bbolt.Tx) error {
+	return stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+		policy := record.(*stotypes.ReplicationPolicy)
+
+		if sliceutil.ContainsInt(policy.DesiredVolumes, volId) {
+			return fmt.Errorf(
+				"Replication policy '%s' sends new data to your volume",
+				policy.Name)
+		}
+
+		return nil
+	}, tx)
 }
