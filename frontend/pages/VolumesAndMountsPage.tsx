@@ -567,38 +567,6 @@ export default class VolumesAndMountsPage extends React.Component<
 					<td>
 						<Dropdown>
 							<CommandLink
-								command={VolumeMountLocal(obj.Id, {
-									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsStorageLocalFsIndexMd),
-								})}
-							/>
-							<CommandLink
-								command={VolumeMountGoogleDrive(obj.Id, {
-									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsStorageGoogledriveIndexMd),
-									redirect: (createdRecordId): string => {
-										if (createdRecordId === 'mounted-ok') {
-											reloadCurrentPage();
-										} else {
-											if (
-												confirm(
-													'You´ll now be redirected to Google to authorize your account to access Google Drive',
-												)
-											) {
-												window.open(createdRecordId, '_blank');
-											}
-										}
-										return '';
-									},
-								})}
-							/>
-							<CommandLink
-								command={VolumeMountS3(obj.Id, {
-									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsStorageS3IndexMd),
-								})}
-							/>
-							<CommandLink
 								command={VolumeRename(obj.Id, obj.Label, {
 									disambiguation: obj.Label,
 								})}
@@ -716,48 +684,104 @@ export default class VolumesAndMountsPage extends React.Component<
 			return loadingOrError;
 		}
 
+		const rows: JSX.Element[] = [];
+
+		const mkRow = (vol: Volume, mount: VolumeMount | undefined, showVolume: boolean) => {
+			const node = mount ? nodes.filter((n) => n.Id === mount.Node)[0] : undefined;
+
+			const rowKey = vol.Uuid + (mount ? mount.Id : '');
+
+			return (
+				<tr key={rowKey}>
+					<td>{mount && onlineBadge(mount.Online)}</td>
+					<td>
+						<span title={mount && 'MountId=' + mount.Id}>
+							{showVolume && vol.Label}
+						</span>
+					</td>
+					<td>{node && node.Name}</td>
+					<td>{mount && mount.Driver}</td>
+					<td>{mount && <SecretReveal secret={mount.DriverOpts} />}</td>
+					<td>
+						<Dropdown>
+							<CommandLink
+								command={VolumeMountLocal(vol.Id, {
+									disambiguation: vol.Label,
+									helpUrl: DocGitHubMaster(DocRef.DocsStorageLocalFsIndexMd),
+								})}
+							/>
+							<CommandLink
+								command={VolumeMountGoogleDrive(vol.Id, {
+									disambiguation: vol.Label,
+									helpUrl: DocGitHubMaster(DocRef.DocsStorageGoogledriveIndexMd),
+									redirect: (createdRecordId): string => {
+										if (createdRecordId === 'mounted-ok') {
+											reloadCurrentPage();
+										} else {
+											if (
+												confirm(
+													'You´ll now be redirected to Google to authorize your account to access Google Drive',
+												)
+											) {
+												window.open(createdRecordId, '_blank');
+											}
+										}
+										return '';
+									},
+								})}
+							/>
+							<CommandLink
+								command={VolumeMountS3(vol.Id, {
+									disambiguation: vol.Label,
+									helpUrl: DocGitHubMaster(DocRef.DocsStorageS3IndexMd),
+								})}
+							/>
+							{mount && (
+								<CommandLink
+									command={VolumeUnmount(mount.Id, {
+										disambiguation: vol.Label,
+									})}
+								/>
+							)}
+						</Dropdown>
+					</td>
+				</tr>
+			);
+		};
+
+		for (const vol of volumes) {
+			const volumesMounts = mounts.filter((m) => m.Volume === vol.Id);
+
+			if (!volumesMounts.length) {
+				rows.push(mkRow(vol, undefined, true));
+			} else {
+				for (let i = 0; i < volumesMounts.length; i++) {
+					rows.push(mkRow(vol, volumesMounts[i], i === 0));
+				}
+			}
+		}
+
 		return (
 			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
+						<th colSpan={2} style={{ textAlign: 'center' }}>
+							Volume
+						</th>
+						<th colSpan={4} style={{ textAlign: 'center' }}>
+							Mount
+						</th>
+					</tr>
+					<tr>
 						<th style={{ width: '1%' }} />
-						<th>Volume</th>
-						<th>Node</th>
+						<th></th>
+						<th>Server</th>
 						<th>Driver</th>
 						<th>DriverOpts</th>
 						<th />
 					</tr>
 				</thead>
-				<tbody>
-					{mounts.map((mount) => {
-						const volume = volumes.filter((vol) => vol.Id === mount.Volume);
-						const node = nodes.filter((nd) => nd.Id === mount.Node);
-
-						const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
-						const nodeName = node.length === 1 ? node[0].Name : '(error)';
-
-						return (
-							<tr key={mount.Id}>
-								<td>{onlineBadge(mount.Online)}</td>
-								<td>
-									<span title={`MountId=${mount.Id}`}>{volumeName}</span>
-								</td>
-								<td>{nodeName}</td>
-								<td>{mount.Driver}</td>
-								<td>
-									<SecretReveal secret={mount.DriverOpts} />
-								</td>
-								<td>
-									<CommandIcon
-										command={VolumeUnmount(mount.Id, {
-											disambiguation: volumeName,
-										})}
-									/>
-								</td>
-							</tr>
-						);
-					})}
-				</tbody>
+				<tbody>{rows}</tbody>
 			</table>
 		);
 	}
