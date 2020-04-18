@@ -121,7 +121,8 @@
 			"type": "string",
 			"stringMembers": [
 				"TlsCertificate",
-				"VolumeMounts",
+				"Volume",
+				"Mount",
 				"Smart",
 				"VolumeReplication",
 				"ReplicationPolicies",

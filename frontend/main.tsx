@@ -71,8 +71,12 @@ class Handlers implements r.RouteHandlers {
 		return <SubsystemsPage />;
 	}
 
-	volumesAndMounts() {
-		return <VolumesAndMountsPage view="volumesAndMounts" />;
+	volumes() {
+		return <VolumesAndMountsPage view="volumes" />;
+	}
+
+	mounts() {
+		return <VolumesAndMountsPage view="mounts" />;
 	}
 
 	volumesTopologyZones() {

@@ -66,7 +66,8 @@ import {
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 import {
-	volumesAndMountsUrl,
+	volumesUrl,
+	mountsUrl,
 	volumesTopologyZonesUrl,
 	volumesServiceUrl,
 	volumesSmartUrl,
@@ -76,7 +77,8 @@ import {
 
 interface VolumesAndMountsPageProps {
 	view:
-		| 'volumesAndMounts'
+		| 'volumes'
+		| 'mounts'
 		| 'topology'
 		| 'service'
 		| 'smart'
@@ -197,14 +199,10 @@ export default class VolumesAndMountsPage extends React.Component<
 							{this.renderSmartView()}
 						</Panel>
 					);
-				case 'volumesAndMounts':
-					return (
-						<div>
-							<Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>
-
-							<Panel heading="Mounts">{this.renderMounts()}</Panel>
-						</div>
-					);
+				case 'volumes':
+					return <Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>;
+				case 'mounts':
+					return <Panel heading="Mounts">{this.renderMounts()}</Panel>;
 				default:
 					throw unrecognizedValue(this.props.view);
 			}
@@ -215,8 +213,12 @@ export default class VolumesAndMountsPage extends React.Component<
 				<TabController
 					tabs={[
 						{
-							url: volumesAndMountsUrl(),
-							title: 'Volumes & mounts',
+							url: volumesUrl(),
+							title: 'Volumes',
+						},
+						{
+							url: mountsUrl(),
+							title: 'Mounts',
 						},
 						{
 							url: volumesTopologyZonesUrl(),

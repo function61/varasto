@@ -21,7 +21,8 @@ import {
 	gettingStartedUrl,
 	replicationPoliciesUrl,
 	usersUrl,
-	volumesAndMountsUrl,
+	volumesUrl,
+	mountsUrl,
 } from 'generated/stoserver/stoserverui_uiroutes';
 
 interface SmallWellProps {
@@ -298,8 +299,8 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={volumesAndMountsUrl()} target="_blank">
-						this page
+					<a href={volumesUrl()} target="_blank">
+						volumes
 					</a>{' '}
 					to see your first volume. If you want to create additional volumes, use{' '}
 					<SmallWell>Volumes &raquo; {VolumeCreate().title}</SmallWell>.
@@ -336,8 +337,8 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					Go to{' '}
-					<a href={volumesAndMountsUrl()} target="_blank">
-						Volumes &amp; mounts
+					<a href={mountsUrl()} target="_blank">
+						Mounts
 					</a>
 					. From there choose:
 				</p>

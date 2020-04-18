@@ -73,7 +73,7 @@ func temperatureToHealthStatus(tempC int) stoservertypes.HealthStatus {
 }
 
 func quotaHealth(volumesOverQuota []string) stohealth.HealthChecker {
-	quotasHealth := staticHealthBuilder("Quotas", stoservertypes.HealthKindVolumeMounts.Ptr())
+	quotasHealth := staticHealthBuilder("Quotas", stoservertypes.HealthKindVolume.Ptr())
 
 	if len(volumesOverQuota) == 0 {
 		return quotasHealth.Pass("")
@@ -109,7 +109,7 @@ func serverCertHealth(
 }
 
 func healthNoFailedMounts(failedMountNames []string) stohealth.HealthChecker {
-	mountsHealth := staticHealthBuilder("Mounts online", stoservertypes.HealthKindVolumeMounts.Ptr())
+	mountsHealth := staticHealthBuilder("Mounts online", stoservertypes.HealthKindMount.Ptr())
 
 	if len(failedMountNames) > 0 {
 		return mountsHealth.Fail(fmt.Sprintf(

@@ -40,7 +40,11 @@
 		"path": "/admin/subsystems"
 	},
 	{
-		"id": "volumesAndMounts",
+		"id": "volumes",
+		"path": "/admin/volumes"
+	},
+	{
+		"id": "mounts",
 		"path": "/admin/volumes/mounts"
 	},
 	{

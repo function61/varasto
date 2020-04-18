@@ -14,7 +14,8 @@ import {
 	subsystemsUrl,
 	volumesIntegrityUrl,
 	scheduledJobsUrl,
-	volumesAndMountsUrl,
+	volumesUrl,
+	mountsUrl,
 } from 'generated/stoserver/stoserverui_uiroutes';
 import {
 	DangerLabel,
@@ -239,8 +240,10 @@ function healthKindToLink(kind: HealthKind): string {
 			return volumesReplicationUrl();
 		case HealthKind.Smart:
 			return volumesSmartUrl();
-		case HealthKind.VolumeMounts:
-			return volumesAndMountsUrl();
+		case HealthKind.Volume:
+			return volumesUrl();
+		case HealthKind.Mount:
+			return mountsUrl();
 		case HealthKind.TlsCertificate:
 			return nodesUrl();
 		case HealthKind.ReplicationPolicies:
