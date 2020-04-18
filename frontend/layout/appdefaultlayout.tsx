@@ -47,7 +47,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 		return (
 			<DefaultLayout
 				appName={appName}
-				appHomepage="https://github.com/function61/varasto"
+				appHomepage="https://function61.com/varasto"
 				navLinks={navLinks}
 				logoNode={
 					<img
