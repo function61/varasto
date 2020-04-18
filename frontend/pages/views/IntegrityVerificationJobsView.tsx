@@ -115,7 +115,11 @@ export default class IntegirtyVerificationJobsView extends React.Component<
 					<td>
 						{' '}
 						<Dropdown>
-							<CommandLink command={VolumeVerifyIntegrity(vol.Id)} />
+							<CommandLink
+								command={VolumeVerifyIntegrity(vol.Id, {
+									disambiguation: vol.Label,
+								})}
+							/>
 						</Dropdown>
 					</td>
 				</tr>
@@ -160,7 +164,11 @@ export default class IntegirtyVerificationJobsView extends React.Component<
 				<td>
 					{completed && (
 						<Dropdown>
-							<CommandLink command={VolumeVerifyIntegrity(vol.Id)} />
+							<CommandLink
+								command={VolumeVerifyIntegrity(vol.Id, {
+									disambiguation: vol.Label,
+								})}
+							/>
 						</Dropdown>
 					)}
 					{!completed && (
