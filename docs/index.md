@@ -156,6 +156,15 @@ Subscribe to Varasto news & updates
 [Subscribe to Varasto news & updates](https://buttondown.email/varasto) via email (or RSS).
 
 
+Need help? Found an issue? Feature request?
+-------------------------------------------
+
+For help, issues or feature requests use our
+[issue tracker](https://github.com/function61/varasto/issues)!
+
+In the future - given sufficient interest, we could set up a Slack or similar.
+
+
 Food for thought
 ----------------
 
