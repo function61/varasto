@@ -43,6 +43,24 @@ export default class IntegirtyVerificationJobsView extends React.Component<
 	state: IntegirtyVerificationJobsViewState = {};
 
 	render() {
+		return (
+			<div>
+				<RefreshButton
+					refresh={() => {
+						this.props.refresh();
+					}}
+				/>
+				{this.renderTable()}
+				<RefreshButton
+					refresh={() => {
+						this.props.refresh();
+					}}
+				/>
+			</div>
+		);
+	}
+
+	renderTable() {
 		const rows: JSX.Element[] = [];
 
 		for (const vol of this.props.volumes) {
@@ -78,18 +96,6 @@ export default class IntegirtyVerificationJobsView extends React.Component<
 					</tr>
 				</thead>
 				<tbody>{rows}</tbody>
-				<tfoot>
-					<tr>
-						<td colSpan={99}>
-							{' '}
-							<RefreshButton
-								refresh={() => {
-									this.props.refresh();
-								}}
-							/>
-						</td>
-					</tr>
-				</tfoot>
 			</table>
 		);
 	}
