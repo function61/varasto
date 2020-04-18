@@ -405,15 +405,25 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 }
 
 func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegrity, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
+	jobId := stoutils.NewIntegrityVerificationJobId()
+
+	if err := c.db.Update(func(tx *bbolt.Tx) error {
 		job := &stotypes.IntegrityVerificationJob{
-			ID:       stoutils.NewIntegrityVerificationJobId(),
+			ID:       jobId,
 			Started:  ctx.Meta.Timestamp,
 			VolumeId: cmd.Id,
 		}
 
 		return stodb.IntegrityVerificationJobRepository.Update(job, tx)
-	})
+	}); err != nil {
+		return err
+	}
+
+	if cmd.Start {
+		c.ivController.Resume(jobId)
+	}
+
+	return nil
 }
 
 func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *command.Ctx) error {

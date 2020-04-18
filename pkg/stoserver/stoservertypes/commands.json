@@ -22,7 +22,8 @@
 		"crudNature": "create",
 		"title": "Verify data integrity",
 		"fields": [
-			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true }
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Start", "title": "Start immediately", "type": "checkbox" }
 		]
 	},
 	{
