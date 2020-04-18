@@ -141,6 +141,7 @@ export class FileUploadArea extends React.Component<FileUploadAreaProps, FileUpl
 		});
 
 		// TODO: upload progress
+		//       fetch() doesn't provide an API for it so it was not easy :(
 
 		const response = await fetch(uploadEndpoint, {
 			method: 'POST',
