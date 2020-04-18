@@ -26,21 +26,21 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import * as React from 'react';
 
-interface IntegirtyVerificationJobsViewProps {
+interface IntegrityVerificationJobsViewProps {
 	volumes: Volume[];
 	jobs: IntegrityVerificationJob[];
 	refresh: () => void;
 }
 
-interface IntegirtyVerificationJobsViewState {
+interface IntegrityVerificationJobsViewState {
 	ivHistoricalJobsForVolumeUuid?: string;
 }
 
-export default class IntegirtyVerificationJobsView extends React.Component<
-	IntegirtyVerificationJobsViewProps,
-	IntegirtyVerificationJobsViewState
+export default class IntegrityVerificationJobsView extends React.Component<
+	IntegrityVerificationJobsViewProps,
+	IntegrityVerificationJobsViewState
 > {
-	state: IntegirtyVerificationJobsViewState = {};
+	state: IntegrityVerificationJobsViewState = {};
 
 	render() {
 		return (
