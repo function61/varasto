@@ -139,4 +139,4 @@ Summary of your options:
 |---------------------------------------------------|-------------|-----------------------|
 | Just copy live `varasto.db`                       | Inconsistent | Dangerous            |
 | Filesystem-level snapshot, then copy `varasto.db` | Crash-like  | You'll probably be OK |
-| Consistent snapshot from API                      | Fully       | Safest option         |
+| Consistent snapshot from API                      | Full        | Safest option         |
