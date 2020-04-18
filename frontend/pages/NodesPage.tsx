@@ -1,6 +1,7 @@
 import { Result } from 'f61ui/component/result';
+import { WarningAlert } from 'f61ui/component/alerts';
 import { CommandLink } from 'f61ui/component/CommandButton';
-import { tableClassStripedHover } from 'f61ui/component/bootstrap';
+import { tableClassStripedHover, Panel } from 'f61ui/component/bootstrap';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -34,8 +35,9 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 
 	render() {
 		return (
-			<SettingsLayout title="Nodes" breadcrumbs={[]}>
-				{this.renderData()}
+			<SettingsLayout title="Servers" breadcrumbs={[]}>
+				<Panel heading="Servers">{this.renderData()}</Panel>
+				<Panel heading="Info">{this.info()}</Panel>
 			</SettingsLayout>
 		);
 	}
@@ -86,5 +88,17 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 
 	private fetchData() {
 		this.state.nodes.load(() => getNodes());
+	}
+
+	private info() {
+		return (
+			<div>
+				<p>
+					Having multiple servers gives you high availability - if one of your servers
+					crashes/goes offline, you can still access your data.
+				</p>
+				<WarningAlert>💰 High availability requires a paid license.</WarningAlert>
+			</div>
+		);
 	}
 }

@@ -33,7 +33,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 			mkLink('Metadata backup', 'cloud-upload', r.metadataBackupUrl({ view: '' })),
 			mkLink('Users', 'user', r.usersUrl()),
 			mkLink('Logs', 'list-alt', r.logsUrl()),
-			mkLink('Nodes', 'th-large', r.nodesUrl()),
+			mkLink('Servers', 'th-large', r.nodesUrl()),
 			mkLink('Replication policies', 'retweet', r.replicationPoliciesUrl()),
 			mkLink('Content metadata', 'book', r.contentMetadataUrl()),
 			mkLink('FUSE server & network folders', 'folder-open', r.fuseServerUrl()),
