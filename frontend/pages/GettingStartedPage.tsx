@@ -149,9 +149,9 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					An icon like this takes you to documentation:{' '}
-					<DocLink doc={DocRef.DocsUsingNetworkFoldersIndexMd} />. We have written the
-					documentation with great love, to try to make it short enough to read but still
-					give you a good picture of how things work!
+					<DocLink doc={DocRef.DocsIndexMd} />. We have written the documentation with
+					great love, to try to make it short enough to read but still give you a good
+					picture of how things work!
 				</p>
 
 				{this.phaseNavBar(currSection)}
@@ -501,7 +501,7 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					For advanced help, check out the main documentation!{' '}
-					<DocLink doc={DocRef.READMEMd} />
+					<DocLink doc={DocRef.DocsIndexMd} />
 				</p>
 
 				<p>

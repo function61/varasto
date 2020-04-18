@@ -80,7 +80,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 
 					<InfoAlert>
 						Once you have downloaded the client app, follow installation instructions:{' '}
-						<DocLink doc={DocRef.DocsUsingClientIndexMd} />
+						<DocLink doc={DocRef.DocsDataInterfacesClientIndexMd} />
 					</InfoAlert>
 				</Panel>
 			</AppDefaultLayout>
