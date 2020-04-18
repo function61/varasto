@@ -46,7 +46,6 @@ import {
 	VolumeSetWarrantyEndDate,
 	VolumeSmartSetId,
 	VolumeUnmount,
-	VolumeVerifyIntegrity,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
 	getIntegrityVerificationJobs,
@@ -604,11 +603,6 @@ export default class VolumesAndMountsPage extends React.Component<
 							/>
 							<CommandLink
 								command={VolumeChangeQuota(obj.Id, obj.Quota / 1024 / 1024, {
-									disambiguation: obj.Label,
-								})}
-							/>
-							<CommandLink
-								command={VolumeVerifyIntegrity(obj.Id, {
 									disambiguation: obj.Label,
 								})}
 							/>
