@@ -628,8 +628,6 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 		return err
 	}
 
-	log.Printf("wrote blob %s", meta.Ref.AsHex())
-
 	return tx.Commit()
 }
 
