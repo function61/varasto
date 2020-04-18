@@ -166,7 +166,10 @@ export default class VolumesAndMountsPage extends React.Component<
 						<Panel
 							heading={
 								<div>
-									Replication{' '}
+									Replication queue
+									&nbsp;
+									<Info text="Queued replication operations per volume. In a healthy system progress should be always realtime or close, unless you are doing large transfers or data migrations." />
+									&nbsp;
 									<RefreshButton
 										refresh={() => {
 											this.loadReplicationStatuses();
@@ -227,7 +230,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						},
 						{
 							url: volumesReplicationUrl(),
-							title: 'Replication',
+							title: 'Replication status',
 						},
 					]}>
 					{content}
