@@ -18,8 +18,8 @@ Our traditional API is broken into two parts:
 
 | Purpose          | Name & docs |
 |------------------|-------------|
-| For reading data | [REST API](../../stoserver/stoservertypes/rest_endpoints.md) |
-| For writing data | [Commands](../../stoserver/stoservertypes/commands.md)       |
+| For reading data | [REST API](../stoserver/stoservertypes/rest_endpoints.md) |
+| For writing data | [Commands](../stoserver/stoservertypes/commands.md)       |
 
 This separation that we're doing is known as [CQRS](https://martinfowler.com/bliki/CQRS.html) -
 extremely short summary:

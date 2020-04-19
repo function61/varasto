@@ -35,7 +35,7 @@ nav:
   - Varasto client: data-interfaces/client/index.md
   - Network folders: data-interfaces/network-folders/index.md
   - FUSE interface: data-interfaces/fuse/index.md
-  - API (programmatic access): data-interfaces/api/index.md
+  - API (programmatic access): developers/api-overview.md
 - Operating:
   - SMART monitoring: using/smart-monitoring/index.md
   - Metadata backup: using/metadata-backup/index.md
@@ -57,10 +57,11 @@ nav:
   - Ransomware protection: security/ransomware-protection/index.md
   - Security policy: security.md
 - Developers:
+  - API overview: developers/api-overview.md
   - Codebase layout: developers/codebase/index.md
   - How to build & develop: https://github.com/function61/turbobob/blob/master/docs/external-how-to-build-and-dev.md
   - Package documentation on GoDoc.org: https://godoc.org/github.com/function61/varasto
-  - Server API:
+  - Server API reference:
     - REST endpoints: stoserver/stoservertypes/rest_endpoints.md
     - Types: stoserver/stoservertypes/types.md
     - Commands: stoserver/stoservertypes/commands.md

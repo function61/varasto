@@ -32,7 +32,7 @@ Comparison
 | (OS) iOS               | ☑️     | ☑️             | ☐      | ☐               |
 
 !!! tip
-	We also have [API for programmatic access](api/index.md), but the above summary is
+	We also have [API for programmatic access](../developers/api-overview.md), but the above summary is
 	focused on end-users.
 
 
