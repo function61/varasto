@@ -455,7 +455,10 @@ export default class VolumesAndMountsPage extends React.Component<
 								command={VolumeMigrateData(obj.Id, { disambiguation: obj.Label })}
 							/>
 							<CommandLink
-								command={VolumeMarkDataLost(obj.Id, { disambiguation: obj.Label })}
+								command={VolumeMarkDataLost(obj.Id, {
+									disambiguation: obj.Label,
+									helpUrl: DocGitHubMaster(DocRef.DocsUsingWhenADiskFailsIndexMd),
+								})}
 							/>
 						</Dropdown>
 					</td>
