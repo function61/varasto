@@ -141,6 +141,12 @@ export default class VolumesAndMountsPage extends React.Component<
 									<div>
 										Data integrity verification jobs &nbsp;
 										<Info text="Showing only latest scan result by default" />
+										&nbsp;
+										<DocLink
+											doc={
+												DocRef.DocsUsingBackgroundIntegrityVerificationIndexMd
+											}
+										/>
 									</div>
 								}>
 								{this.renderIvJobs()}

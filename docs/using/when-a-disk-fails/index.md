@@ -12,6 +12,7 @@ How does Varasto react to error situations?
 |-----------------------|--------|
 | Read corrupted data   | Varasto gives I/O error to user. There is no chance an error is missed even if disk lies and reports OK |
 | Write to volume fails | If the volume reports an I/O error, the replica we tried to write won't be recorded in the database |
+| Data corrupts on-disk | These generally won't be noticed before trying to read. We support [integrity verification scans](../background-integrity-verification/index.md) that detect errors in the background |
 
 !!! bug "TODO"
 	Varasto should [auto-unmount](https://github.com/function61/varasto/issues/171)

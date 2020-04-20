@@ -144,6 +144,7 @@
 				"docs/storage/googledrive/index.md",
 				"docs/storage/local-fs/index.md",
 				"docs/storage/s3/index.md",
+				"docs/using/background-integrity-verification/index.md",
 				"docs/using/metadata-backup/index.md",
 				"docs/using/replication-policies/index.md",
 				"docs/using/smart-monitoring/index.md",

@@ -78,6 +78,11 @@ Administration
 !!! note ""
 	![](../using/smart-monitoring/smart.png)
 
+### Data integrity verification
+
+!!! note ""
+	![](../using/background-integrity-verification/screenshot.png)
+
 
 ### Health monitoring
 

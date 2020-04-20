@@ -124,7 +124,7 @@ EC support is being researched but
 Limitations of Varasto's crypto design
 --------------------------------------
 
-Since sha-256 of plaintext is stored in the database, some knowledge is leaked: if someone
+Since `SHA-256` of plaintext is stored in the database, some knowledge is leaked: if someone
 already has the file that you have stored, they can compute the hash and see that you have
 the same hash, i.e. know that you have the same file.
 
@@ -137,7 +137,8 @@ Please note that this only applies if those people have access to your Varasto d
 Varasto cryptosystem's description in minimal code
 --------------------------------------------------
 
-[TODO](https://github.com/function61/varasto/issues/134)
+!!! bug "TODO"
+	Issue [#134](https://github.com/function61/varasto/issues/134)
 
 
 What if my HSM gets stolen?
@@ -150,3 +151,57 @@ steals the HSM she can't use the KEK without unlocking the HSM first with a PIN.
 
 Remember to safeguard your backup KEKs as well as your primary KEK - your security is only
 as strong as your weakest link.
+
+
+How does integrity verification work with encrypted content?
+------------------------------------------------------------
+
+!!! tip "Read first"
+	Read on
+	[what a CAS is](../../concepts-ideas-architecture/index.md#content-addressable-storage).
+
+
+### Integrity verification in a generic CAS system
+
+With a generic CAS, one can verify integrity by checking that the file content matches
+the hash it was stored under - i.e. our integrity verifier could use the `SHA-256` hashes.
+Nice and simple.
+
+Things get a little more complicated **if we want** encryption, deduplication and for
+[file scrubbing](../../using/background-integrity-verification/index.md) to be possible without
+access to the encryption keys.
+
+
+### Integrity verification in an encrypted, deduplicated CAS system
+
+We have two different perspectives for integrity verification, with their minimal requirements:
+
+|          | User accesses a file | [File scrubbing](../../using/background-integrity-verification/index.md) |
+|----------|----------------------|----------------|
+| Detect drive I/O errors | ☑️ | ☑️ |
+| Detect bit rot          | ☑️ | ☑️ |
+| Detect tampering        | ☑️ | ☐ |
+| (cryptographically secure hash needed) | ☑️ | ☐ |
+
+Given our use cases and requirements, here's a rough list of our options:
+
+| Encryption | Deduplication[^1] | Scrubber works w/o encryption keys | CAS address | Scrubber checks |
+|-----------------|-------------------|--------------------------------|-----------------|--|
+| ☐ | ☑️ | n/a | plaintext | (CAS address) |
+| ☑️ | ☑️ | ☐ | plaintext | (CAS address) |
+| ☑️ | ☐ | ☑️ | ciphertext | (CAS address) |
+| ☑️ | ☑️ | ☑️ | plaintext | `CRC32(ciphertext)` |
+
+Since we want to tick all the boxes (encryption, deduplication and scrubbing without
+encryption keys), we're left with having to have a separate (for scrubber's use) hash
+based on the ciphertext.
+
+Why `CRC32`? Because it's much cheaper than `SHA256` (would've been more consistent though)
+and it doesn't have to be a cryptographic hash capable of detecting tampering - because it'll
+be verified when an actual user accesses the file:
+
+![](encrypted-integrity-verification.png)
+
+
+[^1]: If our CAS used ciphertext hash as address, we'd lose deduplication because quality
+      ciphertext is always indistinguishable from randomness.

@@ -39,22 +39,21 @@ You get all of this for free:
 |                             | Details                               |
 |-----------------------------|---------------------------------------|
 | Supported OSes              | [Almost everything: PCs, mobile devices (Android, iOS), Raspberry Pis etc.](#supported-oses) |
-| [Health monitoring](screenshots/index.md#health-monitoring) | Get warnings or alerts if there is anything wrong with your disks, data or Varasto. |
+| Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data. Take back ownership of your data. |
+| [Data durability](using/replication-policies/index.md) | Transparently replicates your data to multiple disks / off-site storage. |
+| [Data integrity](using/background-integrity-verification/index.md) | `SHA-256` hashes verified on file write/read - detects [bit rot](https://en.wikipedia.org/wiki/Data_degradation) immediately. We also have scheduled scrubbing to detect errors in the background before they affect you. |
+| Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login which sensitivity level content do you want to show. |
 | Backup all your devices' data | Varasto's architecture is ideal for backing up all your PCs, mobile devices etc. |
-| Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive), all in encrypted form so you don't have to trust the cloud or have data leaks if local HDDs get stolen. |
-| [Integrated internal database backups](using/metadata-backup/index.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
+| Supported storage methods   | Local disks or cloud services (AWS S3, Google Drive), all in encrypted form so you don't have to trust the cloud ("zero trust" model) or have data leaks if local disks get stolen. |
+| [Data access methods](data-interfaces/index.md) | 1) Clone collection to your computer 2) Open/stream files from web UI 3) Via network folders 4) Linux FUSE interface |
+| [Integrated metadata backups](using/metadata-backup/index.md) | Use optional built-in backup to automatically upload encrypted backup of your metadata DB to AWS S3. If you don't like it, there's interface for external backup tools as well. |
 | Transparent compression     | Only well-compressible files will be automatically compressed |
 | [Metadata support & tagging](content/movies/index.md) | Can use metadata sources for automatically fetching movie/TV series info, poster images etc. Can also add tags to collections. |
 | All files in one place      | Never again forget on which disk a particular file was stored - it's all in one place even if you have 100 disks! Varasto is [dogfooded](https://en.wikipedia.org/wiki/Eating_your_own_dog_food) with ~50 TB of data without any slowdowns. |
 | [Thumbnails for photos](content/photos/index.md) | Automatic thumbnailing of photos/pictures |
-| [Data access methods](data-interfaces/) | 1) Clone collection to your computer 2) Open/stream files from web UI 3) Via network folders 4) Linux FUSE interface |
-| Data integrity              | Sha256 hashes verified on file write/read - detects [bit rot](https://en.wikipedia.org/wiki/Data_degradation) immediately |
-| Data privacy                | All data is encrypted - each collection with a separate key so compromise of one collection does not compromise other data |
-| Data sensitivity            | You can mark different collections with different sensitivity levels and decide on login if you want to show only family-friendly content |
-| Data durability             | Transparently replicates your data to multiple disks / offsite storage |
+| [Health monitoring](screenshots/index.md#health-monitoring) | Get warnings or alerts if there is anything wrong with your volumes, data or Varasto. |
 | [Per-collection durability](using/replication-policies/index.md) | To save money, we support storing important files with higher redundancy than less important files |
 | Transactional               | File or group of files are successfully committed or none at all. Practically no other filesystem does this |
-| Scheduled scrubbing         | Varasto can scan your disks periodically to detect failing disks ASAP |
 | [Ransomware protection](security/ransomware-protection/index.md) | Run Varasto on a separate security-hardened device/NAS to protect from ransomware, or configure replication to S3 ransomware-protected bucket |
 | [Integrated SMART monitoring](using/smart-monitoring/index.md) | Detect disk failures early |
 

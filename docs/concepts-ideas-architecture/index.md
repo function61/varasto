@@ -59,6 +59,9 @@ Varasto is backed by a
 To learn more about how Varasto stores files:
 [read more](../storage/local-fs/index.md#more-details-for-nerds).
 
+Additional details:
+[Integrity verification in an encrypted CAS system](../security/encryption/index.md#how-does-integrity-verification-work-with-encrypted-content)
+
 
 Ideas
 -----
