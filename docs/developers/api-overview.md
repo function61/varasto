@@ -103,7 +103,7 @@ Realtime push-based data API
 
 Changes in Varasto are published as events that subscribers can monitor in realtime. The
 event stream has exactly-once delivery semantics so you can trust to receive all the events
-even if your subscriber crashes/goes offline for amounts of time.
+even if your subscriber crashes/goes offline for periods of time.
 
 This is the same fabric that our high-availability multi-master clustering is built on.
 
