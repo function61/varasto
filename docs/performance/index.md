@@ -7,8 +7,9 @@ Benchmarks
 | ☐ | Many small files | TODO          | TODO         |
 | ☑️ | One large file   | 209.0         | 162          |
 
-Measured inside a VirtualBox Ubuntu Linux VM (host: Windows 10). VM had access to 6 cores,
-CPU (AMD Ryzen 5 2400G) had 8 cores.
+Measured inside a VirtualBox Ubuntu Linux VM (host: Windows 10). VM had access to 6 threads,
+CPU ([AMD Ryzen 5 2400G](https://www.cpubenchmark.net/cpu.php?cpu=AMD+Ryzen+5+2400G&id=3183),
+not a top-spec CPU) had 8 threads.
 
 
 Notes on benchmarks
