@@ -701,10 +701,11 @@ export default class VolumesAndMountsPage extends React.Component<
 							<tr key={status.VolumeId}>
 								<td>{volumeName}</td>
 								<td>
-									<ProgressBar
-										progress={status.Progress}
-										colour={status.Progress < 100 ? 'warning' : undefined}
-									/>
+									{status.Progress === 100 ? (
+										'Realtime'
+									) : (
+										<ProgressBar progress={status.Progress} colour="warning" />
+									)}
 								</td>
 							</tr>
 						);
