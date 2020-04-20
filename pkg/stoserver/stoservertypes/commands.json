@@ -221,9 +221,10 @@
 		"ctor": ["Id"],
 		"crudNature": "delete",
 		"title": "Mark all volume data lost",
+		"additional_confirmation": "I have read the documentation",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "OnlyIfRedundancy", "type": "checkbox", "help": "Abort if blob would lose last redundant copy" }
+			{ "key": "OnlyIfRedundancy", "title": "Abort if blob would lose last replica", "type": "checkbox", "help": "Failsafe for you to reconsider if it losing last replica would come as a surprise." }
 		]
 	},
 	{
