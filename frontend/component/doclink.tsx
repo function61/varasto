@@ -8,10 +8,10 @@ interface DocLinkProps {
 }
 export class DocLink extends React.Component<DocLinkProps, {}> {
 	render() {
-		return <DocsLink url={DocGitHubMaster(this.props.doc)} title={this.props.title} />;
+		return <DocsLink url={DocUrlLatest(this.props.doc)} title={this.props.title} />;
 	}
 }
 
-export function DocGitHubMaster(doc: DocRef): string {
-	return 'https://github.com/function61/varasto/blob/master/' + doc;
+export function DocUrlLatest(doc: DocRef): string {
+	return 'https://function61.com/varasto/' + doc.replace('index.md', '').replace('.md', '/');
 }

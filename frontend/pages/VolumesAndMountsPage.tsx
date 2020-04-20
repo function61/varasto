@@ -1,4 +1,4 @@
-import { DocGitHubMaster, DocLink } from 'component/doclink';
+import { DocUrlLatest, DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import IntegrityVerificationJobsView, {
 	volumeTechnologyBadge,
@@ -463,7 +463,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeMarkDataLost(obj.Id, {
 									disambiguation: obj.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsUsingWhenADiskFailsIndexMd),
+									helpUrl: DocUrlLatest(DocRef.DocsUsingWhenADiskFailsIndexMd),
 								})}
 							/>
 						</Dropdown>
@@ -571,13 +571,13 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeMountLocal(vol.Id, {
 									disambiguation: vol.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsStorageLocalFsIndexMd),
+									helpUrl: DocUrlLatest(DocRef.DocsStorageLocalFsIndexMd),
 								})}
 							/>
 							<CommandLink
 								command={VolumeMountGoogleDrive(vol.Id, {
 									disambiguation: vol.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsStorageGoogledriveIndexMd),
+									helpUrl: DocUrlLatest(DocRef.DocsStorageGoogledriveIndexMd),
 									redirect: (createdRecordId): string => {
 										if (createdRecordId === 'mounted-ok') {
 											reloadCurrentPage();
@@ -597,7 +597,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							<CommandLink
 								command={VolumeMountS3(vol.Id, {
 									disambiguation: vol.Label,
-									helpUrl: DocGitHubMaster(DocRef.DocsStorageS3IndexMd),
+									helpUrl: DocUrlLatest(DocRef.DocsStorageS3IndexMd),
 								})}
 							/>
 							{mount && (
