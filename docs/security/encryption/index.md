@@ -2,11 +2,14 @@
 Summary: configurable security
 ------------------------------
 
-You can configure the "security dial" of Varasto between maximum convenience and maximum security.
+You can configure the "security dial" of Varasto between maximum convenience and maximum
+security - even on a per-directory-tree basis.
 
-For the most casual users you don't necessarily even have to understand about these security
+![](dial.png)
+
+For most casual users you don't even necessarily have to understand about these security
 mechanisms. Varasto can do the best it can without getting in the way by configuring
-easy-to-use defaults - the security will still be comparable to full disk encryption solutions.
+easy-to-use defaults - the security will still be comparable to full-disk encryption solutions.
 
 If you are interested in improving the security beyond baseline, read on!
 
@@ -14,7 +17,8 @@ If you are interested in improving the security beyond baseline, read on!
 Glossary
 --------
 
-NOTE: Seeing the below diagram will make following this easier!
+!!! tip
+	Locating these terms in the diagram below will make understanding easier!
 
 | Term                           | Meaning |
 |--------------------------------|---------|
@@ -193,7 +197,7 @@ Given our use cases and requirements, here's a rough list of our options:
 | ☑️ | ☑️ | ☑️ | plaintext | `CRC32(ciphertext)` |
 
 Since we want to tick all the boxes (encryption, deduplication and scrubbing without
-encryption keys), we're left with having to have a separate (for scrubber's use) hash
+encryption keys), we're left with having to have a separate hash, for scrubber's use,
 based on the ciphertext.
 
 Why `CRC32`? Because it's much cheaper than `SHA256` (would've been more consistent though)
