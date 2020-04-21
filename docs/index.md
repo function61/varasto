@@ -17,21 +17,6 @@ introduction video:
 <iframe width="688" height="387" src="https://www.youtube.com/embed/qV7TdKnGSqk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
-Status & timeline
------------------
-
-**Current status**: beta testers are invited/appreciated in helping out in finding pain
-points in rapid iteration to improve the system!
-
-| Date                | No probable data loss | No rough edges     | Note | 
-|---------------------|-----------------------|--------------------|------|
-| ~~before jan 2020~~ | ☐  | ☐  | |
-| **jan - apr 2020**  | ☑ | ☐  | <- we're here. Gathering user experiences from beta testers |
-| may 2020 onwards    | ☑ | ☑ | General availability |
-
-1st of May is target for "this should work well enough without major rough edges".
-
-
 Features
 --------
 
@@ -76,6 +61,21 @@ These (also free) features are not ready, but are prioritized and on the roadmap
 | [Multi-user](https://github.com/function61/varasto/issues/39) | Have separate file hierarchies for your friends & family |
 | File sharing         | Share your own files to friends |
 | Offline drives       | We support use cases where you plug in a particular hard drive occasionally. Queued writes/deletes are applied when volume becomes available |
+
+
+Status & timeline
+-----------------
+
+**Current status**: beta testers are invited/appreciated in helping out in finding pain
+points in rapid iteration to improve the system!
+
+| Date                | No probable data loss | No rough edges     | Note | 
+|---------------------|-----------------------|--------------------|------|
+| ~~before jan 2020~~ | ☐  | ☐  | |
+| **jan - apr 2020**  | ☑ | ☐  | <- we're here. Gathering user experiences from beta testers |
+| may 2020 onwards    | ☑ | ☑ | General availability |
+
+1st of May is target for "this should work well enough without major rough edges".
 
 
 Optimized for
