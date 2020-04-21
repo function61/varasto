@@ -76,7 +76,7 @@ Auto-detection logic:
 | Inside a container? | Chosen backend | Rationale |
 |---------------------|----------------|-----------|
 | No | `SmartCtlViaDocker` | Assume the host doesn't have the correct version of smartctl installed |
-| Yes | `SmartCtl`         | The right version of smartctl is baked-in to the image |
+| Yes | `SmartCtl`         | The right version of smartctl is baked-in to Varasto image |
 
 If we got the autodetection wrong, you can change the backend in
 `Settings > Servers > server > Change SMART backend`.
