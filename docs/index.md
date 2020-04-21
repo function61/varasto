@@ -11,9 +11,10 @@ Vision
 Video & screenshot introduction
 -------------------------------
 
-TODO: video
+[Screenshots](screenshots/index.md) give you a great idea quickly. Also, a short
+introduction video:
 
-See [screenshots](screenshots/index.md) to get a better picture.
+<iframe width="688" height="387" src="https://www.youtube.com/embed/qV7TdKnGSqk" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 
 Status & timeline
