@@ -1,3 +1,4 @@
+import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
 import { Info } from 'f61ui/component/info';
@@ -28,6 +29,7 @@ import {
 import {
 	ReconciliationReport,
 	ReplicationPolicy,
+	DocRef,
 	Volume,
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
@@ -72,6 +74,8 @@ export default class ReplicationPoliciesPage extends React.Component<
 					heading={
 						<div>
 							Replication policies &nbsp;
+							<DocLink doc={DocRef.DocsUsingReplicationPoliciesIndexMd} />
+							&nbsp;
 							<Dropdown>
 								<CommandLink command={ReplicationpolicyCreate()} />
 							</Dropdown>
