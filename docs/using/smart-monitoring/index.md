@@ -45,7 +45,7 @@ it's the device path to the Linux block device like `/dev/sda`.
 It's recommended to use paths under `/dev/disk/by-uuid/..` to explicitly specify which disk
 you're referring to, since `/dev/sda` could very well be `/dev/sdb` on next boot.
 
-You can enter "SMART ID" via `Settings > Volumes & mounts > (your disk) > Set SMART ID`.
+You can enter "SMART ID" in `Volumes & mounts > SMART > Configuration > Set SMART ID`.
 
 Once you've entered the ID, the row doesn't automatically show up in the SMART tab - it only
 shows up after the first SMART report is polled for this disk.

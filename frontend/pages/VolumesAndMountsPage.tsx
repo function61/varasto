@@ -3,21 +3,15 @@ import { thousandSeparate } from 'component/numberformatter';
 import IntegrityVerificationJobsView, {
 	volumeTechnologyBadge,
 } from 'pages/views/IntegrityVerificationJobsView';
+import SmartView from 'pages/views/SmartView';
 import TopologyAndZonesView, { onlineBadge } from 'pages/views/TopologyAndZonesView';
 import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
 import { reloadCurrentPage } from 'f61ui/browserutils';
-import { InfoAlert } from 'f61ui/component/alerts';
-import {
-	DangerLabel,
-	Glyphicon,
-	Panel,
-	SuccessLabel,
-	tableClassStripedHover,
-} from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
-import { CommandButton, CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
+import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { ProgressBar } from 'f61ui/component/progressbar';
@@ -26,7 +20,6 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { plainDateToDateTime, dateRFC3339 } from 'f61ui/types';
 import { unrecognizedValue } from 'f61ui/utils';
 import {
-	NodeSmartScan,
 	VolumeChangeDescription,
 	VolumeChangeNotes,
 	VolumeChangeQuota,
@@ -41,7 +34,6 @@ import {
 	VolumeSetSerialNumber,
 	VolumeSetTechnology,
 	VolumeSetWarrantyEndDate,
-	VolumeSmartSetId,
 	VolumeUnmount,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
@@ -247,74 +239,11 @@ export default class VolumesAndMountsPage extends React.Component<
 	private renderSmartView() {
 		const [volumes, loadingOrError] = this.state.volumes.unwrap();
 
-		const volumesWithSmart = (volumes || []).filter((vol) => !!vol.Smart.LatestReport);
+		if (!volumes || loadingOrError) {
+			return loadingOrError;
+		}
 
-		return (
-			<table className={tableClassStripedHover}>
-				<thead>
-					<tr>
-						<th>Passed</th>
-						<th>Label</th>
-						<th>Description</th>
-						<th>Reported</th>
-						<th>Temperature</th>
-						<th>PowerCycleCount</th>
-						<th>PowerOnTime</th>
-					</tr>
-				</thead>
-				<tbody>
-					{volumesWithSmart.map((vol) => {
-						const smart = vol.Smart.LatestReport!;
-
-						return (
-							<tr key={vol.Id}>
-								<td>
-									{smart.Passed ? (
-										<SuccessLabel title="Pass">✓</SuccessLabel>
-									) : (
-										<DangerLabel title="Fail">❌</DangerLabel>
-									)}
-								</td>
-								<td>{vol.Label}</td>
-								<td>{vol.Description}</td>
-								<td>
-									<Timestamp ts={smart.Time} />
-								</td>
-								<td>
-									{smart.Temperature
-										? smart.Temperature.toString() + ' °C'
-										: null}
-								</td>
-								<td>
-									{smart.PowerCycleCount
-										? thousandSeparate(smart.PowerCycleCount)
-										: null}
-								</td>
-								<td>
-									{smart.PowerOnTime ? thousandSeparate(smart.PowerOnTime) : null}
-								</td>
-							</tr>
-						);
-					})}
-				</tbody>
-				<tfoot>
-					<tr>
-						<td colSpan={99}>
-							<div>{loadingOrError}</div>
-							{volumesWithSmart.length === 0 && (
-								<div>
-									<InfoAlert>
-										No SMART-reporting volumes found. Read docs first:{' '}
-										<DocLink doc={DocRef.DocsUsingSmartMonitoringIndexMd} />
-									</InfoAlert>
-								</div>
-							)}
-							<CommandButton command={NodeSmartScan()} />
-						</td>
-					</tr>
-				</tfoot>
-			</table>
-		);
+		return <SmartView volumes={volumes} />;
 	}
 
 	private renderServiceView() {
@@ -449,11 +378,6 @@ export default class VolumesAndMountsPage extends React.Component<
 							/>
 							<CommandLink
 								command={VolumeSetTechnology(obj.Id, obj.Technology, {
-									disambiguation: obj.Label,
-								})}
-							/>
-							<CommandLink
-								command={VolumeSmartSetId(obj.Id, obj.Smart.Id, {
 									disambiguation: obj.Label,
 								})}
 							/>
