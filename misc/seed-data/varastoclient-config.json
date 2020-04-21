@@ -1,0 +1,6 @@
+{
+    "server_addr": "https://localhost",
+    "auth_token": "fdspdptPaMjyi-6l-fLgQwlin6rClEYSJ6_LFzWQsRE",
+    "fuse_mount_path": "/mnt/stofuse/varasto",
+    "tls_insecure_skip_validation": true
+}
