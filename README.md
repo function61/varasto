@@ -13,7 +13,9 @@ Vision
 Video & screenshot introduction
 -------------------------------
 
-TODO: video
+Video:
+
+[![Varasto introduction thumbnail](http://img.youtube.com/vi/qV7TdKnGSqk/0.jpg)](http://www.youtube.com/watch?v=qV7TdKnGSqk "Varasto introduction")
 
 See [screenshots](https://function61.com/varasto/docs/screenshots/) to get a better picture.
 
