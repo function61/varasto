@@ -49,9 +49,8 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
-						<th>Id</th>
-						<th>Addr</th>
 						<th>Name</th>
+						<th>Address</th>
 						<th>TLS cert</th>
 						<th>TLS cert expires</th>
 						<th />
@@ -60,9 +59,8 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 				<tbody>
 					{(nodes || []).map((node: Node) => (
 						<tr key={node.Id}>
-							<td>{node.Id}</td>
+							<td title={'Id=' + node.Id}>{node.Name}</td>
 							<td>{node.Addr}</td>
-							<td>{node.Name}</td>
 							<td>
 								{node.TlsCert.Identity}{' '}
 								<Info
