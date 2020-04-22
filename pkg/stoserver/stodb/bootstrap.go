@@ -45,6 +45,8 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 		return err
 	}
 
+	// it'd be dangerous to use os.Hostname() and assume it's resolvable from clients, so
+	// better leave it to the user to configure it explicitly later
 	hostname := "localhost"
 
 	privKeyPem, err := sslca.GenEcP256PrivateKeyPem()
@@ -69,7 +71,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 	newNode := &stotypes.Node{
 		ID:           stoutils.NewNodeId(),
 		Addr:         "https://" + hostname,
-		Name:         "dev",
+		Name:         "Primary",
 		TlsCert:      string(certPem),
 		SmartBackend: smartBackend,
 	}
