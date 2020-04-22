@@ -7,6 +7,10 @@ theme:
 
 docs_dir: '.'
 
+# if not hosting docs at root, 404 page's resources would point to /assets (= break)
+# unless this is specified
+site_url: https://function61.com/varasto/docs/
+
 repo_url: https://github.com/function61/varasto/
 
 markdown_extensions:
