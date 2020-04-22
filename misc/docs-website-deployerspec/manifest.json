@@ -1,6 +1,6 @@
 {
   "manifest_version_major": 1,
-  "deployer_image": "fn61/edgerouter:20200218_1015_e619de47",
+  "deployer_image": "fn61/edgerouter:20200422_0646_c28967d0",
   "deploy_command": [
     "edgerouter",
     "s3",
