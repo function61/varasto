@@ -47,6 +47,8 @@ github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwc
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
 github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
+github.com/cubewise-code/go-mime v0.0.0-20190322015324-9c5316ef3e8e h1:H84/8WJu66RflVTCXOk0O+9OQf4uiUWsuBBjYmiZFNE=
+github.com/cubewise-code/go-mime v0.0.0-20190322015324-9c5316ef3e8e/go.mod h1:4abs/jPXcmJzYoYGF91JF9Uq9s/KL5n1jvFDix8KcqY=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible h1:7qlOGliEKZXTDg6OTjfoBKDXWrumCAMpl/TFQ4/5kLM=
@@ -90,6 +92,8 @@ github.com/function61/gokit v0.0.0-20200331084833-271e1443912a h1:Oi5EsOLtIeLtlP
 github.com/function61/gokit v0.0.0-20200331084833-271e1443912a/go.mod h1:f6JhYQwMbwfAX472K/2A46CKet7BrpugMzuCobtqPQo=
 github.com/function61/gokit v0.0.0-20200401160056-1720ecfda58e h1:mge1HLkxTJWcJcgtGLerTjQOd185rfzbeoPwyT7oR6M=
 github.com/function61/gokit v0.0.0-20200401160056-1720ecfda58e/go.mod h1:f6JhYQwMbwfAX472K/2A46CKet7BrpugMzuCobtqPQo=
+github.com/function61/gokit v0.0.0-20200421151620-41e973712cf6 h1:l4l0yhwj8+V7z+n6T1+1qGnLFPQoKLqEdK4uykxqodA=
+github.com/function61/gokit v0.0.0-20200421151620-41e973712cf6/go.mod h1:qkZftFp+nvc6BitjWRb9GXS4A1tQ2BuASctzscHa9Io=
 github.com/function61/lambda-alertmanager v1.0.0/go.mod h1:9e4VH+6LqHdGh32ZYkaeo3kdWi9h2CiMPIveDbrW0tw=
 github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1 h1:/JifQnaG1jIVufKhsVrmqX4UwkG7vRhsGh0qf5lGQjw=
 github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1/go.mod h1:xEFSqRukETpU1ijzEZpY3ohSj01MzntOpL0eUHYp92M=

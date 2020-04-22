@@ -3,12 +3,12 @@ package stoserver
 import (
 	"encoding/json"
 	"fmt"
-	"mime"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"sync/atomic"
 
+	"github.com/function61/gokit/mime"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -70,12 +70,7 @@ func contentTypeForFilename(path string) string {
 	ext := filepath.Ext(path)
 
 	// works with uppercase extensions as well
-	contentType := mime.TypeByExtension(ext)
-	if contentType == "" {
-		contentType = "application/octet-stream"
-	}
-
-	return contentType
+	return mime.TypeByExtension(ext, mime.OctetStream)
 }
 
 func parseStringBool(serialized string) (bool, error) {
