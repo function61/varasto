@@ -466,9 +466,10 @@
 		"ctor": [],
 		"crudNature": "create",
 		"title": "Create replication policy",
+		"info": ["Don't create more policies than you need right now, because we don't support deletion of policies yet."],
 		"fields": [
-			{ "key": "Name" },
-			{ "key": "MinZones", "type": "integer" }
+			{ "key": "Name", "placeholder": "Work files" },
+			{ "key": "MinZones", "title": "Minimum # of zones", "type": "integer" }
 		]
 	},
 	{
