@@ -110,20 +110,8 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 			Name:      "System",
 			AuthToken: systemAuthToken,
 		}, tx),
-		ScheduledJobRepository.Update(&stotypes.ScheduledJob{
-			ID:          "ocKgpTHU3Sk",
-			Description: "SMART poller",
-			Schedule:    "@every 5m",
-			Kind:        stoservertypes.ScheduledJobKindSmartpoll,
-			Enabled:     true,
-		}, tx),
-		ScheduledJobRepository.Update(&stotypes.ScheduledJob{
-			ID:          "h-cPYsYtFzM",
-			Description: "Metadata backup",
-			Schedule:    "@midnight",
-			Kind:        stoservertypes.ScheduledJobKindMetadatabackup,
-			Enabled:     true,
-		}, tx),
+		ScheduledJobRepository.Update(scheduledJobSeedSmartPoller(), tx),
+		ScheduledJobRepository.Update(scheduledJobSeedMetadataBackup(), tx),
 		CfgNodeId.Set(newNode.ID, tx),
 		CfgNodeTlsCertKey.Set(string(privKeyPem), tx),
 	}
