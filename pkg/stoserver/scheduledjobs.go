@@ -19,34 +19,12 @@ import (
 // current middlewares has this empty too
 const FIXMEsystemUserId = ""
 
-type scheduledJobCommandPlumbing struct {
-	invoker  command.Invoker
-	eventLog eventlog.Log
-}
-
 type smartPollerScheduledJob struct {
 	commandPlumbing *scheduledJobCommandPlumbing
 }
 
 func (s *smartPollerScheduledJob) GetRunner() scheduler.JobFn {
-	return func(ctx context.Context, logger *log.Logger) error {
-		cmdCtx := command.NewCtx(
-			ctx,
-			ehevent.Meta(time.Now(), FIXMEsystemUserId),
-			"",
-			"")
-
-		if err := httpcommand.InvokeSkippingAuthorization(
-			&stoservertypes.NodeSmartScan{},
-			cmdCtx,
-			s.commandPlumbing.invoker,
-			s.commandPlumbing.eventLog,
-		); err != nil {
-			return err
-		}
-
-		return nil
-	}
+	return commandInvokerJobFn(&stoservertypes.NodeSmartScan{}, s.commandPlumbing)
 }
 
 type metadataBackupScheduledJob struct {
@@ -54,28 +32,14 @@ type metadataBackupScheduledJob struct {
 }
 
 func (s *metadataBackupScheduledJob) GetRunner() scheduler.JobFn {
-	return func(ctx context.Context, logger *log.Logger) error {
-		cmdCtx := command.NewCtx(
-			ctx,
-			ehevent.Meta(time.Now(), FIXMEsystemUserId),
-			"",
-			"")
-
-		if err := httpcommand.InvokeSkippingAuthorization(
-			&stoservertypes.DatabaseBackup{},
-			cmdCtx,
-			s.commandPlumbing.invoker,
-			s.commandPlumbing.eventLog,
-		); err != nil {
-			return err
-		}
-
-		return nil
-	}
+	return commandInvokerJobFn(&stoservertypes.DatabaseBackup{}, s.commandPlumbing)
 }
 
-func scheduledJobRunner(kind stoservertypes.ScheduledJobKind, commandPlumbing *scheduledJobCommandPlumbing) scheduler.JobFn {
-	switch stoservertypes.ScheduledJobKindExhaustive89a75e(kind) {
+func scheduledJobRunner(
+	kind stoservertypes.ScheduledJobKind,
+	commandPlumbing *scheduledJobCommandPlumbing,
+) scheduler.JobFn {
+	switch stoservertypes.ScheduledJobKindExhaustive1edcb7(kind) {
 	case stoservertypes.ScheduledJobKindSmartpoll:
 		return (&smartPollerScheduledJob{commandPlumbing}).GetRunner()
 	case stoservertypes.ScheduledJobKindMetadatabackup:
@@ -201,5 +165,36 @@ func convertLastRunToDb(lastRun *scheduler.JobLastRun) *stotypes.ScheduledJobLas
 		Started:  lastRun.Started,
 		Finished: lastRun.Finished,
 		Error:    lastRun.Error,
+	}
+}
+
+// data a scheduled job needs to be able to invoke commands
+type scheduledJobCommandPlumbing struct {
+	invoker  command.Invoker
+	eventLog eventlog.Log
+}
+
+// makes a scheduled job function that executes a command
+func commandInvokerJobFn(
+	cmd command.Command,
+	commandPlumbing *scheduledJobCommandPlumbing,
+) scheduler.JobFn {
+	return func(ctx context.Context, logger *log.Logger) error {
+		cmdCtx := command.NewCtx(
+			ctx,
+			ehevent.Meta(time.Now(), FIXMEsystemUserId),
+			"",
+			"")
+
+		if err := httpcommand.InvokeSkippingAuthorization(
+			cmd,
+			cmdCtx,
+			commandPlumbing.invoker,
+			commandPlumbing.eventLog,
+		); err != nil {
+			return err
+		}
+
+		return nil
 	}
 }
