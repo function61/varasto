@@ -3,6 +3,7 @@ import { DocLink } from 'component/doclink';
 import {
 	DangerLabel,
 	Panel,
+	CollapsePanel,
 	SuccessLabel,
 	WarningLabel,
 	tableClassStripedHover,
@@ -40,7 +41,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 		return (
 			<SettingsLayout title="Subsystems" breadcrumbs={[]}>
 				<Panel heading="Subsystems">{this.renderSubsystems()}</Panel>
-				<Panel heading="Info">{this.info()}</Panel>
+				<CollapsePanel heading="Info">{this.info()}</CollapsePanel>
 			</SettingsLayout>
 		);
 	}

@@ -1,6 +1,6 @@
 import { DocLink } from 'component/doclink';
 import { Result } from 'f61ui/component/result';
-import { Panel, Well } from 'f61ui/component/bootstrap';
+import { Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import {
 	ConfigSetFuseServerBaseurl,
@@ -50,13 +50,13 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 							<DocLink doc={DocRef.DocsDataInterfacesNetworkFoldersIndexMd} />
 						</div>
 					}>
-					{this.renderEditForm()}
+					{this.renderSettings()}
 				</Panel>
 			</SettingsLayout>
 		);
 	}
 
-	private renderEditForm() {
+	private renderSettings() {
 		return (
 			<div className="form-horizontal">
 				{this.state.baseUrl.draw((baseUrl) => (
@@ -90,26 +90,6 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 				))}
 
 				<CommandButton command={FuseUnmountAll()} />
-
-				<Well>
-					<p>FUSE is technology in Linux where we can easily define filesystems.</p>
-
-					<p>
-						Varasto supports projecting Varasto collections over FUSE as read-only
-						files. Great use cases are direct-streaming videos. If you want transcoded
-						videos, those you can view directly from Varasto's web ui.
-					</p>
-
-					<p>
-						You need to run this Varasto-FUSE process separately from the main Varasto
-						binary.
-					</p>
-
-					<p>
-						You can then export the filesystem over Samba as a read-only network folder
-						to other computers in the network.
-					</p>
-				</Well>
 			</div>
 		);
 	}

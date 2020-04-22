@@ -1,7 +1,7 @@
 import { Result } from 'f61ui/component/result';
 import { WarningAlert } from 'f61ui/component/alerts';
 import { CommandLink } from 'f61ui/component/CommandButton';
-import { tableClassStripedHover, Panel } from 'f61ui/component/bootstrap';
+import { tableClassStripedHover, CollapsePanel, Panel } from 'f61ui/component/bootstrap';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -37,7 +37,7 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 		return (
 			<SettingsLayout title="Servers" breadcrumbs={[]}>
 				<Panel heading="Servers">{this.renderData()}</Panel>
-				<Panel heading="Info">{this.info()}</Panel>
+				<CollapsePanel heading="Info">{this.info()}</CollapsePanel>
 			</SettingsLayout>
 		);
 	}
