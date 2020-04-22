@@ -4,6 +4,7 @@ import {
 	tableClassStripedHover,
 	Glyphicon,
 	Panel,
+	CollapsePanel,
 	SuccessLabel,
 } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
@@ -72,20 +73,11 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 				{this.renderJobsTable(enabledJobs)}
 
 				{disabledJobs.length > 0 && (
-					<div>
-						<button
-							className="btn btn-primary"
-							type="button"
-							data-toggle="collapse"
-							data-target="#collapseExample"
-							aria-expanded="false"
-							aria-controls="collapseExample">
-							Show {disabledJobs.length} disabled job(s)
-						</button>
-						<div id="collapseExample" className="collapse">
-							{this.renderJobsTable(disabledJobs)}
-						</div>
-					</div>
+					<CollapsePanel
+						heading={`Show ${disabledJobs.length} disabled job(s)`}
+						visualStyle="warning">
+						{this.renderJobsTable(disabledJobs)}
+					</CollapsePanel>
 				)}
 			</div>
 		);
