@@ -44,6 +44,8 @@ func scheduledJobRunner(
 		return (&smartPollerScheduledJob{commandPlumbing}).GetRunner()
 	case stoservertypes.ScheduledJobKindMetadatabackup:
 		return (&metadataBackupScheduledJob{commandPlumbing}).GetRunner()
+	case stoservertypes.ScheduledJobKindVersionupdatecheck:
+		return (&versionUpdateCheckScheduledJob{commandPlumbing}).GetRunner()
 	// case "user.cmd":
 	// case "user.docker":
 	default:

@@ -36,7 +36,7 @@ import (
 */
 
 const (
-	CurrentSchemaVersion = 3
+	CurrentSchemaVersion = 4
 )
 
 var (
@@ -81,6 +81,8 @@ func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
 	switch schemaVersionInDb {
 	case 2:
 		return from2to3(tx)
+	case 3:
+		return from3to4(tx)
 	default:
 		return fmt.Errorf(
 			"schema migration %d -> %d not supported",
@@ -129,6 +131,11 @@ func from2to3(tx *bbolt.Tx) error {
 	}
 
 	return nil
+}
+
+// add scheduled task: "update check"
+func from3to4(tx *bbolt.Tx) error {
+	return ScheduledJobRepository.Update(scheduledJobSeedVersionUpdateCheck(), tx)
 }
 
 func writeSchemaVersion(tx *bbolt.Tx) error {

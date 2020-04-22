@@ -7,12 +7,13 @@ import (
 	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
+	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
 )
 
 func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		job, err := stodb.Read(tx).ScheduledJob(cmd.Id)
+		job, err := openScheduledJobNotUpdater(cmd.Id, tx)
 		if err != nil {
 			return err
 		}
@@ -29,7 +30,7 @@ func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, c
 
 func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		job, err := stodb.Read(tx).ScheduledJob(cmd.Id)
+		job, err := openScheduledJobNotUpdater(cmd.Id, tx)
 		if err != nil {
 			return err
 		}
@@ -46,7 +47,7 @@ func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable,
 
 func (c *cHandlers) ScheduledjobChangeSchedule(cmd *stoservertypes.ScheduledjobChangeSchedule, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		job, err := stodb.Read(tx).ScheduledJob(cmd.Id)
+		job, err := openScheduledJobNotUpdater(cmd.Id, tx)
 		if err != nil {
 			return err
 		}
@@ -65,4 +66,18 @@ func (c *cHandlers) ScheduledjobStart(cmd *stoservertypes.ScheduledjobStart, ctx
 	c.conf.Scheduler.Trigger(cmd.Id)
 
 	return nil
+}
+
+// this would mess up our analytics
+func openScheduledJobNotUpdater(id string, tx *bbolt.Tx) (*stotypes.ScheduledJob, error) {
+	job, err := stodb.Read(tx).ScheduledJob(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if job.ID == stoservertypes.UpdateCheckerScheduledJobId {
+		return nil, errors.New("editing update checker is disabled")
+	}
+
+	return job, nil
 }

@@ -112,6 +112,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 		}, tx),
 		ScheduledJobRepository.Update(scheduledJobSeedSmartPoller(), tx),
 		ScheduledJobRepository.Update(scheduledJobSeedMetadataBackup(), tx),
+		ScheduledJobRepository.Update(scheduledJobSeedVersionUpdateCheck(), tx),
 		CfgNodeId.Set(newNode.ID, tx),
 		CfgNodeTlsCertKey.Set(string(privKeyPem), tx),
 	}

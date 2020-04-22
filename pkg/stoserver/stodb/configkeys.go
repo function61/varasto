@@ -10,5 +10,6 @@ var (
 	CfgFuseServerBaseUrl   = ConfigAccessor(stoservertypes.CfgFuseServerBaseUrl)
 	CfgNetworkShareBaseUrl = ConfigAccessor(stoservertypes.CfgNetworkShareBaseUrl)
 	CfgUbackupConfig       = ConfigAccessor(stoservertypes.CfgUbackupConfig)
+	CfgUpdateStatusAt      = ConfigAccessor(stoservertypes.CfgUpdateStatusAt)
 	CfgNodeTlsCertKey      = ConfigAccessor(stoservertypes.CfgNodeTlsCertKey)
 )

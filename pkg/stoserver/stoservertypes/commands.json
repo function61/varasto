@@ -523,6 +523,15 @@
 		"fields": []
 	},
 	{
+		"command": "node.CheckForUpdates",
+		"chain": "public",
+		"ctor": [],
+		"crudNature": "update",
+		"title": "Check for updates",
+		"info": ["Result of check will be visible from health view."],
+		"fields": []
+	},
+	{
 		"command": "node.ChangeSmartBackend",
 		"chain": "public",
 		"ctor": ["Id"],

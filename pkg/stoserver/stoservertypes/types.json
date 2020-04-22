@@ -51,7 +51,9 @@
 		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
 		{ "key": "CfgNetworkShareBaseUrl", "value": "networkshare_baseurl" },
 		{ "key": "CfgUbackupConfig", "value": "ubackup_config" },
+		{ "key": "CfgUpdateStatusAt", "value": "update_status_at" },
 		{ "key": "CfgNodeTlsCertKey", "value": "node_tls_cert_key" },
+		{ "key": "UpdateCheckerScheduledJobId", "value": "EQi_3OhROUs" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [
@@ -105,6 +107,7 @@
 			"type": "string",
 			"stringMembers": [
 				"smartpoll",
+				"versionupdatecheck",
 				"metadatabackup"
 			]
 		},
@@ -120,6 +123,7 @@
 			"name": "HealthKind",
 			"type": "string",
 			"stringMembers": [
+				"SoftwareUpdates",
 				"TlsCertificate",
 				"Volume",
 				"Mount",
@@ -140,6 +144,7 @@
 				"docs/content/tvshows/index.md",
 				"docs/data-interfaces/client/index.md",
 				"docs/data-interfaces/network-folders/index.md",
+				"docs/install/update/index.md",
 				"docs/security/encryption/index.md",
 				"docs/storage/googledrive/index.md",
 				"docs/storage/local-fs/index.md",
@@ -481,6 +486,19 @@
 			"type": {"_": "object", "fields": {
 				"Volume": {"_": "integer"},
 				"BlobCount": {"_": "integer"}
+			}}
+		},
+		{
+			"name": "UpdatesStatusAt",
+			"type": {"_": "object", "fields": {
+				"At": {"_": "datetime"},
+				"Status": {"_": "UpdatesStatus"}
+			}}
+		},
+		{
+			"name": "UpdatesStatus",
+			"type": {"_": "object", "fields": {
+				"LatestVersion": {"_": "string"}
 			}}
 		},
 		{

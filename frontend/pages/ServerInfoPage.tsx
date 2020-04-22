@@ -1,11 +1,15 @@
+import { CommandLink } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
 import { Result } from 'f61ui/component/result';
 import { Info } from 'f61ui/component/info';
+import { NodeCheckForUpdates } from 'generated/stoserver/stoservertypes_commands';
 import {
 	changeSensitivity,
 	getMaxSensitivityFromLocalStorage,
 	Sensitivity,
 	sensitivityLabel,
 } from 'component/sensitivity';
+import { DocUrlLatest } from 'component/doclink';
 import {
 	nodesUrl,
 	volumesSmartUrl,
@@ -32,6 +36,7 @@ import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_end
 import {
 	Health,
 	HealthKind,
+	DocRef,
 	HealthStatus,
 	ServerInfo,
 } from 'generated/stoserver/stoservertypes_types';
@@ -75,7 +80,17 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 					}>
 					{this.renderHealth()}
 				</Panel>
-				<Panel heading="Server info">{this.renderInfo()}</Panel>
+				<Panel
+					heading={
+						<div>
+							Server info &nbsp;
+							<Dropdown>
+								<CommandLink command={NodeCheckForUpdates()} />
+							</Dropdown>
+						</div>
+					}>
+					{this.renderInfo()}
+				</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
 			</SettingsLayout>
 		);
@@ -254,6 +269,8 @@ function healthKindToLink(kind: HealthKind): string {
 			return volumesIntegrityUrl();
 		case HealthKind.Subsystems:
 			return subsystemsUrl();
+		case HealthKind.SoftwareUpdates:
+			return DocUrlLatest(DocRef.DocsInstallUpdateIndexMd);
 		default:
 			throw unrecognizedValue(kind);
 	}

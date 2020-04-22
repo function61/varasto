@@ -60,6 +60,7 @@ nav:
 - Security:
   - Encryption in Varasto: security/encryption/index.md
   - Ransomware protection: security/ransomware-protection/index.md
+  - Your privacy: security/privacy/index.md
   - Security policy: security.md
 - Developers:
   - API overview: developers/api-overview.md
