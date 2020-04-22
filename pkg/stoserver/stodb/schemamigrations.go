@@ -29,9 +29,9 @@ import (
 	  Changes: added index to DEK to bring back deduplication
 	Migration: change backup header to signature vN, import
 
-	v3
+	v3 (and onwards)
 	==
-	  Changes: revamped replication policy infrastructure
+	  Changes: described in function comment
 	Migration: automatic
 */
 
@@ -51,30 +51,42 @@ func ValidateSchemaVersion(tx *bbolt.Tx, logger *log.Logger) error {
 		return blorm.ErrBucketNotFound
 	}
 
-	schemaVersionInDb := binary.LittleEndian.Uint32(metaBucket.Get(schemaVersionKey))
+	// the migrations will continue until morale improves
+	for {
+		schemaVersionInDb := binary.LittleEndian.Uint32(metaBucket.Get(schemaVersionKey))
 
-	if schemaVersionInDb == CurrentSchemaVersion { // happy path => no migration needed
-		return nil
+		// no migration needed (or migrations reached a happy level)
+		if schemaVersionInDb == CurrentSchemaVersion {
+			return nil
+		}
+
+		schemaVersionAfterMigration := schemaVersionInDb + 1
+
+		logex.Levels(logger).Info.Printf(
+			"migrating from %d -> %d",
+			schemaVersionInDb,
+			schemaVersionAfterMigration)
+
+		if err := migrate(schemaVersionInDb, tx); err != nil {
+			return err
+		}
+
+		if err := writeSchemaVersionWith(schemaVersionAfterMigration, tx); err != nil {
+			return err
+		}
 	}
+}
 
-	// only support 2->3 for now
-	if schemaVersionInDb != 2 {
+func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
+	switch schemaVersionInDb {
+	case 2:
+		return from2to3(tx)
+	default:
 		return fmt.Errorf(
 			"schema migration %d -> %d not supported",
 			schemaVersionInDb,
-			CurrentSchemaVersion)
+			schemaVersionInDb+1)
 	}
-
-	logex.Levels(logger).Info.Printf(
-		"migrating from %d -> %d",
-		schemaVersionInDb,
-		CurrentSchemaVersion)
-
-	if err := from2to3(tx); err != nil {
-		return err
-	}
-
-	return writeSchemaVersionWith(3, tx)
 }
 
 // sets these attributes:
