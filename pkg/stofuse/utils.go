@@ -72,8 +72,7 @@ func makeMountpointIfRequired(mountpoint string) error {
 		return err
 	}
 	if !mountpointExists {
-		// intentionally does not use MkdirAll()
-		if err := os.Mkdir(mountpoint, 0755); err != nil {
+		if err := os.MkdirAll(mountpoint, 0755); err != nil {
 			return fmt.Errorf("failed making mount point: %w", err)
 		}
 	}

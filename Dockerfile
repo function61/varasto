@@ -4,6 +4,7 @@ FROM alpine:edge
 
 WORKDIR /varasto
 
+# stores Varasto state (files' metadata)
 VOLUME /varasto-db
 
 ENTRYPOINT ["sto"]
@@ -18,8 +19,7 @@ RUN mkdir -p /varasto \
 	&& ln -s /varasto/sto /bin/sto \
 	&& ln -s /varasto-db/varastoclient-config.json /root/varastoclient-config.json \
 	&& apk add --update smartmontools fuse \
-	&& echo '{"db_location": "/varasto-db/varasto.db"}' > /varasto/config.json \
-	&& mkdir /mnt/stofuse
+	&& echo '{"db_location": "/varasto-db/varasto.db"}' > /varasto/config.json
 
 COPY rel/sto_linux-amd64 /varasto/sto
 
