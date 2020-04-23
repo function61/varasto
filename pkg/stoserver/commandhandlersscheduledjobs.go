@@ -13,7 +13,7 @@ import (
 
 func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		job, err := openScheduledJobNotUpdater(cmd.Id, tx)
+		job, err := openScheduledJobNotUpdateChecker(cmd.Id, tx)
 		if err != nil {
 			return err
 		}
@@ -30,7 +30,7 @@ func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, c
 
 func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		job, err := openScheduledJobNotUpdater(cmd.Id, tx)
+		job, err := openScheduledJobNotUpdateChecker(cmd.Id, tx)
 		if err != nil {
 			return err
 		}
@@ -47,7 +47,7 @@ func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable,
 
 func (c *cHandlers) ScheduledjobChangeSchedule(cmd *stoservertypes.ScheduledjobChangeSchedule, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		job, err := openScheduledJobNotUpdater(cmd.Id, tx)
+		job, err := openScheduledJobNotUpdateChecker(cmd.Id, tx)
 		if err != nil {
 			return err
 		}
@@ -69,13 +69,13 @@ func (c *cHandlers) ScheduledjobStart(cmd *stoservertypes.ScheduledjobStart, ctx
 }
 
 // this would mess up our analytics
-func openScheduledJobNotUpdater(id string, tx *bbolt.Tx) (*stotypes.ScheduledJob, error) {
+func openScheduledJobNotUpdateChecker(id string, tx *bbolt.Tx) (*stotypes.ScheduledJob, error) {
 	job, err := stodb.Read(tx).ScheduledJob(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if job.ID == stoservertypes.UpdateCheckerScheduledJobId {
+	if job.Kind == stoservertypes.ScheduledJobKindVersionupdatecheck {
 		return nil, errors.New("editing update checker is disabled")
 	}
 

@@ -31,7 +31,7 @@ func scheduledJobSeedMetadataBackup() *stotypes.ScheduledJob {
 
 func scheduledJobSeedVersionUpdateCheck() *stotypes.ScheduledJob {
 	return &stotypes.ScheduledJob{
-		ID:          stoservertypes.UpdateCheckerScheduledJobId,
+		ID:          "EQi_3OhROUs",
 		Description: "Varasto software update check",
 		Schedule:    "@midnight",
 		Kind:        stoservertypes.ScheduledJobKindVersionupdatecheck,
