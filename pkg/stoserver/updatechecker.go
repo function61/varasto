@@ -47,7 +47,9 @@ func healthRunningLatestVersion(tx *bbolt.Tx) stohealth.HealthChecker {
 		return verCheck.Warn("Running dev version, therefore can´t judge if updates available")
 	}
 
-	if dynversion.Version == status.LatestVersion {
+	// our version numbers are comparable. there could be published releases the users
+	// are running that we haven't pushed as a stable release yet
+	if dynversion.Version >= status.LatestVersion {
 		return verCheck.Pass(
 			fmt.Sprintf("Running latest version (checked %s ago)",
 				duration.Humanize(time.Since(statusAt.At))))
