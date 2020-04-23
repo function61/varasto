@@ -1,5 +1,5 @@
 import { DocLink } from 'component/doclink';
-import { WarningAlert } from 'f61ui/component/alerts';
+import { WarningAlert, InfoAlert } from 'f61ui/component/alerts';
 import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
 import { unrecognizedValue } from 'f61ui/utils';
@@ -272,6 +272,10 @@ export default class GettingStartedPage extends React.Component<
 	private yourFirstVolume(currSection: section): React.ReactNode {
 		return (
 			<div>
+				<InfoAlert>
+					A default volume with a 1 GB quota has been created for you. You can change its
+					name and quota now or later.
+				</InfoAlert>
 				<p>A volume is a physical storage location for your data. That can be a:</p>
 				<ul>
 					<li>a directory in your existing partition</li>
@@ -283,18 +287,13 @@ export default class GettingStartedPage extends React.Component<
 					still have the same data in another volume so you won't lose data.
 				</p>
 				<p>
-					But you don't have to worry about redundancy choices right now - you can add
-					volumes later and it's easy to change replication settings even for existing
-					data to be spread to two or more volumes later.
+					You don't have to worry about redundancy choices right now - you can add volumes
+					later and it's easy to change replication settings even for existing data to be
+					spread to more volumes.
 				</p>
 				<p>
 					Note: you don't need to decide where data is stored when you create a volume -
 					you'll make that decision when you mount the volume (that's the next page).
-				</p>
-
-				<p>
-					A default volume with a 1 GB quota has been created for you. You can change its
-					name and quota now or later.
 				</p>
 
 				<p>
@@ -376,6 +375,13 @@ export default class GettingStartedPage extends React.Component<
 	private defaultReplicationPolicy(currSection: section): React.ReactNode {
 		return (
 			<div>
+				<InfoAlert>
+					A default policy was created for you, which specifies that new data will be
+					stored on the volume that we just created for you. After you add more volumes,
+					you can change the replication policy (even retroactively) to increase your data
+					redundancy.
+				</InfoAlert>
+
 				<p>
 					A replication policy defines into which volumes a collection's files are stored
 					in.
@@ -393,12 +399,6 @@ export default class GettingStartedPage extends React.Component<
 				<p>
 					Read more: <DocLink doc={DocRef.DocsUsingReplicationPoliciesIndexMd} />{' '}
 					(includes a picture)
-				</p>
-
-				<p>
-					<b>A default policy was created for you</b>, which specifies that data is stored
-					on your default volume. After you add more volumes, you can change the
-					replication policy (even retroactively) to increase your data redundancy.
 				</p>
 
 				<p>
@@ -488,6 +488,11 @@ export default class GettingStartedPage extends React.Component<
 					To demonstrate making changes, add a file to the cloned collection. Then run{' '}
 					<SmallWell>sto push</SmallWell> to send the changes back to Varasto.
 				</p>
+
+				<InfoAlert>
+					Confused? There's a short video demonstrating this process:{' '}
+					<DocLink doc={DocRef.DocsDataInterfacesClientIndexMd} />
+				</InfoAlert>
 
 				{this.phaseNavBar(currSection)}
 			</div>

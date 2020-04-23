@@ -9,7 +9,7 @@ against the master branch (= latest version). So to stay secure, always use the 
 version of this project.
 
 
-Reporting a Vulnerability
+Reporting a vulnerability
 -------------------------
 
 If you think you've found a vulnerability, responsible disclosure is appreciated!

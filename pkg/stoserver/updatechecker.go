@@ -21,7 +21,7 @@ import (
 // in this file:
 // - health checker (check if we're running the latest version)
 // - command for getting the latest version from the update server
-// - parser for the update
+// - deserializer for the update JSON
 // - scheduled job implementation for running the above command
 
 func healthRunningLatestVersion(tx *bbolt.Tx) stohealth.HealthChecker {

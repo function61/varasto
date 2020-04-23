@@ -153,7 +153,13 @@
 		"chain": "public",
 		"ctor": ["Id"],
 		"crudNature": "create",
-		"title": "Mount local volume",
+		"title": "Mount a local volume",
+		"info": [
+			"If you're testing out Varasto and don't want to dedicate a partition to Varasto yet, you don't need to mount anything and just specify something like '/mnt/varasto/test/varasto-test' as the path",
+			"If you want to dedicate a disk/partition for Varasto use, mount it in '/mnt/varasto/VOL_NAME' and use '/mnt/varasto/VOL_NAME/varasto-volname' as the path",
+			"If the directory does not exist, it will be created for you",
+			"NOTE: The volume will be seen as 'offline' for the first a few seconds"
+		],
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "Path", "placeholder": "/mnt/varasto/fry/varasto-fry" }
@@ -713,7 +719,7 @@
 		"title": "Change schedule",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true },
-			{ "key": "Schedule" }
+			{ "key": "Schedule", "help": "https://godoc.org/github.com/robfig/cron" }
 		]
 	},
 	{
