@@ -1,3 +1,4 @@
+import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { DocLink } from 'component/doclink';
 import {
@@ -40,7 +41,19 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 	render() {
 		return (
 			<SettingsLayout title="Subsystems" breadcrumbs={[]}>
-				<Panel heading="Subsystems">{this.renderSubsystems()}</Panel>
+				<Panel
+					heading={
+						<div>
+							Subsystems{' '}
+							<RefreshButton
+								refresh={() => {
+									this.fetchData();
+								}}
+							/>
+						</div>
+					}>
+					{this.renderSubsystems()}
+				</Panel>
 				<CollapsePanel heading="Info">{this.info()}</CollapsePanel>
 			</SettingsLayout>
 		);
