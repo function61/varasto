@@ -66,10 +66,12 @@ func runServer(
 	logl := logex.Levels(logger)
 
 	// if public.tar.gz is not present in our working directory, try to download & extract it automatically
-	if err := extractpublicfiles.Run(extractpublicfiles.BintrayDownloadUrl(
-		"function61",
-		"dl",
-		"varasto/"+dynversion.Version+"/"+extractpublicfiles.PublicFilesArchiveFilename), extractpublicfiles.PublicFilesArchiveFilename, logger); err != nil {
+	if err := extractpublicfiles.Run(githubAssetUrl(
+		dynversion.Version,
+		extractpublicfiles.PublicFilesArchiveFilename),
+		extractpublicfiles.PublicFilesArchiveFilename,
+		logger,
+	); err != nil {
 		return err
 	}
 
@@ -700,4 +702,8 @@ func (r *configReloader) ReloadConfig() {
 			panic(err)
 		}
 	}()
+}
+
+func githubAssetUrl(release string, filename string) string {
+	return "https://github.com/function61/varasto/releases/download/" + release + "/" + filename
 }

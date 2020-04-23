@@ -1,9 +1,17 @@
-Update
-======
+---
+title: Update
+---
 
 You probably reached this page because Varasto told you there's a new version available.
 
 It's time to update to the latest version of Varasto.
+
+
+Changelog
+---------
+
+If you want to find out about the latest changes, check out our
+[releases page](https://github.com/function61/varasto/releases).
 
 
 Before updating
@@ -15,70 +23,88 @@ Before updating, [take a backup](../../using/metadata-backup/index.md#taking-a-b
 (and verify that it was successfull).
 
 
-Changelog
----------
-
-To find out about the latest release, along with its changes, check out our
-[releases page](https://github.com/function61/varasto/releases).
-
-
 How to update
 -------------
 
-This one depends on how you installed Varasto.
+This one depends on how you installed Varasto:
 
+=== "Docker"
+	Updating means restarting Varasto with an updated version of its Docker image.
 
-### Docker
+	Stop Varasto:
 
-Updating means restarting Varasto with an updated version of its Docker image.
+	```console
+	docker stop varasto
+	```
 
-!!! info "Docker and 'latest' image"
-	If you launched Varasto without specifying which version of the image to use (if you're
-	unsure, then you didn't), then Docker defaults to `latest` version.
-	
-	The `latest` Docker tag is "dynamic" - i.e. the actual image it points to changes
-	over time. In this case run `$ docker pull fn61/varasto` to get the latest "latest"
-	version!
+	Remove the container (so we can run Varasto again with a different image version):
 
-If you explicitly specified version of Varasto that you want to use, then you don't have
-to run the pull command.
+	```console
+	docker rm varasto
+	```
 
-Stop Varasto:
+	!!! tip
+		Don't worry, removing the Varasto container doesn't remove Varasto content / state
+		(= metadata database), since we gave it a named volume when we started it.
 
-```console
-docker stop varasto
-```
+	Pull newest version of Varasto image:
 
-Remove the container (so we can run Varasto again with a different image):
+	```console
+	docker pull fn61/varasto
+	```
 
-```console
-docker rm varasto
-```
+	Now start the new version of Varasto using the same command as in the
+	[original installation instructions](../linux-docker.md).
 
-Now start new version of Varasto. Use the same command as in the
-[original installation instructions](../linux-docker.md), and:
+=== "Docker compose"
+	Updating means restarting Varasto with an updated version of its Docker image.
 
-- If you used the `latest` version, you can run the exact same command
-- If you explicitly defined version, then find out the newest version from our
-  [releases page](#changelog) (Docker tag names are same as our release names).
+	Go in the directory where you stored the Varasto's `docker-compose.yml` (per the
+	install instructions):
 
+	```console
+	cd somewhere/
+	```
 
+	Stop Varasto:
 
-### Manual installation
+	```console
+	docker-compose down
+	```
 
-!!! tip "Summary"
-	Updating boils down to replacing the `sto` binary and `public.tar.gz` with newer versions.
+	Pull newest version of Varasto image:
 
-Stop Varasto.
+	```console
+	docker pull fn61/varasto
+	```
 
-Delete the old:
+	Now start the new version of Varasto using the same command as in the
+	[original installation instructions](../linux-docker.md).
 
-- `sto` binary file
-- `public.tar.gz` archive
-- `public/` directory (this is the above archive extracted)
+=== "Manual installation"
+	Updating means replacing the `sto` binary and `public.tar.gz` with newer versions.
 
-You can go over the [original installation instructions](../linux-manual.md) if you want,
-but only download the binary and the `public.tar.gz` files (configuration and service
-auto-start installation should not be done again).
+	!!! info "This guide assumes Linux"
+		If you're on some other system, improvise.
 
-Start Varasto.
+	Stop Varasto. If you're using systemd:
+
+	```console
+	systemctl stop varasto
+	```
+
+	Delete the old executable, `public.tar.gz` archive and its extracted directory:
+
+	```console
+	rm -rf sto public.tar.gz public/
+	```
+
+	You can go over the [original installation instructions](../linux-manual.md) if you want,
+	but only do these:
+
+	- download the binary
+	- and optionally the `public.tar.gz` file (it's downloaded automatically if it's not found)
+
+	(i.e. configuration and service auto-start installation should not be done again)
+
+	Start Varasto.

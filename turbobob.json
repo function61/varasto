@@ -49,18 +49,16 @@
 		},
 		{
 			"name": "publisher",
-			"uses": "docker://fn61/buildkit-publisher:20190206_1058_d35b3939",
+			"uses": "docker://fn61/buildkit-publisher:20200228_1755_83c203ff",
 			"mount_destination": "/workspace",
 			"commands": {
-				"publish": ["publish.sh", "rel/*"],
+				"publish": ["publish-gh.sh", "function61/varasto", "rel/"],
 				"build": ["true"],
 				"dev": ["bash"]
 			},
-			"env": {
-				"BINTRAY_PROJECT": "function61/dl/varasto"
-			},
 			"pass_envs": [
-				"BINTRAY_CREDS"
+				"GITHUB_TOKEN",
+				"EVENTHORIZON"
 			]
 		}
 	],

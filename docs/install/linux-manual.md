@@ -1,8 +1,9 @@
 Linux (manual)
 ==============
 
-Download suitable binary from the Bintray link (in README). Don't worry about `public.tar.gz`
-(it's downloaded+extracted automatically if it's missing).
+Download suitable binary from the
+[newest release](https://github.com/function61/varasto/releases) (you don't need anything
+else).
 
 Rename `sto_linux-amd64` -> `sto` and `chmod +x` it.
 

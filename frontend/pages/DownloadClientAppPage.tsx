@@ -38,19 +38,19 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 								<td title="PC">💻</td>
 								<td>Windows</td>
 								<td>x86 64-bit</td>
-								<td>{bintrayLink('sto.exe')}</td>
+								<td>{assetLink('sto.exe')}</td>
 							</tr>
 							<tr>
 								<td title="PC">💻</td>
 								<td>Linux</td>
 								<td>x86 64-bit</td>
-								<td>{bintrayLink('sto_linux-amd64')}</td>
+								<td>{assetLink('sto_linux-amd64')}</td>
 							</tr>
 							<tr>
 								<td title="Single-board computer / embedded">📟</td>
 								<td>Linux</td>
 								<td>ARM (Raspberry Pi etc.)</td>
-								<td>{bintrayLink('sto_linux-arm')}</td>
+								<td>{assetLink('sto_linux-arm')}</td>
 							</tr>
 							<tr>
 								<td title="Mobile">📱</td>
@@ -65,7 +65,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 								<td title="PC">💻</td>
 								<td>macOS</td>
 								<td>x86 64-bit</td>
-								<td>{bintrayLink('sto_darwin-amd64')}</td>
+								<td>{assetLink('sto_darwin-amd64')}</td>
 							</tr>
 							<tr>
 								<td title="Mobile">📱</td>
@@ -88,14 +88,14 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 	}
 }
 
-function bintrayLink(binaryName: string): React.ReactNode {
+function assetLink(binaryName: string): React.ReactNode {
 	return (
 		<a
 			className="btn btn-default"
 			href={
-				'https://bintray.com/function61/dl/download_file?file_path=varasto%2F' +
+				'https://github.com/function61/varasto/releases/download/' +
 				version +
-				'%2F' +
+				'/' +
 				binaryName
 			}
 			target="_blank">
