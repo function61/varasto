@@ -1522,9 +1522,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 		return nil, err
 	}
 
-	return stohealth.NewHealthFolder(
-		"Varasto",
-		nil,
+	checkers := []stohealth.HealthChecker{
 		healthRunningLatestVersion(tx),
 		healthNoFailedMounts(conf.FailedMountNames),
 		serverCertHealth(
@@ -1533,18 +1531,29 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 		quotaHealth(volumesOverQuota),
 		healthNoReconciliationConflicts(),
 		stohealth.NewLastIntegrityVerificationJob(db),
-		stohealth.NewHealthFolder(
+	}
+
+	if len(temps) > 0 {
+		checkers = append(checkers, stohealth.NewHealthFolder(
 			"Temperatures",
 			stoservertypes.HealthKindSmart.Ptr(),
-			temps...),
-		stohealth.NewHealthFolder(
+			temps...))
+	}
+
+	if len(smarts) > 0 {
+		checkers = append(checkers, stohealth.NewHealthFolder(
 			"SMART diagnostics",
 			stoservertypes.HealthKindSmart.Ptr(),
-			smarts...),
+			smarts...))
+	}
+
+	checkers = append(checkers,
 		healthSubsystems(conf.ThumbServer, conf.FuseProjector),
 		healthForScheduledJobs(tx),
 		stohealth.NewHealthFolder(
 			"Replication queue",
 			stoservertypes.HealthKindVolumeReplication.Ptr(),
-			replicationQueues...)), nil
+			replicationQueues...))
+
+	return stohealth.NewHealthFolder("Varasto", nil, checkers...), nil
 }
