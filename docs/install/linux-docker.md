@@ -21,6 +21,7 @@ Start Varasto
 
 	```console
 	docker run -d --name varasto \
+		--restart always \
 		-v varasto-db:/varasto-db \
 		-v /mnt/varasto:/mnt/varasto:shared \
 		-v /dev:/dev:ro \
@@ -41,6 +42,7 @@ Start Varasto
 	services:
 	  varasto:
 	    image: fn61/varasto
+	    restart: always          # restart on crashes
 	    cap_add:
 	    - SYS_ADMIN              # for FUSE support. these are not required if you have "privileged: true"
 	    - MKNOD                  # (but are IF you remove privileged because you don't need SMART support)
