@@ -15,5 +15,5 @@ jobs:
       # list here each secret to pass on to the build
       env:
         DOCKER_CREDS: ${{ secrets.DOCKER_CREDS }}
-        BINTRAY_CREDS: ${{ secrets.BINTRAY_CREDS }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        EVENTHORIZON: ${{ secrets.EVENTHORIZON }}
