@@ -376,15 +376,15 @@
 		]
 	},
 	{
-		"command": "collection.PullMetadata",
+		"command": "collection.PullTmdbMetadata",
 		"chain": "public",
 		"ctor": ["Collection"],
 		"crudNature": "update",
-		"title": "Metadata: pull",
+		"title": "Metadata: pull from TMDb",
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
-			{ "key": "ForeignKey", "title": "IMDb ID", "placeholder": "tt1226229" },
-			{ "key": "ScrubName", "title": "Use name from IMDb", "type": "checkbox" }
+			{ "key": "ForeignKey", "title": "IMDb ID", "help": "Yes, we're using IMDb IDs with TMDb", "placeholder": "tt1226229" },
+			{ "key": "ScrubName", "title": "Use name from TMDb", "help": "Renames your collection to the official name - if they're different", "type": "checkbox" }
 		]
 	},
 	{
@@ -650,7 +650,7 @@
 		"crudNature": "update",
 		"title": "Set https://themoviedb.org API key",
 		"fields": [
-			{ "key": "Apikey", "optional": true, "placeholder": "778afba08c531c549272ecb5621b08d3" }
+			{ "key": "Apikey", "title": "API key", "optional": true, "placeholder": "778afba08c531c549272ecb5621b08d3" }
 		]
 	},
 	{

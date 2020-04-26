@@ -5,7 +5,7 @@ import {
 	CollectionChangeSensitivity,
 	CollectionDelete,
 	CollectionMove,
-	CollectionPullMetadata,
+	CollectionPullTmdbMetadata,
 	CollectionRename,
 	CollectionTag,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -19,7 +19,7 @@ export function collectionDropdown(coll: CollectionSubset) {
 			<CommandLink command={CollectionChangeDescription(coll.Id, coll.Description)} />
 			<CommandLink command={CollectionMove(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)} />
-			<CommandLink command={CollectionPullMetadata(coll.Id)} />
+			<CommandLink command={CollectionPullTmdbMetadata(coll.Id)} />
 			<CommandLink command={CollectionTag(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionDelete(coll.Id, { disambiguation: coll.Name })} />
 		</Dropdown>

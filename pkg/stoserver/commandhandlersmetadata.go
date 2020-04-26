@@ -17,7 +17,7 @@ import (
 )
 
 // this is for movies
-func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMetadata, ctx *command.Ctx) error {
+func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPullTmdbMetadata, ctx *command.Ctx) error {
 	tmdb, err := c.themoviedbapiClient()
 	if err != nil {
 		return err

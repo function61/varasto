@@ -25,7 +25,7 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionMoveFilesIntoAnotherCollection,
-	CollectionPullMetadata,
+	CollectionPullTmdbMetadata,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
 	downloadFileUrl,
@@ -413,7 +413,7 @@ export default class CollectionPage extends React.Component<
 
 							{imdbIdExpectedButMissing && (
 								<CommandInlineForm
-									command={CollectionPullMetadata(collOutput.Collection.Id)}
+									command={CollectionPullTmdbMetadata(collOutput.Collection.Id)}
 								/>
 							)}
 						</Panel>
