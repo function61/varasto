@@ -25,6 +25,11 @@ Web UI
 !!! note ""
 	![](../content/photos/screenshot.png)
 
+### Games
+
+!!! note ""
+	![](../content/games/screenshot.png)
+
 
 Other ways to access your data
 ------------------------------

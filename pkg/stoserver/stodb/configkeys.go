@@ -7,6 +7,7 @@ import (
 var (
 	CfgNodeId              = ConfigAccessor("nodeId")
 	CfgTheMovieDbApikey    = ConfigAccessor(stoservertypes.CfgTheMovieDbApikey)
+	CfgIgdbApikey          = ConfigAccessor(stoservertypes.CfgIgdbApikey)
 	CfgFuseServerBaseUrl   = ConfigAccessor(stoservertypes.CfgFuseServerBaseUrl)
 	CfgNetworkShareBaseUrl = ConfigAccessor(stoservertypes.CfgNetworkShareBaseUrl)
 	CfgUbackupConfig       = ConfigAccessor(stoservertypes.CfgUbackupConfig)

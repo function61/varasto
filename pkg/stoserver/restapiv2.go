@@ -1075,6 +1075,8 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 		val, err = stodb.CfgFuseServerBaseUrl.GetOptional(tx)
 	case stoservertypes.CfgTheMovieDbApikey:
 		val, err = stodb.CfgTheMovieDbApikey.GetOptional(tx)
+	case stoservertypes.CfgIgdbApikey:
+		val, err = stodb.CfgIgdbApikey.GetOptional(tx)
 	case stoservertypes.CfgNetworkShareBaseUrl:
 		val, err = stodb.CfgNetworkShareBaseUrl.GetOptional(tx)
 	case stoservertypes.CfgUbackupConfig:
@@ -1382,6 +1384,29 @@ func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWri
 	return &stoservertypes.GeneratedIds{
 		Changeset: stoutils.NewCollectionChangesetId(),
 	}
+}
+
+// you can't make URLs by ID to IGDB without "slug" (which I don't think can be guaranteed
+// to stay constant), so we have to use the API to fetch the current URL when user wants to
+// enter the site
+func (h *handlers) IgdbIntegrationRedir(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	igdb, err := igdbClient(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	game, err := igdb.GameById(r.Context(), mux.Vars(r)["id"])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if game.Url == "" {
+		http.Error(w, "game found but its URL not", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, game.Url, http.StatusFound)
 }
 
 func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {

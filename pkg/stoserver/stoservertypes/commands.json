@@ -388,6 +388,18 @@
 		]
 	},
 	{
+		"command": "collection.PullIgdbMetadata",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "update",
+		"title": "Metadata: pull from IGDB",
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "ForeignKey", "title": "IGDB ID", "placeholder": "20025" },
+			{ "key": "ScrubName", "title": "Use name from IGDB", "help": "Renames your collection to the official name - if they're different", "type": "checkbox" }
+		]
+	},
+	{
 		"command": "collection.ChangeSensitivity",
 		"chain": "public",
 		"ctor": ["Id","Sensitivity"],
@@ -651,6 +663,16 @@
 		"title": "Set https://themoviedb.org API key",
 		"fields": [
 			{ "key": "Apikey", "title": "API key", "optional": true, "placeholder": "778afba08c531c549272ecb5621b08d3" }
+		]
+	},
+	{
+		"command": "config.SetIgdbApikey",
+		"chain": "public",
+		"ctor": ["Apikey"],
+		"crudNature": "update",
+		"title": "Set https://www.igdb.com API key",
+		"fields": [
+			{ "key": "Apikey", "title": "API key", "optional": true, "placeholder": "821ae63dbe0c573eff8b69d451fb21bc" }
 		]
 	},
 	{

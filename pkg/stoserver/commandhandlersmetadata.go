@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/sliceutil"
+	"github.com/function61/varasto/pkg/igdbapi"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
@@ -254,6 +256,100 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 	})
 }
 
+func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPullIgdbMetadata, ctx *command.Ctx) error {
+	igdb, err := igdbClient(c.db)
+	if err != nil {
+		return err
+	}
+
+	igdbId := cmd.ForeignKey
+
+	gameDetails, err := igdb.GameById(ctx.Ctx, igdbId)
+	if err != nil {
+		return err
+	}
+
+	screenshotUrls, err := igdb.GameScreenshotUrls(ctx.Ctx, igdbId)
+	if err != nil {
+		return err
+	}
+
+	youtubeVideoIds, err := igdb.GameYoutubeVideoIds(ctx.Ctx, igdbId)
+	if err != nil {
+		return err
+	}
+
+	externalIds, err := igdb.ExternalIdsByGameId(ctx.Ctx, igdbId)
+	if err != nil {
+		return err
+	}
+
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(cmd.Collection)
+		if err != nil {
+			return err
+		}
+
+		if cmd.ScrubName {
+			if err := maybeRename(coll, gameDetails.Name, tx); err != nil {
+				return err
+			}
+		}
+
+		coll.Metadata[stoservertypes.MetadataIgdbGameId] = strconv.Itoa(gameDetails.ID)
+
+		if gameDetails.Summary != "" {
+			coll.Metadata[stoservertypes.MetadataOverview] = gameDetails.Summary
+		}
+
+		if gameDetails.FirstReleaseDate != nil {
+			coll.Metadata[stoservertypes.MetadataReleaseDate] = time.Time(*gameDetails.FirstReleaseDate).UTC().Format("2006-01-02")
+		}
+
+		if externalIds.Official != nil {
+			coll.Metadata[stoservertypes.MetadataHomepage] = *externalIds.Official
+		}
+
+		if externalIds.SteamId != nil {
+			coll.Metadata[stoservertypes.MetadataSteamAppId] = *externalIds.SteamId
+		}
+
+		if externalIds.GogSlug != nil {
+			coll.Metadata[stoservertypes.MetadataGogSlug] = *externalIds.GogSlug
+		}
+
+		if externalIds.RedditSlug != nil {
+			coll.Metadata[stoservertypes.MetadataRedditSlug] = *externalIds.RedditSlug
+		}
+
+		if externalIds.EnglishWikipediaSlug != nil {
+			coll.Metadata[stoservertypes.MetadataWikipediaSlug] = *externalIds.EnglishWikipediaSlug
+		}
+
+		if externalIds.GooglePlayAppId != nil {
+			coll.Metadata[stoservertypes.MetadataGooglePlayApp] = *externalIds.GooglePlayAppId
+		}
+
+		if externalIds.AppleAppStoreAppId != nil {
+			coll.Metadata[stoservertypes.MetadataAppleAppStoreApp] = *externalIds.AppleAppStoreAppId
+		}
+
+		if len(youtubeVideoIds) > 0 {
+			// don't replace if it already has
+			if _, has := coll.Metadata[stoservertypes.MetadataYoutubeId]; !has {
+				// only link the first
+				coll.Metadata[stoservertypes.MetadataYoutubeId] = youtubeVideoIds[0]
+			}
+		}
+
+		if len(screenshotUrls) > 0 {
+			coll.Metadata[stoservertypes.MetadataBackdrop] = screenshotUrls[0]
+		}
+
+		return stodb.CollectionRepository.Update(coll, tx)
+	})
+}
+
 func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMovieDbApikey, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		if cmd.Apikey != "" { // allow clearing this without testing
@@ -261,11 +357,23 @@ func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMo
 			client := themoviedbapi.New(cmd.Apikey)
 			_, err := client.OpenMovieByImdbId(ctx.Ctx, "tt1226229") // one of my fav movies, way underrated :)
 			if err != nil {
-				return fmt.Errorf("failed validating API key: %v", err)
+				return fmt.Errorf("failed validating API key: %w", err)
 			}
 		}
 
 		return stodb.CfgTheMovieDbApikey.Set(cmd.Apikey, tx)
+	})
+}
+
+func (c *cHandlers) ConfigSetIgdbApikey(cmd *stoservertypes.ConfigSetIgdbApikey, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		if cmd.Apikey != "" { // allow clearing this without testing
+			if _, err := igdbapi.New(cmd.Apikey).GameById(ctx.Ctx, "20025"); err != nil {
+				return fmt.Errorf("failed validating API key: %w", err)
+			}
+		}
+
+		return stodb.CfgIgdbApikey.Set(cmd.Apikey, tx)
 	})
 }
 
@@ -282,6 +390,21 @@ func (c *cHandlers) themoviedbapiClient() (*themoviedbapi.Client, error) {
 	}
 
 	return themoviedbapi.New(apikey), nil
+}
+
+func igdbClient(db *bbolt.DB) (*igdbapi.Client, error) {
+	tx, err := db.Begin(false)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	apikey, err := stodb.CfgIgdbApikey.GetRequired(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	return igdbapi.New(apikey), nil
 }
 
 func maybeRename(coll *stotypes.Collection, scrubbedName string, tx *bbolt.Tx) error {

@@ -544,7 +544,9 @@ function helpByDirectoryType(type: DirectoryType): HelpForDirType | null {
 			return { doc: DocRef.DocsContentMoviesIndexMd, title: 'Guide: storing movies' };
 		case DirectoryType.Series:
 			return { doc: DocRef.DocsContentTvshowsIndexMd, title: 'Guide: storing TV shows' };
-		case DirectoryType.Generic:
+		case DirectoryType.Games:
+			return { doc: DocRef.DocsContentGamesIndexMd, title: 'Guide: storing games' };
+		case DirectoryType.Generic: // have doc, but let's not pollute every directory
 		case DirectoryType.Podcasts:
 			return null;
 		default:
@@ -562,6 +564,8 @@ function directoryTypeToEmoji(type: DirectoryType): string {
 			return '📺';
 		case DirectoryType.Podcasts:
 			return '🎙️';
+		case DirectoryType.Games:
+			return '🎮';
 		default:
 			throw unrecognizedValue(type);
 	}

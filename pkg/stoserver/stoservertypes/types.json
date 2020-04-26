@@ -28,6 +28,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/config/{id}", "produces": {"_": "ConfigValue"}, "name": "getConfig" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/logs", "produces": {"_": "list", "of": {"_": "string"}}, "name": "getLogs" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/redir/{id}", "name": "igdbIntegrationRedir" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
@@ -41,6 +42,14 @@
 		{ "key": "MetadataTheMovieDbMovieId", "value": "themoviedb.id" },
 		{ "key": "MetadataTheMovieDbTvEpisodeId", "value": "themoviedb.episode_id" },
 		{ "key": "MetadataTheMovieDbTvId", "value": "themoviedb.tv_id" },
+		{ "key": "MetadataSteamAppId", "value": "steampowered.com:app:id" },
+		{ "key": "MetadataYoutubeId", "value": "youtube.com:video:id" },
+		{ "key": "MetadataGogSlug", "value": "gog.com:slug" },
+		{ "key": "MetadataGooglePlayApp", "value": "play.google.com:app:id" },
+		{ "key": "MetadataAppleAppStoreApp", "value": "apps.apple.com:app:id" },
+		{ "key": "MetadataRedditSlug", "value": "reddit.com:subreddit:slug" },
+		{ "key": "MetadataWikipediaSlug", "value": "en.wikipedia.org:slug" },
+		{ "key": "MetadataIgdbGameId", "value": "igdb.com:game:id" },
 		{ "key": "MetadataTheTvDbEpisodeImage", "value": "thetvdb.ep_image" },
 		{ "key": "MetadataTheTvDbSeriesId", "value": "thetvdb.series_id" },
 		{ "key": "MetadataThumbnail", "value": "thumbnail_url" },
@@ -48,6 +57,7 @@
 		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },
 		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
 		{ "key": "CfgTheMovieDbApikey", "value": "themoviedb_apikey" },
+		{ "key": "CfgIgdbApikey", "value": "igdb_apikey" },
 		{ "key": "CfgFuseServerBaseUrl", "value": "fuseserver_baseurl" },
 		{ "key": "CfgNetworkShareBaseUrl", "value": "networkshare_baseurl" },
 		{ "key": "CfgUbackupConfig", "value": "ubackup_config" },
@@ -72,6 +82,7 @@
 				"generic",
 				"movies",
 				"series",
+				"games",
 				"podcasts"
 			]
 		},
@@ -140,6 +151,7 @@
 			"stringMembers": [
 				"docs/index.md",
 				"docs/content/movies/index.md",
+				"docs/content/games/index.md",
 				"docs/content/tvshows/index.md",
 				"docs/data-interfaces/client/index.md",
 				"docs/data-interfaces/network-folders/index.md",

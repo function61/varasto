@@ -1,22 +1,33 @@
 import { Result } from 'f61ui/component/result';
-import { Panel, Well } from 'f61ui/component/bootstrap';
+import { Panel, CollapsePanel } from 'f61ui/component/bootstrap';
 import { CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { SecretReveal } from 'f61ui/component/secretreveal';
-import { ConfigSetTheMovieDbApikey } from 'generated/stoserver/stoservertypes_commands';
+import {
+	ConfigSetTheMovieDbApikey,
+	ConfigSetIgdbApikey,
+} from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
-import { CfgTheMovieDbApikey, ConfigValue } from 'generated/stoserver/stoservertypes_types';
+import {
+	CfgTheMovieDbApikey,
+	CfgIgdbApikey,
+	ConfigValue,
+} from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
 
 interface ContentMetadataPageState {
-	apikey: Result<ConfigValue>;
+	apikeyTmdb: Result<ConfigValue>;
+	apikeyIgdb: Result<ConfigValue>;
 }
 
 export default class ContentMetadataPage extends React.Component<{}, ContentMetadataPageState> {
 	state: ContentMetadataPageState = {
-		apikey: new Result<ConfigValue>((_) => {
-			this.setState({ apikey: _ });
+		apikeyTmdb: new Result<ConfigValue>((_) => {
+			this.setState({ apikeyTmdb: _ });
+		}),
+		apikeyIgdb: new Result<ConfigValue>((_) => {
+			this.setState({ apikeyIgdb: _ });
 		}),
 	};
 
@@ -36,29 +47,50 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 				<Panel
 					heading={
 						<div>
-							TMDb (
+							Movies &amp; TV series - TMDb (
 							<a href="https://www.themoviedb.org/" target="_blank">
 								themoviedb.org
 							</a>
 							) &nbsp;
-							<Info text="For fetching metadata (plot descriptions, poster images etc.) for movies and TV series. This is not required, but if given you can get richer metadata." />
+							<Info text="You get: plot descriptions, poster images etc." />
 						</div>
 					}>
-					{this.renderApikeyForm()}
-					<Well>
-						More info about getting an API key{' '}
-						<a href="https://www.themoviedb.org/faq/api" target="_blank">
-							here
-						</a>
-						. It's free and easy.
-					</Well>
+					{this.renderTmdb()}
 				</Panel>
+
+				<Panel
+					heading={
+						<div>
+							Games - IGDB (
+							<a href="https://www.igdb.com/" target="_blank">
+								igdb.com
+							</a>
+							) &nbsp;
+							<Info text="You get: game overview, screenshot, links, YouTube videos etc." />
+						</div>
+					}>
+					{this.renderIgdb()}
+				</Panel>
+
+				<CollapsePanel heading="Info" visualStyle="info">
+					<p>
+						These optional providers enable Varasto to display rich metadata for various
+						kinds of content.
+					</p>
+					<p>
+						Unfortunately, you have to register &amp; configure API keys for them first
+						so the providers can protect themselves from abuse.
+					</p>
+					<p>
+						The API keys are <b>free for you to use</b> - i.e. they don't cost anything.
+					</p>
+				</CollapsePanel>
 			</SettingsLayout>
 		);
 	}
 
-	private renderApikeyForm() {
-		const [apikey, loadingOrError] = this.state.apikey.unwrap();
+	private renderTmdb() {
+		const [apikey, loadingOrError] = this.state.apikeyTmdb.unwrap();
 
 		if (!apikey) {
 			return loadingOrError;
@@ -75,7 +107,45 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 						{apikey.Value !== '' ? (
 							<SecretReveal secret={apikey.Value} />
 						) : (
-							'Not set - unable to fetch metadata'
+							<span>
+								Not set - unable to fetch metadata.{' '}
+								<a href="https://www.themoviedb.org/faq/api" target="_blank">
+									Register for an API key
+								</a>
+								&nbsp; (&amp; get more info).
+							</span>
+						)}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	private renderIgdb() {
+		const [apikey, loadingOrError] = this.state.apikeyIgdb.unwrap();
+
+		if (!apikey) {
+			return loadingOrError;
+		}
+
+		return (
+			<div className="form-horizontal">
+				<div className="form-group">
+					<label className="col-sm-2 control-label">
+						API key &nbsp;
+						<CommandIcon command={ConfigSetIgdbApikey(apikey.Value)} />
+					</label>
+					<div className="col-sm-10">
+						{apikey.Value !== '' ? (
+							<SecretReveal secret={apikey.Value} />
+						) : (
+							<span>
+								Not set - unable to fetch metadata.{' '}
+								<a href="https://www.igdb.com/api" target="_blank">
+									Register for an API key
+								</a>
+								&nbsp; (&amp; get more info).
+							</span>
 						)}
 					</div>
 				</div>
@@ -84,6 +154,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 	}
 
 	private fetchData() {
-		this.state.apikey.load(() => getConfig(CfgTheMovieDbApikey));
+		this.state.apikeyTmdb.load(() => getConfig(CfgTheMovieDbApikey));
+		this.state.apikeyIgdb.load(() => getConfig(CfgIgdbApikey));
 	}
 }

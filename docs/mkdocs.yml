@@ -57,6 +57,7 @@ nav:
   - Photos: content/photos/index.md
   - Movies: content/movies/index.md
   - TV shows: content/tvshows/index.md
+  - Games: content/games/index.md
   # - Podcasts (TODO): stuff.md
 - Security:
   - Encryption in Varasto: security/encryption/index.md

@@ -9,11 +9,20 @@ import {
 	MetadataReleaseDate,
 	MetadataTheMovieDbMovieId,
 	MetadataTheMovieDbTvId,
+	MetadataIgdbGameId,
 	MetadataTheTvDbSeriesId,
 	MetadataThumbnail,
+	MetadataGooglePlayApp,
+	MetadataAppleAppStoreApp,
+	MetadataSteamAppId,
+	MetadataGogSlug,
+	MetadataYoutubeId,
+	MetadataRedditSlug,
+	MetadataWikipediaSlug,
 	MetadataVideoRevenueDollars,
 	MetadataVideoRuntimeMins,
 } from 'generated/stoserver/stoservertypes_types';
+import { igdbIntegrationRedirUrl } from 'generated/stoserver/stoservertypes_endpoints';
 import * as React from 'react';
 
 interface MetadataKeyValue {
@@ -94,6 +103,46 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 							'TMDb',
 							'https://www.themoviedb.org/tv/{key}',
 							metadata[MetadataTheMovieDbTvId],
+						)}
+						{this.maybeUrl(
+							'IGDB',
+							'{key}',
+							igdbIntegrationRedirUrl(metadata[MetadataIgdbGameId]),
+						)}
+						{this.maybeUrl(
+							'Steam store',
+							'https://store.steampowered.com/app/{key}',
+							metadata[MetadataSteamAppId],
+						)}
+						{this.maybeUrl(
+							'GOG.com',
+							'https://www.gog.com/game/{key}',
+							metadata[MetadataGogSlug],
+						)}
+						{this.maybeUrl(
+							'Wikipedia',
+							'https://en.wikipedia.org/wiki/{key}',
+							metadata[MetadataWikipediaSlug],
+						)}
+						{this.maybeUrl(
+							'YouTube',
+							'https://www.youtube.com/watch?v={key}',
+							metadata[MetadataYoutubeId],
+						)}
+						{this.maybeUrl(
+							'Reddit',
+							'https://www.reddit.com/r/{key}/',
+							metadata[MetadataRedditSlug],
+						)}
+						{this.maybeUrl(
+							'Google Play',
+							'https://play.google.com/store/apps/details?id={key}',
+							metadata[MetadataGooglePlayApp],
+						)}
+						{this.maybeUrl(
+							'Apple App Store',
+							'https://apps.apple.com/us/app/redirect/id{key}',
+							metadata[MetadataAppleAppStoreApp],
 						)}
 						{this.maybeUrl('Homepage', '{key}', metadata[MetadataHomepage])}
 					</div>
