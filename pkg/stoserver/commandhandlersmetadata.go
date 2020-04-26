@@ -34,13 +34,8 @@ func (c *cHandlers) CollectionPullMetadata(cmd *stoservertypes.CollectionPullMet
 			return err
 		}
 
-		// store because we might lose detail when scrubbing name
-		if cmd.ScrubName && collection.Name != info.OriginalTitle {
-			collection.Metadata["previous_name"] = collection.Name
-
-			collection.Name = info.OriginalTitle
-
-			if err := validateUniqueNameWithinSiblings(collection.Directory, collection.Name, tx); err != nil {
+		if cmd.ScrubName {
+			if err := maybeRename(collection, info.OriginalTitle, tx); err != nil {
 				return err
 			}
 		}
@@ -287,4 +282,18 @@ func (c *cHandlers) themoviedbapiClient() (*themoviedbapi.Client, error) {
 	}
 
 	return themoviedbapi.New(apikey), nil
+}
+
+func maybeRename(coll *stotypes.Collection, scrubbedName string, tx *bbolt.Tx) error {
+	if coll.Name == scrubbedName {
+		return nil
+	}
+	// store as not to lose data when scrubbing name
+	if _, hasPreviousName := coll.Metadata["previous_name"]; !hasPreviousName {
+		coll.Metadata["previous_name"] = coll.Name
+	}
+
+	coll.Name = scrubbedName
+
+	return validateUniqueNameWithinSiblings(coll.Directory, coll.Name, tx)
 }
