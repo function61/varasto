@@ -41,11 +41,6 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 			return null;
 		}
 
-		const backdropImage =
-			metadata[MetadataBackdrop] ||
-			metadata[MetadataThumbnail] ||
-			globalConfig().assetsDir + '/../image-not-available.png';
-
 		const overview: string = metadata[MetadataOverview] || '';
 
 		const badges: React.ReactNode[] = [];
@@ -76,7 +71,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 
 		return (
 			<Panel
-				children={<img src={backdropImage} style={{ maxWidth: '100%' }} />}
+				children={<img src={backdropImage(metadata)} style={{ maxWidth: '100%' }} />}
 				footer={
 					<div>
 						{overview}
@@ -172,4 +167,12 @@ export function metadataKvsToKv(kvs: MetadataKv[]): MetadataKeyValue {
 		ret[kv.Key] = kv.Value;
 	});
 	return ret;
+}
+
+export function backdropImage(metadata: MetadataKeyValue): string {
+	return metadata[MetadataBackdrop] || metadata[MetadataThumbnail] || imageNotAvailable();
+}
+
+export function imageNotAvailable(): string {
+	return globalConfig().assetsDir + '/../image-not-available.png';
 }

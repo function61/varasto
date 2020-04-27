@@ -1,6 +1,11 @@
 import { collectionDropdown } from 'component/collectiondropdown';
 import { DocLink } from 'component/doclink';
-import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
+import {
+	metadataKvsToKv,
+	imageNotAvailable,
+	backdropImage,
+	MetadataPanel,
+} from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
 import {
@@ -17,7 +22,6 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
-import { globalConfig } from 'f61ui/globalconfig';
 import { unrecognizedValue } from 'f61ui/utils';
 import {
 	CollectionCreate,
@@ -44,7 +48,6 @@ import {
 	MetadataImdbId,
 	MetadataOverview,
 	MetadataReleaseDate,
-	MetadataThumbnail,
 	MetadataTitle,
 	RootPathDotBase64FIXME,
 } from 'generated/stoserver/stoservertypes_types';
@@ -366,8 +369,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 		const collectionToRow = (coll: CollectionSubset): React.ReactNode => {
 			const metadata = metadataKvsToKv(coll.Metadata);
 
-			const imageSrc = metadata[MetadataThumbnail] || imageNotAvailable();
-
 			const badges = [];
 
 			if (MetadataReleaseDate in metadata) {
@@ -398,7 +399,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							rev: HeadRevisionId,
 							path: RootPathDotBase64FIXME,
 						})}>
-						<img src={imageSrc} style={{ maxWidth: '100%' }} />
+						<img src={backdropImage(metadata)} style={{ maxWidth: '100%' }} />
 					</a>
 				</Panel>
 			);
@@ -528,10 +529,6 @@ const directoryDropdown = (dir: Directory) => {
 };
 
 const hasMeta = (coll: CollectionSubset): boolean => coll.Metadata && coll.Metadata.length > 0;
-
-function imageNotAvailable(): string {
-	return globalConfig().assetsDir + '/../image-not-available.png';
-}
 
 interface HelpForDirType {
 	doc: DocRef;
