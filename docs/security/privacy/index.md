@@ -25,6 +25,11 @@ to do the check:
 | Current version | 20200418_1637_fa31fb5e | ☐ | So we can tell you if your version contains critical vulnerabilities |
 | IP address | 84.15.186.115 | ☐ | One can't check for updates (or use the internet) without revealing one's IP address |
 
+!!! tip
+	You can audit the
+	[version checking code](https://github.com/function61/varasto/blob/6eb3f4d6f18ce61be453291ab644fe8ef64aad62/pkg/stoserver/updatechecker.go#L63)
+	yourself.
+
 
 The data we record about Varasto users
 --------------------------------------
