@@ -2,6 +2,7 @@ package stoserver
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -37,6 +38,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
+	"github.com/function61/varasto/pkg/themoviedbapi"
 	"github.com/gorilla/mux"
 	"github.com/minio/sha256-simd"
 	"go.etcd.io/bbolt"
@@ -382,7 +384,26 @@ func (h *handlers) GetSubsystemStatuses(rctx *httpauth.RequestContext, w http.Re
 	}
 }
 
+func (h *handlers) SearchVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Volume {
+	query := strings.ToLower(r.URL.Query().Get("q"))
+
+	return h.getVolumesInternal(rctx, w, r, func(vol stotypes.Volume) bool {
+		return strings.Contains(strings.ToLower(vol.Label), query)
+	})
+}
+
 func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Volume {
+	return h.getVolumesInternal(rctx, w, r, func(vol stotypes.Volume) bool {
+		return true
+	})
+}
+
+func (h *handlers) getVolumesInternal(
+	rctx *httpauth.RequestContext,
+	w http.ResponseWriter,
+	r *http.Request,
+	filter func(vol stotypes.Volume) bool,
+) *[]stoservertypes.Volume {
 	ret := []stoservertypes.Volume{}
 
 	tx, err := h.db.Begin(false)
@@ -393,6 +414,10 @@ func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWrit
 	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
+		if !filter(dbObject) {
+			continue
+		}
+
 		var topology *stoservertypes.VolumeTopology
 
 		if dbObject.Enclosure != "" {
@@ -653,7 +678,24 @@ func commitChangesetInternal(
 	return coll
 }
 
+func (h *handlers) SearchReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationPolicy {
+	q := strings.ToLower(r.URL.Query().Get("q"))
+
+	return h.getReplicationPoliciesInternal(rctx, w, r, func(policy stotypes.ReplicationPolicy) bool {
+		return strings.Contains(strings.ToLower(policy.Name), q)
+	})
+}
+
 func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationPolicy {
+	return h.getReplicationPoliciesInternal(rctx, w, r, func(_ stotypes.ReplicationPolicy) bool { return true })
+}
+
+func (h *handlers) getReplicationPoliciesInternal(
+	rctx *httpauth.RequestContext,
+	w http.ResponseWriter,
+	r *http.Request,
+	filter func(stotypes.ReplicationPolicy) bool,
+) *[]stoservertypes.ReplicationPolicy {
 	policies := []stoservertypes.ReplicationPolicy{}
 
 	tx, err := h.db.Begin(false)
@@ -664,6 +706,10 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
+		if !filter(dbObject) {
+			continue
+		}
+
 		policies = append(policies, stoservertypes.ReplicationPolicy{
 			Id:             dbObject.ID,
 			Name:           dbObject.Name,
@@ -1378,6 +1424,107 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 		Items:      nonCompliantItems,
 		TotalItems: totalItems,
 	}
+}
+
+func (h *handlers) SearchIgdb(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.MetadataIgdbGame {
+	igdb, err := igdbClient(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	suggestions := []stoservertypes.MetadataIgdbGame{}
+
+	// TODO: validate query non-empty
+	games, err := igdb.SearchGames(r.Context(), r.URL.Query().Get("q"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	for _, game := range games {
+		var releaseYearPtr *int
+
+		if game.FirstReleaseDate != nil {
+			releaseYear := time.Time(*game.FirstReleaseDate).Year()
+			releaseYearPtr = &releaseYear
+		}
+
+		suggestions = append(suggestions, stoservertypes.MetadataIgdbGame{
+			Id:          strconv.Itoa(game.ID),
+			Title:       game.Name,
+			ReleaseYear: releaseYearPtr,
+		})
+	}
+
+	return &suggestions
+}
+
+func (h *handlers) SearchMetadataImdbMovieId(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.MetadataImdbMovieId {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Error(w, "empty query", http.StatusBadRequest)
+		return nil
+	}
+
+	time.Sleep(2 * time.Second)
+
+	tmdb, err := themoviedbapiClient(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	results, err := tmdb.MultiSearch(context.TODO(), query)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	transformed := []stoservertypes.MetadataImdbMovieId{}
+
+	for _, result := range results {
+		switch result.MediaType {
+		case themoviedbapi.MediaTypeMovie:
+			var releaseYear *int
+			if result.ReleaseDate != "" {
+				x, err := strconv.Atoi(result.ReleaseDate[0:4])
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return nil
+				}
+
+				releaseYear = &x
+			}
+
+			transformed = append(transformed, stoservertypes.MetadataImdbMovieId{
+				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.Id)),
+				Title:       result.Title,
+				ReleaseYear: releaseYear,
+			})
+		case themoviedbapi.MediaTypeTv:
+			var releaseYear *int
+			if result.FirstAirDate != "" {
+				x, err := strconv.Atoi(result.FirstAirDate[0:4])
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return nil
+				}
+
+				releaseYear = &x
+			}
+
+			transformed = append(transformed, stoservertypes.MetadataImdbMovieId{
+				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.Id)),
+				Title:       result.Name,
+				ReleaseYear: releaseYear,
+			})
+		default:
+			// ignore
+		}
+	}
+
+	return &transformed
 }
 
 func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.GeneratedIds {

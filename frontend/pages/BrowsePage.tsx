@@ -1,5 +1,6 @@
 import { collectionDropdown } from 'component/collectiondropdown';
 import { DocLink } from 'component/doclink';
+import { replicationPolicyAutocomplete } from 'component/autocompletes';
 import {
 	metadataKvsToKv,
 	imageNotAvailable,
@@ -516,7 +517,9 @@ const directoryDropdown = (dir: Directory) => {
 			<CommandLink command={DirectoryChangeDescription(dir.Id, dir.Description)} />
 			<CommandLink command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)} />
 			<CommandLink
-				command={DirectoryChangeReplicationPolicy(dir.Id, dir.ReplicationPolicy || '')}
+				command={DirectoryChangeReplicationPolicy(dir.Id, dir.ReplicationPolicy || '', {
+					Policy: replicationPolicyAutocomplete,
+				})}
 			/>
 			<CommandLink command={DirectoryPullMetadata(dir.Id)} />
 			<CommandLink command={DirectoryMove(dir.Id, { disambiguation: dir.Name })} />

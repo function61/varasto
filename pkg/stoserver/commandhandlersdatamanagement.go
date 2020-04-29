@@ -204,8 +204,8 @@ func (c *cHandlers) DirectoryChangeReplicationPolicy(cmd *stoservertypes.Directo
 			return err
 		}
 
-		if cmd.ReplicationPolicy != "" { // validation
-			if _, err := stodb.Read(tx).ReplicationPolicy(cmd.ReplicationPolicy); err != nil {
+		if cmd.Policy != "" { // validation
+			if _, err := stodb.Read(tx).ReplicationPolicy(cmd.Policy); err != nil {
 				return err
 			}
 		} else { // unsetting policy
@@ -214,7 +214,7 @@ func (c *cHandlers) DirectoryChangeReplicationPolicy(cmd *stoservertypes.Directo
 			}
 		}
 
-		dir.ReplicationPolicy = cmd.ReplicationPolicy
+		dir.ReplicationPolicy = cmd.Policy
 
 		return stodb.DirectoryRepository.Update(dir, tx)
 	})

@@ -20,7 +20,7 @@ import (
 
 // this is for movies
 func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPullTmdbMetadata, ctx *command.Ctx) error {
-	tmdb, err := c.themoviedbapiClient()
+	tmdb, err := themoviedbapiClient(c.db)
 	if err != nil {
 		return err
 	}
@@ -31,9 +31,29 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 			return err
 		}
 
-		info, err := tmdb.OpenMovieByImdbId(ctx.Ctx, cmd.ForeignKey)
+		var info *themoviedbapi.Movie
+
+		// check if tmdb reference
+		typ, tmdbId, err := decodeTmdbRef(cmd.ForeignKey)
 		if err != nil {
 			return err
+		}
+
+		// it is TMDb id (movie or other type)
+		if typ != "" {
+			if typ != themoviedbapi.MediaTypeMovie {
+				return fmt.Errorf("trying to pull movie metadata but given tmdb type: %s", typ)
+			}
+
+			info, err = tmdb.OpenMovie(ctx.Ctx, tmdbId)
+			if err != nil {
+				return err
+			}
+		} else { // not TMDb ID => IMDb ID then
+			info, err = tmdb.OpenMovieByImdbId(ctx.Ctx, cmd.ForeignKey)
+			if err != nil {
+				return err
+			}
 		}
 
 		if cmd.ScrubName {
@@ -68,7 +88,7 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 
 // directory holds a bunch of series
 func (c *cHandlers) DirectoryPullMetadata(cmd *stoservertypes.DirectoryPullMetadata, ctx *command.Ctx) error {
-	tmdb, err := c.themoviedbapiClient()
+	tmdb, err := themoviedbapiClient(c.db)
 	if err != nil {
 		return err
 	}
@@ -187,7 +207,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 			}
 		}
 
-		tmdb, err := c.themoviedbapiClient()
+		tmdb, err := themoviedbapiClient(c.db)
 		if err != nil {
 			return err
 		}
@@ -377,8 +397,8 @@ func (c *cHandlers) ConfigSetIgdbApikey(cmd *stoservertypes.ConfigSetIgdbApikey,
 	})
 }
 
-func (c *cHandlers) themoviedbapiClient() (*themoviedbapi.Client, error) {
-	tx, err := c.db.Begin(false)
+func themoviedbapiClient(db *bbolt.DB) (*themoviedbapi.Client, error) {
+	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
@@ -390,6 +410,30 @@ func (c *cHandlers) themoviedbapiClient() (*themoviedbapi.Client, error) {
 	}
 
 	return themoviedbapi.New(apikey), nil
+}
+
+func encodeTmdbRef(typ string, id string) string {
+	return "tmdb:" + typ + ":" + id
+}
+
+func decodeTmdbRef(input string) (string, string, error) {
+	if !strings.HasPrefix(input, "tmdb:") {
+		return "", "", nil
+	}
+
+	components := strings.Split(input, ":")
+	if len(components) != 3 {
+		return "", "", fmt.Errorf("expected 3 components; got %d", len(components))
+	}
+
+	switch components[1] {
+	case themoviedbapi.MediaTypeMovie:
+		return themoviedbapi.MediaTypeMovie, components[2], nil
+	case themoviedbapi.MediaTypeTv:
+		return themoviedbapi.MediaTypeTv, components[2], nil
+	default:
+		return "", "", fmt.Errorf("unsupported tmdb type: %s", components[2])
+	}
 }
 
 func igdbClient(db *bbolt.DB) (*igdbapi.Client, error) {

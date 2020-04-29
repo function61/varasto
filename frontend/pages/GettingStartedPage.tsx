@@ -411,8 +411,10 @@ export default class GettingStartedPage extends React.Component<
 
 				<p>
 					If you wish to change the policy, use{' '}
-					<SmallWell>{ReplicationpolicyChangeDesiredVolumes('0').title}</SmallWell> to
-					specify which volumes your data should be written to.
+					<SmallWell>
+						{ReplicationpolicyChangeDesiredVolumes('0', {} as any).title}
+					</SmallWell>{' '}
+					to specify which volumes your data should be written to.
 				</p>
 
 				{this.phaseNavBar(currSection)}

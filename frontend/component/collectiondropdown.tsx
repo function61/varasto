@@ -1,3 +1,4 @@
+import { tmdbAutocomplete, igdbAutocomplete } from 'component/autocompletes';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import {
@@ -20,8 +21,12 @@ export function collectionDropdown(coll: CollectionSubset) {
 			<CommandLink command={CollectionChangeDescription(coll.Id, coll.Description)} />
 			<CommandLink command={CollectionMove(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)} />
-			<CommandLink command={CollectionPullTmdbMetadata(coll.Id)} />
-			<CommandLink command={CollectionPullIgdbMetadata(coll.Id)} />
+			<CommandLink
+				command={CollectionPullTmdbMetadata(coll.Id, { ForeignKey: tmdbAutocomplete })}
+			/>
+			<CommandLink
+				command={CollectionPullIgdbMetadata(coll.Id, { ForeignKey: igdbAutocomplete })}
+			/>
 			<CommandLink command={CollectionTag(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionDelete(coll.Id, { disambiguation: coll.Name })} />
 		</Dropdown>

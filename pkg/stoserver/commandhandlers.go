@@ -835,7 +835,7 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		desiredVolumes := []int{}
 
-		for _, desiredVolumeId := range []int{cmd.Volume1, cmd.Volume2, cmd.Volume3, cmd.Volume4, cmd.Volume5, cmd.Volume6, cmd.Volume7, cmd.Volume8, cmd.Volume9} {
+		for _, desiredVolumeId := range []int{cmd.Volume1, cmd.Volume2, cmd.Volume3, cmd.Volume4} {
 			if desiredVolumeId == 0 { // null value for int
 				continue
 			}

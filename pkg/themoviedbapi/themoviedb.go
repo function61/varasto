@@ -4,6 +4,7 @@ package themoviedbapi
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strconv"
 
 	"github.com/function61/gokit/ezhttp"
@@ -12,6 +13,20 @@ import (
 type ExternalIds struct {
 	Id     int64  `json:"id"`
 	ImdbId string `json:"imdb_id"`
+}
+
+const (
+	MediaTypeMovie = "movie"
+	MediaTypeTv    = "tv"
+)
+
+type MultiSearchResult struct { // disgusting tagged union, media_type tells us which fields we can expect to be set
+	Id           int64  `json:"id"`
+	MediaType    string `json:"media_type"`
+	Title        string `json:"title"`          // when movie
+	Name         string `json:"name"`           // when TV
+	ReleaseDate  string `json:"release_date"`   // when movie, yyyy-mm-dd
+	FirstAirDate string `json:"first_air_date"` // when TV, yyyy-mm-dd
 }
 
 type Movie struct {
@@ -142,6 +157,25 @@ func (c *Client) GetEpisodeExternalIds(
 	}
 
 	return res, nil
+}
+
+func (c *Client) MultiSearch(ctx context.Context, query string) ([]MultiSearchResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
+	defer cancel()
+
+	type Response struct {
+		Results []MultiSearchResult `json:"results"`
+	}
+
+	res := Response{}
+	if _, err := ezhttp.Get(
+		ctx,
+		endpointV3("/search/multi?api_key="+c.apiKey+"&query="+url.QueryEscape(query)),
+		ezhttp.RespondsJson(&res, true)); err != nil {
+		return nil, err
+	}
+
+	return res.Results, nil
 }
 
 func (c *Client) findMovieByImdbId(ctx context.Context, imdbId string) (string, error) {

@@ -17,6 +17,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/keyencryptionkeys", "produces": {"_": "list", "of": {"_": "KeyEncryptionKey"}}, "name": "getKeyEncryptionKeys" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes_search?q={q}", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "searchVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/reconciliation", "produces": {"_": "ReconciliationReport"}, "name": "getReconcilableItems" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups/dl?id={id}", "name": "downloadUbackupStoredBackup" },
@@ -28,7 +29,10 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/config/{id}", "produces": {"_": "ConfigValue"}, "name": "getConfig" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/logs", "produces": {"_": "list", "of": {"_": "string"}}, "name": "getLogs" },
-		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/redir/{id}", "name": "igdbIntegrationRedir" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/movies?q={query}", "produces": {"_": "list", "of": {"_": "MetadataImdbMovieId"}}, "name": "searchMetadataImdbMovieId" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/games?q={query}", "produces": {"_": "list", "of": {"_": "MetadataIgdbGame"}}, "name": "searchIgdb" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/game-redir/{id}", "name": "igdbIntegrationRedir" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies_search?q={query}", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "searchReplicationPolicies" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
 	"stringConsts": [
@@ -178,6 +182,22 @@
 				"Modified": {"_": "datetime"},
 				"Size": {"_": "integer"},
 				"BlobRefs": {"_": "list", "of": {"_": "string"}}
+			}}
+		},
+		{
+			"name": "MetadataImdbMovieId",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"ReleaseYear": {"_": "integer", "nullable": true},
+				"Title": {"_": "string"}
+			}}
+		},
+		{
+			"name": "MetadataIgdbGame",
+			"type": {"_": "object", "fields": {
+				"Id": {"_": "string"},
+				"ReleaseYear": {"_": "integer", "nullable": true},
+				"Title": {"_": "string"}
 			}}
 		},
 		{

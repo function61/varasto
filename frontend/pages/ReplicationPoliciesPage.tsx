@@ -1,4 +1,5 @@
 import { DocLink } from 'component/doclink';
+import { volumeAutocomplete } from 'component/autocompletes';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
 import { Info } from 'f61ui/component/info';
@@ -148,12 +149,22 @@ export default class ReplicationPoliciesPage extends React.Component<
 										command={ReplicationpolicyRename(rp.Id, rp.Name)}
 									/>
 									<CommandLink
-										command={ReplicationpolicyChangeDesiredVolumes(rp.Id)}
+										command={ReplicationpolicyChangeDesiredVolumes(
+											rp.Id,
+											{
+												Volume1: volumeAutocomplete,
+												Volume2: volumeAutocomplete,
+												Volume3: volumeAutocomplete,
+												Volume4: volumeAutocomplete,
+											},
+											{ disambiguation: rp.Name },
+										)}
 									/>
 									<CommandLink
 										command={ReplicationpolicyChangeMinZones(
 											rp.Id,
 											rp.MinZones,
+											{ disambiguation: rp.Name },
 										)}
 									/>
 								</Dropdown>
@@ -309,6 +320,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 										<CommandButton
 											command={DatabaseReconcileReplicationPolicy(
 												this.state.selectedCollIds.join(','),
+												{ Volume: volumeAutocomplete },
 											)}
 										/>
 									</div>

@@ -13,7 +13,7 @@ require (
 	github.com/djherbis/times v1.1.0
 	github.com/fatih/color v1.9.0 // indirect
 	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
-	github.com/function61/eventkit v0.0.0-20200324142359-89e3d9397819
+	github.com/function61/eventkit v0.0.0-20200429151023-1f8483ad5aa9
 	github.com/function61/gokit v0.0.0-20200421151620-41e973712cf6
 	github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1
 	github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692

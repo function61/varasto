@@ -1,4 +1,5 @@
 import { DocUrlLatest, DocLink } from 'component/doclink';
+import { volumeAutocomplete } from 'component/autocompletes';
 import { thousandSeparate } from 'component/numberformatter';
 import IntegrityVerificationJobsView, {
 	volumeTechnologyBadge,
@@ -382,7 +383,11 @@ export default class VolumesAndMountsPage extends React.Component<
 								})}
 							/>
 							<CommandLink
-								command={VolumeMigrateData(obj.Id, { disambiguation: obj.Label })}
+								command={VolumeMigrateData(
+									obj.Id,
+									{ To: volumeAutocomplete },
+									{ disambiguation: obj.Label },
+								)}
 							/>
 							<CommandLink
 								command={VolumeMarkDataLost(obj.Id, {
