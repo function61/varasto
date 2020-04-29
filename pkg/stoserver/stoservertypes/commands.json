@@ -656,6 +656,7 @@
 		"ctor": ["Apikey"],
 		"crudNature": "update",
 		"title": "Set https://themoviedb.org API key",
+		"info": ["API key will be validated on save by making a dummy request"],
 		"fields": [
 			{ "key": "Apikey", "title": "API key", "optional": true, "placeholder": "778afba08c531c549272ecb5621b08d3" }
 		]
@@ -666,6 +667,7 @@
 		"ctor": ["Apikey"],
 		"crudNature": "update",
 		"title": "Set https://www.igdb.com API key",
+		"info": ["API key will be validated on save by making a dummy request"],
 		"fields": [
 			{ "key": "Apikey", "title": "API key", "optional": true, "placeholder": "821ae63dbe0c573eff8b69d451fb21bc" }
 		]

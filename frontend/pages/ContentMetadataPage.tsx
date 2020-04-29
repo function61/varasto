@@ -79,10 +79,10 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 					</p>
 					<p>
 						Unfortunately, you have to register &amp; configure API keys for them first
-						so the providers can protect themselves from abuse.
+						(so the providers can protect themselves from abuse).
 					</p>
 					<p>
-						The API keys are <b>free for you to use</b> - i.e. they don't cost anything.
+						The API keys are <b>free for you to use</b>.
 					</p>
 				</CollapsePanel>
 			</SettingsLayout>
