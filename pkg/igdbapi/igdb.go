@@ -9,6 +9,8 @@ import (
 	"github.com/function61/gokit/ezhttp"
 )
 
+const gameFields = "age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,collection,cover,created_at,dlcs,expansions,external_games,first_release_date,follows,franchise,franchises,game_engines,game_modes,genres,hypes,involved_companies,keywords,multiplayer_modes,name,parent_game,platforms,player_perspectives,popularity,pulse_count,rating,rating_count,release_dates,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,time_to_beat,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites"
+
 type Client struct {
 	apiKey string
 }
@@ -20,7 +22,7 @@ func New(apiKey string) *Client {
 func (c *Client) GameById(ctx context.Context, id string) (*Game, error) {
 	query := fmt.Sprintf(
 		"fields %s; where id = %s;",
-		"age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,collection,cover,created_at,dlcs,expansions,external_games,first_release_date,follows,franchise,franchises,game_engines,game_modes,genres,hypes,involved_companies,keywords,multiplayer_modes,name,parent_game,platforms,player_perspectives,popularity,pulse_count,rating,rating_count,release_dates,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,time_to_beat,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites",
+		gameFields,
 		id)
 
 	res := []Game{}
@@ -40,6 +42,24 @@ func (c *Client) GameById(ctx context.Context, id string) (*Game, error) {
 	}
 
 	return &res[0], nil
+}
+
+func (c *Client) SearchGames(ctx context.Context, name string) ([]Game, error) {
+	query := fmt.Sprintf(`search "%s"; fields %s;`, name, gameFields)
+
+	searchResults := []Game{}
+	if _, err := ezhttp.Post(
+		ctx,
+		endpointV3("/games"),
+		ezhttp.Header("Accept", "application/json"),
+		ezhttp.Header("user-key", c.apiKey),
+		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
+		ezhttp.RespondsJson(&searchResults, true),
+	); err != nil {
+		return nil, err
+	}
+
+	return searchResults, nil
 }
 
 func (c *Client) GameYoutubeVideoIds(ctx context.Context, id string) ([]string, error) {
