@@ -2,7 +2,7 @@ Linux (Docker)
 ==============
 
 !!! info "Prerequisite: Docker"
-	If you're on Ubuntu, it's one `$ sudo apt-get install docker.io` away. For other distros,
+	If you're on Ubuntu, it's one `$ sudo apt install docker.io` away. For other distros,
 	[see instructions](https://docs.docker.com/engine/install/).
 
 We have two Docker start examples available:
