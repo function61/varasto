@@ -82,11 +82,6 @@ func (c *Controller) run(ctx context.Context) error {
 
 			if bytes.Equal(nextContinueToken, stodb.StartFromFirst) {
 				c.progress.Set(100)
-			} else if len(nextContinueToken) >= 2 {
-				// our database is btree so iteration of blobs is sorted, and keys are hashes
-				// with random distribution, so we can estimate progress by looking at first
-				// 16 bits of hash
-				c.progress.Set(int32(float64(binary.BigEndian.Uint16(nextContinueToken[0:2])) / 65536.0 * 100.0))
 			}
 
 			continueToken = nextContinueToken
@@ -146,6 +141,11 @@ func (c *Controller) discoverAndRunReplicationJobs(
 		}
 
 		jobQueue <- job
+
+		// our database is btree so iteration of blobs is sorted, and keys are hashes
+		// with random distribution, so we can estimate progress by looking at first
+		// 16 bits of hash
+		c.progress.Set(int32(float64(binary.BigEndian.Uint16(job.Ref[0:2])) / 65536.0 * 100.0))
 	}
 
 	return nextContinueToken, nil

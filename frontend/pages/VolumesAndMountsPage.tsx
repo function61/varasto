@@ -615,10 +615,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				<thead>
 					<tr>
 						<th>Volume</th>
-						<th>
-							Progress{' '}
-							<Info text="Doesn't update in realtime. If you don't see a change you're expecting, wait a few minutes." />
-						</th>
+						<th>Progress</th>
 					</tr>
 				</thead>
 				<tbody>
