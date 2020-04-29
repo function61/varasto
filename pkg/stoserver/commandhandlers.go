@@ -386,6 +386,10 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 			return err
 		}
 
+		if from.ID == to.ID {
+			return fmt.Errorf("from == to (%d)", from.ID)
+		}
+
 		return stodb.BlobRepository.Each(func(record interface{}) error {
 			blob := record.(*stotypes.Blob)
 
