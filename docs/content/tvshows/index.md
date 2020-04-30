@@ -12,7 +12,8 @@ It's better to show you the end result first, so this guide is easier to underst
 Preparations
 ------------
 
-You will only need to do this once for Varasto.
+!!! info
+	You will only need to do this once for Varasto.
 
 Create a directory, let's say `Media > Series`.
 
@@ -29,8 +30,7 @@ Preparations for each TV show
 
 Create a directory in Varasto for this series. I created `Media > Series > Brooklyn Nine-Nine`.
 
-Now let's tell Varasto exactly which TV series this is, fetch IMDb ID according to
-[these instructions](../movies/index.md#fetching-metadata), but instead of entering
+Now let's tell Varasto exactly which TV series this is. Look for 
 it for a collection like with movies we enter the metadata ID for the main series directory
 (Varasto will know that collections under this directory tree are for the same series):
 
@@ -94,7 +94,7 @@ $ tree .
 
 Let's sort them by season and episode. Varasto has `mvu` subcommand ("move utils" - think
 the Unix "mv" command but for specific situations) to do this. But let's first do a **dry run**
-to see what the command would do:
+(= without `--do` switch) to see what the command would do:
 
 ```
 $ sto mvu tv
@@ -212,76 +212,88 @@ $ cd S04/
 $ sto push bulk --rm bkaPHC-pZoM | bash
 ```
 
-(NOTE: if you want a dry run, just leave out the `| bash` part)
+??? info "Explain '--rm'"
+	The `--rm` switch removes the source files after they've been uploaded to Varasto. Don't
+	worry, the
+	[removal has safeguards](../../data-interfaces/client/index.md#safe-removal-of-collections)
+	which make it safe. If you don't want to remove the source files, leave out the switch.
 
-Done - all your episodes are uploaded! Let's break down the above command!
+!!! tip "Tip: dry run"
+	Leave out the `| bash` part and you'll see the generated upload script
 
-The general form of the bulk command is `push bulk <parentDirectory>`.
+Done - all your episodes are uploaded!
 
-The `--rm` switch removes the source files after they've been uploaded to Varasto. Don't
-worry, the
-[removal has safeguards](../movies/index.md#removing-the-local-copy-that-we-just-uploaded)
-which make it safe. If you don't want to remove the source files, leave out the switch.
+
+Explaining the season upload command
+------------------------------------
+
+The general form of the bulk command is `push bulk [--rm] <parentDirectory>`.
 
 The `bulk` command generates a small uploader shell script that will invoke `$ sto` commands
-for each subdirectory to be uploaded as separate collection:
+for each subdirectory to be uploaded as a separate collection:
 
 1. Adopt the episode's directory in Varasto
 2. Push directory's contents to Varasto
-3. (if wanted) Remove local source directory after upload is complete
+3. (optionally) Remove local source directory after upload is complete
 
-To unpack the `| bash` portion a bit, this is equivalent:
+??? info "Explain '| bash'"
+	This is equivalent:
 
-```
-$ sto push bulk --rm bkaPHC-pZoM > upload.sh
-$ bash upload.sh
-```
+	```console
+	$ sto push bulk --rm bkaPHC-pZoM > upload.sh
+	$ bash upload.sh
+	```
 
-The upload.sh script looks like this:
+	I.e. we use the pipe to run the generated script directly, instead of saving it to disk first.
 
-```
-set -eu
 
-parentDirId="bkaPHC-pZoM"
+??? info "What does the upload script look like"
 
-one() {
-	local dir="$1"
+	It looks like this:
 
-	(cd "$dir" && sto adopt -- "$parentDirId" && sto push)
+	```console
+	set -eu
 
-	sto rm "$dir"
-}
+	parentDirId="bkaPHC-pZoM"
 
-one "S04E01"
-one "S04E02"
-one "S04E03"
-one "S04E04"
-one "S04E05"
-one "S04E06"
-one "S04E07"
-one "S04E08"
-one "S04E09"
-one "S04E10"
-one "S04E11"
-one "S04E13"
-one "S04E14"
-one "S04E15"
-one "S04E16"
-one "S04E17"
-one "S04E18"
-one "S04E19"
-one "S04E20"
-one "S04E21"
-one "S04E22"
-```
+	one() {
+		local dir="$1"
 
-The script basically does this:
+		(cd "$dir" && sto adopt -- "$parentDirId" && sto push)
 
-```
-$ (cd S04E01/ && sto adopt "bkaPHC-pZoM" && sto push) && sto rm S04E01/
-$ (cd S04E02/ && sto adopt "bkaPHC-pZoM" && sto push) && sto rm S04E02/
-...
-```
+		sto rm "$dir"
+	}
+
+	one "S04E01"
+	one "S04E02"
+	one "S04E03"
+	one "S04E04"
+	one "S04E05"
+	one "S04E06"
+	one "S04E07"
+	one "S04E08"
+	one "S04E09"
+	one "S04E10"
+	one "S04E11"
+	one "S04E13"
+	one "S04E14"
+	one "S04E15"
+	one "S04E16"
+	one "S04E17"
+	one "S04E18"
+	one "S04E19"
+	one "S04E20"
+	one "S04E21"
+	one "S04E22"
+	```
+
+	Which ultimately runs commands like this:
+
+	```console
+	$ (cd S04E01/ && sto adopt "bkaPHC-pZoM" && sto push) && sto rm S04E01/
+	$ (cd S04E02/ && sto adopt "bkaPHC-pZoM" && sto push) && sto rm S04E02/
+	...
+	```
 
 
 Uploading multiple seasons
@@ -289,7 +301,7 @@ Uploading multiple seasons
 
 We'll just leverage what we learned from uploading a single season. The general form is:
 
-```
+```console
 $ (cd S1/ && sto push bulk "idForSeason1" | bash)
 $ (cd S2/ && sto push bulk "idForSeason2" | bash)
 $ (cd S3/ && sto push bulk "idForSeason3" | bash)

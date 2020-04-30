@@ -111,3 +111,10 @@ $ sto st  # note: no changes are reported below
 $ cd ..
 $ sto rm ted2/
 ```
+
+
+Uploading collections in bulk
+-----------------------------
+
+Sometimes you want to upload many collections at once. Instructions are covered in
+[TV show upload tutorial](../../content/tvshows/index.md#explaining-the-season-upload-command).
