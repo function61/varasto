@@ -102,7 +102,8 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 						{this.maybeUrl(
 							'IGDB',
 							'{key}',
-							igdbIntegrationRedirUrl(metadata[MetadataIgdbGameId]),
+							metadata[MetadataIgdbGameId] &&
+								igdbIntegrationRedirUrl(metadata[MetadataIgdbGameId]),
 						)}
 						{this.maybeUrl(
 							'Steam store',
