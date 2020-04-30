@@ -55,8 +55,6 @@
 		{ "key": "MetadataRedditSlug", "value": "reddit.com:subreddit:slug" },
 		{ "key": "MetadataWikipediaSlug", "value": "en.wikipedia.org:slug" },
 		{ "key": "MetadataIgdbGameId", "value": "igdb.com:game:id" },
-		{ "key": "MetadataTheTvDbEpisodeImage", "value": "thetvdb.ep_image" },
-		{ "key": "MetadataTheTvDbSeriesId", "value": "thetvdb.series_id" },
 		{ "key": "MetadataThumbnail", "value": "thumbnail_url" },
 		{ "key": "MetadataTitle", "value": "title" },
 		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },

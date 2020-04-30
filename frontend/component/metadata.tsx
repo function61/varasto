@@ -10,7 +10,6 @@ import {
 	MetadataTheMovieDbMovieId,
 	MetadataTheMovieDbTvId,
 	MetadataIgdbGameId,
-	MetadataTheTvDbSeriesId,
 	MetadataThumbnail,
 	MetadataGooglePlayApp,
 	MetadataAppleAppStoreApp,
@@ -79,11 +78,6 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 						{badges.map((badge) => (
 							<span className="margin-left">{badge}</span>
 						))}
-						{this.maybeUrl(
-							'thetvdb.com',
-							'https://www.thetvdb.com/dereferrer/series/{key}',
-							metadata[MetadataTheTvDbSeriesId],
-						)}
 						{this.maybeUrl(
 							'IMDB',
 							'https://www.imdb.com/title/{key}/',
