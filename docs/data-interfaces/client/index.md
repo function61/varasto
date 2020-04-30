@@ -14,34 +14,46 @@ OS support
 | Varasto client | ☑   | ☑      | ☑   | Soon    | ☐   |
 
 
-Download Varasto client binary
-------------------------------
+Setting up
+----------
+
+### Download
 
 You'll find the client binary from your Varasto server's UI.
 
 
-Place "sto" binary in PATH
---------------------------
+### Installation
 
-Store client app in your `PATH`. This makes it so that you can run `$ sto` from anywhere.
+=== "Linux/macOS"
+	Rename the binary to `sto` and give it executable permissions.
+
+	```console
+	$ mv sto_linux-amd64 sto
+	$ chmod +x sto
+	```
+
+	Place the binary in your PATH.
+
+=== "Windows"
+	Place the `sto.exe` in your PATH.
+
+	If you don't know where to put it, put it in `C:\Windows\sto.exe`
+
+This makes it so that you can run `$ sto` from anywhere.
 
 
-First-time configuration
-------------------------
+### Configuration
 
-Run:
+If you haven't configured Varasto client yet, `config-print` will give you instructions to fix it:
 
-```
+```console
 $ sto config-print
+file: /home/joonas/varastoclient-config.json
+.. does not exist. To configure, run:
+    $ sto config-init
 ```
 
-The command probably tells you that you haven't configured it yet. To configure, run:
-
-```
-$ sto config-init
-```
-
-The above command gives you instructions on how to proceed.
+Running `$ sto config-init` without any arguments will give you instructions.
 
 
 How does the cloning interface look like?
