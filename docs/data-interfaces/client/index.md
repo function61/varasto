@@ -77,3 +77,37 @@ $ sto st
 
 $ sto push
 ```
+
+
+Safe removal of collections
+---------------------------
+
+`$ sto rm` is a safe method of removing local clones of remote collections - Varasto
+doesn't let you remove local copy if it has changes that are not pushed to the remote.
+
+This example continues where we left off at
+[movie upload tutorial](../../content/movies/index.md#uploading-your-first-movie).
+
+What happened is that when we pushed the state of the current directory ("local") to a
+Varasto collection ("remote"), they synchronized states - i.e. there are now two copies.
+
+Let's try it by changing our local (`ted2/`) directory:
+
+```console
+$ echo foobar > hello.txt
+$ cd ..
+$ sto rm ted2/
+Refusing to delete workdir 'ted2/' because it has changes
+$ cd ted2/
+$ sto st
++ hello.txt
+```
+
+Ok let's remove the changed file so we can remove the directory safely:
+
+```console
+$ rm hello.txt
+$ sto st  # note: no changes are reported below
+$ cd ..
+$ sto rm ted2/
+```

@@ -70,31 +70,12 @@ $ sto push
 Removing the local copy that we just uploaded
 ---------------------------------------------
 
-What happened is that when we pushed the state of the current directory ("local") to a
-Varasto collection ("remote"), they synchronized states - i.e. they are now in same state.
+Varasto has a [safe mechanism for removing](../../data-interfaces/client/index.md) local
+copies of collections - it only removes the data if Varasto server has the same data:
 
-With Varasto you have a safe method of removing local clones of remote collections - Varasto
-doesn't let you remove local copy if it has changes that are not pushed to the remote.
-
-Let's try it by changing our local (`ted2/`) directory:
-
-```
-$ echo foobar > hello.txt
+```console
 $ cd ..
-$ sto rm ted2/
-Refusing to delete workdir 'ted2/' because it has changes
-$ cd ted2/
-$ sto st
-+ hello.txt
-```
-
-Ok let's remove the changed file so we can remove the movie directory safely:
-
-```
-$ rm hello.txt
-$ sto st  # note: no changes are reported below
-$ cd ..
-$ sto rm ted2/
+$ sto rm ted2
 ```
 
 
