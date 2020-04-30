@@ -1479,8 +1479,6 @@ func (h *handlers) searchTmdbInternal(
 		return nil
 	}
 
-	time.Sleep(2 * time.Second)
-
 	tmdb, err := themoviedbapiClient(h.db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
