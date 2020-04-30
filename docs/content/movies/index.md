@@ -105,6 +105,6 @@ Metadata support configuration
 
 Varasto needs an API key to be able to fetch movie and TV show metadata.
 
-You can do this from `Settings > Content metadata > TMDb`:
+You can do this from `Settings > Content metadata`:
 
 ![](tmdb-apikey.png)

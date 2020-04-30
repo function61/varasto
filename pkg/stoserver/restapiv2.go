@@ -135,15 +135,9 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		return httpErr(err, http.StatusNotFound)
 	}
 
-	parentDirs, err := getParentDirs(*dir, tx)
+	parentDirsConverted, err := getParentDirsConverted(*dir, tx)
 	if err != nil {
 		return httpErr(err, http.StatusInternalServerError)
-	}
-
-	parentDirsConverted := []stoservertypes.Directory{}
-
-	for _, parentDir := range parentDirs {
-		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
 	}
 
 	dbColls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
@@ -718,6 +712,49 @@ func (h *handlers) getReplicationPoliciesInternal(
 	}
 
 	return &policies
+}
+
+func (h *handlers) GetReplicationPoliciesForDirectories(
+	rctx *httpauth.RequestContext,
+	w http.ResponseWriter,
+	r *http.Request,
+) *[]stoservertypes.ReplicationPolicyForDirectory {
+	rpfd := []stoservertypes.ReplicationPolicyForDirectory{}
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+	defer func() {
+		ignoreError(tx.Rollback())
+	}()
+
+	// might not deserve an index?
+	if err := stodb.DirectoryRepository.Each(func(record interface{}) error {
+		dir := record.(*stotypes.Directory)
+
+		if dir.ReplicationPolicy == "" {
+			return nil
+		}
+
+		parents, err := getParentDirsConverted(*dir, tx)
+		if err != nil {
+			return err
+		}
+
+		rpfd = append(rpfd, stoservertypes.ReplicationPolicyForDirectory{
+			Directory:        convertDir(*dir),
+			DirectoryParents: parents,
+		})
+
+		return nil
+	}, tx); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	return &rpfd
 }
 
 func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.SchedulerJob {
@@ -1602,6 +1639,21 @@ func getParentDirs(of stotypes.Directory, tx *bbolt.Tx) ([]stotypes.Directory, e
 	}
 
 	return parentDirs, nil
+}
+
+func getParentDirsConverted(of stotypes.Directory, tx *bbolt.Tx) ([]stoservertypes.Directory, error) {
+	parentDirs, err := getParentDirs(of, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	parentDirsConverted := []stoservertypes.Directory{}
+
+	for _, parentDir := range parentDirs {
+		parentDirsConverted = append(parentDirsConverted, convertDir(parentDir))
+	}
+
+	return parentDirsConverted, nil
 }
 
 func metadataMapToKvList(kvmap map[string]string) []stoservertypes.MetadataKv {

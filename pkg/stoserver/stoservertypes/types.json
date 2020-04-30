@@ -33,6 +33,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/tv?q={query}", "produces": {"_": "list", "of": {"_": "TmdbSearchResult"}}, "name": "searchTmdbTv" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/games?q={query}", "produces": {"_": "list", "of": {"_": "MetadataIgdbGame"}}, "name": "searchIgdb" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/game-redir/{id}", "name": "igdbIntegrationRedir" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies_for_directories", "produces": {"_": "list", "of": {"_": "ReplicationPolicyForDirectory"}}, "name": "getReplicationPoliciesForDirectories" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies_search?q={query}", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "searchReplicationPolicies" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies", "produces": {"_": "list", "of": {"_": "ReplicationPolicy"}}, "name": "getReplicationPolicies" }
 	],
@@ -529,6 +530,13 @@
 			"name": "UpdatesStatus",
 			"type": {"_": "object", "fields": {
 				"LatestVersion": {"_": "string"}
+			}}
+		},
+		{
+			"name": "ReplicationPolicyForDirectory",
+			"type": {"_": "object", "fields": {
+				"Directory": {"_": "Directory"},
+				"DirectoryParents": {"_": "list", "of": {"_": "Directory"}}
 			}}
 		},
 		{

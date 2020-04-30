@@ -25,7 +25,7 @@ You'll find the client binary from your Varasto server's UI.
 ### Installation
 
 === "Linux/macOS"
-	Rename the binary to `sto` and give it executable permissions.
+	Rename the binary to `sto` and give it executable permissions:
 
 	```console
 	$ mv sto_linux-amd64 sto

@@ -26,12 +26,15 @@ import {
 	getReconcilableItems,
 	getReplicationPolicies,
 	getVolumes,
+	getReplicationPoliciesForDirectories,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	ReconciliationReport,
 	ReplicationPolicy,
 	DocRef,
+	ReplicationPolicyForDirectory,
 	Volume,
+	RootFolderId,
 } from 'generated/stoserver/stoservertypes_types';
 import { SettingsLayout } from 'layout/settingslayout';
 import * as React from 'react';
@@ -41,6 +44,7 @@ interface ReplicationPoliciesPageState {
 	replicationpolicies: Result<ReplicationPolicy[]>;
 	reconciliationReport: Result<ReconciliationReport>;
 	volumes: Result<Volume[]>;
+	replicationPoliciesForDirectories: Result<ReplicationPolicyForDirectory[]>;
 }
 
 export default class ReplicationPoliciesPage extends React.Component<
@@ -57,6 +61,9 @@ export default class ReplicationPoliciesPage extends React.Component<
 		}),
 		volumes: new Result<Volume[]>((_) => {
 			this.setState({ volumes: _ });
+		}),
+		replicationPoliciesForDirectories: new Result<ReplicationPolicyForDirectory[]>((_) => {
+			this.setState({ replicationPoliciesForDirectories: _ });
 		}),
 	};
 
@@ -84,6 +91,8 @@ export default class ReplicationPoliciesPage extends React.Component<
 					}>
 					{this.renderPolicies()}
 				</Panel>
+
+				<Panel heading="Policies applied to content">{this.renderAppliedToContent()}</Panel>
 
 				<Panel heading="Reconciliation">{this.renderReconcilable()}</Panel>
 			</SettingsLayout>
@@ -171,6 +180,71 @@ export default class ReplicationPoliciesPage extends React.Component<
 							</td>
 						</tr>
 					))}
+				</tbody>
+			</table>
+		);
+	}
+
+	private renderAppliedToContent() {
+		const [rpfds, policies, loadingOrError] = Result.unwrap2(
+			this.state.replicationPoliciesForDirectories,
+			this.state.replicationpolicies,
+		);
+
+		if (!rpfds || !policies || loadingOrError) {
+			return loadingOrError;
+		}
+
+		const isRoot = (rpfd: ReplicationPolicyForDirectory): boolean =>
+			rpfd.Directory.Id === RootFolderId;
+		const notRoot = (rpfd: ReplicationPolicyForDirectory): boolean =>
+			rpfd.Directory.Id !== RootFolderId;
+
+		const renderDir = (rpfd: ReplicationPolicyForDirectory) => {
+			const policy = policies.filter((p) => p.Id === rpfd.Directory.ReplicationPolicy)[0];
+			if (!policy) {
+				// shouldn't happen
+				throw new Error('Server returned Directory without a ReplicationPolicy');
+			}
+
+			const hierarchy = rpfd.DirectoryParents.map((d) => d.Name).concat(rpfd.Directory.Name);
+
+			const dirName = hierarchy.join(' » ');
+
+			return (
+				<tr key={rpfd.Directory.Id}>
+					<td></td>
+					<td>{dirName}</td>
+					<td>{policy.Name}</td>
+					<td>{this.dataSafety(replicaCount(policy), policy.MinZones)}</td>
+				</tr>
+			);
+		};
+
+		return (
+			<table className={tableClassStripedHover}>
+				<thead>
+					<tr>
+						<th></th>
+						<th>Applies under</th>
+						<th>Policy</th>
+						<th>Data safety</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<th colSpan={99}>
+							All content <Info text=".. that are not in exceptions" />
+						</th>
+					</tr>
+					{rpfds.filter(isRoot).map(renderDir)}
+					<tr>
+						<th colSpan={99}>
+							Exceptions{' '}
+							<Info text="To add exceptions, go to a directory and add a policy to it." />
+						</th>
+					</tr>
+					{rpfds.filter(notRoot).map(renderDir)}
 				</tbody>
 			</table>
 		);
@@ -347,6 +421,9 @@ export default class ReplicationPoliciesPage extends React.Component<
 		this.state.replicationpolicies.load(() => getReplicationPolicies());
 		this.state.reconciliationReport.load(() => getReconcilableItems());
 		this.state.volumes.load(() => getVolumes());
+		this.state.replicationPoliciesForDirectories.load(() =>
+			getReplicationPoliciesForDirectories(),
+		);
 	}
 }
 
