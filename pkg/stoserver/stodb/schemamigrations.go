@@ -36,7 +36,7 @@ import (
 */
 
 const (
-	CurrentSchemaVersion = 4
+	CurrentSchemaVersion = 5
 )
 
 var (
@@ -83,6 +83,8 @@ func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
 		return from2to3(tx)
 	case 3:
 		return from3to4(tx)
+	case 4:
+		return from4to5(tx)
 	default:
 		return fmt.Errorf(
 			"schema migration %d -> %d not supported",
@@ -136,6 +138,61 @@ func from2to3(tx *bbolt.Tx) error {
 // add scheduled task: "update check"
 func from3to4(tx *bbolt.Tx) error {
 	return ScheduledJobRepository.Update(scheduledJobSeedVersionUpdateCheck(), tx)
+}
+
+// rename IMDB and TMDb metadata keys
+func from4to5(tx *bbolt.Tx) error {
+	if err := CollectionRepository.Each(func(record interface{}) error {
+		coll := record.(*stotypes.Collection)
+
+		anyMoves := false
+
+		move := func(from string, to string) {
+			if value, has := coll.Metadata[from]; has {
+				coll.Metadata[to] = value
+				delete(coll.Metadata, from)
+				anyMoves = true
+			}
+		}
+
+		move("imdb.id", stoservertypes.MetadataImdbId)
+		move("themoviedb.id", stoservertypes.MetadataTheMovieDbMovieId)
+		move("themoviedb.episode_id", stoservertypes.MetadataTheMovieDbTvEpisodeId)
+		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
+
+		if anyMoves {
+			return CollectionRepository.Update(coll, tx)
+		} else { // perf optimization
+			return nil
+		}
+	}, tx); err != nil {
+		return err
+	}
+
+	return DirectoryRepository.Each(func(record interface{}) error {
+		dir := record.(*stotypes.Directory)
+
+		anyMoves := false
+
+		move := func(from string, to string) {
+			if value, has := dir.Metadata[from]; has {
+				dir.Metadata[to] = value
+				delete(dir.Metadata, from)
+				anyMoves = true
+			}
+		}
+
+		move("imdb.id", stoservertypes.MetadataImdbId)
+		move("themoviedb.id", stoservertypes.MetadataTheMovieDbMovieId)
+		move("themoviedb.episode_id", stoservertypes.MetadataTheMovieDbTvEpisodeId)
+		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
+
+		if anyMoves {
+			return DirectoryRepository.Update(dir, tx)
+		} else { // perf optimization
+			return nil
+		}
+	}, tx)
 }
 
 func writeSchemaVersion(tx *bbolt.Tx) error {
