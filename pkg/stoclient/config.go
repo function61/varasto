@@ -129,13 +129,13 @@ func configPrintEntrypoint() *cobra.Command {
 			confPath, err := ConfigFilePath()
 			exitIfError(err)
 
-			fmt.Printf("path: %s\n", confPath)
+			fmt.Printf("file: %s\n", confPath)
 
 			exists, err := fileexists.Exists(confPath)
 			exitIfError(err)
 
 			if !exists {
-				fmt.Println(".. does not exist. run config-init to fix that")
+				fmt.Printf(".. does not exist. To configure, run:\n    $ %s config-init\n", os.Args[0])
 				return
 			}
 
