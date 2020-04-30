@@ -87,15 +87,35 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 }
 
 // directory holds a bunch of series
-func (c *cHandlers) DirectoryPullMetadata(cmd *stoservertypes.DirectoryPullMetadata, ctx *command.Ctx) error {
+func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullTmdbMetadata, ctx *command.Ctx) error {
 	tmdb, err := themoviedbapiClient(c.db)
 	if err != nil {
 		return err
 	}
 
-	tv, err := tmdb.OpenTvByImdbId(ctx.Ctx, cmd.ForeignKey)
+	// check if tmdb reference
+	typ, tmdbId, err := decodeTmdbRef(cmd.ForeignKey)
 	if err != nil {
 		return err
+	}
+
+	var tv *themoviedbapi.Tv
+
+	// it is TMDb id (movie or other type)
+	if typ != "" {
+		if typ != themoviedbapi.MediaTypeTv {
+			return fmt.Errorf("trying to pull TV show metadata but got type: %s", typ)
+		}
+
+		tv, err = tmdb.OpenTv(ctx.Ctx, tmdbId)
+		if err != nil {
+			return err
+		}
+	} else { // not TMDb ID => IMDb ID then
+		tv, err = tmdb.OpenTvByImdbId(ctx.Ctx, cmd.ForeignKey)
+		if err != nil {
+			return err
+		}
 	}
 
 	return c.db.Update(func(tx *bbolt.Tx) error {

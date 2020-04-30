@@ -47,7 +47,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 				<Panel
 					heading={
 						<div>
-							Movies &amp; TV series - TMDb (
+							Movies &amp; TV shows - TMDb (
 							<a href="https://www.themoviedb.org/" target="_blank">
 								themoviedb.org
 							</a>

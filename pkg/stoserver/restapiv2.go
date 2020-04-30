@@ -2,7 +2,6 @@ package stoserver
 
 import (
 	"bytes"
-	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -1460,8 +1459,21 @@ func (h *handlers) SearchIgdb(rctx *httpauth.RequestContext, w http.ResponseWrit
 	return &suggestions
 }
 
-func (h *handlers) SearchMetadataImdbMovieId(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.MetadataImdbMovieId {
-	query := r.URL.Query().Get("q")
+func (h *handlers) SearchTmdbMovies(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.TmdbSearchResult {
+	return h.searchTmdbInternal(rctx, w, r, r.URL.Query().Get("q"), themoviedbapi.MediaTypeMovie)
+}
+
+func (h *handlers) SearchTmdbTv(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.TmdbSearchResult {
+	return h.searchTmdbInternal(rctx, w, r, r.URL.Query().Get("q"), themoviedbapi.MediaTypeTv)
+}
+
+func (h *handlers) searchTmdbInternal(
+	rctx *httpauth.RequestContext,
+	w http.ResponseWriter,
+	r *http.Request,
+	query string,
+	mediaType string,
+) *[]stoservertypes.TmdbSearchResult {
 	if query == "" {
 		http.Error(w, "empty query", http.StatusBadRequest)
 		return nil
@@ -1475,15 +1487,19 @@ func (h *handlers) SearchMetadataImdbMovieId(rctx *httpauth.RequestContext, w ht
 		return nil
 	}
 
-	results, err := tmdb.MultiSearch(context.TODO(), query)
+	results, err := tmdb.MultiSearch(r.Context(), query)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
 
-	transformed := []stoservertypes.MetadataImdbMovieId{}
+	transformed := []stoservertypes.TmdbSearchResult{}
 
 	for _, result := range results {
+		if result.MediaType != mediaType {
+			continue
+		}
+
 		switch result.MediaType {
 		case themoviedbapi.MediaTypeMovie:
 			var releaseYear *int
@@ -1497,7 +1513,7 @@ func (h *handlers) SearchMetadataImdbMovieId(rctx *httpauth.RequestContext, w ht
 				releaseYear = &x
 			}
 
-			transformed = append(transformed, stoservertypes.MetadataImdbMovieId{
+			transformed = append(transformed, stoservertypes.TmdbSearchResult{
 				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.Id)),
 				Title:       result.Title,
 				ReleaseYear: releaseYear,
@@ -1514,7 +1530,7 @@ func (h *handlers) SearchMetadataImdbMovieId(rctx *httpauth.RequestContext, w ht
 				releaseYear = &x
 			}
 
-			transformed = append(transformed, stoservertypes.MetadataImdbMovieId{
+			transformed = append(transformed, stoservertypes.TmdbSearchResult{
 				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.Id)),
 				Title:       result.Name,
 				ReleaseYear: releaseYear,

@@ -1,7 +1,8 @@
 import { SearchBox } from 'component/autocomplete';
 import { CustomFieldInputFactory } from 'f61ui/commandtypes';
 import {
-	searchMetadataImdbMovieId,
+	searchTmdbMovies,
+	searchTmdbTv,
 	searchIgdb,
 	searchReplicationPolicies,
 	searchVolumes,
@@ -57,13 +58,43 @@ export const volumeAutocomplete: CustomFieldInputFactory<number> = (
 	);
 };
 
-export const tmdbAutocomplete: CustomFieldInputFactory<string> = (field, _, update, autoFocus) => {
+export const tmdbMovieAutocomplete: CustomFieldInputFactory<string> = (
+	field,
+	_,
+	update,
+	autoFocus,
+) => {
 	return (
 		<SearchBox
 			allowEmptySearch={false}
 			autoFocus={autoFocus}
 			placeholder={field.Placeholder}
-			dataSource={searchMetadataImdbMovieId}
+			dataSource={searchTmdbMovies}
+			onSelect={(item) => {
+				update(item.key);
+			}}
+			itemToAutocompleteItem={(item) => {
+				const releaseYear = item.ReleaseYear;
+				const label = releaseYear ? `${item.Title} (${releaseYear})` : item.Title;
+
+				return { label, key: item.Id };
+			}}
+		/>
+	);
+};
+
+export const tmdbTvAutocomplete: CustomFieldInputFactory<string> = (
+	field,
+	_,
+	update,
+	autoFocus,
+) => {
+	return (
+		<SearchBox
+			allowEmptySearch={false}
+			autoFocus={autoFocus}
+			placeholder={field.Placeholder}
+			dataSource={searchTmdbTv}
 			onSelect={(item) => {
 				update(item.key);
 			}}

@@ -313,7 +313,7 @@ Metadata support
 ----------------
 
 Varasto needs an API key to be able to fetch TV show and movie metadata.
-Instructions are [here](../movies/index.md#metadata-support).
+Instructions are [here](../movies/index.md#metadata-support-configuration).
 
 Fetching metadata currently happens by mass-selecting each collection and hitting
 "Refresh metadata automatically". In the future this will happen automatically.

@@ -11,7 +11,8 @@ Note: Varasto can also track the movies that you've watched (and which year) - s
 Preparations
 ------------
 
-You only have to do this part once.
+!!! info
+	You only have to do this part once.
 
 Create a directory in Varasto, let's say `Media > Movies`.
 
@@ -29,11 +30,13 @@ Now you can see the assigned type. Take note of the directory's ID:
 Uploading your first movie
 --------------------------
 
-NOTE: While this guide discusses command line usage, you can also upload files from the UI!
+!!! tip
+	While this guide discusses command line usage, you can also upload files from the
+	[Web UI](../../data-interfaces/web-ui/index.md)!
 
-We have a directory that has a movie in it
+We have a directory that has a movie in it:
 
-```
+```console
 $ cd ted2/
 $ tree .
 └── Ted 2 (2015).mkv
@@ -41,31 +44,28 @@ $ tree .
 
 Remember, our movie parent directory ID is `GD2MmBEqk9A`.
 
-To upload the movie to Varasto, do this:
+To upload the movie to Varasto, run these commands:
 
-```
-$ sto adopt GD2MmBEqk9A && sto push
-```
-
-The upload is done! But let's break down the above two commands:
-
-We'll adopt the directory in Varasto. Adopting means that a corresponding collection will
-be created in Varasto under a specified Varasto directory (but no files will be
-uploaded/pushed yet).
-
-```
+```console
 $ sto adopt GD2MmBEqk9A
-```
-
-Now we have an empty collection in Varasto:
-
-![](adoption.png)
-
-Next we'll just push the contents of the directory to Varasto:
-
-```
 $ sto push
 ```
+
+The upload is done!
+
+??? info "Explanation: adopt"
+	We'll **adopt** the directory in Varasto. Adopting means that a corresponding collection will
+	be created in Varasto under a specified Varasto parent directory (but no files will be
+	uploaded/pushed yet).
+
+	After running the command, we now have an empty collection in Varasto:
+
+	![](adoption.png)
+
+??? info "Explanation: push"
+	The push command **pushes** the collection's local changes (= all data, since adoption
+	created an empty collection) to Varasto server.
+
 
 Removing the local copy that we just uploaded
 ---------------------------------------------
@@ -82,31 +82,26 @@ $ sto rm ted2
 Fetching metadata
 -----------------
 
-The movie is stored in Varasto, but Varasto can't fetch metadata for it without telling
-exactly which movie it is (Varasto is not yet smart enough to guess based on filename).
-
-Go find the movie on IMDb, and copy-paste its ID to Varasto:
-
-![](imdb-id.png)
-
-Sidenote: we'll soon might make a search that lets you search directly from Varasto.
-
-Now set the ID and pull metadata. Also note that we had an ugly name for the directory
-that we uploaded the movie from, but we can let Varasto clean up the collection's name
-from the proper title in IMDb:
-
-![](pull-metadata.png)
-
-
-Metadata support
-----------------
-
 Like you saw in the end result, Varasto fetched metadata for the movie:
 
 - Movie runtime
 - Banner image
 - Plot summary, revenue and release date
 - Links to IMDb and TMDb
+
+The movie is stored in Varasto, but Varasto can't fetch metadata for it without telling
+exactly which movie it is (Varasto is not yet smart enough to guess based on filename):
+
+![](pull-metadata.png)
+
+Varasto can also clean up your collection name based on the official title:
+
+- After adoption our collection name was `ted2`.
+- After metadata pull it was cleaned up to `Ted 2`.
+
+
+Metadata support configuration
+------------------------------
 
 Varasto needs an API key to be able to fetch movie and TV show metadata.
 

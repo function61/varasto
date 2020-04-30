@@ -289,14 +289,14 @@
 		]
 	},
 	{
-		"command": "directory.PullMetadata",
+		"command": "directory.PullTmdbMetadata",
 		"chain": "public",
 		"ctor": ["Directory"],
 		"crudNature": "update",
-		"title": "Metadata: pull",
+		"title": "Metadata: pull from TMDb",
 		"fields": [
 			{ "key": "Directory", "hideIfDefaultValue": true },
-			{ "key": "ForeignKey", "help": "IMDB ID or similar" }
+			{ "key": "ForeignKey", "title": "Title in TMDb", "placeholder": "Homeland", "type": "custom/string" }
 		]
 	},
 	{

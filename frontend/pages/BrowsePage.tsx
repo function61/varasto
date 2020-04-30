@@ -1,6 +1,6 @@
 import { collectionDropdown } from 'component/collectiondropdown';
 import { DocLink } from 'component/doclink';
-import { replicationPolicyAutocomplete } from 'component/autocompletes';
+import { replicationPolicyAutocomplete, tmdbTvAutocomplete } from 'component/autocompletes';
 import {
 	metadataKvsToKv,
 	imageNotAvailable,
@@ -34,7 +34,7 @@ import {
 	DirectoryDelete,
 	DirectoryChangeReplicationPolicy,
 	DirectoryMove,
-	DirectoryPullMetadata,
+	DirectoryPullTmdbMetadata,
 	DirectoryRename,
 	DirectorySetType,
 } from 'generated/stoserver/stoservertypes_commands';
@@ -521,7 +521,9 @@ const directoryDropdown = (dir: Directory) => {
 					Policy: replicationPolicyAutocomplete,
 				})}
 			/>
-			<CommandLink command={DirectoryPullMetadata(dir.Id)} />
+			<CommandLink
+				command={DirectoryPullTmdbMetadata(dir.Id, { ForeignKey: tmdbTvAutocomplete })}
+			/>
 			<CommandLink command={DirectoryMove(dir.Id, { disambiguation: dir.Name })} />
 			<CommandLink
 				command={DirectorySetType(dir.Id, dir.Type, { disambiguation: dir.Name })}

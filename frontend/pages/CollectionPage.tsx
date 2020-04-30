@@ -1,4 +1,4 @@
-import { tmdbAutocomplete } from 'component/autocompletes';
+import { tmdbMovieAutocomplete } from 'component/autocompletes';
 import { AssetImg } from 'component/assetimg';
 import { collectionDropdown } from 'component/collectiondropdown';
 import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
@@ -415,7 +415,7 @@ export default class CollectionPage extends React.Component<
 							{imdbIdExpectedButMissing && (
 								<CommandInlineForm
 									command={CollectionPullTmdbMetadata(collOutput.Collection.Id, {
-										ForeignKey: tmdbAutocomplete,
+										ForeignKey: tmdbMovieAutocomplete,
 									})}
 								/>
 							)}
