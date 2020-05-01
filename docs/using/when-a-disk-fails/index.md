@@ -32,11 +32,8 @@ go back. You hopefully have nightly backups, but it's good to take a backup just
 this operation so that if you need to resort to the backup, it contains the most recent changes.
 
 ??? question "Why?"
-	Marking all volume's data lost involves "forgetting" which blobs were stored on the volume
-	you're about to decommission - i.e. Varasto will think the volume is empty. This is so
-	that replication controller will notice the discrepancy between desired and actual state
-	and start demanding new replicas to make your data safe again. This will be
-	[further explained here](#reconcile-any-lost-redundancy).
+	Because we will be making accounting changes in the metadata database. This will be
+	further explained in [Mark all volume data lost](#reconcile-any-lost-redundancy).
 
 
 ### Stop writing new data to the failing disk
@@ -47,10 +44,35 @@ Remove the volume from any replication policies' `New data goes to` plan.
 	![](../replication-policies/screenshot.png)
 
 
+### If you want to replicate all data to specific volume
+
+??? note "This step is optional"
+	You can skip this step, and mark all volume data lost, and the reconciliation step will
+	notice that some data's replication policy now conflicts with the desired replication
+	level. You can then decide (per collection) where the replicas-to-be-satisfied will be
+	placed.
+
+	This means that if a big disk broke and you don't have enough space in any single disk
+	to satisfy additional replicas, you can delegate replicas to many volumes so you won't
+	run out of space.
+
+Let's say you had a fully used 4 TB disk that broke. If you have a unused >= 4 TB disk or
+some other disk with at least 4 TB of free space, you can transfer everything that was on
+the failed disk to this another volume.
+
+You can use the `Migrate data to another volume` feature to make sure another volume will
+contain the data the volume-to-decommission had before it broke. **Migration reads will be
+read from healthy replicas**, i.e. the feature doesn't mean "transfer data from A to B" -
+rather it means "transfer data that was in A, from any healthy replicas, to B".
+
+
 ### Mark all volume data lost
 
-TODO: have the `mark all volume data lost` command assert that replication policies won't
-refer to it.
+This operation makes Varasto "forget" which blobs were stored on the volume you're about
+to decommission - i.e. **Varasto will think the volume is empty**.
+
+This is done so that replication controller will notice the discrepancy between desired
+and actual state and start demanding new replicas to make your data safe again.
 
 !!! tip
 	For your safety, the command has a `Only if redundancy` switch so Varasto aborts the
@@ -72,11 +94,8 @@ which volume will be used to fulfill the storage needs of the conflicted replica
 
 ### Decommission the volume
 
-TODO: rename to "hide a volume"?
+This action checks that volume is safe to decommission and hides the volume from UI in
+places where you usually only want to see active volumes.
 
-This action only hides a volume from UI in places where you usually only want to see
-in-use volumes.
-
-You may now detach the disk and get rid of it. Don't worry about secure disposal of the
-disk, since all the data was encrypted anyway. (provided you used the disk only for
-Varasto data)
+You may now get rid of the disk. Don't worry about secure disposal of the disk, since all
+the data was encrypted anyway. (provided you used the disk only for Varasto data)

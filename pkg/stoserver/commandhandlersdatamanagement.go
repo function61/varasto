@@ -44,6 +44,56 @@ func NewReconciliationCompletionReport() *ReconciliationCompletionReport {
 	}
 }
 
+func (c *cHandlers) VolumeDecommission(cmd *stoservertypes.VolumeDecommission, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		vol, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		if vol.BlobCount != 0 {
+			return fmt.Errorf(
+				"Refusing to decommission non-empty volume (has %d blobs) for your safety. Mark data lost first!",
+				vol.BlobCount)
+		}
+
+		if vol.SmartId != "" {
+			return errors.New("volume still has SMART polling enabled")
+		}
+
+		if err := stodb.VolumeMountRepository.Each(func(record interface{}) error {
+			mount := record.(*stotypes.VolumeMount)
+
+			if mount.Volume == vol.ID {
+				return fmt.Errorf("volume is still mounted (mount ID %s)", mount.ID)
+			}
+
+			return nil
+		}, tx); err != nil {
+			return err
+		}
+
+		if err := stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+			policy := record.(*stotypes.ReplicationPolicy)
+
+			if sliceutil.ContainsInt(policy.DesiredVolumes, vol.ID) {
+				return fmt.Errorf(
+					"Policy '%s' still wants to write data to the volume you're trying to decommission",
+					policy.Name)
+			}
+
+			return nil
+		}, tx); err != nil {
+			return err
+		}
+
+		vol.Decommissioned = &ctx.Meta.Timestamp
+		vol.DecommissionReason = cmd.Reason
+
+		return stodb.VolumeRepository.Update(vol, tx)
+	})
+}
+
 func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		volToPurge, err := stodb.Read(tx).Volume(cmd.Id)

@@ -33,23 +33,25 @@ func (r *ReplicationPolicy) ReplicaCount() int {
 }
 
 type Volume struct {
-	ID            int
-	UUID          string
-	Label         string
-	Description   string
-	Notes         string
-	SerialNumber  string
-	Technology    string
-	SmartId       string
-	SmartReport   string
-	Zone          string
-	Enclosure     string
-	EnclosureSlot int // 0 = not defined
-	Manufactured  time.Time
-	WarrantyEnds  time.Time
-	Quota         int64
-	BlobSizeTotal int64 // @ compressed & deduplicated
-	BlobCount     int64 // does not include volume descriptor blob (sha256=0000..)
+	ID                 int
+	UUID               string
+	Label              string
+	Description        string
+	Notes              string
+	SerialNumber       string
+	Technology         string
+	SmartId            string
+	SmartReport        string
+	Zone               string
+	Enclosure          string
+	EnclosureSlot      int // 0 = not defined
+	Manufactured       time.Time
+	WarrantyEnds       time.Time
+	Quota              int64
+	BlobSizeTotal      int64 // @ compressed & deduplicated
+	BlobCount          int64 // does not include volume descriptor blob (sha256=0000..)
+	Decommissioned     *time.Time
+	DecommissionReason string
 }
 
 type VolumeMount struct {

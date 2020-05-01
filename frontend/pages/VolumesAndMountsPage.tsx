@@ -10,7 +10,7 @@ import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
 import { reloadCurrentPage } from 'f61ui/browserutils';
-import { Glyphicon, Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel, CollapsePanel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandIcon, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
@@ -26,6 +26,7 @@ import {
 	VolumeChangeQuota,
 	VolumeCreate,
 	VolumeMarkDataLost,
+	VolumeDecommission,
 	VolumeMigrateData,
 	VolumeMountGoogleDrive,
 	VolumeMountLocal,
@@ -43,6 +44,7 @@ import {
 	getReplicationStatuses,
 	getVolumeMounts,
 	getVolumes,
+	getDecommissionedVolumes,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	DocRef,
@@ -77,7 +79,8 @@ interface VolumesAndMountsPageProps {
 }
 
 interface VolumesAndMountsPageState {
-	volumes: Result<Volume[]>;
+	volumes: Result<Volume[]>; // does not contain decommissioned ones
+	volumesDecommissioned: Result<Volume[]>;
 	mounts: Result<VolumeMount[]>;
 	ivJobs: Result<IntegrityVerificationJob[]>;
 	nodes: Result<Node[]>;
@@ -91,6 +94,9 @@ export default class VolumesAndMountsPage extends React.Component<
 	state: VolumesAndMountsPageState = {
 		volumes: new Result<Volume[]>((_) => {
 			this.setState({ volumes: _ });
+		}),
+		volumesDecommissioned: new Result<Volume[]>((_) => {
+			this.setState({ volumesDecommissioned: _ });
 		}),
 		mounts: new Result<VolumeMount[]>((_) => {
 			this.setState({ mounts: _ });
@@ -190,7 +196,13 @@ export default class VolumesAndMountsPage extends React.Component<
 						</Panel>
 					);
 				case 'volumes':
-					return <Panel heading={volumesHeading()}>{this.renderVolumes()}</Panel>;
+					return (
+						<Panel heading={volumesHeading()}>
+							{this.renderVolumes()}
+
+							{this.renderDecommissionedVolumes()}
+						</Panel>
+					);
 				case 'mounts':
 					return <Panel heading="Mounts">{this.renderMounts()}</Panel>;
 				default:
@@ -395,6 +407,11 @@ export default class VolumesAndMountsPage extends React.Component<
 									helpUrl: DocUrlLatest(DocRef.DocsUsingWhenADiskFailsIndexMd),
 								})}
 							/>
+							<CommandLink
+								command={VolumeDecommission(obj.Id, {
+									disambiguation: obj.Label,
+								})}
+							/>
 						</Dropdown>
 					</td>
 				</tr>
@@ -427,6 +444,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				WarrantyEnds: null,
 				Zone: '',
 				Topology: null,
+				Decommissioned: null,
 			},
 		);
 
@@ -463,6 +481,45 @@ export default class VolumesAndMountsPage extends React.Component<
 					</tr>
 				</tfoot>
 			</table>
+		);
+	}
+
+	private renderDecommissionedVolumes() {
+		const [volumesDecommissioned, loadingOrError] = this.state.volumesDecommissioned.unwrap();
+
+		if (!volumesDecommissioned || loadingOrError) {
+			return loadingOrError;
+		}
+
+		if (!volumesDecommissioned.length) {
+			return null;
+		}
+
+		return (
+			<CollapsePanel
+				heading={`${volumesDecommissioned.length} decommissioned volumes`}
+				visualStyle="info">
+				<table className={tableClassStripedHover}>
+					<thead>
+						<tr>
+							<th>When</th>
+							<th>Label</th>
+							<th>Reason</th>
+						</tr>
+					</thead>
+					<tbody>
+						{volumesDecommissioned.map((vol) => (
+							<tr key={vol.Uuid}>
+								<td>
+									<Timestamp ts={vol.Decommissioned!.At} />
+								</td>
+								<td>{vol.Label}</td>
+								<td>{vol.Decommissioned!.Reason}</td>
+							</tr>
+						))}
+					</tbody>
+				</table>
+			</CollapsePanel>
 		);
 	}
 
@@ -642,6 +699,7 @@ export default class VolumesAndMountsPage extends React.Component<
 	}
 	private fetchData() {
 		this.state.volumes.load(() => getVolumes());
+		this.state.volumesDecommissioned.load(() => getDecommissionedVolumes());
 		this.state.mounts.load(() => getVolumeMounts());
 		this.state.nodes.load(() => getNodes());
 		this.state.ivJobs.load(() => getIntegrityVerificationJobs());

@@ -242,6 +242,21 @@
 		]
 	},
 	{
+		"command": "volume.Decommission",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Decommission the volume",
+		"info": [
+			"Volume will be hidden from most places in the UI.",
+			"For your safety, these things will be checked: volume has to be unmounted & empty, SMART polling be disabled and none of the replication policies shall refer to it."
+		],
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Reason" }
+		]
+	},
+	{
 		"command": "directory.Create",
 		"chain": "public",
 		"ctor": ["Parent"],

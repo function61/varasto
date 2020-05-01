@@ -381,13 +381,19 @@ func (h *handlers) SearchVolumes(rctx *httpauth.RequestContext, w http.ResponseW
 	query := strings.ToLower(r.URL.Query().Get("q"))
 
 	return h.getVolumesInternal(rctx, w, r, func(vol stotypes.Volume) bool {
-		return strings.Contains(strings.ToLower(vol.Label), query)
+		return vol.Decommissioned == nil && strings.Contains(strings.ToLower(vol.Label), query)
 	})
 }
 
 func (h *handlers) GetVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Volume {
 	return h.getVolumesInternal(rctx, w, r, func(vol stotypes.Volume) bool {
-		return true
+		return vol.Decommissioned == nil
+	})
+}
+
+func (h *handlers) GetDecommissionedVolumes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Volume {
+	return h.getVolumesInternal(rctx, w, r, func(vol stotypes.Volume) bool {
+		return vol.Decommissioned != nil
 	})
 }
 
@@ -441,22 +447,31 @@ func (h *handlers) getVolumesInternal(
 			we = &guts.Date{Time: dbObject.WarrantyEnds}
 		}
 
+		var decommissioned *stoservertypes.VolumeDecommissioned
+		if dbObject.Decommissioned != nil {
+			decommissioned = &stoservertypes.VolumeDecommissioned{
+				At:     *dbObject.Decommissioned,
+				Reason: dbObject.DecommissionReason,
+			}
+		}
+
 		ret = append(ret, stoservertypes.Volume{
-			Id:            dbObject.ID,
-			Uuid:          dbObject.UUID,
-			Label:         dbObject.Label,
-			Description:   dbObject.Description,
-			Notes:         dbObject.Notes,
-			SerialNumber:  dbObject.SerialNumber,
-			Zone:          dbObject.Zone,
-			Technology:    stoservertypes.VolumeTechnology(dbObject.Technology),
-			Manufactured:  mfg,
-			WarrantyEnds:  we,
-			Topology:      topology,
-			Smart:         smartAttrs,
-			Quota:         int(dbObject.Quota), // FIXME: lossy conversions here
-			BlobSizeTotal: int(dbObject.BlobSizeTotal),
-			BlobCount:     int(dbObject.BlobCount),
+			Id:             dbObject.ID,
+			Uuid:           dbObject.UUID,
+			Label:          dbObject.Label,
+			Description:    dbObject.Description,
+			Notes:          dbObject.Notes,
+			SerialNumber:   dbObject.SerialNumber,
+			Zone:           dbObject.Zone,
+			Technology:     stoservertypes.VolumeTechnology(dbObject.Technology),
+			Manufactured:   mfg,
+			WarrantyEnds:   we,
+			Topology:       topology,
+			Smart:          smartAttrs,
+			Quota:          int(dbObject.Quota), // FIXME: lossy conversions here
+			BlobSizeTotal:  int(dbObject.BlobSizeTotal),
+			BlobCount:      int(dbObject.BlobCount),
+			Decommissioned: decommissioned,
 		})
 	}
 

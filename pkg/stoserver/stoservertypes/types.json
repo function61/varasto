@@ -16,7 +16,8 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replication_progress", "produces": {"_": "list", "of": {"_": "ReplicationStatus"}}, "name": "getReplicationStatuses" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/nodes", "produces": {"_": "list", "of": {"_": "Node"}}, "name": "getNodes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/keyencryptionkeys", "produces": {"_": "list", "of": {"_": "KeyEncryptionKey"}}, "name": "getKeyEncryptionKeys" },
-		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getVolumes", "description": "Only returns non-decommissioned volumes" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes_decommissioned", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "getDecommissionedVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumes_search?q={q}", "produces": {"_": "list", "of": {"_": "Volume"}}, "name": "searchVolumes" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/reconciliation", "produces": {"_": "ReconciliationReport"}, "name": "getReconcilableItems" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
@@ -361,9 +362,17 @@
 				"WarrantyEnds": {"_": "date", "nullable": true},
 				"Zone": {"_": "string"},
 				"Topology": {"_": "VolumeTopology", "nullable": true},
+				"Decommissioned": {"_": "VolumeDecommissioned", "nullable": true},
 				"Quota": {"_": "integer"},
 				"BlobSizeTotal": {"_": "integer"},
 				"BlobCount": {"_": "integer"}
+			}}
+		},
+		{
+			"name": "VolumeDecommissioned",
+			"type": {"_": "object", "fields": {
+				"At": {"_": "datetime"},
+				"Reason": {"_": "string"}
 			}}
 		},
 		{
