@@ -100,7 +100,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 		}, tx),
 		ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
 			ID:             "default",
-			Name:           "Default replication policy",
+			Name:           "Default",
 			DesiredVolumes: []int{1},
 			MinZones:       1,
 		}, tx),
