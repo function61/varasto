@@ -204,7 +204,17 @@ export default class VolumesAndMountsPage extends React.Component<
 						</Panel>
 					);
 				case 'mounts':
-					return <Panel heading="Mounts">{this.renderMounts()}</Panel>;
+					return (
+						<Panel
+							heading={
+								<div>
+									Mounts &nbsp;
+									<Info text="Currently, mounting/unmounting makes Varasto automatically restart. So the UI giving out errors for a few seconds is to be expected." />
+								</div>
+							}>
+							{this.renderMounts()}
+						</Panel>
+					);
 				default:
 					throw unrecognizedValue(this.props.view);
 			}
@@ -627,7 +637,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						<th></th>
 						<th>Server</th>
 						<th>Driver</th>
-						<th>DriverOpts</th>
+						<th>Driver options</th>
 						<th />
 					</tr>
 				</thead>
