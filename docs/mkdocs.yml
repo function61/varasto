@@ -46,6 +46,7 @@ nav:
   - Metadata backup: using/metadata-backup/index.md
   - Replication policies: using/replication-policies/index.md
   - Integrity verification in background: using/background-integrity-verification/index.md
+  - Moving large amounts of data: using/moving-data/index.md
   - When a disk fails: using/when-a-disk-fails/index.md
 - Local / remote storage:
   - Local disk storage: storage/local-fs/index.md

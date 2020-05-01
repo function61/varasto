@@ -113,6 +113,12 @@ Administration
 	![](../using/replication-policies/screenshot.png)
 
 
+### Replication queue
+
+!!! note ""
+	![](../using/replication-policies/replication-queue-status.png)
+
+
 Other
 -----
 
