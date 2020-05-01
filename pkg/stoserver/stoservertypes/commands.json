@@ -99,9 +99,13 @@
 		"ctor": ["Id", "SmartId"],
 		"crudNature": "update",
 		"title": "Set SMART ID",
+		"info": [
+			"Setting this enables SMART polling for this volume",
+			"Removing this disables SMART polling"
+		],
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "SmartId", "optional": true }
+			{ "key": "SmartId", "title": "SMART ID", "placeholder": "/dev/disk/0122023d-a355-44fa-865d-1744a9bb0c3b", "help": "Usually path to the Linux disk device", "optional": true }
 		]
 	},
 	{
@@ -216,6 +220,10 @@
 		"ctor": ["From"],
 		"crudNature": "update",
 		"title": "Migrate data to another volume",
+		"info": [
+			"This doesn't mean strictly 'copy data from volume A to volume B' - but more exactly 'copy data that exists in volume A to volume B', i.e. if A's data also exists in C, then both B and C can be used for the actual read operations",
+			"In other words, if your disk for volume A breaks, you can use this migrate feature to ensure that what was in A will also be in B (healthy replicas will be used for reads) before you'll decommission volume A"
+		],
 		"fields": [
 			{ "key": "From", "type": "integer", "hideIfDefaultValue": true },
 			{ "key": "To", "title": "Migrate to", "placeholder": "(volume)", "type": "custom/integer" }
