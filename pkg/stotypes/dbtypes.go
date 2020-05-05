@@ -166,6 +166,10 @@ type ScheduledJobLastRun struct {
 	Error    string
 }
 
+func (s ScheduledJobLastRun) Runtime() time.Duration {
+	return s.Finished.Sub(s.Started)
+}
+
 func NewChangeset(
 	id string,
 	parent string,

@@ -12,9 +12,10 @@ require (
 	github.com/disintegration/imageorient v0.0.0-20180920195336-8147d86e83ec
 	github.com/djherbis/times v1.1.0
 	github.com/fatih/color v1.9.0 // indirect
+	github.com/felixge/httpsnoop v1.0.1
 	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
 	github.com/function61/eventkit v0.0.0-20200429151023-1f8483ad5aa9
-	github.com/function61/gokit v0.0.0-20200421151620-41e973712cf6
+	github.com/function61/gokit v0.0.0-20200505133340-ea23da4315bb
 	github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1
 	github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef
@@ -33,6 +34,7 @@ require (
 	github.com/nsf/termbox-go v0.0.0-20190817171036-93860e161317
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/prometheus/client_golang v1.4.1
 	github.com/prometheus/procfs v0.0.8
 	github.com/raviqqe/liche v0.0.0-20200229003944-f57a5d1c5be4 // indirect
 	github.com/robfig/cron v1.2.0

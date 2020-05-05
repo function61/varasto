@@ -226,13 +226,17 @@ func runServer(
 	}
 	serverConfig.Scheduler = schedulerController
 
+	router.Handle(
+		"/metrics",
+		serverConfig.Metrics.MetricsHttpHandler())
+
 	if err := defineUi(router); err != nil {
 		return withErrButWaitTasks(err)
 	}
 
 	srv := &http.Server{
 		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
-		Handler: router,
+		Handler: serverConfig.Metrics.WrapHttpServer(router),
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},
 		},
@@ -260,6 +264,8 @@ func runServer(
 	})
 
 	tasks.Start("listenershutdowner", httputils.ServerShutdownTask(srv))
+
+	tasks.Start("metricscollector", serverConfig.Metrics.Task(serverConfig, db))
 
 	logl.Info.Printf(
 		"node %s (ver. %s) started",
@@ -322,6 +328,7 @@ type ServerConfig struct {
 	TlsCertificate         wrappedKeypair
 	KeyStore               *keyStore
 	FailedMountNames       []string
+	Metrics                *metricsController
 }
 
 func validateSchemaVersionAndMigrateIfNeeded(db *bbolt.DB, logger *log.Logger) error {
@@ -342,7 +349,12 @@ func validateSchemaVersionAndMigrateIfNeeded(db *bbolt.DB, logger *log.Logger) e
 }
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
-func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Logger, logTail *logtee.StringTail) (*ServerConfig, error) {
+func readConfigFromDatabase(
+	db *bbolt.DB,
+	scf *ServerConfigFile,
+	logger *log.Logger,
+	logTail *logtee.StringTail,
+) (*ServerConfig, error) {
 	if err := validateSchemaVersionAndMigrateIfNeeded(db, logger); err != nil {
 		return nil, err
 	}
@@ -400,6 +412,8 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 
 	failedMountNames := []string{}
 
+	metrics := newMetricsController()
+
 	for _, mount := range clusterWideMounts {
 		if mount.Node != selfNode.ID { // only mount vols for our node
 			continue
@@ -410,10 +424,13 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 			return nil, err
 		}
 
-		driver, err := getDriver(*volume, mount, logger)
+		originalDriver, err := getDriver(*volume, mount, logger)
 		if err != nil {
 			return nil, err
 		}
+
+		// wrap original driver with metrics-collecting proxy
+		driver := metrics.WrapDriver(originalDriver, volume.ID, volume.UUID, volume.Label)
 
 		// for safety. if on Windows we're using external USB disks, their drive letters
 		// could get mixed up and we could mount the wrong volume and that would not be great.
@@ -446,6 +463,7 @@ func readConfigFromDatabase(db *bbolt.DB, scf *ServerConfigFile, logger *log.Log
 		ReplicationControllers: map[int]*storeplication.Controller{},
 		TlsCertificate:         *wrappedKeypair,
 		FailedMountNames:       failedMountNames,
+		Metrics:                metrics,
 	}, nil
 }
 
