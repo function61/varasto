@@ -706,6 +706,16 @@
 		]
 	},
 	{
+		"command": "config.SetGrafanaUrl",
+		"chain": "public",
+		"ctor": ["Url"],
+		"crudNature": "update",
+		"title": "Set Grafana URL",
+		"fields": [
+			{ "key": "Url", "title": "Grafana URL", "optional": true, "placeholder": "https://grafana.example.com/d/LrjytbeZz/varasto?orgId=1&kiosk=tv" }
+		]
+	},
+	{
 		"command": "fuse.UnmountAll",
 		"chain": "public",
 		"ctor": [],

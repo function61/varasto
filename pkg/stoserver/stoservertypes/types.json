@@ -68,6 +68,7 @@
 		{ "key": "CfgUbackupConfig", "value": "ubackup_config" },
 		{ "key": "CfgUpdateStatusAt", "value": "update_status_at" },
 		{ "key": "CfgNodeTlsCertKey", "value": "node_tls_cert_key" },
+		{ "key": "CfgGrafanaUrl", "value": "grafana_url" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [

@@ -869,6 +869,12 @@ func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuse
 	})
 }
 
+func (c *cHandlers) ConfigSetGrafanaUrl(cmd *stoservertypes.ConfigSetGrafanaUrl, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		return stodb.CfgGrafanaUrl.Set(cmd.Url, tx)
+	})
+}
+
 func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.CfgNetworkShareBaseUrl.Set(cmd.Baseurl, tx)

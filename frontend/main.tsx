@@ -13,6 +13,7 @@ import GettingStartedPage from 'pages/GettingStartedPage';
 import LogsPage from 'pages/LogsPage';
 import MetadataBackupPage from 'pages/MetadataBackupPage';
 import NodesPage from 'pages/NodesPage';
+import MetricsPage from 'pages/MetricsPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
 import ScheduledJobsPage from 'pages/ScheduledJobsPage';
 import ServerInfoPage from 'pages/ServerInfoPage';
@@ -105,6 +106,10 @@ class Handlers implements r.RouteHandlers {
 
 	logs() {
 		return <LogsPage />;
+	}
+
+	metrics() {
+		return <MetricsPage />;
 	}
 
 	contentMetadata() {

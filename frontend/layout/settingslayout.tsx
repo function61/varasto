@@ -32,6 +32,7 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 			mkLink('Scheduled jobs', 'time', r.scheduledJobsUrl()),
 			mkLink('Metadata backup', 'cloud-upload', r.metadataBackupUrl({ view: '' })),
 			mkLink('Users', 'user', r.usersUrl()),
+			mkLink('Metrics', 'stats', r.metricsUrl()),
 			mkLink('Logs', 'list-alt', r.logsUrl()),
 			mkLink('Servers', 'th-large', r.nodesUrl()),
 			mkLink('Replication policies', 'retweet', r.replicationPoliciesUrl()),

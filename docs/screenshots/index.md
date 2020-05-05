@@ -101,12 +101,6 @@ Administration
 	![](../using/metadata-backup/backuplist.png)
 
 
-### Clients
-
-!!! note ""
-	![](clients.png)
-
-
 ### Replication policies
 
 !!! note ""
@@ -117,6 +111,18 @@ Administration
 
 !!! note ""
 	![](../using/replication-policies/replication-queue-status.png)
+
+
+### Observability (Prometheus metrics)
+
+!!! note ""
+	![](../using/observability/grafana-metrics.png)
+
+
+### Clients
+
+!!! note ""
+	![](clients.png)
 
 
 Other

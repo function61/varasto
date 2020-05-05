@@ -13,4 +13,5 @@ var (
 	CfgUbackupConfig       = ConfigAccessor(stoservertypes.CfgUbackupConfig)
 	CfgUpdateStatusAt      = ConfigAccessor(stoservertypes.CfgUpdateStatusAt)
 	CfgNodeTlsCertKey      = ConfigAccessor(stoservertypes.CfgNodeTlsCertKey)
+	CfgGrafanaUrl          = ConfigAccessor(stoservertypes.CfgGrafanaUrl)
 )

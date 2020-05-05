@@ -76,6 +76,10 @@
 		"path": "/admin/logs"
 	},
 	{
+		"id": "metrics",
+		"path": "/admin/metrics"
+	},
+	{
 		"id": "contentMetadata",
 		"path": "/admin/content_metadata"
 	},
