@@ -11,6 +11,7 @@ import (
 	"github.com/function61/gokit/mime"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stotypes"
+	"go.etcd.io/bbolt"
 )
 
 func panicIfError(err error) {
@@ -100,4 +101,15 @@ func (b *nonBlockingLock) TryLock() (bool, func()) {
 	} else {
 		return false, func() { panic("should not be called") }
 	}
+}
+
+func readTx(db *bbolt.DB) (*bbolt.Tx, func(), error) {
+	tx, err := db.Begin(false)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return tx, func() {
+		ignoreError(tx.Rollback())
+	}, nil
 }

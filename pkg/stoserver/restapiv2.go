@@ -736,14 +736,12 @@ func (h *handlers) GetReplicationPoliciesForDirectories(
 ) *[]stoservertypes.ReplicationPolicyForDirectory {
 	rpfd := []stoservertypes.ReplicationPolicyForDirectory{}
 
-	tx, err := h.db.Begin(false)
+	tx, rollback, err := readTx(h.db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
-	defer func() {
-		ignoreError(tx.Rollback())
-	}()
+	defer rollback()
 
 	// might not deserve an index?
 	if err := stodb.DirectoryRepository.Each(func(record interface{}) error {
@@ -1105,9 +1103,9 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.IntegrityVerificationJob {
 	ret := []stoservertypes.IntegrityVerificationJob{}
 
-	tx, err := h.db.Begin(false)
+	tx, rollback, err := readTx(h.db)
 	panicIfError(err)
-	defer func() { ignoreError(tx.Rollback()) }()
+	defer rollback()
 
 	dbObjects := []stotypes.IntegrityVerificationJob{}
 	panicIfError(stodb.IntegrityVerificationJobRepository.Each(stodb.IntegrityVerificationJobAppender(&dbObjects), tx))
