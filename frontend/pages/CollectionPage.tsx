@@ -294,15 +294,6 @@ export default class CollectionPage extends React.Component<
 							)}
 						</Panel>
 
-						<Panel heading="Upload">
-							<FileUploadArea
-								collectionId={this.props.id}
-								collectionRevision={
-									this.state.collectionOutputFixme!.Collection.Head
-								}
-							/>
-						</Panel>
-
 						{this.state.selectedFileHashes.length > 0 && (
 							<div>
 								<span className="margin-right">
@@ -433,6 +424,22 @@ export default class CollectionPage extends React.Component<
 								/>
 							)}
 						</Panel>
+
+						<Panel
+							heading={
+								<div>
+									Upload &nbsp;
+									<Info text="You can upload one or more files by drag-n-dropping here. You can also use the 'Choose files' button." />
+								</div>
+							}>
+							<FileUploadArea
+								collectionId={this.props.id}
+								collectionRevision={
+									this.state.collectionOutputFixme!.Collection.Head
+								}
+							/>
+						</Panel>
+
 						<Panel heading="Changesets">
 							<table className={tableClassStripedHover}>
 								<thead>
