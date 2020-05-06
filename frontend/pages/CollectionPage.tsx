@@ -26,6 +26,7 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionMoveFilesIntoAnotherCollection,
+	CollectionDeleteFiles,
 	CollectionPullTmdbMetadata,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
@@ -303,12 +304,24 @@ export default class CollectionPage extends React.Component<
 						</Panel>
 
 						{this.state.selectedFileHashes.length > 0 && (
-							<CommandButton
-								command={CollectionMoveFilesIntoAnotherCollection(
-									collOutput.Collection.Id,
-									this.state.selectedFileHashes.join(','),
-								)}
-							/>
+							<div>
+								<span className="margin-right">
+									<CommandButton
+										command={CollectionMoveFilesIntoAnotherCollection(
+											collOutput.Collection.Id,
+											this.state.selectedFileHashes.join(','),
+										)}
+									/>
+								</span>
+								<span className="margin-right">
+									<CommandButton
+										command={CollectionDeleteFiles(
+											collOutput.Collection.Id,
+											this.state.selectedFileHashes.join(','),
+										)}
+									/>
+								</span>
+							</div>
 						)}
 					</div>
 					<div className="col-md-4">

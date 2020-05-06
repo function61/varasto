@@ -17,7 +17,7 @@ import (
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes.CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
 	// keep indexed map of filenames to move. they are removed on-the-fly, so in the end
-	// we can check for len() == 0 to see that we saw them all
+	// we can check for len() == 0 to see that we processed them all
 	hashesToMove := map[string]bool{}
 	for _, hash := range strings.Split(cmd.Files, ",") {
 		hashesToMove[hash] = true
@@ -122,6 +122,53 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		}
 
 		return nil
+	})
+}
+
+func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFiles, ctx *command.Ctx) error {
+	// keep indexed map of filenames to delete. they are removed on-the-fly, so in the end
+	// we can check for len() == 0 to see that we processed them all
+	hashesToDelete := map[string]bool{}
+	for _, hash := range strings.Split(cmd.Files, ",") {
+		hashesToDelete[hash] = true
+	}
+
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(cmd.Source)
+		if err != nil {
+			return err
+		}
+
+		state, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+		if err != nil {
+			return err
+		}
+
+		deletedFiles := []string{}
+
+		for _, file := range state.Files() {
+			if _, shouldDelete := hashesToDelete[file.Sha256]; !shouldDelete {
+				continue
+			}
+
+			delete(hashesToDelete, file.Sha256)
+
+			deletedFiles = append(deletedFiles, file.Path)
+		}
+
+		changeset := stotypes.NewChangeset(
+			stoutils.NewCollectionChangesetId(),
+			coll.Head,
+			ctx.Meta.Timestamp,
+			nil,
+			nil,
+			deletedFiles)
+
+		if err := appendAndValidateChangeset(changeset, coll); err != nil {
+			return err
+		}
+
+		return stodb.CollectionRepository.Update(coll, tx)
 	})
 }
 

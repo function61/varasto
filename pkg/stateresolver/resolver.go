@@ -1,5 +1,5 @@
-// State resolver is used to compute the state of collection at an exact revision. The
-// revision's parent DAG is traversed back to the root to compute all the deltas.
+// Computes the state of collection at an exact revision. The revision's parent DAG is
+// traversed back to the root to compute all the deltas.
 package stateresolver
 
 import (
@@ -62,6 +62,8 @@ func ComputeStateAt(c stotypes.Collection, changesetId string) (*StateAt, error)
 
 	curr := ch
 
+	// because this is a DAG, our only option is to traverse from newest to oldest
+	// direction. we'll have to do processing in reverse order though (oldest to newest)
 	for curr.Parent != stotypes.NoParentId {
 		parent := findChangesetById(c, curr.Parent)
 		if parent == nil {
@@ -73,6 +75,8 @@ func ComputeStateAt(c stotypes.Collection, changesetId string) (*StateAt, error)
 		curr = parent
 	}
 
+	// process in reverse order (from oldest to newest) because otherwise resulting
+	// state would be borked
 	for i := len(parents) - 1; i >= 0; i-- {
 		parent := parents[i]
 
