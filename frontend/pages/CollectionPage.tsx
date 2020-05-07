@@ -264,8 +264,6 @@ export default class CollectionPage extends React.Component<
 			<div>
 				<SensitivityHeadsUp />
 
-				{inMoviesOrSeriesHierarchy && this.nextPreviousButtons(collOutput, directoryOutput)}
-
 				<div className="row">
 					<div className="col-md-8">
 						<MetadataPanel data={metadataKv} />
@@ -316,6 +314,9 @@ export default class CollectionPage extends React.Component<
 						)}
 					</div>
 					<div className="col-md-4">
+						{inMoviesOrSeriesHierarchy &&
+							this.nextPreviousButtons(collOutput, directoryOutput)}
+
 						<Panel
 							heading={
 								<div>
