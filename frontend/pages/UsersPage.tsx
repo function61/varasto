@@ -58,7 +58,15 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 					{this.renderKeyEncryptionKeys()}
 				</Panel>
 
-				<Panel heading="API keys">{this.renderApiKeys()}</Panel>
+				<Panel
+					heading={
+						<div>
+							API keys &nbsp;
+							<Info text="Used for Varasto clients (the 'sto' commands in command line) to auth with Varasto server" />
+						</div>
+					}>
+					{this.renderApiKeys()}
+				</Panel>
 			</SettingsLayout>
 		);
 	}
