@@ -550,6 +550,10 @@
 			}}
 		},
 		{
+			"name": "FilepathList",
+			"type": {"_": "list", "of": {"_": "string"}}
+		},
+		{
 			"name": "ReplicationPolicy",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},

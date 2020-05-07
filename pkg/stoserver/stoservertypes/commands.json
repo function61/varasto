@@ -439,10 +439,9 @@
 		"ctor": ["Source", "Files"],
 		"crudNature": "update",
 		"title": "Move files to another collection",
-		"info": ["BUG: Currently, this operation identifies file by its hash, so if you have duplicate files within this same collection, this operation may target files you haven't selected."],
 		"fields": [
 			{ "key": "Source", "hideIfDefaultValue": true },
-			{ "key": "Files", "max_length": 4096, "hideIfDefaultValue": true },
+			{ "key": "Files", "type": "FilepathList", "hideIfDefaultValue": true },
 			{ "key": "Destination", "placeholder": "lwwEC91fGeU", "help": "Collection ID" }
 		]
 	},
@@ -452,10 +451,9 @@
 		"ctor": ["Source", "Files"],
 		"crudNature": "delete",
 		"title": "Delete files",
-		"info": ["BUG: Currently, this operation identifies file by its hash, so if you have duplicate files within this same collection, this operation may target files you haven't selected."],
 		"fields": [
 			{ "key": "Source", "hideIfDefaultValue": true },
-			{ "key": "Files", "max_length": 4096, "hideIfDefaultValue": true }
+			{ "key": "Files", "type": "FilepathList", "hideIfDefaultValue": true }
 		]
 	},
 	{

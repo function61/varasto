@@ -161,8 +161,8 @@ export default class CollectionPage extends React.Component<
 						<input
 							type="checkbox"
 							onChange={fileCheckedChange}
-							checked={this.state.selectedFileHashes.indexOf(file.Sha256) !== -1}
-							value={file.Sha256}
+							checked={this.state.selectedFileHashes.indexOf(file.Path) !== -1}
+							value={file.Path}
 						/>
 					</td>
 					<td>
@@ -298,7 +298,7 @@ export default class CollectionPage extends React.Component<
 									<CommandButton
 										command={CollectionMoveFilesIntoAnotherCollection(
 											collOutput.Collection.Id,
-											this.state.selectedFileHashes.join(','),
+											this.state.selectedFileHashes,
 										)}
 									/>
 								</span>
@@ -306,7 +306,7 @@ export default class CollectionPage extends React.Component<
 									<CommandButton
 										command={CollectionDeleteFiles(
 											collOutput.Collection.Id,
-											this.state.selectedFileHashes.join(','),
+											this.state.selectedFileHashes,
 										)}
 									/>
 								</span>

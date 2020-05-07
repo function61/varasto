@@ -3,8 +3,8 @@ package stoserver
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
+	"sort"
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
@@ -16,11 +16,14 @@ import (
 )
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes.CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
-	// keep indexed map of filenames to move. they are removed on-the-fly, so in the end
-	// we can check for len() == 0 to see that we processed them all
-	hashesToMove := map[string]bool{}
-	for _, hash := range strings.Split(cmd.Files, ",") {
-		hashesToMove[hash] = true
+	filesToMove := *cmd.Files
+
+	if len(filesToMove) == 0 {
+		return nil // no-op
+	}
+
+	if err := noDuplicates(filesToMove); err != nil {
+		return err
 	}
 
 	return c.db.Update(func(tx *bbolt.Tx) error {
@@ -46,17 +49,18 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		deleteFromSource := []string{}
 		createToDestination := []stotypes.File{}
 
-		for _, file := range sourceState.Files() {
-			if _, shouldMove := hashesToMove[file.Sha256]; !shouldMove {
-				continue
+		filesInSource := sourceState.Files()
+
+		for _, filePathToMove := range filesToMove {
+			fileToMove, found := filesInSource[filePathToMove]
+			if !found {
+				return fmt.Errorf("File to move not found: %s", filePathToMove)
 			}
 
-			delete(hashesToMove, file.Sha256)
+			createToDestination = append(createToDestination, fileToMove)
+			deleteFromSource = append(deleteFromSource, fileToMove.Path)
 
-			deleteFromSource = append(deleteFromSource, file.Path)
-			createToDestination = append(createToDestination, file)
-
-			for _, refSerialized := range file.BlobRefs {
+			for _, refSerialized := range fileToMove.BlobRefs {
 				ref, err := stotypes.BlobRefFromHex(refSerialized)
 				if err != nil {
 					return err
@@ -82,10 +86,6 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 					collDst.EncryptionKeys = append(collDst.EncryptionKeys, *dekEnvelope)
 				}
 			}
-		}
-
-		if len(hashesToMove) != 0 {
-			return errors.New("did not find all files to move")
 		}
 
 		srcChangeset := stotypes.NewChangeset(
@@ -126,11 +126,14 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 }
 
 func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFiles, ctx *command.Ctx) error {
-	// keep indexed map of filenames to delete. they are removed on-the-fly, so in the end
-	// we can check for len() == 0 to see that we processed them all
-	hashesToDelete := map[string]bool{}
-	for _, hash := range strings.Split(cmd.Files, ",") {
-		hashesToDelete[hash] = true
+	filesToDelete := *cmd.Files
+
+	if len(filesToDelete) == 0 {
+		return nil // no-op
+	}
+
+	if err := noDuplicates(filesToDelete); err != nil {
+		return err
 	}
 
 	return c.db.Update(func(tx *bbolt.Tx) error {
@@ -139,21 +142,17 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 			return err
 		}
 
-		state, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+		stateForValidation, err := stateresolver.ComputeStateAt(*coll, coll.Head)
 		if err != nil {
 			return err
 		}
 
-		deletedFiles := []string{}
+		existingFiles := stateForValidation.Files()
 
-		for _, file := range state.Files() {
-			if _, shouldDelete := hashesToDelete[file.Sha256]; !shouldDelete {
-				continue
+		for _, fileToDelete := range filesToDelete {
+			if _, has := existingFiles[fileToDelete]; !has {
+				return fmt.Errorf("file to delete does not exist: %s", fileToDelete)
 			}
-
-			delete(hashesToDelete, file.Sha256)
-
-			deletedFiles = append(deletedFiles, file.Path)
 		}
 
 		changeset := stotypes.NewChangeset(
@@ -162,7 +161,7 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 			ctx.Meta.Timestamp,
 			nil,
 			nil,
-			deletedFiles)
+			filesToDelete)
 
 		if err := appendAndValidateChangeset(changeset, coll); err != nil {
 			return err
@@ -214,4 +213,17 @@ func minDate(a, b time.Time) time.Time {
 		return a
 	}
 	return b
+}
+
+func noDuplicates(items []string) error {
+	// once sorted, we can just assert that current item is not same as previous item
+	sort.Strings(items)
+
+	for i := 1; i < len(items); i++ {
+		if items[i-1] == items[i] {
+			return fmt.Errorf("duplicate item in list: %s", items[i])
+		}
+	}
+
+	return nil
 }
