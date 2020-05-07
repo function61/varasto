@@ -40,7 +40,7 @@ import {
 	HealthStatus,
 	ServerInfo,
 } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface ServerInfoPageState {
@@ -70,7 +70,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 	render() {
 		return (
-			<SettingsLayout title="Health &amp; server info" breadcrumbs={[]}>
+			<AdminLayout title="Health &amp; server info" breadcrumbs={[]}>
 				<Panel
 					heading={
 						<div>
@@ -92,7 +92,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 					{this.renderInfo()}
 				</Panel>
 				<Panel heading="Sensitivity">{this.renderSensitivitySelector()}</Panel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

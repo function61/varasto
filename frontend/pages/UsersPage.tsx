@@ -13,7 +13,7 @@ import {
 } from 'generated/stoserver/stoservertypes_commands';
 import { getApiKeys, getKeyEncryptionKeys } from 'generated/stoserver/stoservertypes_endpoints';
 import { ApiKey, DocRef, KeyEncryptionKey } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface UsersPageState {
@@ -41,7 +41,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 
 	render() {
 		return (
-			<SettingsLayout title="Users" breadcrumbs={[]}>
+			<AdminLayout title="Users" breadcrumbs={[]}>
 				<Panel heading="Users">
 					<p>todo</p>
 				</Panel>
@@ -67,7 +67,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 					}>
 					{this.renderApiKeys()}
 				</Panel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

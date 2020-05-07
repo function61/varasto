@@ -6,13 +6,13 @@ import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import * as r from 'generated/stoserver/stoserverui_uiroutes';
 
-interface SettingsLayoutProps {
+interface AdminLayoutProps {
 	title: string;
 	breadcrumbs: Breadcrumb[];
 	children: React.ReactNode;
 }
 
-export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
+export class AdminLayout extends React.Component<AdminLayoutProps, {}> {
 	render() {
 		const currLoc = getCurrentLocation();
 
@@ -45,12 +45,12 @@ export class SettingsLayout extends React.Component<SettingsLayoutProps, {}> {
 				title={this.props.title}
 				breadcrumbs={this.props.breadcrumbs.concat({
 					url: r.serverInfoUrl(),
-					title: 'Settings',
+					title: 'Admin',
 				})}
 				children={
 					<div className="row">
 						<div className="col-md-3">
-							<Panel heading="Settings">
+							<Panel heading="Admin">
 								<ul className="nav nav-pills nav-stacked">
 									{settingsLinks.map(renderNavLink)}
 								</ul>

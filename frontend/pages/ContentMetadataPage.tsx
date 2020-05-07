@@ -13,7 +13,7 @@ import {
 	CfgIgdbApikey,
 	ConfigValue,
 } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface ContentMetadataPageState {
@@ -41,7 +41,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 
 	render() {
 		return (
-			<SettingsLayout title="Content metadata" breadcrumbs={[]}>
+			<AdminLayout title="Content metadata" breadcrumbs={[]}>
 				<h2>Content metadata providers</h2>
 
 				<Panel
@@ -85,7 +85,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 						The API keys are <b>free for you to use</b>.
 					</p>
 				</CollapsePanel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

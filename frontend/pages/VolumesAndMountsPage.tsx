@@ -55,7 +55,7 @@ import {
 	VolumeMount,
 	VolumeTechnology,
 } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 import {
 	volumesUrl,
@@ -221,7 +221,7 @@ export default class VolumesAndMountsPage extends React.Component<
 		})();
 
 		return (
-			<SettingsLayout title="Volumes &amp; mounts" breadcrumbs={[]}>
+			<AdminLayout title="Volumes &amp; mounts" breadcrumbs={[]}>
 				<TabController
 					tabs={[
 						{
@@ -255,7 +255,7 @@ export default class VolumesAndMountsPage extends React.Component<
 					]}>
 					{content}
 				</TabController>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

@@ -19,7 +19,7 @@ import {
 } from 'generated/stoserver/stoservertypes_commands';
 import { getSchedulerJobs } from 'generated/stoserver/stoservertypes_endpoints';
 import { SchedulerJob } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface ScheduledJobsPageState {
@@ -43,7 +43,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 
 	render() {
 		return (
-			<SettingsLayout title="Scheduled jobs" breadcrumbs={[]}>
+			<AdminLayout title="Scheduled jobs" breadcrumbs={[]}>
 				<Panel heading="System-level jobs">{this.renderSystemJobs()}</Panel>
 				<CollapsePanel heading="User-level jobs">
 					<p>TODO</p>
@@ -54,7 +54,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 						the rich data platform that Varasto provides.
 					</p>
 				</CollapsePanel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

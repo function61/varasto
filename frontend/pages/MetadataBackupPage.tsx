@@ -24,7 +24,7 @@ import {
 	DocRef,
 	UbackupStoredBackup,
 } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 import { metadataBackupUrl } from 'generated/stoserver/stoserverui_uiroutes';
 
@@ -60,7 +60,7 @@ export default class MetadataBackupPage extends React.Component<
 
 	render() {
 		return (
-			<SettingsLayout title="Metadata backup" breadcrumbs={[]}>
+			<AdminLayout title="Metadata backup" breadcrumbs={[]}>
 				<TabController
 					tabs={[
 						{
@@ -90,7 +90,7 @@ export default class MetadataBackupPage extends React.Component<
 						this.renderBackupConfig()
 					)}
 				</TabController>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

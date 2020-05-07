@@ -16,7 +16,7 @@ import { Timestamp } from 'f61ui/component/timestamp';
 import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';
 import { getSubsystemStatuses } from 'generated/stoserver/stoservertypes_endpoints';
 import { SubsystemStatus, DocRef } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface ServerInfoPageState {
@@ -40,7 +40,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 
 	render() {
 		return (
-			<SettingsLayout title="Subsystems" breadcrumbs={[]}>
+			<AdminLayout title="Subsystems" breadcrumbs={[]}>
 				<Panel
 					heading={
 						<div>
@@ -55,7 +55,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 					{this.renderSubsystems()}
 				</Panel>
 				<CollapsePanel heading="Info">{this.info()}</CollapsePanel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

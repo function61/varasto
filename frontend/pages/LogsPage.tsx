@@ -2,7 +2,7 @@ import { RefreshButton } from 'component/refreshbutton';
 import { Result } from 'f61ui/component/result';
 import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { getLogs } from 'generated/stoserver/stoservertypes_endpoints';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface LogsPageState {
@@ -28,7 +28,7 @@ export default class LogsPage extends React.Component<{}, LogsPageState> {
 		const [logs, loadingOrError] = this.state.logs.unwrap();
 
 		return (
-			<SettingsLayout title="Logs" breadcrumbs={[]}>
+			<AdminLayout title="Logs" breadcrumbs={[]}>
 				<Panel heading="Logs">
 					<RefreshButton
 						refresh={() => {
@@ -62,7 +62,7 @@ export default class LogsPage extends React.Component<{}, LogsPageState> {
 						}}
 					/>
 				</Panel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

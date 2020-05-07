@@ -39,7 +39,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 			mkLink('Browse', 'folder-open', browseUrl({ dir: RootFolderId, view: '' })),
 			mkLink('Download client app', 'download-alt', downloadClientAppUrl()),
 			mkLink('Help', 'book', gettingStartedUrl({ section: 'welcome' })),
-			mkLink('Settings', 'cog', serverInfoUrl()),
+			mkLink('Admin', 'cog', serverInfoUrl()),
 		];
 
 		const appName = 'Varasto';

@@ -14,7 +14,7 @@ import {
 	ConfigValue,
 	DocRef,
 } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface FuseServerPageState {
@@ -42,7 +42,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 
 	render() {
 		return (
-			<SettingsLayout title="FUSE server &amp; network folders" breadcrumbs={[]}>
+			<AdminLayout title="FUSE server &amp; network folders" breadcrumbs={[]}>
 				<Panel
 					heading={
 						<div>
@@ -52,7 +52,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 					}>
 					{this.renderSettings()}
 				</Panel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

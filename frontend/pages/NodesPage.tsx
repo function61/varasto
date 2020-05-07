@@ -11,7 +11,7 @@ import {
 } from 'generated/stoserver/stoservertypes_commands';
 import { getNodes } from 'generated/stoserver/stoservertypes_endpoints';
 import { Node } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface NodesPageState {
@@ -35,10 +35,10 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 
 	render() {
 		return (
-			<SettingsLayout title="Servers" breadcrumbs={[]}>
+			<AdminLayout title="Servers" breadcrumbs={[]}>
 				<Panel heading="Servers">{this.renderData()}</Panel>
 				<CollapsePanel heading="Info">{this.info()}</CollapsePanel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 

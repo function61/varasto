@@ -36,7 +36,7 @@ import {
 	Volume,
 	RootFolderId,
 } from 'generated/stoserver/stoservertypes_types';
-import { SettingsLayout } from 'layout/settingslayout';
+import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 
 interface ReplicationPoliciesPageState {
@@ -77,7 +77,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 
 	render() {
 		return (
-			<SettingsLayout title="Replication policies" breadcrumbs={[]}>
+			<AdminLayout title="Replication policies" breadcrumbs={[]}>
 				<Panel
 					heading={
 						<div>
@@ -95,7 +95,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 				<Panel heading="Policies applied to content">{this.renderAppliedToContent()}</Panel>
 
 				<Panel heading="Reconciliation">{this.renderReconcilable()}</Panel>
-			</SettingsLayout>
+			</AdminLayout>
 		);
 	}
 
