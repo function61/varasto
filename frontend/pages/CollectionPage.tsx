@@ -149,7 +149,7 @@ export default class CollectionPage extends React.Component<
 		};
 
 		const fileToRow = (file: File2) => {
-			const dl = downloadUrlFIXME(
+			const dl = downloadFileUrl(
 				collOutput.Collection.Id,
 				collOutput.ChangesetId,
 				file.Path,
@@ -231,7 +231,7 @@ export default class CollectionPage extends React.Component<
 		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
 
 		const toThumbnail = (file: File2) => {
-			const dl = downloadUrlFIXME(
+			const dl = downloadFileUrl(
 				collOutput.Collection.Id,
 				collOutput.ChangesetId,
 				file.Path,
@@ -585,11 +585,6 @@ export default class CollectionPage extends React.Component<
 
 		this.state.directoryOutput.load(() => getDirectory(collectionOutput.Collection.Directory));
 	}
-}
-
-function downloadUrlFIXME(collectionId: string, changesetId: string, path: string): string {
-	// FIXME: this is a hack
-	return downloadFileUrl(collectionId, changesetId) + '?file=' + encodeURIComponent(path);
 }
 
 // 'subdir/subsubdir/foo.txt' => 'foo.txt'
