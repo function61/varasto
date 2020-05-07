@@ -45,7 +45,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 		return (
 			<SettingsLayout title="Scheduled jobs" breadcrumbs={[]}>
 				<Panel heading="System-level jobs">{this.renderSystemJobs()}</Panel>
-				<Panel heading="User-level jobs">
+				<CollapsePanel heading="User-level jobs">
 					<p>TODO</p>
 					<p>
 						Why? Since we already have a fully-featured scheduler with great monitoring
@@ -53,7 +53,7 @@ export default class ScheduledJobsPage extends React.Component<{}, ScheduledJobs
 						that we can have meaningful user-level jobs that actually do something with
 						the rich data platform that Varasto provides.
 					</p>
-				</Panel>
+				</CollapsePanel>
 			</SettingsLayout>
 		);
 	}
