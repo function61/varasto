@@ -449,7 +449,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							<th>Id</th>
 							<td>
 								{output.Directory.Id}
-								<ClipboardButton text={output.Directory.Id} />
+								<span className="margin-left">
+									<ClipboardButton text={output.Directory.Id} />
+								</span>
 							</td>
 						</tr>
 						{output.Directory.Type !== DirectoryType.Generic && (

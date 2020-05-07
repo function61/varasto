@@ -335,7 +335,9 @@ export default class CollectionPage extends React.Component<
 										<td>
 											{collOutput.Collection.Id}
 
-											<ClipboardButton text={collOutput.Collection.Id} />
+											<span className="margin-left">
+												<ClipboardButton text={collOutput.Collection.Id} />
+											</span>
 										</td>
 									</tr>
 									<tr>
