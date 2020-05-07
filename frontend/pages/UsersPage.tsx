@@ -1,8 +1,9 @@
 import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
+import { Dropdown } from 'f61ui/component/dropdown';
 import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
-import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
+import { CommandButton, CommandLink, CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -63,6 +64,10 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 						<div>
 							API keys &nbsp;
 							<Info text="Used for Varasto clients (the 'sto' commands in command line) to auth with Varasto server" />
+							&nbsp; &nbsp;
+							<Dropdown>
+								<CommandLink command={ApikeyCreate()} />
+							</Dropdown>
 						</div>
 					}>
 					{this.renderApiKeys()}
@@ -106,10 +111,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 				</tbody>
 				<tfoot>
 					<tr>
-						<td colSpan={99}>
-							<div>{loadingOrError}</div>
-							<CommandButton command={ApikeyCreate()} />
-						</td>
+						<td colSpan={99}>{loadingOrError}</td>
 					</tr>
 				</tfoot>
 			</table>

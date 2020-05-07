@@ -810,9 +810,9 @@
 		"chain": "public",
 		"ctor": [],
 		"crudNature": "create",
-		"title": "+ API key",
+		"title": "Create API key",
 		"fields": [
-			{ "key": "Name" }
+			{ "key": "Name", "help": "Describe where the key will be used.", "placeholder": "Bob's work computer" }
 		]
 	},
 	{
