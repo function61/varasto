@@ -89,6 +89,10 @@ export default class CollectionPage extends React.Component<
 	}
 
 	componentWillReceiveProps() {
+		// without this, after using CollectionMoveFilesIntoAnotherCollection and
+		// CollectionDeleteFiles, the old selections would persist after page reload
+		this.setState({ selectedFileHashes: [] });
+
 		shouldAlwaysSucceed(this.fetchData());
 	}
 
