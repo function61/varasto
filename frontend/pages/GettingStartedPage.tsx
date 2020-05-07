@@ -182,12 +182,12 @@ export default class GettingStartedPage extends React.Component<
 
 		return (
 			<div>
-				<p>We need to configure a key encryption key ("KEK").</p>
-
 				<p>
 					Please read at least the <SmallWell>Summary</SmallWell> section of docs:{' '}
 					<DocLink doc={DocRef.DocsSecurityEncryptionIndexMd} />
 				</p>
+
+				<p>We need to configure a key encryption key ("KEK").</p>
 
 				<p>
 					Do you know what a key encryption key is, and do you have an existing one you
