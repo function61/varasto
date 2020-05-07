@@ -15,7 +15,7 @@ export class CollectionTagView extends React.Component<CollectionTagViewProps, {
 		return (
 			<span>
 				{coll.Tags.map((tag) => (
-					<span className="margin-left">
+					<span className="margin-right">
 						<DefaultLabel>
 							<Glyphicon icon="tag" />
 							&nbsp;
@@ -39,7 +39,7 @@ export class CollectionTagEditor extends React.Component<CollectionTagEditorProp
 		return (
 			<span>
 				{coll.Tags.map((tag) => (
-					<span className="margin-left">
+					<span className="margin-right">
 						<DefaultLabel>
 							<Glyphicon icon="tag" />
 							&nbsp;
@@ -51,7 +51,7 @@ export class CollectionTagEditor extends React.Component<CollectionTagEditorProp
 						</DefaultLabel>
 					</span>
 				))}
-				<span className="margin-left">
+				<span>
 					<DefaultLabel>
 						<Glyphicon icon="tag" />
 						<span className="margin-left">
