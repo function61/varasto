@@ -110,11 +110,6 @@ func (c *Controller) discoverAndRunReplicationJobs(
 		defer jobRunnersDone.Done()
 
 		for job := range jobQueue {
-			c.logl.Debug.Printf(
-				"repl %s from %d",
-				job.Ref.AsHex(),
-				job.FromVolumeId)
-
 			if err := c.replicateJob(job); err != nil {
 				c.logl.Error.Printf("replicating blob %s: %v", job.Ref.AsHex(), err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
