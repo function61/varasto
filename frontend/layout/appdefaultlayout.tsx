@@ -9,7 +9,6 @@ import { version } from 'generated/version';
 import * as React from 'react';
 import {
 	browseUrl,
-	downloadClientAppUrl,
 	gettingStartedUrl,
 	serverInfoUrl,
 } from 'generated/stoserver/stoserverui_uiroutes';
@@ -37,7 +36,6 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 
 		const navLinks: NavLink[] = [
 			mkLink('Browse', 'folder-open', browseUrl({ dir: RootFolderId, view: '' })),
-			mkLink('Download client app', 'download-alt', downloadClientAppUrl()),
 			mkLink('Help', 'book', gettingStartedUrl({ section: 'welcome' })),
 			mkLink('Admin', 'cog', serverInfoUrl()),
 		];

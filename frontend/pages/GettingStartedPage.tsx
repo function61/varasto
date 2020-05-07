@@ -13,7 +13,7 @@ import {
 	VolumeMountS3,
 } from 'generated/stoserver/stoservertypes_commands';
 import { DocRef, RootFolderId } from 'generated/stoserver/stoservertypes_types';
-import { AppDefaultLayout } from 'layout/appdefaultlayout';
+import { HelpLayout } from 'layout/HelpLayout';
 import * as React from 'react';
 import {
 	browseUrl,
@@ -91,7 +91,7 @@ export default class GettingStartedPage extends React.Component<
 		};
 
 		return (
-			<AppDefaultLayout title="Getting started" breadcrumbs={[]}>
+			<HelpLayout title="Getting started" breadcrumbs={[]}>
 				{panel(null, 'Welcome to Varasto!', 'welcome', this.welcome)}
 				{panel(null, 'Create user', 'createUser', this.createUser)}
 				{panel(null, 'Set up encryption', 'setUpEncryption', this.setUpEncryption)}
@@ -122,7 +122,7 @@ export default class GettingStartedPage extends React.Component<
 					this.cloningCollection,
 				)}
 				{panel(null, 'Done! Links to further documentation', 'done', this.done)}
-			</AppDefaultLayout>
+			</HelpLayout>
 		);
 	}
 

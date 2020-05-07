@@ -4,13 +4,13 @@ import { Glyphicon, tableClassStripedHover, Panel } from 'f61ui/component/bootst
 import { Info } from 'f61ui/component/info';
 import { DocRef } from 'generated/stoserver/stoservertypes_types';
 import { isDevVersion, version } from 'generated/version';
-import { AppDefaultLayout } from 'layout/appdefaultlayout';
+import { HelpLayout } from 'layout/HelpLayout';
 import * as React from 'react';
 
 export default class DownloadClientAppPage extends React.Component<{}, {}> {
 	render() {
 		return (
-			<AppDefaultLayout title="Download client app" breadcrumbs={[]}>
+			<HelpLayout title="Download client app" breadcrumbs={[]}>
 				<Panel
 					heading={
 						<div>
@@ -83,7 +83,7 @@ export default class DownloadClientAppPage extends React.Component<{}, {}> {
 						<DocLink doc={DocRef.DocsDataInterfacesClientIndexMd} />
 					</InfoAlert>
 				</Panel>
-			</AppDefaultLayout>
+			</HelpLayout>
 		);
 	}
 }
