@@ -28,6 +28,7 @@ export class HelpLayout extends React.Component<HelpLayoutProps, {}> {
 		const helpDocs: NavLink[] = [
 			mkLink('Getting started', 'home', r.gettingStartedUrl({ section: 'welcome' })),
 			mkLink('Download client app', 'download-alt', r.downloadClientAppUrl()),
+			mkLink('Documentation site', 'book', 'https://function61.com/varasto/docs/'),
 		];
 
 		return (
