@@ -25,26 +25,18 @@ var (
 // fully qualified index reference, including the index name
 type qualifiedIndexRef struct {
 	indexName string // looks like directories:by_parent
-	valAndId  unqualifiedIndexRef
-}
-
-type unqualifiedIndexRef struct {
-	val []byte // for setIndex this is always " "
-	id  []byte // primary key of record the index entry refers to
+	val       []byte // for setIndex this is always " "
+	id        []byte // primary key of record the index entry refers to
 }
 
 func (i *qualifiedIndexRef) Equals(other *qualifiedIndexRef) bool {
 	return i.indexName == other.indexName &&
-		bytes.Equal(i.valAndId.val, other.valAndId.val) &&
-		bytes.Equal(i.valAndId.id, other.valAndId.id)
+		bytes.Equal(i.val, other.val) &&
+		bytes.Equal(i.id, other.id)
 }
 
 func mkIndexRef(indexName string, val []byte, id []byte) qualifiedIndexRef {
-	return qualifiedIndexRef{indexName, unqualifiedIndexRef{val, id}}
-}
-
-func mkUqIndexRef(val []byte, id []byte) unqualifiedIndexRef {
-	return unqualifiedIndexRef{val, id}
+	return qualifiedIndexRef{indexName, val, id}
 }
 
 type Index interface {
@@ -73,10 +65,7 @@ type setIndex struct {
 func (s *setIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
 	if s.memberEvaluator(record) {
 		return []qualifiedIndexRef{
-			{
-				indexName: s.name,
-				valAndId:  mkUqIndexRef([]byte(" "), s.repo.idExtractor(record)),
-			},
+			mkIndexRef(s.name, []byte(" "), s.repo.idExtractor(record)),
 		}
 	}
 
@@ -174,7 +163,7 @@ func indexBucketRefForQuery(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
 		return nil
 	}
 
-	return lvl1.Bucket(ref.valAndId.val)
+	return lvl1.Bucket(ref.val)
 }
 
 func indexBucketRefForWrite(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
@@ -184,7 +173,7 @@ func indexBucketRefForWrite(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
 		panic(err)
 	}
 
-	lvl2, err := lvl1.CreateBucketIfNotExists(ref.valAndId.val)
+	lvl2, err := lvl1.CreateBucketIfNotExists(ref.val)
 	if err != nil {
 		panic(err)
 	}

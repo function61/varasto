@@ -147,18 +147,24 @@ func (r *SimpleRepository) indexRefsForRecord(record interface{}) []qualifiedInd
 	return refs
 }
 
-func (r *SimpleRepository) updateIndices(oldIndices []qualifiedIndexRef, newIndices []qualifiedIndexRef, tx *bbolt.Tx) error {
+func (r *SimpleRepository) updateIndices(
+	oldIndices []qualifiedIndexRef,
+	newIndices []qualifiedIndexRef,
+	tx *bbolt.Tx,
+) error {
 	for _, old := range oldIndices {
+		// old doesn't exist in new => drop
 		if !indexRefExistsIn(old, newIndices) {
-			if err := indexBucketRefForWrite(old, tx).Delete(old.valAndId.id); err != nil {
+			if err := indexBucketRefForWrite(old, tx).Delete(old.id); err != nil {
 				return err
 			}
 		}
 	}
 
 	for _, nu := range newIndices {
+		// new doesn't exist in old => add
 		if !indexRefExistsIn(nu, oldIndices) {
-			if err := indexBucketRefForWrite(nu, tx).Put(nu.valAndId.id, nil); err != nil {
+			if err := indexBucketRefForWrite(nu, tx).Put(nu.id, nil); err != nil {
 				return err
 			}
 		}
