@@ -35,6 +35,31 @@ func (i *qualifiedIndexRef) Equals(other *qualifiedIndexRef) bool {
 		bytes.Equal(i.id, other.id)
 }
 
+// write index entry to DB
+func (i *qualifiedIndexRef) Write(tx *bbolt.Tx) error {
+	return indexBucketRefForWrite(i, tx).Put(i.id, nil)
+}
+
+// drop index entry from DB
+func (i *qualifiedIndexRef) Drop(tx *bbolt.Tx) error {
+	return indexBucketRefForWrite(i, tx).Delete(i.id)
+}
+
+func indexBucketRefForWrite(ref *qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
+	// directories:by_parent
+	lvl1, err := tx.CreateBucketIfNotExists([]byte(ref.indexName))
+	if err != nil {
+		panic(err)
+	}
+
+	lvl2, err := lvl1.CreateBucketIfNotExists(ref.val)
+	if err != nil {
+		panic(err)
+	}
+
+	return lvl2
+}
+
 func mkIndexRef(indexName string, val []byte, id []byte) qualifiedIndexRef {
 	return qualifiedIndexRef{indexName, val, id}
 }
@@ -164,21 +189,6 @@ func indexBucketRefForQuery(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
 	}
 
 	return lvl1.Bucket(ref.val)
-}
-
-func indexBucketRefForWrite(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
-	// directories:by_parent
-	lvl1, err := tx.CreateBucketIfNotExists([]byte(ref.indexName))
-	if err != nil {
-		panic(err)
-	}
-
-	lvl2, err := lvl1.CreateBucketIfNotExists(ref.val)
-	if err != nil {
-		panic(err)
-	}
-
-	return lvl2
 }
 
 // https://github.com/boltdb/bolt/issues/658#issuecomment-277898467

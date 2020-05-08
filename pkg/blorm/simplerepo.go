@@ -155,7 +155,7 @@ func (r *SimpleRepository) updateIndices(
 	for _, old := range oldIndices {
 		// old doesn't exist in new => drop
 		if !indexRefExistsIn(old, newIndices) {
-			if err := indexBucketRefForWrite(old, tx).Delete(old.id); err != nil {
+			if err := old.Drop(tx); err != nil {
 				return err
 			}
 		}
@@ -164,7 +164,7 @@ func (r *SimpleRepository) updateIndices(
 	for _, nu := range newIndices {
 		// new doesn't exist in old => add
 		if !indexRefExistsIn(nu, oldIndices) {
-			if err := indexBucketRefForWrite(nu, tx).Put(nu.id, nil); err != nil {
+			if err := nu.Write(tx); err != nil {
 				return err
 			}
 		}
