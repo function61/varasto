@@ -9,7 +9,6 @@ import (
 	"log"
 	"net/http"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/function61/eventkit/command"
@@ -564,73 +563,91 @@ func (c *cHandlers) DirectoryMove(cmd *stoservertypes.DirectoryMove, ctx *comman
 
 func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		if _, err := stodb.Read(tx).Directory(cmd.ParentDir); err != nil {
-			if err == blorm.ErrNotFound {
-				return errors.New("parent directory not found")
-			} else {
-				return err
-			}
-		}
-
-		if err := validateUniqueNameWithinSiblings(cmd.ParentDir, cmd.Name, tx); err != nil {
-			return err
-		}
-
-		// TODO: resolve this from closest parent that has policy defined?
-		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy("default")
+		collection, err := createCollection(cmd.Name, cmd.ParentDir, c.conf.KeyStore, tx)
 		if err != nil {
 			return err
-		}
-
-		if len(replicationPolicy.DesiredVolumes) == 0 {
-			return errors.New("replicationPolicy doesn't specify any volumes")
-		}
-
-		kekPubKeyFingerprints := []string{}
-
-		keks := []stotypes.KeyEncryptionKey{}
-		if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
-			return err
-		}
-
-		for _, kek := range keks {
-			kekPubKeyFingerprints = append(kekPubKeyFingerprints, kek.Fingerprint)
-		}
-
-		dek := [32]byte{}
-		if _, err := rand.Read(dek[:]); err != nil {
-			return err
-		}
-
-		// pack encryption key in an envelope protected with public key crypto,
-		// so Varasto can store data without being able to access it itself
-		dekEnvelopes, err := c.conf.KeyStore.EncryptDek(stoutils.NewEncryptionKeyId(), dek[:], kekPubKeyFingerprints)
-		if err != nil {
-			return err
-		}
-
-		collection := &stotypes.Collection{
-			ID:                stoutils.NewCollectionId(),
-			Created:           time.Now(),
-			Directory:         cmd.ParentDir,
-			Name:              cmd.Name,
-			ReplicationPolicy: replicationPolicy.ID,
-			Head:              stotypes.NoParentId,
-			EncryptionKeys:    []stotypes.KeyEnvelope{*dekEnvelopes},
-			Changesets:        []stotypes.CollectionChangeset{},
-			Metadata:          map[string]string{},
-			Tags:              []string{},
-		}
-
-		// highly unlikely
-		if _, err := stodb.Read(tx).Collection(collection.ID); err != blorm.ErrNotFound {
-			return errors.New("accidentally generated duplicate collection ID")
 		}
 
 		ctx.CreatedRecordId(collection.ID)
 
 		return stodb.CollectionRepository.Update(collection, tx)
 	})
+}
+
+// caller is responsible for saving
+func createCollection(
+	name string,
+	parentDirId string,
+	encryptionKeys *keyStore,
+	tx *bbolt.Tx,
+) (*stotypes.Collection, error) {
+	parentDir, err := stodb.Read(tx).Directory(parentDirId)
+	if err != nil {
+		if err == blorm.ErrNotFound {
+			return nil, errors.New("parent directory not found")
+		} else {
+			return nil, err
+		}
+	}
+
+	if err := validateUniqueNameWithinSiblings(parentDir.ID, name, tx); err != nil {
+		return nil, err
+	}
+
+	// TODO: resolve this from closest parent that has policy defined?
+	replicationPolicy, err := stodb.Read(tx).ReplicationPolicy("default")
+	if err != nil {
+		return nil, err
+	}
+
+	if len(replicationPolicy.DesiredVolumes) == 0 {
+		return nil, fmt.Errorf(
+			"ReplicationPolicy %s doesn't specify any volumes",
+			replicationPolicy.Name)
+	}
+
+	kekPubKeyFingerprints := []string{}
+
+	keks := []stotypes.KeyEncryptionKey{}
+	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
+		return nil, err
+	}
+
+	for _, kek := range keks {
+		kekPubKeyFingerprints = append(kekPubKeyFingerprints, kek.Fingerprint)
+	}
+
+	dek := [32]byte{}
+	if _, err := rand.Read(dek[:]); err != nil {
+		return nil, err
+	}
+
+	// pack encryption key in an envelope protected with public key crypto,
+	// so Varasto can store data without being able to access it itself
+	dekEnvelopes, err := encryptionKeys.EncryptDek(stoutils.NewEncryptionKeyId(), dek[:], kekPubKeyFingerprints)
+	if err != nil {
+		return nil, err
+	}
+
+	collection := &stotypes.Collection{
+		ID:                stoutils.NewCollectionId(),
+		Created:           time.Now(),
+		Directory:         parentDir.ID,
+		Name:              name,
+		ReplicationPolicy: replicationPolicy.ID,
+		Head:              stotypes.NoParentId,
+		EncryptionKeys:    []stotypes.KeyEnvelope{*dekEnvelopes},
+		Changesets:        []stotypes.CollectionChangeset{},
+		Metadata:          map[string]string{},
+		Tags:              []string{},
+	}
+
+	// highly unlikely
+	if _, err := stodb.Read(tx).Collection(collection.ID); err != blorm.ErrNotFound {
+		return nil, errors.New("accidentally generated duplicate collection ID")
+	}
+
+	return collection, nil
 }
 
 func (c *cHandlers) CollectionChangeSensitivity(cmd *stoservertypes.CollectionChangeSensitivity, ctx *command.Ctx) error {
