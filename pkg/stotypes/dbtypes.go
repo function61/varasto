@@ -79,9 +79,9 @@ type Collection struct {
 	Directory         string
 	Name              string
 	Description       string
-	Sensitivity       int // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
-	ReplicationPolicy string
-	Head              string
+	Sensitivity       int           // 0(for all eyes) 1(a bit sensitive) 2(for my eyes only)
+	ReplicationPolicy string        // [calculated] effective policy inherited from parent directory
+	Head              string        // points to the head changeset. unset only for empty collections
 	EncryptionKeys    []KeyEnvelope // first is for all new blobs, the following for moved/deduplicated ones
 	Changesets        []CollectionChangeset
 	Metadata          map[string]string
