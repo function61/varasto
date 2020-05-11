@@ -210,6 +210,10 @@
 		"ctor": ["Id"],
 		"crudNature": "delete",
 		"title": "Unmount",
+		"info": [
+			"Unmounting a volume will stop Varasto from making reads/writes to that volume going forward.",
+			"Varasto does not unmount your volume on the OS level, so you may also need to unmount the disk via your OS-level mechanisms."
+		],
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true }
 		]
