@@ -9,101 +9,116 @@ import (
 /*	types of indices
 	================
 
-	setIndex
+	setIndex (example: pending_replication)
 	--------
-	(pending_replication, "_", id) = nil
+	("_", id) = nil
 
-	simpleIndex
+
+	valueIndex (example: by_parent)
 	-----------
-	(by_parent, parentId, id) = nil
+	(parentId, id) = nil
+
+
+	rangeIndex (example: change_timestamp)
+	----------
+	(timestamp) = id
+
+	TODO: setIndex could now be refactored to not utilize the dummy partition, but we're
+	      not doing that right now to prevent breaking old data
 */
 
 var (
 	StartFromFirst = []byte("")
 )
 
-// fully qualified index reference, including the index name
-type qualifiedIndexRef struct {
-	indexName string // looks like directories:by_parent
-	val       []byte // for setIndex this is always " "
-	id        []byte // primary key of record the index entry refers to
-}
-
-func (i *qualifiedIndexRef) Equals(other *qualifiedIndexRef) bool {
-	return i.indexName == other.indexName &&
-		bytes.Equal(i.val, other.val) &&
-		bytes.Equal(i.id, other.id)
-}
-
-// write index entry to DB
-func (i *qualifiedIndexRef) Write(tx *bbolt.Tx) error {
-	return indexBucketRefForWrite(i, tx).Put(i.id, nil)
-}
-
-// drop index entry from DB
-func (i *qualifiedIndexRef) Drop(tx *bbolt.Tx) error {
-	return indexBucketRefForWrite(i, tx).Delete(i.id)
-}
-
-func indexBucketRefForWrite(ref *qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
-	// directories:by_parent
-	lvl1, err := tx.CreateBucketIfNotExists([]byte(ref.indexName))
-	if err != nil {
-		panic(err)
-	}
-
-	lvl2, err := lvl1.CreateBucketIfNotExists(ref.val)
-	if err != nil {
-		panic(err)
-	}
-
-	return lvl2
-}
-
-func mkIndexRef(indexName string, val []byte, id []byte) qualifiedIndexRef {
-	return qualifiedIndexRef{indexName, val, id}
-}
-
 type Index interface {
 	// only for our internal use
 	extractIndexRefs(record interface{}) []qualifiedIndexRef
 }
 
+// fully qualified index reference, including the index name
+type qualifiedIndexRef struct {
+	indexName []byte // looks like directories:by_parent
+	partition []byte // for setIndex this is always " "
+	sortKey   []byte // primary key of record the index entry refers to
+	value     []byte
+}
+
+func (i *qualifiedIndexRef) Equals(other *qualifiedIndexRef) bool {
+	return bytes.Equal(i.indexName, other.indexName) &&
+		bytes.Equal(i.partition, other.partition) &&
+		bytes.Equal(i.sortKey, other.sortKey) &&
+		bytes.Equal(i.value, other.value)
+}
+
+// write index entry to DB
+func (i *qualifiedIndexRef) Write(tx *bbolt.Tx) error {
+	return indexBucketRefForWrite(i, tx).Put(i.sortKey, i.value)
+}
+
+// drop index entry from DB
+func (i *qualifiedIndexRef) Drop(tx *bbolt.Tx) error {
+	return indexBucketRefForWrite(i, tx).Delete(i.sortKey)
+}
+
+func indexBucketRefForWrite(ref *qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
+	// directories:by_parent
+	indexBucket, err := tx.CreateBucketIfNotExists([]byte(ref.indexName))
+	if err != nil {
+		panic(err)
+	}
+
+	if len(ref.partition) == 0 { // no separate partition
+		return indexBucket
+	}
+
+	partitionBucket, err := indexBucket.CreateBucketIfNotExists(ref.partition)
+	if err != nil {
+		panic(err)
+	}
+
+	return partitionBucket
+}
+
+func mkIndexRef(indexName []byte, partition []byte, sortKey []byte, value []byte) qualifiedIndexRef {
+	return qualifiedIndexRef{indexName, partition, sortKey, value}
+}
+
 type setIndexApi interface {
 	// return StopIteration if you want to stop mid-iteration (nil error will be returned by Query() )
-	Query(start []byte, fn func(id []byte) error, tx *bbolt.Tx) error
+	Query(start []byte, fn func(sortKey []byte) error, tx *bbolt.Tx) error
 	Index
 }
 
 type byValueIndexApi interface {
 	// return StopIteration if you want to stop mid-iteration (nil error will be returned by Query() )
-	Query(val []byte, start []byte, fn func(id []byte) error, tx *bbolt.Tx) error
+	Query(partition []byte, start []byte, fn func(sortKey []byte) error, tx *bbolt.Tx) error
 	Index
 }
 
 type setIndex struct {
 	repo            *SimpleRepository
-	name            string // looks like <repoBucketName>:<indexName>
+	indexName       []byte // looks like <repoBucketName>:<indexName>
 	memberEvaluator func(record interface{}) bool
 }
 
 func (s *setIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
 	if s.memberEvaluator(record) {
 		return []qualifiedIndexRef{
-			mkIndexRef(s.name, []byte(" "), s.repo.idExtractor(record)),
+			mkIndexRef(s.indexName, []byte(" "), s.repo.idExtractor(record), nil),
 		}
 	}
 
 	return []qualifiedIndexRef{}
 }
 
-func (s *setIndex) Query(start []byte, fn func(id []byte) error, tx *bbolt.Tx) error {
-	// " " is required because empty key is not supported
-	return indexQueryShared(s.name, []byte(" "), start, fn, tx)
+func (s *setIndex) Query(start []byte, fn func(sortKey []byte) error, tx *bbolt.Tx) error {
+	// " " is required because empty bucket name is not supported
+	return indexQueryShared(s.indexName, []byte(" "), start, ignoreVal(fn), tx)
 }
 
 func NewSetIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}) bool) setIndexApi {
-	idx := &setIndex{repo, string(repo.bucketName) + ":" + name, memberEvaluator}
+	idx := &setIndex{repo, mkIndexName(name, repo), memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)
 
@@ -112,45 +127,70 @@ func NewSetIndex(name string, repo *SimpleRepository, memberEvaluator func(recor
 
 type byValueIndex struct {
 	repo            *SimpleRepository
-	name            string // looks like <repoBucketName>:<indexName>
-	memberEvaluator func(record interface{}, push func(val []byte))
+	indexName       []byte // looks like <repoBucketName>:<indexName>
+	memberEvaluator func(record interface{}, push func(partition []byte))
 }
 
 func (b *byValueIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
 	qualifiedRefs := []qualifiedIndexRef{}
-	b.memberEvaluator(record, func(val []byte) {
-		if len(val) == 0 {
+	b.memberEvaluator(record, func(partition []byte) {
+		if len(partition) == 0 {
 			panic("cannot index by empty value")
 		}
-		qualifiedRefs = append(qualifiedRefs, mkIndexRef(b.name, val, b.repo.idExtractor(record)))
+		ref := mkIndexRef(b.indexName, partition, b.repo.idExtractor(record), nil)
+		qualifiedRefs = append(qualifiedRefs, ref)
 	})
 
 	return qualifiedRefs
 }
 
-func (b *byValueIndex) Query(value []byte, start []byte, fn func(id []byte) error, tx *bbolt.Tx) error {
-	return indexQueryShared(b.name, value, start, fn, tx)
+func (b *byValueIndex) Query(partition []byte, start []byte, fn func(sortKey []byte) error, tx *bbolt.Tx) error {
+	return indexQueryShared(b.indexName, partition, start, ignoreVal(fn), tx)
+}
+
+// used for indices which have *nil* as the item's value
+func ignoreVal(fn func(sortKey []byte) error) func(sortKey []byte, val []byte) error {
+	return func(sortKey []byte, val []byte) error {
+		return fn(sortKey)
+	}
 }
 
 // used both by byValueIndex and by setIndex
-func indexQueryShared(indexName string, value []byte, start []byte, fn func(id []byte) error, tx *bbolt.Tx) error {
-	// the nil part is not used by indexBucketRefForQuery()
-	bucket := indexBucketRefForQuery(mkIndexRef(indexName, value, nil), tx)
-	if bucket == nil { // index doesn't exist => not matching entries
-		return nil
+func indexQueryShared(
+	indexName []byte,
+	partition []byte,
+	sortKeyStartInclusive []byte,
+	fn func(sortKey []byte, val []byte) error,
+	tx *bbolt.Tx,
+) error {
+	// directories:by_parent
+	indexBucket := tx.Bucket(indexName)
+	if indexBucket == nil {
+		return nil // index doesn't exist => no matching entries
 	}
 
-	idx := bucket.Cursor()
+	bucketToScan := indexBucket
+	if len(partition) > 0 {
+		partitionBucket := indexBucket.Bucket(partition)
+		if partitionBucket == nil {
+			return nil // partition bucket doesn't exist => no matching entries
+		}
 
-	var key []byte
-	if bytes.Equal(start, StartFromFirst) {
-		key, _ = idx.First()
+		bucketToScan = partitionBucket
+	}
+
+	idx := bucketToScan.Cursor()
+
+	var sortKey []byte
+	var value []byte
+	if bytes.Equal(sortKeyStartInclusive, StartFromFirst) {
+		sortKey, value = idx.First()
 	} else {
-		key, _ = idx.Seek(start)
+		sortKey, value = idx.Seek(sortKeyStartInclusive)
 	}
 
-	for ; key != nil; key, _ = idx.Next() {
-		if err := fn(makeCopy(key)); err != nil {
+	for ; sortKey != nil; sortKey, value = idx.Next() {
+		if err := fn(makeCopy(sortKey), makeCopy(value)); err != nil {
 			if err == StopIteration {
 				return nil
 			} else {
@@ -162,8 +202,8 @@ func indexQueryShared(indexName string, value []byte, start []byte, fn func(id [
 	return nil
 }
 
-func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}, push func(val []byte))) byValueIndexApi {
-	idx := &byValueIndex{repo, string(repo.bucketName) + ":" + name, memberEvaluator}
+func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}, push func(partition []byte))) byValueIndexApi {
+	idx := &byValueIndex{repo, mkIndexName(name, repo), memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)
 
@@ -181,19 +221,47 @@ func indexRefExistsIn(ir qualifiedIndexRef, coll []qualifiedIndexRef) bool {
 	return false
 }
 
-func indexBucketRefForQuery(ref qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
-	// directories:by_parent
-	lvl1 := tx.Bucket([]byte(ref.indexName))
-	if lvl1 == nil {
-		return nil
-	}
-
-	return lvl1.Bucket(ref.val)
-}
-
 // https://github.com/boltdb/bolt/issues/658#issuecomment-277898467
 func makeCopy(from []byte) []byte {
 	copied := make([]byte, len(from))
 	copy(copied, from)
 	return copied
+}
+
+type rangeIndexApi interface {
+	Index
+	Query(start []byte, fn func(sortKey []byte, value []byte) error, tx *bbolt.Tx) error
+}
+
+type rangeIndex struct {
+	repo            *SimpleRepository
+	indexName       []byte
+	memberEvaluator func(record interface{}, index func(sortKey []byte))
+}
+
+func (r *rangeIndex) Query(start []byte, fn func(sortKey []byte, value []byte) error, tx *bbolt.Tx) error {
+	return indexQueryShared(r.indexName, nil, start, fn, tx)
+}
+
+func (r *rangeIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
+	refs := []qualifiedIndexRef{}
+
+	r.memberEvaluator(record, func(sortKey []byte) {
+		id := r.repo.idExtractor(record)
+		refs = append(refs, mkIndexRef(r.indexName, nil, sortKey, id))
+	})
+
+	return refs
+}
+
+func NewRangeIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}, index func(sortKey []byte))) rangeIndexApi {
+	idx := &rangeIndex{repo, mkIndexName(name, repo), memberEvaluator}
+
+	repo.indices = append(repo.indices, idx)
+
+	return idx
+}
+
+func mkIndexName(name string, repo *SimpleRepository) []byte {
+	return []byte(string(repo.bucketName) + ":" + name)
 }
