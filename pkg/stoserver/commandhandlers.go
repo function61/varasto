@@ -655,6 +655,8 @@ func createCollection(
 		return nil, errors.New("accidentally generated duplicate collection ID")
 	}
 
+	collection.BumpGlobalVersion()
+
 	return collection, nil
 }
 

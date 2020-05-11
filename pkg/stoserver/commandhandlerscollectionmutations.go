@@ -3,8 +3,8 @@ package stoserver
 import (
 	"errors"
 	"fmt"
-	"time"
 	"sort"
+	"time"
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
@@ -204,6 +204,7 @@ func appendAndValidateChangeset(changeset stotypes.CollectionChangeset, coll *st
 
 	coll.Changesets = append(coll.Changesets, changeset)
 	coll.Head = changeset.ID
+	coll.BumpGlobalVersion()
 
 	return nil
 }

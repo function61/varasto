@@ -82,6 +82,8 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 			collection.Metadata[stoservertypes.MetadataReleaseDate] = info.ReleaseDate
 		}
 
+		collection.BumpGlobalVersion()
+
 		return stodb.CollectionRepository.Update(collection, tx)
 	})
 }
@@ -141,6 +143,8 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 		if tv.ExternalIds.ImdbId != "" {
 			dir.Metadata[stoservertypes.MetadataImdbId] = tv.ExternalIds.ImdbId
 		}
+
+		metaColl.BumpGlobalVersion()
 
 		return stodb.DirectoryRepository.Update(dir, tx)
 	})
@@ -289,6 +293,8 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 						"original")
 				}
 
+				coll.BumpGlobalVersion()
+
 				if err := stodb.CollectionRepository.Update(coll, tx); err != nil {
 					return err
 				}
@@ -388,6 +394,8 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 		if len(screenshotUrls) > 0 {
 			coll.Metadata[stoservertypes.MetadataBackdrop] = screenshotUrls[0]
 		}
+
+		coll.BumpGlobalVersion()
 
 		return stodb.CollectionRepository.Update(coll, tx)
 	})

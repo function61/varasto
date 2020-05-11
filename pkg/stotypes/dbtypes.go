@@ -87,6 +87,14 @@ type Collection struct {
 	Metadata          map[string]string
 	Rating            int // 1-5
 	Tags              []string
+	GlobalVersion     uint64 `msgpack:"gv"`
+}
+
+// this implementation is really bad as a global ordering number (time synchronization
+// issues between servers, time jumping back and forth..), but this is temporary until
+// we're migrating to EventHorizon which gives us change feeds in a much better way.
+func (c *Collection) BumpGlobalVersion() {
+	c.GlobalVersion = uint64(time.Now().UTC().UnixNano())
 }
 
 type CollectionChangeset struct {

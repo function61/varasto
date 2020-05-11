@@ -92,6 +92,15 @@ var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRep
 	index([]byte(coll.Directory))
 })
 
+var CollectionsGlobalVersionIndex = blorm.NewRangeIndex("globalversion", CollectionRepository, func(record interface{}, index func(sortKey []byte)) {
+	coll := record.(*stotypes.Collection)
+
+	globalVersion := make([]byte, 8)
+	binary.BigEndian.PutUint64(globalVersion, coll.GlobalVersion)
+
+	index(globalVersion)
+})
+
 var IntegrityVerificationJobRepository = register("IntegrityVerificationJob", blorm.NewSimpleRepo(
 	"ivjobs",
 	func() interface{} { return &stotypes.IntegrityVerificationJob{} },

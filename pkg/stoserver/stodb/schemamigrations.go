@@ -140,18 +140,18 @@ func from3to4(tx *bbolt.Tx) error {
 	return ScheduledJobRepository.Update(scheduledJobSeedVersionUpdateCheck(), tx)
 }
 
-// rename IMDB and TMDb metadata keys
+// - fill GlobalVersion index for changefeed
+// - rename IMDB and TMDb metadata keys
 func from4to5(tx *bbolt.Tx) error {
+	nextGlobalVersion := uint64(1)
+
 	if err := CollectionRepository.Each(func(record interface{}) error {
 		coll := record.(*stotypes.Collection)
-
-		anyMoves := false
 
 		move := func(from string, to string) {
 			if value, has := coll.Metadata[from]; has {
 				coll.Metadata[to] = value
 				delete(coll.Metadata, from)
-				anyMoves = true
 			}
 		}
 
@@ -160,11 +160,14 @@ func from4to5(tx *bbolt.Tx) error {
 		move("themoviedb.episode_id", stoservertypes.MetadataTheMovieDbTvEpisodeId)
 		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
 
-		if anyMoves {
-			return CollectionRepository.Update(coll, tx)
-		} else { // perf optimization
-			return nil
+		if coll.GlobalVersion == 0 {
+			// make sure each collection gets unique version
+			nextGlobalVersion++
+
+			coll.GlobalVersion = nextGlobalVersion
 		}
+
+		return CollectionRepository.Update(coll, tx)
 	}, tx); err != nil {
 		return err
 	}
