@@ -24,6 +24,7 @@ import (
 	"github.com/function61/gokit/cryptoutil"
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
+	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
@@ -47,7 +48,8 @@ type handlers struct {
 	db           *bbolt.DB
 	conf         *ServerConfig
 	ivController *stointegrityverifier.Controller
-	logger       *log.Logger
+	logger       *log.Logger    // for sub-components
+	logl         *logex.Leveled // for our logging
 }
 
 func defineRestApi(
@@ -58,7 +60,13 @@ func defineRestApi(
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
 ) error {
-	var han stoservertypes.HttpHandlers = &handlers{db, conf, ivController, logger}
+	var han stoservertypes.HttpHandlers = &handlers{
+		db,
+		conf,
+		ivController,
+		logger,
+		logex.Levels(logger),
+	}
 
 	stoservertypes.RegisterRoutes(han, mwares, muxregistrator.New(router))
 
@@ -577,7 +585,7 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 
 	// FIXME: add "produces" to here because commitChangesetInternal responds with updated collection
 	if coll != nil {
-		h.logger.Printf("committed %s to coll %s", changeset.ID, coll.ID)
+		h.logl.Debug.Printf("committed %s to coll %s", changeset.ID, coll.ID)
 
 		ignoreError(outJson(w, coll))
 	}
