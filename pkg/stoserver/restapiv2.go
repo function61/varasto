@@ -598,6 +598,10 @@ func commitChangesetInternal(
 		return nil
 	}
 
+	if !changeset.AnyChanges() {
+		return httpErr("no changes in changeset", http.StatusBadRequest)
+	}
+
 	tx, errTxBegin := db.Begin(true)
 	if errTxBegin != nil {
 		return httpErr(errTxBegin.Error(), http.StatusInternalServerError)
