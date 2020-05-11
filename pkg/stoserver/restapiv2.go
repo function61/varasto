@@ -1335,8 +1335,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 	defer file.Close()
 
 	if _, err := io.Copy(w, file); err != nil {
-		// FIXME: shouldn't try to write headers if even one write went to ResponseWriter
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		h.logl.Error.Printf("error copying blob to response: %v", err)
 		return
 	}
 }
