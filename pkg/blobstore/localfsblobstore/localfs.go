@@ -42,15 +42,19 @@ func (l *localFs) RawStore(ctx context.Context, ref stotypes.BlobRef, content io
 		return err
 	}
 
-	// TODO: this exists check is not strictly necessary, since the file
-	// is written in atomic manner
+	// this exists check is not strictly necessary, since the file is written in an
+	// atomic manner (without this we'd do extra work but it's not dangerous)
 	chunkExists, err := fileexists.Exists(filename)
 	if err != nil {
 		return err
 	}
 
 	if chunkExists {
-		return stotypes.ErrChunkAlreadyExists
+		l.log.Error.Printf("tried to store a blob that is already present: %s", ref.AsHex())
+		// can't consider this an error (one that should stop a successfull blob write),
+		// since this can happen because we can't atomically finish storing blob in FS and
+		// commit knowledge of that to the metadata DB. (these anomalies are bound to happen.)
+		return nil
 	}
 
 	return atomicfilewrite.Write(filename, func(writer io.Writer) error {
