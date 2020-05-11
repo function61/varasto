@@ -116,6 +116,17 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 	}
 }
 
+func convertFile(file stotypes.File) stoservertypes.File {
+	return stoservertypes.File{
+		Path:     file.Path,
+		Sha256:   file.Sha256,
+		Created:  file.Created,
+		Modified: file.Modified,
+		Size:     int(file.Size), // FIXME
+		BlobRefs: file.BlobRefs,
+	}
+}
+
 func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.DirectoryOutput {
 	httpErr := func(err error, errCode int) *stoservertypes.DirectoryOutput { // shorthand
 		http.Error(w, err.Error(), errCode)
@@ -213,14 +224,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 	}
 
 	for _, file := range peekResult.Files {
-		convertedFiles = append(convertedFiles, stoservertypes.File{
-			Path:     file.Path,
-			Sha256:   file.Sha256,
-			Created:  file.Created,
-			Modified: file.Modified,
-			Size:     int(file.Size), // FIXME
-			BlobRefs: file.BlobRefs,
-		})
+		convertedFiles = append(convertedFiles, convertFile(file))
 	}
 
 	changesetsConverted := []stoservertypes.ChangesetSubset{}
