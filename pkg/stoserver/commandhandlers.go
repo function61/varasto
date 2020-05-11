@@ -651,14 +651,16 @@ func (c *cHandlers) CollectionChangeSensitivity(cmd *stoservertypes.CollectionCh
 }
 
 func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *command.Ctx) error {
+	collIds := *cmd.Collections
+	if len(collIds) == 0 {
+		return nil // no-op
+	}
+
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		// check for existence
 		if _, err := stodb.Read(tx).Directory(cmd.Directory); err != nil {
 			return err
 		}
-
-		// Collection is validated as non-empty
-		collIds := strings.Split(cmd.Collection, ",")
 
 		for _, collId := range collIds {
 			coll, err := stodb.Read(tx).Collection(collId)

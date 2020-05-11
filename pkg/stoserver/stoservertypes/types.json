@@ -550,7 +550,7 @@
 			}}
 		},
 		{
-			"name": "FilepathList",
+			"name": "StringList",
 			"type": {"_": "list", "of": {"_": "string"}}
 		},
 		{

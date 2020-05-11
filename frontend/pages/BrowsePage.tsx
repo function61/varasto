@@ -182,8 +182,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 
 	private folderView(output: DirectoryOutput): React.ReactNode {
-		const selectedCollIdsSerialized = this.state.selectedCollIds.join(',');
-
 		const sensitivityAuthorize = createSensitivityAuthorizer();
 
 		const masterCheckedChange = () => {
@@ -333,18 +331,18 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				<tfoot>
 					<tr>
 						<td colSpan={99}>
-							{selectedCollIdsSerialized ? (
+							{this.state.selectedCollIds.length > 0 && (
 								<div>
 									<CommandButton
-										command={CollectionMove(selectedCollIdsSerialized)}
+										command={CollectionMove(this.state.selectedCollIds)}
 									/>
 									<CommandButton
 										command={CollectionRefreshMetadataAutomatically(
-											selectedCollIdsSerialized,
+											this.state.selectedCollIds,
 										)}
 									/>
 								</div>
-							) : null}
+							)}
 
 							<CommandButton command={DirectoryCreate(output.Directory.Id)} />
 

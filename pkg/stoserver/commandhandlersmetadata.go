@@ -148,10 +148,13 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 
 // this is for serie episodes
 func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.CollectionRefreshMetadataAutomatically, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
-		// Collection is validated as non-empty
-		collIds := strings.Split(cmd.Collection, ",")
+	collIds := *cmd.Collections
 
+	if len(collIds) == 0 {
+		return nil // no-op
+	}
+
+	return c.db.Update(func(tx *bbolt.Tx) error {
 		firstColl, err := stodb.Read(tx).Collection(collIds[0])
 		if err != nil {
 			return err

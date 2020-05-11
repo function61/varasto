@@ -369,12 +369,12 @@
 	{
 		"command": "collection.Move",
 		"chain": "public",
-		"ctor": ["Collection"],
+		"ctor": ["Collections"],
 		"crudNature": "update",
 		"title": "Move",
 		"fields": [
-			{ "key": "Collection", "max_length": 4096, "hideIfDefaultValue": true },
-			{ "key": "Directory" }
+			{ "key": "Collections", "type": "StringList", "hideIfDefaultValue": true },
+			{ "key": "Directory", "title": "Directory ID", "placeholder": "B0ddZKryX9k" }
 		]
 	},
 	{
@@ -391,11 +391,11 @@
 	{
 		"command": "collection.RefreshMetadataAutomatically",
 		"chain": "public",
-		"ctor": ["Collection"],
+		"ctor": ["Collections"],
 		"crudNature": "update",
 		"title": "Refresh metadata automatically",
 		"fields": [
-			{ "key": "Collection", "max_length": 4096, "hideIfDefaultValue": true }
+			{ "key": "Collections", "type": "StringList", "hideIfDefaultValue": true }
 		]
 	},
 	{
