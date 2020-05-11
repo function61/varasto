@@ -19,7 +19,7 @@ export function collectionDropdown(coll: CollectionSubset) {
 		<Dropdown>
 			<CommandLink command={CollectionRename(coll.Id, coll.Name)} />
 			<CommandLink command={CollectionChangeDescription(coll.Id, coll.Description)} />
-			<CommandLink command={CollectionMove(coll.Id, { disambiguation: coll.Name })} />
+			<CommandLink command={CollectionMove([coll.Id], { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionChangeSensitivity(coll.Id, coll.Sensitivity)} />
 			<CommandLink
 				command={CollectionPullTmdbMetadata(coll.Id, { ForeignKey: tmdbMovieAutocomplete })}
