@@ -61,6 +61,12 @@ type Episode struct {
 	StillPath     string `json:"still_path"`
 }
 
+type ImageSize string
+
+const (
+	ImageSizeOriginal ImageSize = "original"
+)
+
 type Client struct {
 	apiKey string
 }
@@ -232,6 +238,6 @@ func endpointV3(path string) string {
 }
 
 // width=original|w500|...
-func ImagePath(path string, width string) string {
+func ImagePath(path string, width ImageSize) string {
 	return fmt.Sprintf("https://image.tmdb.org/t/p/%s%s", width, path)
 }
