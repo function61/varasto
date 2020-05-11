@@ -43,6 +43,7 @@
 		{ "key": "RootPathDotBase64FIXME", "value": "Lg==" },
 		{ "key": "MetadataBackdrop", "value": "backdrop_url" },
 		{ "key": "MetadataHomepage", "value": "homepage" },
+		{ "key": "MetadataPreviousName", "value": "previous_name" },
 		{ "key": "MetadataImdbId", "value": "imdb.com:title:id" },
 		{ "key": "MetadataOverview", "value": "overview" },
 		{ "key": "MetadataReleaseDate", "value": "release_date" },

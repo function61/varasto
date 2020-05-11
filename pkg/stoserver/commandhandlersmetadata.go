@@ -475,8 +475,8 @@ func maybeRename(coll *stotypes.Collection, scrubbedName string, tx *bbolt.Tx) e
 		return nil
 	}
 	// store as not to lose data when scrubbing name
-	if _, hasPreviousName := coll.Metadata["previous_name"]; !hasPreviousName {
-		coll.Metadata["previous_name"] = coll.Name
+	if _, hasPreviousName := coll.Metadata[stoservertypes.MetadataPreviousName]; !hasPreviousName {
+		coll.Metadata[stoservertypes.MetadataPreviousName] = coll.Name
 	}
 
 	coll.Name = scrubbedName
