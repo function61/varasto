@@ -12,24 +12,24 @@ type ConfigRequiredError struct {
 	error
 }
 
-type configAccessor struct {
+type ConfigAccessor struct {
 	key string
 }
 
-func ConfigAccessor(key string) *configAccessor {
-	return &configAccessor{key}
+func configAccessor(key string) *ConfigAccessor {
+	return &ConfigAccessor{key}
 }
 
-func (c *configAccessor) GetOptional(tx *bbolt.Tx) (string, error) {
+func (c *ConfigAccessor) GetOptional(tx *bbolt.Tx) (string, error) {
 	return c.getWithRequired(false, tx)
 }
 
 // returns descriptive error message if value not set
-func (c *configAccessor) GetRequired(tx *bbolt.Tx) (string, error) {
+func (c *ConfigAccessor) GetRequired(tx *bbolt.Tx) (string, error) {
 	return c.getWithRequired(true, tx)
 }
 
-func (c *configAccessor) getWithRequired(required bool, tx *bbolt.Tx) (string, error) {
+func (c *ConfigAccessor) getWithRequired(required bool, tx *bbolt.Tx) (string, error) {
 	conf := &stotypes.Config{}
 	if err := configRepository.OpenByPrimaryKey([]byte(c.key), conf, tx); err != nil && err != blorm.ErrNotFound {
 		return "", err
@@ -42,7 +42,7 @@ func (c *configAccessor) getWithRequired(required bool, tx *bbolt.Tx) (string, e
 	return conf.Value, nil
 }
 
-func (c *configAccessor) Set(value string, tx *bbolt.Tx) error {
+func (c *ConfigAccessor) Set(value string, tx *bbolt.Tx) error {
 	return configRepository.Update(&stotypes.Config{
 		Key:   c.key,
 		Value: value,

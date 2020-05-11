@@ -53,9 +53,7 @@ func (c *cHandlers) DatabaseBackupConfigure(cmd *stoservertypes.DatabaseBackupCo
 		}
 	}
 
-	return c.db.Update(func(tx *bbolt.Tx) error {
-		return stodb.CfgUbackupConfig.Set(string(serializedUbConfig), tx)
-	})
+	return c.setConfigValue(stodb.CfgUbackupConfig, string(serializedUbConfig))
 }
 
 func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *command.Ctx) error {

@@ -93,9 +93,7 @@ func (c *cHandlers) NodeCheckForUpdates(cmd *stoservertypes.NodeCheckForUpdates,
 		return err
 	}
 
-	return c.db.Update(func(tx *bbolt.Tx) error {
-		return stodb.CfgUpdateStatusAt.Set(string(statusAtJson), tx)
-	})
+	return c.setConfigValue(stodb.CfgUpdateStatusAt, string(statusAtJson))
 }
 
 // scheduled job for checking version updates

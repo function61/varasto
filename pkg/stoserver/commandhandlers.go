@@ -864,20 +864,20 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 }
 
 func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuseServerBaseurl, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
-		return stodb.CfgFuseServerBaseUrl.Set(cmd.Baseurl, tx)
-	})
+	return c.setConfigValue(stodb.CfgFuseServerBaseUrl, cmd.Baseurl)
 }
 
 func (c *cHandlers) ConfigSetGrafanaUrl(cmd *stoservertypes.ConfigSetGrafanaUrl, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
-		return stodb.CfgGrafanaUrl.Set(cmd.Url, tx)
-	})
+	return c.setConfigValue(stodb.CfgGrafanaUrl, cmd.Url)
 }
 
 func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {
+	return c.setConfigValue(stodb.CfgNetworkShareBaseUrl, cmd.Baseurl)
+}
+
+func (c *cHandlers) setConfigValue(config *stodb.ConfigAccessor, newValue string) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		return stodb.CfgNetworkShareBaseUrl.Set(cmd.Baseurl, tx)
+		return config.Set(newValue, tx)
 	})
 }
 
