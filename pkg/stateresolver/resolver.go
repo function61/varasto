@@ -9,6 +9,7 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
+// keyed by file path
 type fileMap map[string]stotypes.File
 
 type StateAt struct {

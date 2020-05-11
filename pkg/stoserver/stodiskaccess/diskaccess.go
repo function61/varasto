@@ -311,7 +311,7 @@ func (d *Controller) Initialize(ctx context.Context, volumeUuid string, driver b
 
 // it's really dangerous to accidentally mount the wrong volume, so we'll keep a volume descriptor
 // file at sha256=0000.. that contains the volume UUID that we can validate at mount time.
-// might return ErrVolumeDescriptorNotFound if volume descriptor does not yet exist
+// will return ErrVolumeDescriptorNotFound if volume descriptor does not yet exist
 func (d *Controller) verifyOnDiskVolumeUuid(ctx context.Context, driver blobstore.Driver, expectedVolumeUuid string) error {
 	body, err := driver.RawFetch(ctx, volumeDescriptorRef)
 	if err != nil {
