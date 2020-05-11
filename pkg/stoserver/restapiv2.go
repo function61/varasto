@@ -1171,12 +1171,16 @@ func (h *handlers) GetHealth(rctx *httpauth.RequestContext, w http.ResponseWrite
 }
 
 func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ConfigValue {
+	httpErr := func(err error, errCode int) *stoservertypes.ConfigValue { // shorthand
+		http.Error(w, err.Error(), errCode)
+		return nil
+	}
+
 	key := mux.Vars(r)["id"]
 
 	tx, err := h.db.Begin(false)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+		return httpErr(err, http.StatusInternalServerError)
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
@@ -1195,12 +1199,10 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 	case stoservertypes.CfgGrafanaUrl:
 		val, err = stodb.CfgGrafanaUrl.GetOptional(tx)
 	default:
-		http.Error(w, fmt.Sprintf("unknown key: %s", key), http.StatusNotFound)
-		return nil
+		return httpErr(fmt.Errorf("unknown key: %s", key), http.StatusNotFound)
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return nil
+		return httpErr(err, http.StatusInternalServerError)
 	}
 
 	return &stoservertypes.ConfigValue{
