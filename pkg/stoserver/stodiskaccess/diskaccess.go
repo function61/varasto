@@ -161,14 +161,14 @@ func (d *Controller) WriteBlobNoVerify(
 	}
 
 	readCounter := writeCounter{}
-	verifiedContent := readCounter.Tee(content)
+	contentCounted := readCounter.Tee(content)
 
 	encryptionKeyId, encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKeyForNewBlobs(collId)
 	if err != nil {
 		return err
 	}
 
-	blobEncrypted, err := encryptAndCompressBlob(verifiedContent, encryptionKey, ref, maybeCompressible)
+	blobEncrypted, err := encryptAndCompressBlob(contentCounted, encryptionKey, ref, maybeCompressible)
 	if err != nil {
 		return err
 	}
