@@ -445,7 +445,7 @@
 		"title": "Move files to another collection",
 		"fields": [
 			{ "key": "Source", "hideIfDefaultValue": true },
-			{ "key": "Files", "type": "FilepathList", "hideIfDefaultValue": true },
+			{ "key": "Files", "type": "StringList", "hideIfDefaultValue": true },
 			{ "key": "Destination", "placeholder": "lwwEC91fGeU", "help": "Collection ID" }
 		]
 	},
@@ -457,7 +457,7 @@
 		"title": "Delete files",
 		"fields": [
 			{ "key": "Source", "hideIfDefaultValue": true },
-			{ "key": "Files", "type": "FilepathList", "hideIfDefaultValue": true }
+			{ "key": "Files", "type": "StringList", "hideIfDefaultValue": true }
 		]
 	},
 	{
