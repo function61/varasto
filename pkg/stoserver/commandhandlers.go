@@ -594,8 +594,16 @@ func createCollection(
 		return nil, err
 	}
 
-	// TODO: resolve this from closest parent that has policy defined?
-	replicationPolicy, err := stodb.Read(tx).ReplicationPolicy("default")
+	dirWithReplicationPolicy := parentDir
+	for dirWithReplicationPolicy.ReplicationPolicy == "" {
+		// root at the very latest specifies one
+		dirWithReplicationPolicy, err = stodb.Read(tx).Directory(dirWithReplicationPolicy.Parent)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(dirWithReplicationPolicy.ReplicationPolicy)
 	if err != nil {
 		return nil, err
 	}
