@@ -344,18 +344,22 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								</div>
 							)}
 
-							<CommandButton command={DirectoryCreate(output.Directory.Id)} />
+							{this.state.selectedCollIds.length === 0 && (
+								<div>
+									<CommandButton command={DirectoryCreate(output.Directory.Id)} />
 
-							<CommandButton
-								command={CollectionCreate(output.Directory.Id, {
-									redirect: (id) =>
-										collectionUrl({
-											id,
-											rev: HeadRevisionId,
-											path: RootPathDotBase64FIXME,
-										}),
-								})}
-							/>
+									<CommandButton
+										command={CollectionCreate(output.Directory.Id, {
+											redirect: (id) =>
+												collectionUrl({
+													id,
+													rev: HeadRevisionId,
+													path: RootPathDotBase64FIXME,
+												}),
+										})}
+									/>
+								</div>
+							)}
 						</td>
 					</tr>
 				</tfoot>
