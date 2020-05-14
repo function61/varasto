@@ -583,7 +583,7 @@ function resolveDirReplicationPolicy(output: DirectoryOutput): string {
 		return output.Directory.ReplicationPolicy;
 	}
 
-	const parentsReversed = output.Parents.reverse();
+	const parentsReversed = output.Parents.slice().reverse();
 
 	for (const parent of parentsReversed) {
 		if (parent.ReplicationPolicy) {
