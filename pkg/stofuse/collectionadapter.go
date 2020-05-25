@@ -13,7 +13,7 @@ import (
 )
 
 func adaptCollectionToDirectory(coll *stotypes.Collection, srv *FsServer) (*CollectionAsDir, error) {
-	state, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+	state, err := stateresolver.ComputeStateAtHead(*coll)
 	if err != nil {
 		return nil, err
 	}

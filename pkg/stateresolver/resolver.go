@@ -43,6 +43,10 @@ func (s *StateAt) FileList() []stotypes.File {
 	return files
 }
 
+func ComputeStateAtHead(c stotypes.Collection) (*StateAt, error) {
+	return ComputeStateAt(c, c.Head)
+}
+
 func ComputeStateAt(c stotypes.Collection, changesetId string) (*StateAt, error) {
 	state := &StateAt{
 		ChangesetId: changesetId,

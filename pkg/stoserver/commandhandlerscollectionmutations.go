@@ -41,7 +41,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 			return errors.New("Source and destination cannot be same")
 		}
 
-		sourceState, err := stateresolver.ComputeStateAt(*collSrc, collSrc.Head)
+		sourceState, err := stateresolver.ComputeStateAtHead(*collSrc)
 		if err != nil {
 			return err
 		}
@@ -142,7 +142,7 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 			return err
 		}
 
-		stateForValidation, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+		stateForValidation, err := stateresolver.ComputeStateAtHead(*coll)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 }
 
 func appendAndValidateChangeset(changeset stotypes.CollectionChangeset, coll *stotypes.Collection) error {
-	currentHeadState, err := stateresolver.ComputeStateAt(*coll, coll.Head)
+	currentHeadState, err := stateresolver.ComputeStateAtHead(*coll)
 	if err != nil {
 		return err
 	}

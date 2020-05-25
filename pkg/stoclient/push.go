@@ -28,7 +28,7 @@ const (
 )
 
 func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
-	parentState, err := stateresolver.ComputeStateAt(wd.manifest.Collection, wd.manifest.Collection.Head)
+	parentState, err := stateresolver.ComputeStateAtHead(wd.manifest.Collection)
 	if err != nil {
 		return nil, err
 	}
