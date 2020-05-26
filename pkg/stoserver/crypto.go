@@ -9,16 +9,6 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func findDekEnvelope(keyId string, kenvs []stotypes.KeyEnvelope) *stotypes.KeyEnvelope {
-	for _, kenv := range kenvs {
-		if kenv.KeyId == keyId {
-			return &kenv
-		}
-	}
-
-	return nil
-}
-
 func copyAndReEncryptDekFromAnotherCollection(
 	dekId string,
 	kekPubKeyFingerprints []string,
@@ -35,7 +25,7 @@ func copyAndReEncryptDekFromAnotherCollection(
 			return err
 		}
 
-		dekEnvelope := findDekEnvelope(dekId, sourceColl.EncryptionKeys)
+		dekEnvelope := stotypes.FindDekEnvelope(dekId, sourceColl.EncryptionKeys)
 		if dekEnvelope == nil {
 			return fmt.Errorf("(should not happen) encryption key envelope not found coll: %s", collId)
 		}

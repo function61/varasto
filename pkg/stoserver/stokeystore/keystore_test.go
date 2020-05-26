@@ -1,4 +1,4 @@
-package stoserver
+package stokeystore
 
 import (
 	"testing"
@@ -26,7 +26,7 @@ func TestEncryptAndDecryptKek(t *testing.T) {
 	assert.Assert(t, len(kenv.Slots[0].KeyEncrypted) == 128)
 	assert.Assert(t, len(kenv.Slots[1].KeyEncrypted) == 128)
 
-	tryDecryption := func(store *keyStore) string {
+	tryDecryption := func(store *Store) string {
 		decrypted, err := store.DecryptDek(*kenv)
 		if err != nil {
 			return err.Error()
@@ -39,8 +39,8 @@ func TestEncryptAndDecryptKek(t *testing.T) {
 	assert.EqualString(t, tryDecryption(ks2), "my secret message")
 	assert.EqualString(t, tryDecryption(ks3), "don't have any private key to slots of DEK dummyKeyId")
 
-	assert.Assert(t, findDekEnvelope("foo", []stotypes.KeyEnvelope{*kenv}) == nil)
-	assert.Assert(t, findDekEnvelope("dummyKeyId", []stotypes.KeyEnvelope{*kenv}) != nil)
+	assert.Assert(t, stotypes.FindDekEnvelope("foo", []stotypes.KeyEnvelope{*kenv}) == nil)
+	assert.Assert(t, stotypes.FindDekEnvelope("dummyKeyId", []stotypes.KeyEnvelope{*kenv}) != nil)
 }
 
 func TestEncryptEmptyKeyIdOrNoPublicKeys(t *testing.T) {
@@ -53,11 +53,13 @@ func TestEncryptEmptyKeyIdOrNoPublicKeys(t *testing.T) {
 	assert.EqualString(t, err.Error(), "no kekPubKeyFingerprints given")
 }
 
-func keyStoreWith(privateKeys ...string) *keyStore {
-	ks := newKeyStore()
+func keyStoreWith(privateKeys ...string) *Store {
+	ks := New()
 
 	for _, privateKey := range privateKeys {
-		panicIfError(ks.RegisterPrivateKey(privateKey))
+		if err := ks.RegisterPrivateKey(privateKey); err != nil {
+			panic(err)
+		}
 	}
 
 	return ks

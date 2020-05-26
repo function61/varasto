@@ -599,7 +599,7 @@ func commitChangesetInternal(
 
 			// blob got deduplicated from somewhere, and thus it uses a DEK that our collection
 			// currently doesn't have a copy of?
-			if findDekEnvelope(blob.EncryptionKeyId, coll.EncryptionKeys) == nil {
+			if stotypes.FindDekEnvelope(blob.EncryptionKeyId, coll.EncryptionKeys) == nil {
 				env, err := copyAndReEncryptDekFromAnotherCollection(
 					blob.EncryptionKeyId,
 					extractKekPubKeyFingerprints(coll),

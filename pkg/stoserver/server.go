@@ -586,7 +586,7 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 	// we are given a list of key envelopes. the first one is for new blobs written to this
 	// collection, and the following are for when blobs get deduplicated into this collection -
 	// source collection's key envelopes are copied into target collection's key envelopes
-	kenv := findDekEnvelope(blob.EncryptionKeyId, encryptionKeys)
+	kenv := stotypes.FindDekEnvelope(blob.EncryptionKeyId, encryptionKeys)
 	if kenv == nil {
 		return nil, fmt.Errorf("(should not happen) encryption key envelope not found for: %s", ref.AsHex())
 	}
