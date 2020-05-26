@@ -397,17 +397,9 @@ func readConfigFromDatabase(
 		authTokens[client.AuthToken] = true
 	}
 
-	keks := []stotypes.KeyEncryptionKey{}
-	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
+	keyStore, err := loadAndFillKeyStore(tx)
+	if err != nil {
 		return nil, err
-	}
-
-	keyStore := stokeystore.New()
-
-	for _, kek := range keks {
-		if err := keyStore.RegisterPrivateKey(kek.PrivateKey); err != nil {
-			return nil, err
-		}
 	}
 
 	dam := stodiskaccess.New(&dbbma{db, keyStore})

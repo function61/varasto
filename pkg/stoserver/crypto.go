@@ -9,6 +9,23 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+func loadAndFillKeyStore(tx *bbolt.Tx) (*stokeystore.Store, error) {
+	keks := []stotypes.KeyEncryptionKey{}
+	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
+		return nil, err
+	}
+
+	keyStore := stokeystore.New()
+
+	for _, kek := range keks {
+		if err := keyStore.RegisterPrivateKey(kek.PrivateKey); err != nil {
+			return nil, err
+		}
+	}
+
+	return keyStore, nil
+}
+
 func copyAndReEncryptDekFromAnotherCollection(
 	dekId string,
 	kekPubKeyFingerprints []string,
