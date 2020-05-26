@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/function61/eventhorizon/pkg/ehevent"
@@ -62,7 +63,7 @@ func runServer(
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	confReloader := &configReloader{restarter}
+	confReloader := &configReloader{restarter: restarter}
 
 	logl := logex.Levels(logger)
 
@@ -711,16 +712,18 @@ func mkWrappedKeypair(certPem, keyPem []byte) (*wrappedKeypair, error) {
 // to the server
 type configReloader struct {
 	restarter *restartcontroller.Controller
+	timerOnce sync.Once
 }
 
 func (r *configReloader) ReloadConfig() {
-	go func() {
+	// protect against multiple timed restarts per single run instance
+	go r.timerOnce.Do(func() {
 		time.Sleep(3 * time.Second)
 
 		if err := r.restarter.Restart(); err != nil {
 			panic(err)
 		}
-	}()
+	})
 }
 
 func githubAssetUrl(release string, filename string) string {
