@@ -61,6 +61,7 @@ func (b *blobDiscoveredNoopListener) CancelCh() chan interface{} {
 }
 
 type backgroundUploader struct {
+	ctx                  context.Context
 	uploadJobs           chan blobDiscoveredAttrs
 	clientConfig         ClientConfig
 	uploadersDone        chan error
@@ -69,8 +70,14 @@ type backgroundUploader struct {
 	blobAlreadyUploading *mutexmap.M // keyed by blob ref
 }
 
-func NewBackgroundUploader(n int, clientConfig ClientConfig, uploadProgress UploadProgressListener) *backgroundUploader {
+func NewBackgroundUploader(
+	ctx context.Context,
+	n int,
+	clientConfig ClientConfig,
+	uploadProgress UploadProgressListener,
+) *backgroundUploader {
 	b := &backgroundUploader{
+		ctx:                  ctx,
 		uploadJobs:           make(chan blobDiscoveredAttrs),
 		uploadersDone:        make(chan error, n),
 		clientConfig:         clientConfig,
@@ -159,7 +166,7 @@ func (b *backgroundUploader) upload(job blobDiscoveredAttrs) error {
 	}
 	defer unlock()
 
-	ctx, cancel := context.WithTimeout(context.TODO(), 3*60*time.Second)
+	ctx, cancel := context.WithTimeout(b.ctx, 3*60*time.Second)
 	defer cancel()
 
 	return retry.Retry(ctx, func(ctx context.Context) error {

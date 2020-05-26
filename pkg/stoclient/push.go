@@ -270,6 +270,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 	}
 
 	buploader := NewBackgroundUploader(
+		ctx,
 		backgroundUploaderConcurrency,
 		*clientConfig,
 		textUiUploadProgressOutputIfInTerminal())
@@ -297,6 +298,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 
 func push(ctx context.Context, wd *workdirLocation) error {
 	buploader := NewBackgroundUploader(
+		ctx,
 		backgroundUploaderConcurrency,
 		wd.clientConfig,
 		textUiUploadProgressOutputIfInTerminal())
