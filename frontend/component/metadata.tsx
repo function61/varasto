@@ -169,5 +169,5 @@ export function backdropImage(metadata: MetadataKeyValue): string {
 }
 
 export function imageNotAvailable(): string {
-	return globalConfig().assetsDir + '/../image-not-available.png';
+	return globalConfig().assetsDir + '/../image-not-available.svg';
 }
