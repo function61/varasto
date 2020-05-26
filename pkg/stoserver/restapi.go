@@ -1,5 +1,7 @@
 package stoserver
 
+// most of the REST endpoints for Varasto
+
 import (
 	"bytes"
 	"encoding/base64"
