@@ -1,12 +1,7 @@
 import { collectionDropdown } from 'component/collectiondropdown';
 import { DocLink } from 'component/doclink';
 import { replicationPolicyAutocomplete, tmdbTvAutocomplete } from 'component/autocompletes';
-import {
-	metadataKvsToKv,
-	imageNotAvailable,
-	backdropImage,
-	MetadataPanel,
-} from 'component/metadata';
+import { metadataKvsToKv, imageNotAvailable, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
 import {
@@ -30,6 +25,7 @@ import {
 	CollectionRefreshMetadataAutomatically,
 	DirectoryChangeDescription,
 	DirectoryChangeSensitivity,
+	CollectionTriggerMediaScan,
 	DirectoryCreate,
 	DirectoryDelete,
 	DirectoryChangeReplicationPolicy,
@@ -41,15 +37,13 @@ import {
 import { getDirectory } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CollectionSubset,
-	Directory,
+	CollectionSubsetWithMeta,
 	DirectoryOutput,
 	DirectoryType,
 	DocRef,
 	HeadRevisionId,
+	DirectoryAndMeta,
 	MetadataImdbId,
-	MetadataOverview,
-	MetadataReleaseDate,
-	MetadataTitle,
 	RootPathDotBase64FIXME,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -69,8 +63,8 @@ interface BrowsePageState {
 // for decorate-sort-undecorate
 interface DirOrCollection {
 	name: string; // only used for sorting
-	dir?: Directory;
-	coll?: CollectionSubset;
+	dir?: DirectoryAndMeta;
+	coll?: CollectionSubsetWithMeta;
 }
 
 export default class BrowsePage extends React.Component<BrowsePageProps, BrowsePageState> {
@@ -100,17 +94,20 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			);
 		}
 
-		const breadcrumbs: Breadcrumb[] = output.Parents.map((dir) => {
+		const breadcrumbs: Breadcrumb[] = output.Parents.map((dirAndMeta) => {
+			const dirx = dirAndMeta.Directory; // shorthand
 			return {
-				title: dir.Name,
-				url: browseUrl({ dir: dir.Id, view: this.props.view }),
+				title: dirx.Name,
+				url: browseUrl({ dir: dirx.Id, view: this.props.view }),
 			};
 		});
 
+		const dir = output.Directory.Directory; // shorthand
+
 		const showTabController =
 			output.Collections.filter(hasMeta).length > 0 &&
-			output.Directory.Type !== DirectoryType.Movies &&
-			output.Directory.Type !== DirectoryType.Series;
+			dir.Type !== DirectoryType.Movies &&
+			dir.Type !== DirectoryType.Series;
 
 		const content = ((): React.ReactNode => {
 			switch (this.props.view) {
@@ -129,13 +126,13 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 		return (
 			<AppDefaultLayout
-				title={output.Directory.Name}
+				title={dir.Name}
 				titleElem={
 					<span>
-						{output.Directory.Name}
-						{output.Directory.Description && (
+						{dir.Name}
+						{dirDescription(output.Directory) && (
 							<span className="margin-left">
-								<DefaultLabel>{output.Directory.Description}</DefaultLabel>
+								<DefaultLabel>{dirDescription(output.Directory)}</DefaultLabel>
 							</span>
 						)}
 					</span>
@@ -145,10 +142,16 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				<div className="row">
 					<div className="col-md-9">
 						<div>
-							{output.Parents.map((dir: Directory) => (
-								<MetadataPanel data={metadataKvsToKv(dir.Metadata)} />
-							))}
-							<MetadataPanel data={metadataKvsToKv(output.Directory.Metadata)} />
+							{output.Parents.map((dirAndMeta) => {
+								return (
+									dirAndMeta.MetaCollection && (
+										<MetadataPanel collWithMeta={dirAndMeta.MetaCollection} />
+									)
+								);
+							})}
+							{output.Directory.MetaCollection && (
+								<MetadataPanel collWithMeta={output.Directory.MetaCollection} />
+							)}
 						</div>
 
 						{showTabController ? (
@@ -182,10 +185,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 	}
 
 	private folderView(output: DirectoryOutput): React.ReactNode {
+		const dir = output.Directory.Directory; // shorthand
+
 		const sensitivityAuthorize = createSensitivityAuthorizer();
 
 		const masterCheckedChange = () => {
-			const selectedCollIds = output.Collections.map((coll) => coll.Id);
+			const selectedCollIds = output.Collections.map((coll) => coll.Collection.Id);
 
 			this.setState({ selectedCollIds });
 		};
@@ -203,8 +208,9 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			this.setState({ selectedCollIds });
 		};
 
-		const collectionToRow = (coll: CollectionSubset) => {
-			const dirIsForMovies = output.Directory.Type === DirectoryType.Movies;
+		const collectionToRow = (collWithMeta: CollectionSubsetWithMeta) => {
+			const coll = collWithMeta.Collection; // shorthand
+			const dirIsForMovies = dir.Type === DirectoryType.Movies;
 			const warning = dirIsForMovies &&
 				!(MetadataImdbId in metadataKvsToKv(coll.Metadata)) && (
 					<div>{metadataMissingIcon()}</div>
@@ -265,30 +271,36 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 			);
 		};
 
-		const directoryToRow = (dir: Directory) => {
-			const content = sensitivityAuthorize(dir.Sensitivity) ? (
+		const directoryToRow = (dirAndMeta: DirectoryAndMeta) => {
+			const dirx = dirAndMeta.Directory;
+			const content = sensitivityAuthorize(dirx.Sensitivity) ? (
 				<div>
-					<a href={browseUrl({ dir: dir.Id, view: this.props.view })}>{dir.Name}</a>
-					{dir.Description && (
+					<a href={browseUrl({ dir: dirx.Id, view: this.props.view })}>{dirx.Name}</a>
+					{dirDescription(dirAndMeta) && (
 						<span className="margin-left">
-							<DefaultLabel>{dir.Description}</DefaultLabel>
+							<DefaultLabel>{dirDescription(dirAndMeta)}</DefaultLabel>
 						</span>
 					)}
-					{dir.Sensitivity > Sensitivity.FamilyFriendly &&
-						mkSensitivityBadge(dir.Sensitivity)}
+					{dirx.Sensitivity > Sensitivity.FamilyFriendly &&
+						mkSensitivityBadge(dirx.Sensitivity)}
 				</div>
 			) : (
 				<div>
 					<span style={{ color: 'transparent', textShadow: '0 0 7px rgba(0,0,0,0.5)' }}>
-						{dir.Name}
+						{dirx.Name}
 					</span>
-					{mkSensitivityBadge(dir.Sensitivity)}
+					{mkSensitivityBadge(dirx.Sensitivity)}
 				</div>
 			);
 
-			const dirIsForSeries = output.Directory.Type === DirectoryType.Series;
+			const dirIsForSeries = dirx.Type === DirectoryType.Series;
 			const warning =
-				dirIsForSeries && !(MetadataImdbId in metadataKvsToKv(dir.Metadata))
+				dirIsForSeries &&
+				(!dirAndMeta.MetaCollection ||
+					!(
+						MetadataImdbId in
+						metadataKvsToKv(dirAndMeta.MetaCollection.Collection.Metadata)
+					))
 					? metadataMissingIcon()
 					: null;
 
@@ -300,7 +312,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 					</td>
 					<td>{content}</td>
 					<td>{warning}</td>
-					<td>{directoryDropdown(dir)}</td>
+					<td>{directoryDropdown(dirAndMeta)}</td>
 				</tr>
 			);
 		};
@@ -346,10 +358,10 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 							{this.state.selectedCollIds.length === 0 && (
 								<div>
-									<CommandButton command={DirectoryCreate(output.Directory.Id)} />
+									<CommandButton command={DirectoryCreate(dir.Id)} />
 
 									<CommandButton
-										command={CollectionCreate(output.Directory.Id, {
+										command={CollectionCreate(dir.Id, {
 											redirect: (id) =>
 												collectionUrl({
 													id,
@@ -369,73 +381,37 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 	// FIXME: sensitivityAuthorize
 	private richView(output: DirectoryOutput): React.ReactNode {
-		const collectionToRow = (coll: CollectionSubset): React.ReactNode => {
-			const metadata = metadataKvsToKv(coll.Metadata);
-
-			const badges = [];
-
-			if (MetadataReleaseDate in metadata) {
-				badges.push(<DefaultLabel>📅 {metadata[MetadataReleaseDate]}</DefaultLabel>);
-			}
-
-			if (coll.Description) {
-				badges.push(
-					<span className="margin-left">
-						<DefaultLabel>{coll.Description}</DefaultLabel>
-					</span>,
+		return mergeDirectoriesAndCollectionsSorted(output).map((doc) => {
+			if (doc.dir) {
+				const dir = doc.dir.Directory;
+				return (
+					<Panel heading={dir.Name}>
+						<a
+							href={browseUrl({
+								dir: dir.Id,
+								view: this.props.view,
+							})}>
+							<img src={imageNotAvailable()} style={{ maxWidth: '100%' }} />
+						</a>
+					</Panel>
+				);
+			} else if (doc.coll) {
+				return (
+					<MetadataPanel
+						collWithMeta={doc.coll}
+						imageLinksToCollection={true}
+						showTitle={true}
+					/>
 				);
 			}
-
-			return (
-				<Panel
-					heading={
-						<div>
-							{coll.Name} - {metadata[MetadataTitle] || ''} &nbsp;
-							{badges}
-							<CollectionTagView collection={coll} />
-						</div>
-					}
-					footer={metadata[MetadataOverview] && <p>{metadata[MetadataOverview]}</p>}>
-					<a
-						href={collectionUrl({
-							id: coll.Id,
-							rev: HeadRevisionId,
-							path: RootPathDotBase64FIXME,
-						})}>
-						<img src={backdropImage(metadata)} style={{ maxWidth: '100%' }} />
-					</a>
-				</Panel>
-			);
-		};
-
-		const directoryToRow = (dir: Directory): React.ReactNode => {
-			return (
-				<Panel heading={dir.Name}>
-					<a
-						href={browseUrl({
-							dir: dir.Id,
-							view: this.props.view,
-						})}>
-						<img src={imageNotAvailable()} style={{ maxWidth: '100%' }} />
-					</a>
-				</Panel>
-			);
-		};
-
-		const docToRow = (doc: DirOrCollection): React.ReactNode => {
-			if (doc.dir) {
-				return directoryToRow(doc.dir);
-			} else if (doc.coll) {
-				return collectionToRow(doc.coll);
-			}
 			throw new Error('should not happen');
-		};
-
-		return mergeDirectoriesAndCollectionsSorted(output).map(docToRow);
+		});
 	}
 
 	private directoryPanel(output: DirectoryOutput): React.ReactNode {
-		const dirHelp = helpByDirectoryType(output.Directory.Type);
+		const dir = output.Directory.Directory; // shorthand
+
+		const dirHelp = helpByDirectoryType(dir.Type);
 
 		return (
 			<Panel
@@ -450,16 +426,16 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<tr>
 							<th>Id</th>
 							<td>
-								{output.Directory.Id}
+								{dir.Id}
 								<span className="margin-left">
-									<ClipboardButton text={output.Directory.Id} />
+									<ClipboardButton text={dir.Id} />
 								</span>
 							</td>
 						</tr>
-						{output.Directory.Type !== DirectoryType.Generic && (
+						{dir.Type !== DirectoryType.Generic && (
 							<tr>
 								<th>Type</th>
-								<td>{directoryTypeToEmoji(output.Directory.Type)}</td>
+								<td>{directoryTypeToEmoji(dir.Type)}</td>
 							</tr>
 						)}
 						{dirHelp && (
@@ -473,7 +449,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 						<tr>
 							<th>Content</th>
 							<td>
-								{thousandSeparate(output.Directories.length)} subdirectories
+								{thousandSeparate(output.SubDirectories.length)} subdirectories
 								<br />
 								{thousandSeparate(output.Collections.length)} collections
 							</td>
@@ -496,8 +472,8 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 function mergeDirectoriesAndCollectionsSorted(output: DirectoryOutput): DirOrCollection[] {
 	let docs: DirOrCollection[] = [];
 
-	docs = docs.concat(output.Directories.map((dir) => ({ name: dir.Name, dir })));
-	docs = docs.concat(output.Collections.map((coll) => ({ name: coll.Name, coll })));
+	docs = docs.concat(output.SubDirectories.map((dir) => ({ name: dir.Directory.Name, dir })));
+	docs = docs.concat(output.Collections.map((coll) => ({ name: coll.Collection.Name, coll })));
 
 	docs.sort((a, b) => (a.name < b.name ? -1 : 1));
 
@@ -514,11 +490,16 @@ const mkSensitivityBadge = (sens: Sensitivity) => (
 	</a>
 );
 
-const directoryDropdown = (dir: Directory) => {
+const directoryDropdown = (dirAndMeta: DirectoryAndMeta) => {
+	const dir = dirAndMeta.Directory;
+	const metaColl: CollectionSubset | null = dirAndMeta.MetaCollection
+		? dirAndMeta.MetaCollection.Collection
+		: null;
+
 	return (
 		<Dropdown>
 			<CommandLink command={DirectoryRename(dir.Id, dir.Name)} />
-			<CommandLink command={DirectoryChangeDescription(dir.Id, dir.Description)} />
+			<CommandLink command={DirectoryChangeDescription(dir.Id, dirDescription(dirAndMeta))} />
 			<CommandLink command={DirectoryChangeSensitivity(dir.Id, dir.Sensitivity)} />
 			<CommandLink
 				command={DirectoryChangeReplicationPolicy(dir.Id, dir.ReplicationPolicy || '', {
@@ -528,6 +509,7 @@ const directoryDropdown = (dir: Directory) => {
 			<CommandLink
 				command={DirectoryPullTmdbMetadata(dir.Id, { ForeignKey: tmdbTvAutocomplete })}
 			/>
+			{metaColl && <CommandLink command={CollectionTriggerMediaScan(metaColl.Id)} />}
 			<CommandLink command={DirectoryMove(dir.Id, { disambiguation: dir.Name })} />
 			<CommandLink
 				command={DirectorySetType(dir.Id, dir.Type, { disambiguation: dir.Name })}
@@ -537,7 +519,8 @@ const directoryDropdown = (dir: Directory) => {
 	);
 };
 
-const hasMeta = (coll: CollectionSubset): boolean => coll.Metadata && coll.Metadata.length > 0;
+const hasMeta = (coll: CollectionSubsetWithMeta): boolean =>
+	coll.Collection.Metadata && coll.Collection.Metadata.length > 0;
 
 interface HelpForDirType {
 	doc: DocRef;
@@ -583,18 +566,22 @@ function metadataMissingIcon() {
 
 // if not explicitly defined, walk parents until found
 function resolveDirReplicationPolicy(output: DirectoryOutput): string {
-	if (output.Directory.ReplicationPolicy) {
-		return output.Directory.ReplicationPolicy;
+	if (output.Directory.Directory.ReplicationPolicy) {
+		return output.Directory.Directory.ReplicationPolicy;
 	}
 
 	const parentsReversed = output.Parents.slice().reverse();
 
 	for (const parent of parentsReversed) {
-		if (parent.ReplicationPolicy) {
-			return parent.ReplicationPolicy;
+		if (parent.Directory.ReplicationPolicy) {
+			return parent.Directory.ReplicationPolicy;
 		}
 	}
 
 	// should not happen - at the very least the root should have policy set
 	throw new Error('unable to resolve ReplicationPolicy');
+}
+
+function dirDescription(dirAndMeta: DirectoryAndMeta): string {
+	return dirAndMeta.MetaCollection ? dirAndMeta.MetaCollection.Collection.Description : '';
 }

@@ -453,6 +453,17 @@ func (c *cHandlers) DirectoryDelete(cmd *stoservertypes.DirectoryDelete, ctx *co
 			return err
 		}
 
+		if dir.MetaCollection != "" {
+			metaColl, err := stodb.Read(tx).Collection(dir.MetaCollection)
+			if err != nil {
+				return err
+			}
+
+			if err := stodb.CollectionRepository.Delete(metaColl, tx); err != nil {
+				return err
+			}
+		}
+
 		collections, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
 		if err != nil {
 			return err
@@ -499,9 +510,14 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChan
 			return err
 		}
 
-		dir.Description = cmd.Description
+		metaColl, err := metaCollForDir(dir, tx, c.conf.KeyStore)
+		if err != nil {
+			return err
+		}
 
-		return stodb.DirectoryRepository.Update(dir, tx)
+		metaColl.Description = cmd.Description
+
+		return stodb.CollectionRepository.Update(dir, tx)
 	})
 }
 
@@ -899,6 +915,10 @@ func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuse
 
 func (c *cHandlers) ConfigSetGrafanaUrl(cmd *stoservertypes.ConfigSetGrafanaUrl, ctx *command.Ctx) error {
 	return c.setConfigValue(stodb.CfgGrafanaUrl, cmd.Url)
+}
+
+func (c *cHandlers) ConfigSetMediascannerState(cmd *stoservertypes.ConfigSetMediascannerState, ctx *command.Ctx) error {
+	return c.setConfigValue(stodb.CfgMediascannerState, cmd.State)
 }
 
 func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {

@@ -8,15 +8,30 @@ import (
 	"time"
 
 	"github.com/function61/eventkit/command"
+	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/igdbapi"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
+	"github.com/function61/varasto/pkg/stomediascanner/stomediascantypes"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stokeystore"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/themoviedbapi"
 	"go.etcd.io/bbolt"
 )
+
+func (c *cHandlers) CollectionTriggerMediaScan(cmd *stoservertypes.CollectionTriggerMediaScan, ctx *command.Ctx) error {
+	scanner := stomediascantypes.NewRestClientUrlBuilder("https://localhost")
+
+	mode := ""
+	if cmd.AllowDestructive {
+		mode = "a"
+	}
+
+	_, err := ezhttp.Get(ctx.Ctx, scanner.TriggerScan(cmd.Collection, mode), ezhttp.Client(ezhttp.InsecureTlsClient))
+	return err
+}
 
 // this is for movies
 func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPullTmdbMetadata, ctx *command.Ctx) error {
@@ -25,35 +40,35 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 		return err
 	}
 
+	var info *themoviedbapi.Movie
+
+	// check if tmdb reference
+	typ, tmdbId, err := decodeTmdbRef(cmd.ForeignKey)
+	if err != nil {
+		return err
+	}
+
+	// it is TMDb id (movie or other type)
+	if typ != "" {
+		if typ != themoviedbapi.MediaTypeMovie {
+			return fmt.Errorf("trying to pull movie metadata but given tmdb type: %s", typ)
+		}
+
+		info, err = tmdb.OpenMovie(ctx.Ctx, tmdbId)
+		if err != nil {
+			return err
+		}
+	} else { // not TMDb ID => IMDb ID then
+		info, err = tmdb.OpenMovieByImdbId(ctx.Ctx, cmd.ForeignKey)
+		if err != nil {
+			return err
+		}
+	}
+
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		collection, err := stodb.Read(tx).Collection(cmd.Collection)
 		if err != nil {
 			return err
-		}
-
-		var info *themoviedbapi.Movie
-
-		// check if tmdb reference
-		typ, tmdbId, err := decodeTmdbRef(cmd.ForeignKey)
-		if err != nil {
-			return err
-		}
-
-		// it is TMDb id (movie or other type)
-		if typ != "" {
-			if typ != themoviedbapi.MediaTypeMovie {
-				return fmt.Errorf("trying to pull movie metadata but given tmdb type: %s", typ)
-			}
-
-			info, err = tmdb.OpenMovie(ctx.Ctx, tmdbId)
-			if err != nil {
-				return err
-			}
-		} else { // not TMDb ID => IMDb ID then
-			info, err = tmdb.OpenMovieByImdbId(ctx.Ctx, cmd.ForeignKey)
-			if err != nil {
-				return err
-			}
 		}
 
 		if cmd.ScrubName {
@@ -74,9 +89,6 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 		}
 		if info.RevenueDollars != 0 {
 			collection.Metadata[stoservertypes.MetadataVideoRevenueDollars] = strconv.Itoa(int(info.RevenueDollars))
-		}
-		if info.BackdropPath != "" {
-			collection.Metadata[stoservertypes.MetadataBackdrop] = themoviedbapi.ImagePath(info.BackdropPath, "original")
 		}
 		if info.ReleaseDate != "" {
 			collection.Metadata[stoservertypes.MetadataReleaseDate] = info.ReleaseDate
@@ -126,32 +138,38 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 			return err
 		}
 
-		dir.Metadata[stoservertypes.MetadataTheMovieDbTvId] = fmt.Sprintf("%d", tv.Id)
-
-		if tv.BackdropPath != "" {
-			dir.Metadata[stoservertypes.MetadataBackdrop] = themoviedbapi.ImagePath(tv.BackdropPath, "original")
+		metaColl, err := metaCollForDir(dir, tx, c.conf.KeyStore)
+		if err != nil {
+			return err
 		}
 
+		metaColl.Metadata[stoservertypes.MetadataTheMovieDbTvId] = fmt.Sprintf("%d", tv.Id)
+
 		if tv.Overview != "" {
-			dir.Metadata[stoservertypes.MetadataOverview] = tv.Overview
+			metaColl.Metadata[stoservertypes.MetadataOverview] = tv.Overview
 		}
 
 		if tv.Homepage != "" {
-			dir.Metadata[stoservertypes.MetadataHomepage] = tv.Homepage
+			metaColl.Metadata[stoservertypes.MetadataHomepage] = tv.Homepage
 		}
 
 		if tv.ExternalIds.ImdbId != "" {
-			dir.Metadata[stoservertypes.MetadataImdbId] = tv.ExternalIds.ImdbId
+			metaColl.Metadata[stoservertypes.MetadataImdbId] = tv.ExternalIds.ImdbId
 		}
 
 		metaColl.BumpGlobalVersion()
 
-		return stodb.DirectoryRepository.Update(dir, tx)
+		return stodb.CollectionRepository.Update(metaColl, tx)
 	})
 }
 
 // this is for serie episodes
 func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.CollectionRefreshMetadataAutomatically, ctx *command.Ctx) error {
+	tmdb, err := themoviedbapiClient(c.db)
+	if err != nil {
+		return err
+	}
+
 	collIds := *cmd.Collections
 
 	if len(collIds) == 0 {
@@ -175,14 +193,19 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 		}
 
 		tmdbTvId := ""
-		for _, parentDir := range parentDirs {
-			tmdbTvId = parentDir.Metadata[stoservertypes.MetadataTheMovieDbTvId]
-			if tmdbTvId != "" {
-				break
+		for _, parentDir := range append(parentDirs, *firstCollDirectory) {
+			if parentDir.MetaCollection != "" {
+				metaColl, err := stodb.Read(tx).Collection(parentDir.MetaCollection)
+				if err != nil {
+					return err
+				}
+
+				tmdbTvId = metaColl.Metadata[stoservertypes.MetadataTheMovieDbTvId]
+				if tmdbTvId != "" {
+					break
+				}
 			}
-		}
-		if tmdbTvId == "" {
-			tmdbTvId = firstCollDirectory.Metadata[stoservertypes.MetadataTheMovieDbTvId] // one last try
+
 		}
 		if tmdbTvId == "" {
 			return fmt.Errorf("could not resolve %s for collection", stoservertypes.MetadataTheMovieDbTvId)
@@ -234,11 +257,6 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 			}
 		}
 
-		tmdb, err := themoviedbapiClient(c.db)
-		if err != nil {
-			return err
-		}
-
 		for _, seasonNumber := range uniqueSeasonNumbers {
 			episodes, err := tmdb.GetSeasonEpisodes(ctx.Ctx, seasonNumber, tmdbTvId)
 			if err != nil {
@@ -287,11 +305,6 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 				if ep.Overview != "" {
 					coll.Metadata[stoservertypes.MetadataOverview] = ep.Overview
 				}
-				if ep.StillPath != "" {
-					coll.Metadata[stoservertypes.MetadataThumbnail] = themoviedbapi.ImagePath(
-						ep.StillPath,
-						"original")
-				}
 
 				coll.BumpGlobalVersion()
 
@@ -314,11 +327,6 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 	igdbId := cmd.ForeignKey
 
 	gameDetails, err := igdb.GameById(ctx.Ctx, igdbId)
-	if err != nil {
-		return err
-	}
-
-	screenshotUrls, err := igdb.GameScreenshotUrls(ctx.Ctx, igdbId)
 	if err != nil {
 		return err
 	}
@@ -389,10 +397,6 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 				// only link the first
 				coll.Metadata[stoservertypes.MetadataYoutubeId] = youtubeVideoIds[0]
 			}
-		}
-
-		if len(screenshotUrls) > 0 {
-			coll.Metadata[stoservertypes.MetadataBackdrop] = screenshotUrls[0]
 		}
 
 		coll.BumpGlobalVersion()
@@ -490,4 +494,23 @@ func maybeRename(coll *stotypes.Collection, scrubbedName string, tx *bbolt.Tx) e
 	coll.Name = scrubbedName
 
 	return validateUniqueNameWithinSiblings(coll.Directory, coll.Name, tx)
+}
+
+// - saves given directory, meta collection is created on-the-fly
+// - possibly created meta collection is not saved
+func metaCollForDir(dir *stotypes.Directory, tx *bbolt.Tx, keyStore *stokeystore.Store) (*stotypes.Collection, error) {
+	var metaColl *stotypes.Collection
+
+	if dir.MetaCollection != "" {
+		return stodb.Read(tx).Collection(dir.MetaCollection)
+	}
+
+	metaColl, err := createCollection(stoservertypes.StoDirMetaName, dir.ID, keyStore, tx)
+	if err != nil {
+		return nil, err
+	}
+
+	dir.MetaCollection = metaColl.ID
+
+	return metaColl, stodb.DirectoryRepository.Update(dir, tx)
 }

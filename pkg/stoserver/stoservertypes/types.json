@@ -42,7 +42,8 @@
 	"stringConsts": [
 		{ "key": "RootFolderId", "value": "root" },
 		{ "key": "RootPathDotBase64FIXME", "value": "Lg==" },
-		{ "key": "MetadataBackdrop", "value": "backdrop_url" },
+		{ "key": "BannerPath", "value": ".sto/banner.jpg" },
+		{ "key": "StoDirMetaName", "value": ".stodirmeta" },
 		{ "key": "MetadataHomepage", "value": "homepage" },
 		{ "key": "MetadataPreviousName", "value": "previous_name" },
 		{ "key": "MetadataImdbId", "value": "imdb.com:title:id" },
@@ -59,7 +60,6 @@
 		{ "key": "MetadataRedditSlug", "value": "reddit.com:subreddit:slug" },
 		{ "key": "MetadataWikipediaSlug", "value": "en.wikipedia.org:slug" },
 		{ "key": "MetadataIgdbGameId", "value": "igdb.com:game:id" },
-		{ "key": "MetadataThumbnail", "value": "thumbnail_url" },
 		{ "key": "MetadataTitle", "value": "title" },
 		{ "key": "MetadataVideoRevenueDollars", "value": "video.revenue_dollars" },
 		{ "key": "MetadataVideoRuntimeMins", "value": "video.runtime_mins" },
@@ -71,6 +71,7 @@
 		{ "key": "CfgUpdateStatusAt", "value": "update_status_at" },
 		{ "key": "CfgNodeTlsCertKey", "value": "node_tls_cert_key" },
 		{ "key": "CfgGrafanaUrl", "value": "grafana_url" },
+		{ "key": "CfgMediascannerState", "value": "mediascanner_state" },
 		{ "key": "HeadRevisionId", "value": "head" }
 	],
 	"enums": [
@@ -231,10 +232,9 @@
 				"Id": {"_": "string"},
 				"Parent": {"_": "string"},
 				"Name": {"_": "string"},
-				"Description": {"_": "string"},
+				"MetaCollectionId": {"_": "string"},
 				"ReplicationPolicy": {"_": "string", "nullable": true},
 				"Type": {"_": "DirectoryType"},
-				"Metadata": {"_": "list", "of": {"_": "MetadataKv"}},
 				"Sensitivity": {"_": "integer"}
 			}}
 		},
@@ -260,10 +260,17 @@
 		{
 			"name": "DirectoryOutput",
 			"type": {"_": "object", "fields": {
+				"Directory": {"_": "DirectoryAndMeta"},
+				"Parents": {"_": "list", "of": {"_": "DirectoryAndMeta"}},
+				"SubDirectories": {"_": "list", "of": {"_": "DirectoryAndMeta"}},
+				"Collections": {"_": "list", "of": {"_": "CollectionSubsetWithMeta"}}
+			}}
+		},
+		{
+			"name": "DirectoryAndMeta",
+			"type": {"_": "object", "fields": {
 				"Directory": {"_": "Directory"},
-				"Parents": {"_": "list", "of": {"_": "Directory"}},
-				"Directories": {"_": "list", "of": {"_": "Directory"}},
-				"Collections": {"_": "list", "of": {"_": "CollectionSubset"}}
+				"MetaCollection": {"_": "CollectionSubsetWithMeta", "nullable": true}
 			}}
 		},
 		{
@@ -293,6 +300,14 @@
 			}}
 		},
 		{
+			"name": "CollectionSubsetWithMeta",
+			"type": {"_": "object", "fields": {
+				"Collection": {"_": "CollectionSubset"},
+				"FilesInMeta": {"_": "list", "of": {"_": "string"}},
+				"FilesInMetaAt": {"_": "string"}
+			}}
+		},
+		{
 			"name": "CollectionSubset",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
@@ -314,7 +329,7 @@
 			"name": "CollectionOutput",
 			"type": {"_": "object", "fields": {
 				"TotalSize": {"_": "integer"},
-				"Collection": {"_": "CollectionSubset"},
+				"CollectionWithMeta": {"_": "CollectionSubsetWithMeta"},
 				"FileCount": {"_": "integer"},
 				"ChangesetId": {"_": "string"},
 				"SelectedPathContents": {"_": "SelectedPathContents"}

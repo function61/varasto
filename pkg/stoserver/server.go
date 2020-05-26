@@ -34,6 +34,7 @@ import (
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/restartcontroller"
 	"github.com/function61/varasto/pkg/scheduler"
+	"github.com/function61/varasto/pkg/stomediascanner"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
@@ -131,14 +132,14 @@ func runServer(
 
 	serverConfig.ThumbServer = &subsystem{
 		id:        stoservertypes.SubsystemIdThumbnailGenerator,
-		httpMount: "/api/thumbnails",
+		httpMount: "/api/mediascanner",
 		enabled:   true,
 		controller: childprocesscontroller.New(
-			[]string{os.Args[0], "server", "thumbserver", "--addr", "domainsocket://" + thumbnailerSockAddr},
-			"Thumbnail generator",
-			logex.Prefix("manager(thumbserver)", logger),
-			logex.Prefix("thumbserver", logger),
-			func(task func(context.Context) error) { tasks.Start("manager(thumbserver)", task) }),
+			[]string{os.Args[0], "server", stomediascanner.Verb, "--addr", "domainsocket://" + thumbnailerSockAddr},
+			"Media scanner",
+			logex.Prefix("manager(mediascanner)", logger),
+			logex.Prefix("mediascanner", logger),
+			func(task func(context.Context) error) { tasks.Start("manager(mediascanner)", task) }),
 		sockPath: thumbnailerSockAddr,
 	}
 

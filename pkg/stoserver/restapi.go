@@ -103,52 +103,92 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		return httpErr(err, http.StatusInternalServerError)
 	}
 
-	colls := []stoservertypes.CollectionSubset{}
+	collsWithMeta := []stoservertypes.CollectionSubsetWithMeta{}
 	for _, dbColl := range dbColls {
-		colls = append(colls, convertDbCollection(dbColl, nil)) // FIXME: nil ok?
+		if dbColl.Name == stoservertypes.StoDirMetaName {
+			continue
+		}
+
+		state, err := stateresolver.ComputeStateAtHead(dbColl)
+		if err != nil {
+			return httpErr(err, http.StatusInternalServerError)
+		}
+
+		collWithMeta, err := convertDbCollection(dbColl, nil, state)
+		if err != nil {
+			return httpErr(err, http.StatusInternalServerError)
+		}
+
+		collsWithMeta = append(collsWithMeta, *collWithMeta)
 	}
-	sort.Slice(colls, func(i, j int) bool { return colls[i].Name < colls[j].Name })
+	sort.Slice(collsWithMeta, func(i, j int) bool { return collsWithMeta[i].Collection.Name < collsWithMeta[j].Collection.Name })
 
 	dbSubDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
 	if err != nil {
 		return httpErr(err, http.StatusInternalServerError)
 	}
 
-	subDirs := []stoservertypes.Directory{}
+	subDirsWithMeta := []stoservertypes.DirectoryAndMeta{}
 	for _, dbSubDir := range dbSubDirs {
-		subDirs = append(subDirs, convertDir(dbSubDir))
+		subDirWithMeta, err := newDirectoryAndMeta(convertDir(dbSubDir), tx)
+		if err != nil {
+			return httpErr(err, http.StatusInternalServerError)
+		}
+
+		subDirsWithMeta = append(subDirsWithMeta, *subDirWithMeta)
 	}
-	sort.Slice(subDirs, func(i, j int) bool { return subDirs[i].Name < subDirs[j].Name })
+	sort.Slice(subDirsWithMeta, func(i, j int) bool { return subDirsWithMeta[i].Directory.Name < subDirsWithMeta[j].Directory.Name })
+
+	parentDirsAndMeta := []stoservertypes.DirectoryAndMeta{}
+	for _, parent := range parentDirsConverted {
+		parentDirAndMeta, err := newDirectoryAndMeta(parent, tx)
+		if err != nil {
+			return httpErr(err, http.StatusInternalServerError)
+		}
+
+		parentDirsAndMeta = append(parentDirsAndMeta, *parentDirAndMeta)
+	}
+
+	directoryAndMeta, err := newDirectoryAndMeta(convertDir(*dir), tx)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 
 	return &stoservertypes.DirectoryOutput{
-		Directory:   convertDir(*dir),
-		Parents:     parentDirsConverted,
-		Directories: subDirs,
-		Collections: colls,
+		Directory:      *directoryAndMeta,
+		Parents:        parentDirsAndMeta,
+		SubDirectories: subDirsWithMeta,
+		Collections:    collsWithMeta,
 	}
 }
 
 func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.CollectionOutput {
+	httpErr := func(err error, code int) *stoservertypes.CollectionOutput {
+		http.Error(w, err.Error(), code)
+		return nil
+	}
+
 	collectionId := mux.Vars(r)["id"]
 	changesetId := mux.Vars(r)["rev"]
 	pathBytes, err := base64.StdEncoding.DecodeString(mux.Vars(r)["path"])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return nil
+		return httpErr(err, http.StatusBadRequest)
 	}
 
 	tx, err := h.db.Begin(false)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	coll, err := stodb.Read(tx).Collection(collectionId)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			http.Error(w, "not found", http.StatusNotFound)
+			return nil
 		} else {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return httpErr(err, http.StatusInternalServerError)
 		}
-		return nil
 	}
 
 	if changesetId == stoservertypes.HeadRevisionId {
@@ -156,7 +196,9 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 	}
 
 	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
-	panicIfError(err)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
 
 	allFilesInRevision := state.FileList()
 
@@ -184,6 +226,11 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		})
 	}
 
+	collApi, err := convertDbCollection(*coll, changesetsConverted, state)
+	if err != nil {
+		return httpErr(err, http.StatusInternalServerError)
+	}
+
 	return &stoservertypes.CollectionOutput{
 		TotalSize: int(totalSize), // FIXME
 		SelectedPathContents: stoservertypes.SelectedPathContents{
@@ -192,9 +239,9 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 			ParentDirs: peekResult.ParentDirs,
 			SubDirs:    peekResult.SubDirs,
 		},
-		FileCount:   len(allFilesInRevision),
-		ChangesetId: changesetId,
-		Collection:  convertDbCollection(*coll, changesetsConverted),
+		FileCount:          len(allFilesInRevision),
+		ChangesetId:        changesetId,
+		CollectionWithMeta: *collApi,
 	}
 }
 
@@ -1137,6 +1184,8 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 		val, err = stodb.CfgUbackupConfig.GetOptional(tx)
 	case stoservertypes.CfgGrafanaUrl:
 		val, err = stodb.CfgGrafanaUrl.GetOptional(tx)
+	case stoservertypes.CfgMediascannerState:
+		val, err = stodb.CfgMediascannerState.GetOptional(tx)
 	default:
 		return httpErr(fmt.Errorf("unknown key: %s", key), http.StatusNotFound)
 	}

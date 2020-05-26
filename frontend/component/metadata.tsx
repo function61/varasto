@@ -1,7 +1,7 @@
 import { DefaultLabel, Panel } from 'f61ui/component/bootstrap';
 import { globalConfig } from 'f61ui/globalconfig';
+import { CollectionTagView } from 'component/tags';
 import {
-	MetadataBackdrop,
 	MetadataHomepage,
 	MetadataImdbId,
 	MetadataKv,
@@ -10,31 +10,45 @@ import {
 	MetadataTheMovieDbMovieId,
 	MetadataTheMovieDbTvId,
 	MetadataIgdbGameId,
-	MetadataThumbnail,
 	MetadataGooglePlayApp,
 	MetadataAppleAppStoreApp,
 	MetadataSteamAppId,
 	MetadataGogSlug,
 	MetadataYoutubeId,
 	MetadataRedditSlug,
+	MetadataTitle,
 	MetadataWikipediaSlug,
+	BannerPath,
+	CollectionSubsetWithMeta,
+	HeadRevisionId,
+	RootPathDotBase64FIXME,
 	MetadataVideoRevenueDollars,
 	MetadataVideoRuntimeMins,
 } from 'generated/stoserver/stoservertypes_types';
-import { igdbIntegrationRedirUrl } from 'generated/stoserver/stoservertypes_endpoints';
+import { collectionUrl } from 'generated/frontend_uiroutes';
+import {
+	igdbIntegrationRedirUrl,
+	downloadFileUrl,
+} from 'generated/stoserver/stoservertypes_endpoints';
 import * as React from 'react';
-
 interface MetadataKeyValue {
 	[key: string]: string;
 }
 
 interface MetadataPanelProps {
-	data: MetadataKeyValue;
+	showTitle?: boolean; // shows title and publication date
+	showDetails?: boolean; // shows summary, publication date and external links
+	imageLinksToCollection?: boolean;
+	collWithMeta: CollectionSubsetWithMeta;
 }
 
 export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 	render() {
-		const metadata = this.props.data;
+		// shorthands
+		const collWithMeta = this.props.collWithMeta;
+		const coll = collWithMeta.Collection;
+
+		const metadata = metadataKvsToKv(coll.Metadata);
 
 		if (Object.keys(metadata).length === 0) {
 			return null;
@@ -68,90 +82,109 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 			badges.push(<DefaultLabel>📅 {metadata[MetadataReleaseDate]}</DefaultLabel>);
 		}
 
+		const bannerSrc =
+			collWithMeta.FilesInMeta.indexOf(BannerPath) !== -1
+				? downloadFileUrl(coll.Id, collWithMeta.FilesInMetaAt, BannerPath)
+				: imageNotAvailable();
+
+		const title = metadata[MetadataTitle] || '';
+
+		const banner = <img src={bannerSrc} style={{ minWidth: '100%', maxWidth: '100%' }} />;
+
+		const bannerMaybeLink = this.props.imageLinksToCollection ? (
+			<a
+				href={collectionUrl({
+					id: coll.Id,
+					rev: HeadRevisionId,
+					path: RootPathDotBase64FIXME,
+				})}>
+				{banner}
+			</a>
+		) : (
+			banner
+		);
+
 		return (
 			<Panel
-				children={<img src={backdropImage(metadata)} style={{ maxWidth: '100%' }} />}
-				footer={
-					<div>
-						{overview}
-						&nbsp;
-						{badges.map((badge) => (
-							<span className="margin-left">{badge}</span>
-						))}
-						{this.maybeUrl(
-							'IMDB',
-							'https://www.imdb.com/title/{key}/',
-							metadata[MetadataImdbId],
-						)}
-						{this.maybeUrl(
-							'TMDb',
-							'https://www.themoviedb.org/movie/{key}',
-							metadata[MetadataTheMovieDbMovieId],
-						)}
-						{this.maybeUrl(
-							'TMDb',
-							'https://www.themoviedb.org/tv/{key}',
-							metadata[MetadataTheMovieDbTvId],
-						)}
-						{this.maybeUrl(
-							'IGDB',
-							'{key}',
-							metadata[MetadataIgdbGameId] &&
-								igdbIntegrationRedirUrl(metadata[MetadataIgdbGameId]),
-						)}
-						{this.maybeUrl(
-							'Steam store',
-							'https://store.steampowered.com/app/{key}',
-							metadata[MetadataSteamAppId],
-						)}
-						{this.maybeUrl(
-							'GOG.com',
-							'https://www.gog.com/game/{key}',
-							metadata[MetadataGogSlug],
-						)}
-						{this.maybeUrl(
-							'Wikipedia',
-							'https://en.wikipedia.org/wiki/{key}',
-							metadata[MetadataWikipediaSlug],
-						)}
-						{this.maybeUrl(
-							'YouTube',
-							'https://www.youtube.com/watch?v={key}',
-							metadata[MetadataYoutubeId],
-						)}
-						{this.maybeUrl(
-							'Reddit',
-							'https://www.reddit.com/r/{key}/',
-							metadata[MetadataRedditSlug],
-						)}
-						{this.maybeUrl(
-							'Google Play',
-							'https://play.google.com/store/apps/details?id={key}',
-							metadata[MetadataGooglePlayApp],
-						)}
-						{this.maybeUrl(
-							'Apple App Store',
-							'https://apps.apple.com/us/app/redirect/id{key}',
-							metadata[MetadataAppleAppStoreApp],
-						)}
-						{this.maybeUrl('Homepage', '{key}', metadata[MetadataHomepage])}
-					</div>
+				heading={
+					this.props.showTitle && (
+						<div>
+							{coll.Name} - {title} &nbsp;
+							{badges}
+							<CollectionTagView collection={coll} />
+						</div>
+					)
 				}
-			/>
+				footer={
+					this.props.showDetails && (
+						<div>
+							{title && <b>{title}.&nbsp;</b>}
+							{overview}
+							&nbsp;
+							{badges.map((badge) => (
+								<span className="margin-left">{badge}</span>
+							))}
+							{this.externalLinks(metadata)}
+						</div>
+					)
+				}
+				bodyMarginless={true}>
+				{bannerMaybeLink}
+			</Panel>
 		);
 	}
 
-	private maybeUrl(label: string, template: string, key?: string): React.ReactNode {
-		if (!key) {
-			return null;
-		}
-
-		const url = template.replace('{key}', key);
+	private externalLinks(metadata: MetadataKeyValue): React.ReactNode {
+		const links: [string, string, string | undefined][] = [
+			['IMDB', 'https://www.imdb.com/title/{key}/', metadata[MetadataImdbId]],
+			['TMDb', 'https://www.themoviedb.org/movie/{key}', metadata[MetadataTheMovieDbMovieId]],
+			['TMDb', 'https://www.themoviedb.org/tv/{key}', metadata[MetadataTheMovieDbTvId]],
+			[
+				'IGDB',
+				'{key}',
+				metadata[MetadataIgdbGameId] &&
+					igdbIntegrationRedirUrl(metadata[MetadataIgdbGameId]),
+			],
+			[
+				'Steam store',
+				'https://store.steampowered.com/app/{key}',
+				metadata[MetadataSteamAppId],
+			],
+			['GOG.com', 'https://www.gog.com/game/{key}', metadata[MetadataGogSlug]],
+			['Wikipedia', 'https://en.wikipedia.org/wiki/{key}', metadata[MetadataWikipediaSlug]],
+			['YouTube', 'https://www.youtube.com/watch?v={key}', metadata[MetadataYoutubeId]],
+			['Reddit', 'https://www.reddit.com/r/{key}/', metadata[MetadataRedditSlug]],
+			[
+				'Google Play',
+				'https://play.google.com/store/apps/details?id={key}',
+				metadata[MetadataGooglePlayApp],
+			],
+			[
+				'Apple App Store',
+				'https://apps.apple.com/us/app/redirect/id{key}',
+				metadata[MetadataAppleAppStoreApp],
+			],
+			['Homepage', '{key}', metadata[MetadataHomepage]],
+		];
 
 		return (
-			<a href={url} target="_blank" className="margin-left">
-				<DefaultLabel>🔗 {label}</DefaultLabel>
-			</a>
+			<span>
+				{links.map((linkDef) => {
+					const [label, template, key] = linkDef;
+
+					if (!key) {
+						return null;
+					}
+
+					const url = template.replace('{key}', key);
+
+					return (
+						<a href={url} target="_blank" className="margin-left">
+							<DefaultLabel>🔗 {label}</DefaultLabel>
+						</a>
+					);
+				})}
+			</span>
 		);
 	}
 }
@@ -162,10 +195,6 @@ export function metadataKvsToKv(kvs: MetadataKv[]): MetadataKeyValue {
 		ret[kv.Key] = kv.Value;
 	});
 	return ret;
-}
-
-export function backdropImage(metadata: MetadataKeyValue): string {
-	return metadata[MetadataBackdrop] || metadata[MetadataThumbnail] || imageNotAvailable();
 }
 
 export function imageNotAvailable(): string {

@@ -1,0 +1,5 @@
+{
+	"endpoints": [
+		{ "chain": "public", "method": "GET", "path": "/api/mediascanner/collections/{id}?mode={mode}", "name": "triggerScan" }
+	]
+}

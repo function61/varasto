@@ -1,6 +1,10 @@
 package stoserver
 
 import (
+	"strings"
+
+	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
@@ -20,16 +24,19 @@ func convertDir(dir stotypes.Directory) stoservertypes.Directory {
 	return stoservertypes.Directory{
 		Id:                dir.ID,
 		Parent:            dir.Parent,
+		MetaCollectionId:  dir.MetaCollection,
 		Name:              dir.Name,
-		Description:       dir.Description,
 		ReplicationPolicy: replicationPolicy,
 		Type:              typ,
-		Metadata:          metadataMapToKvList(dir.Metadata),
 		Sensitivity:       dir.Sensitivity,
 	}
 }
 
-func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.ChangesetSubset) stoservertypes.CollectionSubset {
+func convertDbCollection(
+	coll stotypes.Collection,
+	changesets []stoservertypes.ChangesetSubset,
+	state *stateresolver.StateAt,
+) (*stoservertypes.CollectionSubsetWithMeta, error) {
 	encryptionKeyIds := []string{}
 	for _, encryptionKey := range coll.EncryptionKeys {
 		encryptionKeyIds = append(encryptionKeyIds, encryptionKey.KeyId)
@@ -40,7 +47,7 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 		rating = &coll.Rating
 	}
 
-	return stoservertypes.CollectionSubset{
+	subset := stoservertypes.CollectionSubset{
 		Id:                coll.ID,
 		Head:              coll.Head,
 		Created:           coll.Created,
@@ -55,6 +62,19 @@ func convertDbCollection(coll stotypes.Collection, changesets []stoservertypes.C
 		Rating:            rating,
 		Changesets:        changesets,
 	}
+
+	filesInMeta := []string{}
+	for _, file := range state.FileList() {
+		if strings.HasPrefix(file.Path, ".sto/") {
+			filesInMeta = append(filesInMeta, file.Path)
+		}
+	}
+
+	return &stoservertypes.CollectionSubsetWithMeta{
+		Collection:    subset,
+		FilesInMeta:   filesInMeta,
+		FilesInMetaAt: subset.Head,
+	}, nil
 }
 
 func convertFile(file stotypes.File) stoservertypes.File {
@@ -93,4 +113,30 @@ func metadataMapToKvList(kvmap map[string]string) []stoservertypes.MetadataKv {
 	}
 
 	return kvList
+}
+
+func newDirectoryAndMeta(dir stoservertypes.Directory, tx *bbolt.Tx) (*stoservertypes.DirectoryAndMeta, error) {
+	var metaCollection *stoservertypes.CollectionSubsetWithMeta
+
+	if dir.MetaCollectionId != "" {
+		metaCollectionDb, err := stodb.Read(tx).Collection(dir.MetaCollectionId)
+		if err != nil {
+			return nil, err
+		}
+
+		state, err := stateresolver.ComputeStateAtHead(*metaCollectionDb)
+		if err != nil {
+			return nil, err
+		}
+
+		metaCollection, err = convertDbCollection(*metaCollectionDb, []stoservertypes.ChangesetSubset{}, state)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &stoservertypes.DirectoryAndMeta{
+		Directory:      dir,
+		MetaCollection: metaCollection,
+	}, nil
 }

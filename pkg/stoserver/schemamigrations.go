@@ -150,6 +150,11 @@ func from3to4(tx *bbolt.Tx) error {
 func from4to5(tx *bbolt.Tx) error {
 	nextGlobalVersion := uint64(1)
 
+	keyStore, err := loadAndFillKeyStore(tx)
+	if err != nil {
+		return err
+	}
+
 	if err := stodb.CollectionRepository.Each(func(record interface{}) error {
 		coll := record.(*stotypes.Collection)
 
@@ -164,6 +169,14 @@ func from4to5(tx *bbolt.Tx) error {
 		move("themoviedb.id", stoservertypes.MetadataTheMovieDbMovieId)
 		move("themoviedb.episode_id", stoservertypes.MetadataTheMovieDbTvEpisodeId)
 		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
+
+		if _, has := coll.Metadata["thumbnail_url"]; has {
+			delete(coll.Metadata, "thumbnail_url")
+		}
+
+		if _, has := coll.Metadata["backdrop_url"]; has {
+			delete(coll.Metadata, "backdrop_url")
+		}
 
 		if coll.GlobalVersion == 0 {
 			// make sure each collection gets unique version
@@ -180,14 +193,19 @@ func from4to5(tx *bbolt.Tx) error {
 	return stodb.DirectoryRepository.Each(func(record interface{}) error {
 		dir := record.(*stotypes.Directory)
 
-		anyMoves := false
-
 		move := func(from string, to string) {
-			if value, has := dir.Metadata[from]; has {
-				dir.Metadata[to] = value
-				delete(dir.Metadata, from)
-				anyMoves = true
+			if value, has := dir.Deprecated1[from]; has {
+				dir.Deprecated1[to] = value
+				delete(dir.Deprecated1, from)
 			}
+		}
+
+		if _, has := dir.Deprecated1["thumbnail_url"]; has {
+			delete(dir.Deprecated1, "thumbnail_url")
+		}
+
+		if _, has := dir.Deprecated1["backdrop_url"]; has {
+			delete(dir.Deprecated1, "backdrop_url")
 		}
 
 		move("imdb.id", stoservertypes.MetadataImdbId)
@@ -195,10 +213,33 @@ func from4to5(tx *bbolt.Tx) error {
 		move("themoviedb.episode_id", stoservertypes.MetadataTheMovieDbTvEpisodeId)
 		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
 
-		if anyMoves {
-			return stodb.DirectoryRepository.Update(dir, tx)
-		} else { // perf optimization
-			return nil
+		if len(dir.Deprecated1) > 0 {
+			metaColl, err := metaCollForDir(dir, tx, keyStore)
+			if err != nil {
+				return err
+			}
+
+			metaColl.Metadata = dir.Deprecated1
+			dir.Deprecated1 = nil
+
+			if err := stodb.CollectionRepository.Update(metaColl, tx); err != nil {
+				return err
+			}
 		}
+
+		if dir.Deprecated2 != "" {
+			metaColl, err := metaCollForDir(dir, tx, keyStore)
+			if err != nil {
+				return err
+			}
+
+			metaColl.Description = dir.Deprecated2
+
+			if err := stodb.CollectionRepository.Update(metaColl, tx); err != nil {
+				return err
+			}
+		}
+
+		return stodb.DirectoryRepository.Update(dir, tx)
 	}, tx)
 }

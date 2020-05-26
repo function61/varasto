@@ -427,6 +427,20 @@
 		]
 	},
 	{
+		"command": "collection.TriggerMediaScan",
+		"chain": "public",
+		"ctor": ["Collection"],
+		"crudNature": "update",
+		"title": "Metadata: refresh",
+		"info": [
+			"If metadata scanner had trouble while automatically trying to fetch metadata, you can trigger manual re-try"
+		],
+		"fields": [
+			{ "key": "Collection", "hideIfDefaultValue": true },
+			{ "key": "AllowDestructive", "title": "Allow destructive actions", "help": "If video files have thumbnail with same file base name, move it under metadata as actual thumbnail of that file - even persists across renames.", "type": "checkbox" }
+		]
+	},
+	{
 		"command": "collection.ChangeSensitivity",
 		"chain": "public",
 		"ctor": ["Id","Sensitivity"],
@@ -728,6 +742,16 @@
 		"title": "Set Grafana URL",
 		"fields": [
 			{ "key": "Url", "title": "Grafana URL", "optional": true, "placeholder": "https://grafana.example.com/d/LrjytbeZz/varasto?orgId=1&kiosk=tv" }
+		]
+	},
+	{
+		"command": "config.SetMediascannerState",
+		"chain": "public",
+		"ctor": ["State"],
+		"crudNature": "update",
+		"title": "Set media scanner state",
+		"fields": [
+			{ "key": "State", "optional": true }
 		]
 	},
 	{

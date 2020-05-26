@@ -11,8 +11,8 @@ import (
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/restartcontroller"
+	"github.com/function61/varasto/pkg/stomediascanner"
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
-	"github.com/function61/varasto/pkg/stoserver/stothumbserver"
 	"github.com/spf13/cobra"
 )
 
@@ -85,7 +85,7 @@ func Entrypoint() *cobra.Command {
 		},
 	})
 
-	cmd.AddCommand(stothumbserver.Entrypoint())
+	cmd.AddCommand(stomediascanner.Entrypoint())
 
 	return cmd
 }

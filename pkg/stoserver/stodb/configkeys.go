@@ -14,4 +14,5 @@ var (
 	CfgUpdateStatusAt      = configAccessor(stoservertypes.CfgUpdateStatusAt)
 	CfgNodeTlsCertKey      = configAccessor(stoservertypes.CfgNodeTlsCertKey)
 	CfgGrafanaUrl          = configAccessor(stoservertypes.CfgGrafanaUrl)
+	CfgMediascannerState   = configAccessor(stoservertypes.CfgMediascannerState)
 )

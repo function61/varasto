@@ -6,6 +6,7 @@ import {
 	CollectionChangeSensitivity,
 	CollectionDelete,
 	CollectionMove,
+	CollectionTriggerMediaScan,
 	CollectionPullTmdbMetadata,
 	CollectionPullIgdbMetadata,
 	CollectionRename,
@@ -27,6 +28,7 @@ export function collectionDropdown(coll: CollectionSubset) {
 			<CommandLink
 				command={CollectionPullIgdbMetadata(coll.Id, { ForeignKey: igdbAutocomplete })}
 			/>
+			<CommandLink command={CollectionTriggerMediaScan(coll.Id)} />
 			<CommandLink command={CollectionTag(coll.Id, { disambiguation: coll.Name })} />
 			<CommandLink command={CollectionDelete(coll.Id, { disambiguation: coll.Name })} />
 		</Dropdown>

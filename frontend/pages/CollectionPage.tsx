@@ -1,9 +1,9 @@
 import { tmdbMovieAutocomplete } from 'component/autocompletes';
 import { AssetImg } from 'component/assetimg';
 import { collectionDropdown } from 'component/collectiondropdown';
-import { Filetype, filetypeForFile, iconForFiletype } from 'component/filetypes';
+import { filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { FileUploadArea } from 'component/fileupload';
-import { metadataKvsToKv, MetadataPanel } from 'component/metadata';
+import { metadataKvsToKv, MetadataPanel, imageNotAvailable } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
 import { Result } from 'f61ui/component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
@@ -40,7 +40,7 @@ import {
 	ChangesetSubset,
 	CollectionOutput,
 	ConfigValue,
-	Directory,
+	DirectoryAndMeta,
 	DirectoryOutput,
 	HeadRevisionId,
 	DirectoryType,
@@ -61,7 +61,6 @@ interface CollectionPageProps {
 
 interface CollectionPageState {
 	collectionOutput: Result<CollectionOutput>;
-	collectionOutputFixme?: CollectionOutput; // for file uploads, think again
 	directoryOutput: Result<DirectoryOutput>;
 	networkShareBaseUrl: Result<ConfigValue>;
 	selectedFileHashes: string[];
@@ -118,10 +117,10 @@ export default class CollectionPage extends React.Component<
 				titleElem={
 					<span>
 						{ret.title}
-						{collectionOutput.Collection.Description && (
+						{collectionOutput.CollectionWithMeta.Collection.Description && (
 							<span className="margin-left">
 								<DefaultLabel>
-									{collectionOutput.Collection.Description}
+									{collectionOutput.CollectionWithMeta.Collection.Description}
 								</DefaultLabel>
 							</span>
 						)}
@@ -135,8 +134,12 @@ export default class CollectionPage extends React.Component<
 	}
 
 	private renderData(collOutput: CollectionOutput, directoryOutput: DirectoryOutput) {
+		const coll = collOutput.CollectionWithMeta.Collection; // shorthand
+
 		const eligibleForThumbnail = collOutput.SelectedPathContents.Files.filter(
-			(file) => filetypeForFile(file) === Filetype.Picture,
+			(file) =>
+				collOutput.CollectionWithMeta.FilesInMeta.indexOf(makeThumbPath(file.Sha256)) !==
+				-1,
 		);
 
 		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,7 +156,7 @@ export default class CollectionPage extends React.Component<
 		};
 
 		const fileToRow = (file: File2) => {
-			const dl = downloadFileUrl(collOutput.Collection.Id, collOutput.ChangesetId, file.Path);
+			const dl = downloadFileUrl(coll.Id, collOutput.ChangesetId, file.Path);
 
 			return (
 				<tr key={file.Path}>
@@ -214,7 +217,7 @@ export default class CollectionPage extends React.Component<
 					<td>
 						<a
 							href={collectionUrl({
-								id: collOutput.Collection.Id,
+								id: coll.Id,
 								rev: changeset.Id,
 								path: this.props.pathBase64,
 							})}>
@@ -228,12 +231,21 @@ export default class CollectionPage extends React.Component<
 			);
 		};
 
-		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
+		const changesetsReversed = coll.Changesets.slice().reverse();
 
 		const toThumbnail = (file: File2) => {
-			const dl = downloadFileUrl(collOutput.Collection.Id, collOutput.ChangesetId, file.Path);
+			const dl = downloadFileUrl(coll.Id, collOutput.ChangesetId, file.Path);
 
-			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&file=${file.Sha256}`;
+			const thumbPath = makeThumbPath(file.Sha256);
+
+			const thumbUrl =
+				collOutput.CollectionWithMeta.FilesInMeta.indexOf(thumbPath) !== -1
+					? downloadFileUrl(
+							coll.Id,
+							collOutput.CollectionWithMeta.FilesInMetaAt,
+							thumbPath,
+					  )
+					: imageNotAvailable();
 
 			return (
 				<a href={dl} target="_blank" title={file.Path} className="margin-left">
@@ -247,11 +259,13 @@ export default class CollectionPage extends React.Component<
 				collOutput.SelectedPathContents.Files.length ===
 			0;
 
-		const metadataKv = metadataKvsToKv(collOutput.Collection.Metadata);
+		const metadataKv = metadataKvsToKv(coll.Metadata);
 
 		const inMoviesOrSeriesHierarchy =
 			directoryOutput.Parents.concat(directoryOutput.Directory).filter(
-				(dir) => dir.Type === DirectoryType.Movies || dir.Type === DirectoryType.Series,
+				(dir) =>
+					dir.Directory.Type === DirectoryType.Movies ||
+					dir.Directory.Type === DirectoryType.Series,
 			).length > 0;
 		const imdbIdExpectedButMissing =
 			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);
@@ -262,11 +276,14 @@ export default class CollectionPage extends React.Component<
 
 				<div className="row">
 					<div className="col-md-8">
-						<MetadataPanel data={metadataKv} />
+						<MetadataPanel
+							collWithMeta={collOutput.CollectionWithMeta}
+							showDetails={true}
+						/>
 
-						{eligibleForThumbnail.length > 0 ? (
+						{eligibleForThumbnail.length > 0 && (
 							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
-						) : null}
+						)}
 
 						<Panel heading="Files">
 							<table className={tableClassStripedHover}>
@@ -293,7 +310,7 @@ export default class CollectionPage extends React.Component<
 								<span className="margin-right">
 									<CommandButton
 										command={CollectionMoveFilesIntoAnotherCollection(
-											collOutput.Collection.Id,
+											coll.Id,
 											this.state.selectedFileHashes,
 										)}
 									/>
@@ -301,7 +318,7 @@ export default class CollectionPage extends React.Component<
 								<span className="margin-right">
 									<CommandButton
 										command={CollectionDeleteFiles(
-											collOutput.Collection.Id,
+											coll.Id,
 											this.state.selectedFileHashes,
 										)}
 									/>
@@ -317,7 +334,7 @@ export default class CollectionPage extends React.Component<
 							heading={
 								<div>
 									Details &nbsp;
-									{collectionDropdown(collOutput.Collection)}
+									{collectionDropdown(coll)}
 								</div>
 							}>
 							<table className={tableClassStripedHover}>
@@ -325,34 +342,29 @@ export default class CollectionPage extends React.Component<
 									<tr>
 										<th>Id</th>
 										<td>
-											{collOutput.Collection.Id}
+											{coll.Id}
 
 											<span className="margin-left">
-												<ClipboardButton text={collOutput.Collection.Id} />
+												<ClipboardButton text={coll.Id} />
 											</span>
 										</td>
 									</tr>
 									<tr>
 										<th>Tags</th>
 										<td>
-											<CollectionTagEditor
-												collection={collOutput.Collection}
-											/>
+											<CollectionTagEditor collection={coll} />
 										</td>
 									</tr>
 									<tr>
 										<th>Rating</th>
 										<td>
-											<RatingEditor
-												rating={collOutput.Collection.Rating}
-												collId={collOutput.Collection.Id}
-											/>
+											<RatingEditor rating={coll.Rating} collId={coll.Id} />
 										</td>
 									</tr>
 									<tr>
 										<th>Created</th>
 										<td>
-											<Timestamp ts={collOutput.Collection.Created} />
+											<Timestamp ts={coll.Created} />
 										</td>
 									</tr>
 									<tr>
@@ -367,27 +379,21 @@ export default class CollectionPage extends React.Component<
 									</tr>
 									<tr>
 										<th>Replication policy</th>
-										<td>{collOutput.Collection.ReplicationPolicy}</td>
+										<td>{coll.ReplicationPolicy}</td>
 									</tr>
 									<tr>
 										<th>
 											Encryption keys{' '}
 											<Info text="Usually has exactly one key. Additional keys appear if files are moved or deduplicated here from other collections (each have own encryption key)." />
 										</th>
-										<td
-											title={collOutput.Collection.EncryptionKeyIds.join(
-												', ',
-											)}>
-											Using {collOutput.Collection.EncryptionKeyIds.length}{' '}
-											key(s)
+										<td title={coll.EncryptionKeyIds.join(', ')}>
+											Using {coll.EncryptionKeyIds.length} key(s)
 										</td>
 									</tr>
 									<tr>
 										<th>Clone command</th>
 										<td>
-											<ClipboardButton
-												text={`sto clone ${collOutput.Collection.Id}`}
-											/>
+											<ClipboardButton text={`sto clone ${coll.Id}`} />
 										</td>
 									</tr>
 									<tr>
@@ -397,9 +403,9 @@ export default class CollectionPage extends React.Component<
 												(networkShareBaseUrl) => {
 													const networkSharePath =
 														networkShareBaseUrl.Value +
-														collOutput.Collection.Id +
+														coll.Id +
 														' - ' +
-														collOutput.Collection.Name;
+														coll.Name;
 
 													return (
 														<div title={networkSharePath}>
@@ -417,7 +423,7 @@ export default class CollectionPage extends React.Component<
 
 							{imdbIdExpectedButMissing && (
 								<CommandInlineForm
-									command={CollectionPullTmdbMetadata(collOutput.Collection.Id, {
+									command={CollectionPullTmdbMetadata(coll.Id, {
 										ForeignKey: tmdbMovieAutocomplete,
 									})}
 								/>
@@ -433,9 +439,7 @@ export default class CollectionPage extends React.Component<
 							}>
 							<FileUploadArea
 								collectionId={this.props.id}
-								collectionRevision={
-									this.state.collectionOutputFixme!.Collection.Head
-								}
+								collectionRevision={coll.Head}
 							/>
 						</Panel>
 
@@ -461,7 +465,9 @@ export default class CollectionPage extends React.Component<
 		collectionOutput: CollectionOutput,
 		directoryOutput: DirectoryOutput,
 	) {
-		const dirToBreadcrumb = (dir: Directory): Breadcrumb => {
+		const dirToBreadcrumb = (dirAndMeta: DirectoryAndMeta): Breadcrumb => {
+			const dir = dirAndMeta.Directory;
+
 			return {
 				title: dir.Name,
 				url: browseUrl({ dir: dir.Id, view: '' }),
@@ -481,7 +487,7 @@ export default class CollectionPage extends React.Component<
 
 		const areWeNavigatedToSubdir = collectionOutput.SelectedPathContents.Path !== '.';
 
-		const collName = collectionOutput.Collection.Name + ' 📚';
+		const collName = collectionOutput.CollectionWithMeta.Collection.Name + ' 📚';
 
 		const title = areWeNavigatedToSubdir
 			? filenameFromPath(collectionOutput.SelectedPathContents.Path)
@@ -520,14 +526,14 @@ export default class CollectionPage extends React.Component<
 			id: string,
 		): { prev: CollectionSubset | null; next: CollectionSubset | null } => {
 			for (let i = 0; i < directoryOutput.Collections.length; i++) {
-				if (directoryOutput.Collections[i].Id !== id) {
+				if (directoryOutput.Collections[i].Collection.Id !== id) {
 					continue;
 				}
 				return {
-					prev: i > 0 ? directoryOutput.Collections[i - 1] : null,
+					prev: i > 0 ? directoryOutput.Collections[i - 1].Collection : null,
 					next:
 						i + 1 < directoryOutput.Collections.length
-							? directoryOutput.Collections[i + 1]
+							? directoryOutput.Collections[i + 1].Collection
 							: null,
 				};
 			}
@@ -535,7 +541,7 @@ export default class CollectionPage extends React.Component<
 			return { prev: null, next: null };
 		};
 
-		const np = nextPrevious(collOutput.Collection.Id);
+		const np = nextPrevious(collOutput.CollectionWithMeta.Collection.Id);
 
 		// if neither, it's no sense to show stub UI
 		if (!np.prev && !np.next) {
@@ -555,7 +561,9 @@ export default class CollectionPage extends React.Component<
 						{np.prev.Name}
 					</AnchorButton>
 				)}
-				<span className="btn btn-default disabled">{collOutput.Collection.Name}</span>
+				<span className="btn btn-default disabled">
+					{collOutput.CollectionWithMeta.Collection.Name}
+				</span>
 				{np.next && (
 					<AnchorButton href={collectionUrlDefault(np.next.Id)}>
 						{np.next.Name}
@@ -580,9 +588,9 @@ export default class CollectionPage extends React.Component<
 
 		const collectionOutput = await collectionOutputPromise;
 
-		this.setState({ collectionOutputFixme: collectionOutput });
-
-		this.state.directoryOutput.load(() => getDirectory(collectionOutput.Collection.Directory));
+		this.state.directoryOutput.load(() =>
+			getDirectory(collectionOutput.CollectionWithMeta.Collection.Directory),
+		);
 	}
 }
 
@@ -598,4 +606,8 @@ function collectionUrlDefault(id: string) {
 		rev: HeadRevisionId,
 		path: RootPathDotBase64FIXME,
 	});
+}
+
+function makeThumbPath(sha256: string): string {
+	return '.sto/thumb/' + sha256.substr(0, 10) + '.jpg';
 }

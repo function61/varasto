@@ -28,6 +28,7 @@ func mainLogic() error {
 	}
 
 	modules := []*codegen.Module{
+		codegen.NewModule("stomediascanner/stomediascantypes", "pkg/stomediascanner/types.json", "", "", ""),
 		codegen.NewModule("stoserver/stoservertypes", "pkg/stoserver/stoservertypes/types.json", "", "pkg/stoserver/stoservertypes/commands.json", ""),
 		codegen.NewModule("stofuse/stofusetypes", "pkg/stofuse/stofusetypes/types.json", "", "", ""),
 		codegen.NewModule("frontend", "", "", "", "pkg/frontend/ui-routes.json"),
