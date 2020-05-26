@@ -35,6 +35,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stoserver/stokeystore"
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stoserver/stoserverui"
@@ -326,7 +327,7 @@ type ServerConfig struct {
 	ThumbServer            *subsystem
 	FuseProjector          *subsystem
 	TlsCertificate         wrappedKeypair
-	KeyStore               *keyStore
+	KeyStore               *stokeystore.Store
 	FailedMountNames       []string
 	Metrics                *metricsController
 }
@@ -400,15 +401,15 @@ func readConfigFromDatabase(
 		return nil, err
 	}
 
-	ks := newKeyStore()
+	keyStore := stokeystore.New()
 
 	for _, kek := range keks {
-		if err := ks.RegisterPrivateKey(kek.PrivateKey); err != nil {
+		if err := keyStore.RegisterPrivateKey(kek.PrivateKey); err != nil {
 			return nil, err
 		}
 	}
 
-	dam := stodiskaccess.New(&dbbma{db, ks})
+	dam := stodiskaccess.New(&dbbma{db, keyStore})
 
 	failedMountNames := []string{}
 
@@ -459,7 +460,7 @@ func readConfigFromDatabase(
 		DiskAccess:             dam,
 		ClientsAuthTokens:      authTokens,
 		LogTail:                logTail,
-		KeyStore:               ks,
+		KeyStore:               keyStore,
 		ReplicationControllers: map[int]*storeplication.Controller{},
 		TlsCertificate:         *wrappedKeypair,
 		FailedMountNames:       failedMountNames,
@@ -502,7 +503,7 @@ func readServerConfigFile() (*ServerConfigFile, error) {
 
 type dbbma struct {
 	db       *bbolt.DB
-	keyStore *keyStore
+	keyStore *stokeystore.Store
 }
 
 func (d *dbbma) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {

@@ -25,6 +25,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stoserver/stokeystore"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -578,7 +579,7 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 func createCollection(
 	name string,
 	parentDirId string,
-	encryptionKeys *keyStore,
+	keyStore *stokeystore.Store,
 	tx *bbolt.Tx,
 ) (*stotypes.Collection, error) {
 	parentDir, err := stodb.Read(tx).Directory(parentDirId)
@@ -632,7 +633,7 @@ func createCollection(
 
 	// pack encryption key in an envelope protected with public key crypto,
 	// so Varasto can store data without being able to access it itself
-	dekEnvelopes, err := encryptionKeys.EncryptDek(stoutils.NewEncryptionKeyId(), dek[:], kekPubKeyFingerprints)
+	dekEnvelopes, err := keyStore.EncryptDek(stoutils.NewEncryptionKeyId(), dek[:], kekPubKeyFingerprints)
 	if err != nil {
 		return nil, err
 	}

@@ -30,7 +30,7 @@ func (c *cHandlers) KekGenerateOrImport(cmd *stoservertypes.KekGenerateOrImport,
 		return err
 	}
 
-	fingerprint, err := sha256FingerprintForPublicKey(&privateKey.PublicKey)
+	fingerprint, err := cryptoutil.Sha256FingerprintForPublicKey(&privateKey.PublicKey)
 	if err != nil {
 		return err
 	}
