@@ -10,7 +10,7 @@ import {
 	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
-import { fuseServerUrl } from 'generated/stoserver/stoserverui_uiroutes';
+import { fuseServerUrl } from 'generated/frontend_uiroutes';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';

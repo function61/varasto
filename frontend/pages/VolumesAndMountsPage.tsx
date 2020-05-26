@@ -65,7 +65,7 @@ import {
 	volumesSmartUrl,
 	volumesIntegrityUrl,
 	volumesReplicationUrl,
-} from 'generated/stoserver/stoserverui_uiroutes';
+} from 'generated/frontend_uiroutes';
 
 interface VolumesAndMountsPageProps {
 	view:

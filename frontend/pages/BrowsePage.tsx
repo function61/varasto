@@ -54,7 +54,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseUrl, collectionUrl, serverInfoUrl } from 'generated/stoserver/stoserverui_uiroutes';
+import { browseUrl, collectionUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
 
 interface BrowsePageProps {
 	directoryId: string;

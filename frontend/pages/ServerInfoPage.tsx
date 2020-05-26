@@ -20,7 +20,7 @@ import {
 	scheduledJobsUrl,
 	volumesUrl,
 	mountsUrl,
-} from 'generated/stoserver/stoserverui_uiroutes';
+} from 'generated/frontend_uiroutes';
 import {
 	DangerLabel,
 	Glyphicon,

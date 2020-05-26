@@ -7,11 +7,7 @@ import { DefaultLayout } from 'f61ui/layout/defaultlayout';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
-import {
-	browseUrl,
-	gettingStartedUrl,
-	serverInfoUrl,
-} from 'generated/stoserver/stoserverui_uiroutes';
+import { browseUrl, gettingStartedUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
 
 interface AppDefaultLayoutProps {
 	title: string;

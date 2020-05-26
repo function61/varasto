@@ -21,7 +21,7 @@ import SubsystemsPage from 'pages/SubsystemsPage';
 import UsersPage from 'pages/UsersPage';
 import VolumesAndMountsPage from 'pages/VolumesAndMountsPage';
 import * as React from 'react';
-import * as r from 'generated/stoserver/stoserverui_uiroutes';
+import * as r from 'generated/frontend_uiroutes';
 
 class Handlers implements r.RouteHandlers {
 	root() {

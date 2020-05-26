@@ -4,7 +4,7 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink, renderNavLink } from 'f61ui/component/navigation';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import * as r from 'generated/stoserver/stoserverui_uiroutes';
+import * as r from 'generated/frontend_uiroutes';
 
 interface AdminLayoutProps {
 	title: string;

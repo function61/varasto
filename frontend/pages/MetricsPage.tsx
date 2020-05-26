@@ -7,7 +7,7 @@ import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import { CfgGrafanaUrl, ConfigValue } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { serverInfoUrl } from 'generated/stoserver/stoserverui_uiroutes';
+import { serverInfoUrl } from 'generated/frontend_uiroutes';
 
 interface MetricsPageState {
 	grafanaUrl: Result<ConfigValue>;

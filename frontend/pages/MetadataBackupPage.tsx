@@ -26,7 +26,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
-import { metadataBackupUrl } from 'generated/stoserver/stoserverui_uiroutes';
+import { metadataBackupUrl } from 'generated/frontend_uiroutes';
 
 interface MetadataBackupPageProps {
 	view: string;

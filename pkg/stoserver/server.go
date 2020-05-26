@@ -30,6 +30,7 @@ import (
 	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/childprocesscontroller"
+	"github.com/function61/varasto/pkg/frontend"
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/restartcontroller"
 	"github.com/function61/varasto/pkg/scheduler"
@@ -39,7 +40,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stokeystore"
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
-	"github.com/function61/varasto/pkg/stoserver/stoserverui"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
@@ -291,7 +291,7 @@ func defineUi(router *mux.Router) error {
 	uiHandler := f61ui.IndexHtmlHandler(assetsPath)
 
 	router.HandleFunc("/", uiHandler)
-	stoserverui.RegisterUiRoutes(router, uiHandler)
+	frontend.RegisterUiRoutes(router, uiHandler)
 
 	return nil
 }

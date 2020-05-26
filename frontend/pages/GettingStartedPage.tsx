@@ -23,7 +23,7 @@ import {
 	usersUrl,
 	volumesUrl,
 	mountsUrl,
-} from 'generated/stoserver/stoserverui_uiroutes';
+} from 'generated/frontend_uiroutes';
 
 interface SmallWellProps {
 	children: React.ReactNode;

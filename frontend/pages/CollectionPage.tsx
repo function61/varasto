@@ -51,7 +51,7 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseUrl, collectionUrl } from 'generated/stoserver/stoserverui_uiroutes';
+import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 
 interface CollectionPageProps {
 	id: string;
@@ -153,11 +153,7 @@ export default class CollectionPage extends React.Component<
 		};
 
 		const fileToRow = (file: File2) => {
-			const dl = downloadFileUrl(
-				collOutput.Collection.Id,
-				collOutput.ChangesetId,
-				file.Path,
-			);
+			const dl = downloadFileUrl(collOutput.Collection.Id, collOutput.ChangesetId, file.Path);
 
 			return (
 				<tr key={file.Path}>
@@ -235,11 +231,7 @@ export default class CollectionPage extends React.Component<
 		const changesetsReversed = collOutput.Collection.Changesets.slice().reverse();
 
 		const toThumbnail = (file: File2) => {
-			const dl = downloadFileUrl(
-				collOutput.Collection.Id,
-				collOutput.ChangesetId,
-				file.Path,
-			);
+			const dl = downloadFileUrl(collOutput.Collection.Id, collOutput.ChangesetId, file.Path);
 
 			const thumbUrl = `/api/thumbnails/thumb?coll=${collOutput.Collection.Id}&file=${file.Sha256}`;
 
