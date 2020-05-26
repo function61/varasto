@@ -29,7 +29,7 @@ func scheduledJobSeedMetadataBackup() *stotypes.ScheduledJob {
 	}
 }
 
-func scheduledJobSeedVersionUpdateCheck() *stotypes.ScheduledJob {
+func ScheduledJobSeedVersionUpdateCheck() *stotypes.ScheduledJob {
 	return &stotypes.ScheduledJob{
 		ID:          "EQi_3OhROUs",
 		Description: "Varasto software update check",

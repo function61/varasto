@@ -1,12 +1,11 @@
-package stodb
+package stoserver
 
 import (
-	"encoding/binary"
 	"fmt"
 	"log"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/varasto/pkg/blorm"
+	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
@@ -35,28 +34,34 @@ import (
 	Migration: automatic
 */
 
-const (
-	CurrentSchemaVersion = 5
-)
+func validateSchemaVersionAndMigrateIfNeeded(db *bbolt.DB, logger *log.Logger) error {
+	tx, err := db.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
 
-var (
-	metaBucketKey    = []byte("_meta")
-	schemaVersionKey = []byte("schemaVersion")
-)
-
-// returns blorm.ErrBucketNotFound if bootstrap required
-func ValidateSchemaVersion(tx *bbolt.Tx, logger *log.Logger) error {
-	metaBucket := tx.Bucket(metaBucketKey)
-	if metaBucket == nil {
-		return blorm.ErrBucketNotFound
+	if err := validateSchemaVersionAndMigrateIfNeededInternal(
+		tx,
+		logex.Prefix("SchemaMigration", logger),
+	); err != nil {
+		return err
 	}
 
+	return tx.Commit()
+}
+
+// returns blorm.ErrBucketNotFound if bootstrap required
+func validateSchemaVersionAndMigrateIfNeededInternal(tx *bbolt.Tx, logger *log.Logger) error {
 	// the migrations will continue until morale improves
 	for {
-		schemaVersionInDb := binary.LittleEndian.Uint32(metaBucket.Get(schemaVersionKey))
+		schemaVersionInDb, err := stodb.ReadSchemaVersion(tx)
+		if err != nil {
+			return err
+		}
 
 		// no migration needed (or migrations reached a happy level)
-		if schemaVersionInDb == CurrentSchemaVersion {
+		if schemaVersionInDb == stodb.CurrentSchemaVersion {
 			return nil
 		}
 
@@ -71,7 +76,7 @@ func ValidateSchemaVersion(tx *bbolt.Tx, logger *log.Logger) error {
 			return err
 		}
 
-		if err := writeSchemaVersionWith(schemaVersionAfterMigration, tx); err != nil {
+		if err := stodb.WriteSchemaVersion(schemaVersionAfterMigration, tx); err != nil {
 			return err
 		}
 	}
@@ -99,35 +104,35 @@ func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
 // - volume.Zone
 // - replicationPolicy.Zones = 1
 func from2to3(tx *bbolt.Tx) error {
-	if err := CollectionRepository.Each(func(record interface{}) error {
+	if err := stodb.CollectionRepository.Each(func(record interface{}) error {
 		coll := record.(*stotypes.Collection)
 		coll.ReplicationPolicy = "default"
-		return CollectionRepository.Update(coll, tx)
+		return stodb.CollectionRepository.Update(coll, tx)
 	}, tx); err != nil {
 		return err
 	}
 
-	dir, err := Read(tx).Directory(stoservertypes.RootFolderId)
+	dir, err := stodb.Read(tx).Directory(stoservertypes.RootFolderId)
 	if err != nil {
 		return err
 	}
 	dir.ReplicationPolicy = "default"
-	if err := DirectoryRepository.Update(dir, tx); err != nil {
+	if err := stodb.DirectoryRepository.Update(dir, tx); err != nil {
 		return err
 	}
 
-	if err := VolumeRepository.Each(func(record interface{}) error {
+	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
 		vol := record.(*stotypes.Volume)
 		vol.Zone = "Default"
-		return VolumeRepository.Update(vol, tx)
+		return stodb.VolumeRepository.Update(vol, tx)
 	}, tx); err != nil {
 		return err
 	}
 
-	if err := ReplicationPolicyRepository.Each(func(record interface{}) error {
+	if err := stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
 		vol := record.(*stotypes.ReplicationPolicy)
 		vol.MinZones = 1
-		return ReplicationPolicyRepository.Update(vol, tx)
+		return stodb.ReplicationPolicyRepository.Update(vol, tx)
 	}, tx); err != nil {
 		return err
 	}
@@ -137,7 +142,7 @@ func from2to3(tx *bbolt.Tx) error {
 
 // add scheduled task: "update check"
 func from3to4(tx *bbolt.Tx) error {
-	return ScheduledJobRepository.Update(scheduledJobSeedVersionUpdateCheck(), tx)
+	return stodb.ScheduledJobRepository.Update(stodb.ScheduledJobSeedVersionUpdateCheck(), tx)
 }
 
 // - fill GlobalVersion index for changefeed
@@ -145,7 +150,7 @@ func from3to4(tx *bbolt.Tx) error {
 func from4to5(tx *bbolt.Tx) error {
 	nextGlobalVersion := uint64(1)
 
-	if err := CollectionRepository.Each(func(record interface{}) error {
+	if err := stodb.CollectionRepository.Each(func(record interface{}) error {
 		coll := record.(*stotypes.Collection)
 
 		move := func(from string, to string) {
@@ -167,12 +172,12 @@ func from4to5(tx *bbolt.Tx) error {
 			coll.GlobalVersion = nextGlobalVersion
 		}
 
-		return CollectionRepository.Update(coll, tx)
+		return stodb.CollectionRepository.Update(coll, tx)
 	}, tx); err != nil {
 		return err
 	}
 
-	return DirectoryRepository.Each(func(record interface{}) error {
+	return stodb.DirectoryRepository.Each(func(record interface{}) error {
 		dir := record.(*stotypes.Directory)
 
 		anyMoves := false
@@ -191,25 +196,9 @@ func from4to5(tx *bbolt.Tx) error {
 		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
 
 		if anyMoves {
-			return DirectoryRepository.Update(dir, tx)
+			return stodb.DirectoryRepository.Update(dir, tx)
 		} else { // perf optimization
 			return nil
 		}
 	}, tx)
-}
-
-func writeSchemaVersion(tx *bbolt.Tx) error {
-	return writeSchemaVersionWith(CurrentSchemaVersion, tx)
-}
-
-func writeSchemaVersionWith(version uint32, tx *bbolt.Tx) error {
-	metaBucket, err := tx.CreateBucketIfNotExists(metaBucketKey)
-	if err != nil {
-		return err
-	}
-
-	schemaVersionInDb := make([]byte, 4)
-	binary.LittleEndian.PutUint32(schemaVersionInDb[:], version)
-
-	return metaBucket.Put(schemaVersionKey, schemaVersionInDb)
 }

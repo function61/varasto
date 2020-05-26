@@ -112,7 +112,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 		}, tx),
 		ScheduledJobRepository.Update(scheduledJobSeedSmartPoller(), tx),
 		ScheduledJobRepository.Update(scheduledJobSeedMetadataBackup(), tx),
-		ScheduledJobRepository.Update(scheduledJobSeedVersionUpdateCheck(), tx),
+		ScheduledJobRepository.Update(ScheduledJobSeedVersionUpdateCheck(), tx),
 		CfgNodeId.Set(newNode.ID, tx),
 		CfgNodeTlsCertKey.Set(string(privKeyPem), tx),
 	}
@@ -129,7 +129,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 }
 
 func BootstrapRepos(tx *bbolt.Tx) error {
-	if err := writeSchemaVersion(tx); err != nil {
+	if err := writeSchemaVersionCurrent(tx); err != nil {
 		return err
 	}
 
