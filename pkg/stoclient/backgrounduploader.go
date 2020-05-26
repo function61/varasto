@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"log"
 	"time"
 
@@ -207,17 +208,43 @@ func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscove
 	ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
 
-	if _, err := ezhttp.Post(
+	if err := UploadBlob(
 		ctx,
-		b.clientConfig.UrlBuilder().UploadBlob(job.ref.AsHex(), job.collectionId, boolToStr(job.maybeCompressible)),
-		ezhttp.AuthBearer(b.clientConfig.AuthToken),
-		ezhttp.SendBody(bytes.NewBuffer(job.content), "application/octet-stream"),
-		ezhttp.Client(b.clientConfig.HttpClient()),
+		job.ref,
+		bytes.NewBuffer(job.content),
+		job.collectionId,
+		job.maybeCompressible,
+		b.clientConfig,
 	); err != nil {
 		return fmt.Errorf("blob %s: %v", job.ref.AsHex(), err)
 	}
 
 	notifyProgress()
+
+	return nil
+}
+
+func UploadBlob(
+	ctx context.Context,
+	blobRef stotypes.BlobRef,
+	content io.Reader,
+	collectionId string,
+	maybeCompressible bool,
+	clientConfig ClientConfig,
+) error {
+	// 10 seconds can be too fast waiting for HDD to spin up + blob write
+	ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	defer cancel()
+
+	if _, err := ezhttp.Post(
+		ctx,
+		clientConfig.UrlBuilder().UploadBlob(blobRef.AsHex(), collectionId, boolToStr(maybeCompressible)),
+		ezhttp.AuthBearer(clientConfig.AuthToken),
+		ezhttp.SendBody(content, "application/octet-stream"),
+		ezhttp.Client(clientConfig.HttpClient()),
+	); err != nil {
+		return fmt.Errorf("UploadBlob %s: %v", blobRef.AsHex(), err)
+	}
 
 	return nil
 }

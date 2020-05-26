@@ -204,7 +204,7 @@ type nullUploadProgressListener string
 func (n *nullUploadProgressListener) ReportUploadProgress(fileProgressEvent) {}
 func (n *nullUploadProgressListener) Close()                                 {}
 
-func newNullUploadProgressListener() UploadProgressListener {
+func NewNullUploadProgressListener() UploadProgressListener {
 	x := nullUploadProgressListener("")
 	return &x
 }
@@ -213,6 +213,6 @@ func textUiUploadProgressOutputIfInTerminal() UploadProgressListener {
 	if isatty.IsTerminal(os.Stdout.Fd()) {
 		return newUploadProgressTextUi()
 	} else {
-		return newNullUploadProgressListener()
+		return NewNullUploadProgressListener()
 	}
 }

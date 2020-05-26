@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	backgroundUploaderConcurrency = 3
+	BackgroundUploaderConcurrency = 3
 )
 
 func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
@@ -102,7 +102,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 
 	ch := stotypes.NewChangeset(
 		stoutils.NewCollectionChangesetId(),
-		wd.manifest.ChangesetId,
+		wd.manifest.ChangesetId, // parent
 		time.Now(),
 		created,
 		updated,
@@ -142,6 +142,12 @@ func scanFileAndDiscoverBlobs(
 	collectionId string,
 	bdl BlobDiscoveredListener,
 ) (*stotypes.File, error) {
+	file, err := os.Open(absolutePath)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
 	// https://unix.stackexchange.com/questions/2802/what-is-the-difference-between-modify-and-change-in-stat-command-context
 	allTimes := times.Get(fileInfo)
 
@@ -150,22 +156,38 @@ func scanFileAndDiscoverBlobs(
 		maybeCreationTime = allTimes.BirthTime()
 	}
 
+	return ScanAndDiscoverBlobs(
+		ctx,
+		relativePath,
+		file,
+		fileInfo.Size(),
+		maybeCreationTime,
+		fileInfo.ModTime(),
+		collectionId,
+		bdl)
+}
+
+// - for when you don't have a file, but you have a stream
+// - totalsize is used for progress calculation, but if you're not using progress UI you
+// can set it to 0
+func ScanAndDiscoverBlobs(
+	ctx context.Context,
+	relativePath string,
+	file io.Reader,
+	totalSize int64,
+	creationTime time.Time,
+	modifiedTime time.Time,
+	collectionId string,
+	bdl BlobDiscoveredListener,
+) (*stotypes.File, error) {
 	bfile := &stotypes.File{
 		Path:     relativePath,
-		Created:  maybeCreationTime,
-		Modified: fileInfo.ModTime(),
-		Size:     fileInfo.Size(),
-		Sha256:   "",         // will be computed later in this method
-		BlobRefs: []string{}, // will be computed later in this method
+		Created:  creationTime,
+		Modified: modifiedTime,
+		Size:     0,          // computed later
+		Sha256:   "",         // computed later
+		BlobRefs: []string{}, // computed later
 	}
-
-	file, err := os.Open(absolutePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	pos := int64(0)
 
 	fullContentHash := sha256.New()
 
@@ -180,21 +202,17 @@ func scanFileAndDiscoverBlobs(
 		default:
 		}
 
-		if _, err := file.Seek(pos, io.SeekStart); err != nil {
-			return nil, err
-		}
-
 		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, stotypes.BlobSize))
 		if errRead != nil {
 			return nil, errRead
 		}
 
-		pos += stotypes.BlobSize
-
 		if len(chunk) == 0 {
 			// should only happen if file size is exact multiple of blobSize
 			break
 		}
+
+		bfile.Size += int64(len(chunk))
 
 		if _, err := fullContentHash.Write(chunk); err != nil {
 			return nil, err
@@ -215,11 +233,7 @@ func scanFileAndDiscoverBlobs(
 			chunk,
 			stoutils.IsMaybeCompressible(relativePath),
 			bfile.Path,
-			bfile.Size))
-
-		if int64(len(chunk)) < stotypes.BlobSize {
-			break
-		}
+			totalSize))
 	}
 
 	bfile.Sha256 = fmt.Sprintf("%x", fullContentHash.Sum(nil))
@@ -227,14 +241,18 @@ func scanFileAndDiscoverBlobs(
 	return bfile, nil
 }
 
-func uploadChangeset(changeset stotypes.CollectionChangeset, collection stotypes.Collection, clientConfig ClientConfig) (*stotypes.Collection, error) {
+func Commit(
+	changeset stotypes.CollectionChangeset,
+	collectionId string,
+	clientConfig ClientConfig,
+) (*stotypes.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 60*3*time.Second)
 	defer cancel()
 
 	updatedCollection := &stotypes.Collection{}
 	if _, err := ezhttp.Post(
 		ctx,
-		clientConfig.UrlBuilder().CommitChangeset(collection.ID),
+		clientConfig.UrlBuilder().CommitChangeset(collectionId),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false),
@@ -271,7 +289,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 
 	buploader := NewBackgroundUploader(
 		ctx,
-		backgroundUploaderConcurrency,
+		BackgroundUploaderConcurrency,
 		*clientConfig,
 		textUiUploadProgressOutputIfInTerminal())
 
@@ -292,14 +310,14 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 		[]stotypes.File{},
 		[]string{})
 
-	_, err = uploadChangeset(changeset, *coll, *clientConfig)
+	_, err = Commit(changeset, coll.ID, *clientConfig)
 	return err
 }
 
 func push(ctx context.Context, wd *workdirLocation) error {
 	buploader := NewBackgroundUploader(
 		ctx,
-		backgroundUploaderConcurrency,
+		BackgroundUploaderConcurrency,
 		wd.clientConfig,
 		textUiUploadProgressOutputIfInTerminal())
 
@@ -317,7 +335,7 @@ func push(ctx context.Context, wd *workdirLocation) error {
 		return err
 	}
 
-	updatedCollection, err := uploadChangeset(*ch, wd.manifest.Collection, wd.clientConfig)
+	updatedCollection, err := Commit(*ch, wd.manifest.Collection.ID, wd.clientConfig)
 	if err != nil {
 		return err
 	}
