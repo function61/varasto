@@ -2,6 +2,7 @@ package stomediascanner
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -69,7 +70,7 @@ func (c *Controller) runTask(ctx context.Context) error {
 
 	state, err := discoverState(ctx, c.clientConf)
 	if err != nil {
-		return err
+		return fmt.Errorf("discoverState: %w", err)
 	}
 
 	// so we can detect if we need to save
@@ -80,12 +81,12 @@ func (c *Controller) runTask(ctx context.Context) error {
 	for {
 		changefeed, err := discoverChanges(ctx, state, c.clientConf)
 		if err != nil {
-			return err
+			return fmt.Errorf("discoverChanges: %w", err)
 		}
 
 		for _, item := range changefeed {
 			if err := collectionThumbnails(ctx, item.CollectionId, false, c.clientConf, c.logl); err != nil {
-				return err
+				return fmt.Errorf("collectionThumbnails: %w", err)
 			}
 
 			// move state forward
