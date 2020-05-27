@@ -18,6 +18,7 @@ func discoverChanges(
 		ctx,
 		conf.UrlBuilder().CollectionChangefeed(after),
 		ezhttp.RespondsJson(&changefeedItems, false),
+		ezhttp.AuthBearer(conf.AuthToken),
 		ezhttp.Client(conf.HttpClient()),
 	); err != nil {
 		return nil, err
@@ -42,6 +43,7 @@ func fetchServerConfig(ctx context.Context, confKey string, conf *stoclient.Clie
 		ctx,
 		conf.UrlBuilder().GetConfig(confKey),
 		ezhttp.RespondsJson(&configValue, false),
+		ezhttp.AuthBearer(conf.AuthToken),
 		ezhttp.Client(conf.HttpClient()),
 	); err != nil {
 		return "", err
