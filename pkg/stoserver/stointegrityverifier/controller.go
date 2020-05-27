@@ -203,8 +203,6 @@ func (s *Controller) resumeJobWorker(
 				continue
 			}
 
-			s.logl.Debug.Printf("verifying %s", blob.Ref.AsHex())
-
 			bytesScanned, err := s.diskAccess.Scrub(blob.Ref, job.VolumeId)
 			if err != nil {
 				descr := fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
