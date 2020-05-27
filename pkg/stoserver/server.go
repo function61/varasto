@@ -291,7 +291,6 @@ func defineUi(router *mux.Router) error {
 
 	uiHandler := f61ui.IndexHtmlHandler(assetsPath)
 
-	router.HandleFunc("/", uiHandler)
 	frontend.RegisterUiRoutes(router, uiHandler)
 
 	return nil
