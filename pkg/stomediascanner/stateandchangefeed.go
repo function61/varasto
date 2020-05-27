@@ -2,7 +2,6 @@ package stomediascanner
 
 import (
 	"context"
-	"time"
 
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/varasto/pkg/stoclient"
@@ -36,7 +35,7 @@ func discoverState(ctx context.Context, conf *stoclient.ClientConfig) (string, e
 }
 
 func fetchServerConfig(ctx context.Context, confKey string, conf *stoclient.ClientConfig) (string, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	configValue := stoservertypes.ConfigValue{}
