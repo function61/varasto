@@ -11,7 +11,6 @@ import (
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
-	"github.com/function61/gokit/stopper"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -22,12 +21,13 @@ const errorReportMaxLength = 20 * 1024
 
 type Controller struct {
 	db                  *bbolt.DB
-	runningJobIds       map[string]*stopper.Stopper
+	runningJobIds       map[string]context.CancelFunc
 	diskAccess          *stodiskaccess.Controller
 	ivJobRepository     blorm.Repository
 	blobRepository      blorm.Repository
 	resume              chan string
 	stop                chan string
+	stopped             chan string
 	opListRunningJobIds chan chan []string
 	logl                *logex.Leveled
 }
@@ -61,10 +61,11 @@ func NewController(
 		db:                  db,
 		ivJobRepository:     ivJobRepository,
 		blobRepository:      blobRepository,
-		runningJobIds:       map[string]*stopper.Stopper{},
+		runningJobIds:       map[string]context.CancelFunc{},
 		diskAccess:          diskAccess,
 		resume:              make(chan string, 1),
 		stop:                make(chan string, 1),
+		stopped:             make(chan string, 1),
 		opListRunningJobIds: make(chan chan []string),
 		logl:                logex.Levels(logger),
 	}
@@ -77,27 +78,36 @@ func NewController(
 }
 
 func (c *Controller) run(ctx context.Context) error {
-	// TODO: renovate to use context-based taskrunner
-	subWorkers := stopper.NewManager()
+	handleStopped := func(jobId string) {
+		delete(c.runningJobIds, jobId)
+	}
 
 	for {
 		select {
 		case <-ctx.Done():
-			subWorkers.StopAllWorkersAndWait()
+			// wait for all to stop
+			for len(c.runningJobIds) > 0 {
+				c.logl.Info.Printf("waiting %d job(s) to stop", len(c.runningJobIds))
+
+				handleStopped(<-c.stopped)
+			}
+
 			return nil
 		case jobId := <-c.stop:
-			stop, found := c.runningJobIds[jobId]
+			jobCancel, found := c.runningJobIds[jobId]
 			if !found {
 				c.logl.Error.Printf("did not find job %s", jobId)
 				continue
 			}
 
 			c.logl.Info.Printf("stopping job %s", jobId)
-			stop.SignalStop()
+			jobCancel()
+		case jobId := <-c.stopped:
+			handleStopped(jobId)
 		case jobId := <-c.resume:
 			c.logl.Info.Printf("resuming job %s", jobId)
 
-			if err := c.resumeJob(jobId, subWorkers.Stopper()); err != nil {
+			if err := c.resumeJob(ctx, jobId); err != nil {
 				c.logl.Error.Printf("resumeJob: %v", err)
 			}
 		case result := <-c.opListRunningJobIds:
@@ -112,7 +122,7 @@ func (c *Controller) run(ctx context.Context) error {
 	}
 }
 
-func (s *Controller) resumeJob(jobId string, stop *stopper.Stopper) error {
+func (s *Controller) resumeJob(ctx context.Context, jobId string) error {
 	if _, running := s.runningJobIds[jobId]; running {
 		return errors.New("job is already running")
 	}
@@ -121,16 +131,21 @@ func (s *Controller) resumeJob(jobId string, stop *stopper.Stopper) error {
 		return err
 	}
 
-	s.runningJobIds[jobId] = stop
+	// job cancellation:
+	// a) *all jobs* on parent cancel (program stopping) OR
+	// b) individual job cancel via public API Stop()
+	jobCtx, cancel := context.WithCancel(ctx)
+
+	s.runningJobIds[jobId] = cancel
 
 	go func() {
-		defer stop.Done()
+		defer cancel()
 
-		if err := s.resumeJobWorker(job, stop); err != nil {
+		if err := s.resumeJobWorker(jobCtx, job); err != nil {
 			s.logl.Error.Printf("resumeJobWorker: %v", err)
 		}
 
-		delete(s.runningJobIds, jobId)
+		s.stopped <- jobId
 	}()
 
 	return nil
@@ -157,8 +172,8 @@ func (s *Controller) nextBlobsForJob(lastCompletedBlobRef stotypes.BlobRef, limi
 }
 
 func (s *Controller) resumeJobWorker(
+	ctx context.Context,
 	job *stotypes.IntegrityVerificationJob,
-	stop *stopper.Stopper,
 ) error {
 	lastStatusUpdate := time.Now()
 
@@ -211,7 +226,7 @@ func (s *Controller) resumeJobWorker(
 				lastStatusUpdate = time.Now()
 
 				select {
-				case <-stop.Signal:
+				case <-ctx.Done():
 					return nil
 				default:
 				}
