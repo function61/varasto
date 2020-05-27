@@ -5,6 +5,9 @@ Summary: configurable security
 You can configure the "security dial" of Varasto between maximum convenience and maximum
 security - even on a per-directory-tree basis.
 
+(The **data on disk is always encrypted with strong encryption**, but how the data encryption
+keys are accessible is configurable for convenience.)
+
 ![](dial.png)
 
 For most casual users you don't even necessarily have to understand about these security
@@ -138,11 +141,123 @@ you want to have the ability to deny those people that you have the same data as
 Please note that this only applies if those people have access to your Varasto database.
 
 
-Varasto cryptosystem's description in minimal code
---------------------------------------------------
+Can I trust Varasto's encryption?
+---------------------------------
 
-!!! bug "TODO"
-	Issue [#134](https://github.com/function61/varasto/issues/134)
+!!! tip "Summary"
+	We've provided an OpenSSL command to decrypt a file that Varasto has encrypted. If you
+	trust OpenSSL and the parameters we give it (and our rationales), you can trust Varasto's
+	implementation.
+
+### Plaintext file
+
+I stored a picture of a kitten, [plaintext.jpg](./plaintext.jpg), in my Varasto installation.
+
+The file is under 4 MB, so it got stored as a single blob. The blob's (and in this case,
+whole file's) `sha256(plaintext)` is
+`b2b0d7f8c66c11ae1355a7f240ec6fe421a71f77fa3022c032783a39bdfb14cb`.
+
+
+### Encryption key
+
+The collection the blob was stored in, got assigned DEK
+`fc5832fa18c5d2534c8a387b90e83ced6dc987dfb0a98bd3dceef0f36cc3e697` (256-bit AES key).
+
+??? question "Was the key generated in a safe manner?"
+	You can [audit the calling code here](https://github.com/function61/varasto/blob/8e7f6663b7051c966445582235d261f698bf31fe/pkg/stoserver/commandhandlers.go#L601).
+
+	([crypto/rand.Read](https://pkg.go.dev/crypto/rand?tab=doc#Read) is safe for
+	cryptographic use.)
+
+
+### On-disk encrypted file
+
+I copied the on-disk encrypted blob here as [ciphertext.bin](./ciphertext.bin).
+
+??? question "Where did I find the encrypted file from?"
+	My instance had it stored in `/mnt/varastotest/m/ao/dfu66dg8qs4qlkvp41r3fsggqe7rnv8o25g1if0t3jffr2j5g`.
+
+	The path is lowercased [base32 extended alphabet](https://cryptii.com/pipes/base32hex)
+	of the sha256 hash.
+
+	Why base32? It takes less disk space than hex encoding, but we can't use base64 because
+	it contains mixed case letters and unfortunately we have to support Windows (which has
+	largely a case insensitive filesystem).
+
+
+### OpenSSL command for decrypting a file encrypted by Varasto
+
+| Detail | Value |
+|--------|-------|
+| Cipher | AES-256 |
+| Mode of operation | CTR |
+| DEK | fc5832fa18c5d2534c8a387b90e83ced6dc987dfb0a98bd3dceef0f36cc3e697 |
+| IV  | b2b0d7f8c66c11ae1355a7f240ec6fe4 (first half of `sha256(plaintext)`, 128 bits) |
+
+??? question "Is CTR a safe mode?"
+	See a good video on [encryption modes](https://www.youtube.com/watch?v=Rk0NIQfEXBA).
+
+	CTR can be unsafe if you don't authenticate the data - that's why there's more modern
+	mode GCM, but we chose not to use it because GCM uses more disk space (CTR gives us
+	nice 1:1 on lengths of plaintext and ciphertext) and **we already do authentication** due
+	to our [CAS design](../../concepts-ideas-architecture/index.md#content-addressable-storage),
+	so ciphertext tampering wouldn't go unnoticed.
+
+??? question "Is the IV safe?"
+	A secure IV can be public knowledge but must never be reused (so usually a random
+	source is used). Since we use `sha256(plaintext)` as IV, it's guaranteed to not be
+	reused because due to our CAS nature we only store each unique hash (and by extension,
+	IV) once.
+
+	See Crypto StackExchange on
+	[Is it safe to use file's hash as IV?](https://crypto.stackexchange.com/questions/3754/is-it-safe-to-use-files-hash-as-iv).
+
+	Also see
+	[Is Convergent Encryption really secure?](https://crypto.stackexchange.com/questions/729/is-convergent-encryption-really-secure):
+
+	> If it's implemented properly, it is as secure as any other form of encryption in
+	> preventing those who don't know the data from obtaining it from the encrypted data.
+	> However, it does have one fundamental limitation that, so far as we know, is inherent
+	> in the technology -- Anyone who has the same file you have can potentially prove that
+	> you have that file.
+
+	The above limitation is already present by design in every CAS-based system.
+
+	The IV is 128 bits because that's AES's block size and what the CTR mode requires.
+
+Plucking in the values from the above table, we get this `openssl` command:
+
+```console
+$ openssl enc -aes-256-ctr -d \
+	-iv b2b0d7f8c66c11ae1355a7f240ec6fe4 \
+	-K fc5832fa18c5d2534c8a387b90e83ced6dc987dfb0a98bd3dceef0f36cc3e697 \
+	-in ciphertext.bin \
+	-out plaintext-decrypted-from-varasto.jpg
+```
+
+Does the decrypted file match the original plaintext?
+
+```console
+$ sha256sum plaintext.jpg plaintext-decrypted-from-varasto.jpg
+b2b0d7f8c66c11ae1355a7f240ec6fe421a71f77fa3022c032783a39bdfb14cb  plaintext.jpg
+b2b0d7f8c66c11ae1355a7f240ec6fe421a71f77fa3022c032783a39bdfb14cb  plaintext-decrypted-from-varasto.jpg
+```
+
+They match. You can download the `ciphertext.bin` and `plaintext.jpg` from this article to
+test it yourself.
+
+
+### Recap
+
+Since the original plaintext and OpenSSL's decryption results match, you can trust Varasto's
+encryption implementation if you:
+
+- Trust AES-256-CTR as a good cipher and mode
+- Trust OpenSSL's implementation of AES-256-CTR
+- Trust Varasto's encryption key generation
+- Trust Varasto's IV selection
+
+We have given explanations to these selections and places/tools for you to audit them yourself.
 
 
 What if my HSM gets stolen?
