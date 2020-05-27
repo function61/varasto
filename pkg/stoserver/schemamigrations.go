@@ -170,13 +170,9 @@ func from4to5(tx *bbolt.Tx) error {
 		move("themoviedb.episode_id", stoservertypes.MetadataTheMovieDbTvEpisodeId)
 		move("themoviedb.tv_id", stoservertypes.MetadataTheMovieDbTvId)
 
-		if _, has := coll.Metadata["thumbnail_url"]; has {
-			delete(coll.Metadata, "thumbnail_url")
-		}
-
-		if _, has := coll.Metadata["backdrop_url"]; has {
-			delete(coll.Metadata, "backdrop_url")
-		}
+		// deletes are no-op if key does not exist
+		delete(coll.Metadata, "thumbnail_url")
+		delete(coll.Metadata, "backdrop_url")
 
 		if coll.GlobalVersion == 0 {
 			// make sure each collection gets unique version
@@ -200,13 +196,8 @@ func from4to5(tx *bbolt.Tx) error {
 			}
 		}
 
-		if _, has := dir.Deprecated1["thumbnail_url"]; has {
-			delete(dir.Deprecated1, "thumbnail_url")
-		}
-
-		if _, has := dir.Deprecated1["backdrop_url"]; has {
-			delete(dir.Deprecated1, "backdrop_url")
-		}
+		delete(dir.Deprecated1, "thumbnail_url")
+		delete(dir.Deprecated1, "backdrop_url")
 
 		move("imdb.id", stoservertypes.MetadataImdbId)
 		move("themoviedb.id", stoservertypes.MetadataTheMovieDbMovieId)
