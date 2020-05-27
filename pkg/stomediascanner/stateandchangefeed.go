@@ -8,12 +8,11 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 )
 
-func discoverChanges(ctx context.Context, after string) ([]stoservertypes.CollectionChangefeedItem, error) {
-	conf, err := stoclient.ReadConfig()
-	if err != nil {
-		return nil, err
-	}
-
+func discoverChanges(
+	ctx context.Context,
+	after string,
+	conf *stoclient.ClientConfig,
+) ([]stoservertypes.CollectionChangefeedItem, error) {
 	changefeedItems := []stoservertypes.CollectionChangefeedItem{}
 	if _, err := ezhttp.Get(
 		ctx,

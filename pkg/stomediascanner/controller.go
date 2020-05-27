@@ -78,7 +78,7 @@ func (c *Controller) runTask(ctx context.Context) error {
 	c.logl.Debug.Printf("start state at: %s", state)
 
 	for {
-		changefeed, err := discoverChanges(ctx, state)
+		changefeed, err := discoverChanges(ctx, state, c.clientConf)
 		if err != nil {
 			return err
 		}
