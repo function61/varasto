@@ -198,6 +198,25 @@ func (s *Controller) resumeJobWorker(
 
 		// verify them
 		for _, blob := range blobBatch {
+			// not strictly completed (as we just begun work on it), but if we have lots of
+			// blobs overall, and this exact volume has very few, and we'd skip updating this
+			// after "blobExistsOnVolumeToVerify" check, we'd receive very little status updates
+			job.LastCompletedBlobRef = blob.Ref
+
+			if time.Since(lastStatusUpdate) >= 5*time.Second {
+				if err := updateJobStatusInDb(); err != nil {
+					return err
+				}
+
+				lastStatusUpdate = time.Now()
+
+				select {
+				case <-stop.Signal:
+					return nil
+				default:
+				}
+			}
+
 			blobExistsOnVolumeToVerify := sliceutil.ContainsInt(blob.Volumes, job.VolumeId)
 			if !blobExistsOnVolumeToVerify {
 				continue
@@ -218,21 +237,6 @@ func (s *Controller) resumeJobWorker(
 			}
 
 			job.BytesScanned += uint64(blob.SizeOnDisk)
-			job.LastCompletedBlobRef = blob.Ref
-
-			select {
-			case <-stop.Signal:
-				return nil
-			default:
-			}
-
-			if time.Since(lastStatusUpdate) >= 5*time.Second {
-				if err := updateJobStatusInDb(); err != nil {
-					return err
-				}
-
-				lastStatusUpdate = time.Now()
-			}
 		}
 
 		if len(blobBatch) < batchLimit { // fewer blobs than requested, so there will be no more
