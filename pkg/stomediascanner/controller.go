@@ -78,6 +78,8 @@ func (c *Controller) runTask(ctx context.Context) error {
 
 	c.logl.Debug.Printf("start state at: %s", state)
 
+	updateServerStateInterval := time.Tick(3 * time.Second)
+
 	for {
 		changefeed, err := discoverChanges(ctx, state, c.clientConf)
 		if err != nil {
@@ -95,17 +97,20 @@ func (c *Controller) runTask(ctx context.Context) error {
 
 		select {
 		case <-ctx.Done():
-			if state != serverState {
-				c.logl.Info.Printf("state advanced to %s (from %s); saving", state, serverState)
-
-				// need background ctx because "ctx" is canceled
-				if err := setState(context.Background(), state, c.clientConf); err != nil {
-					return err
-				}
+			return nil
+		case <-updateServerStateInterval:
+			if serverState == state { // nothing to do
+				continue
 			}
 
-			return nil
-		case <-time.After(5 * time.Second):
+			c.logl.Info.Printf("state advanced to %s (from %s); saving to server", state, serverState)
+
+			if err := setState(ctx, state, c.clientConf); err != nil {
+				return err
+			}
+
+			serverState = state
+		case <-time.After(5 * time.Second): // sleep for a while as not to hammer the server
 			c.logl.Debug.Printf("polling; last time processed (%d) changefeed items\n", len(changefeed))
 		}
 	}
