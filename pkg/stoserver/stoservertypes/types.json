@@ -159,8 +159,9 @@
 			"type": "string",
 			"stringMembers": [
 				"docs/index.md",
-				"docs/content/movies/index.md",
 				"docs/content/games/index.md",
+				"docs/content/generic-files/index.md",
+				"docs/content/movies/index.md",
 				"docs/content/tvshows/index.md",
 				"docs/data-interfaces/client/index.md",
 				"docs/data-interfaces/network-folders/index.md",
