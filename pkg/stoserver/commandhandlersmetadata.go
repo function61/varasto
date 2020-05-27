@@ -406,11 +406,8 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 }
 
 func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMovieDbApikey, ctx *command.Ctx) error {
-	if cmd.Apikey != "" { // allow clearing this without testing
-		// validate the API key by trying to use the API
-		client := themoviedbapi.New(cmd.Apikey)
-		_, err := client.OpenMovieByImdbId(ctx.Ctx, "tt1226229") // one of my fav movies, way underrated :)
-		if err != nil {
+	if cmd.Validation && cmd.Apikey != "" {
+		if _, err := themoviedbapi.New(cmd.Apikey).OpenMovieByImdbId(ctx.Ctx, "tt1226229"); err != nil { // one of my fav movies, way underrated :)
 			return fmt.Errorf("failed validating API key: %w", err)
 		}
 	}
@@ -419,7 +416,7 @@ func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMo
 }
 
 func (c *cHandlers) ConfigSetIgdbApikey(cmd *stoservertypes.ConfigSetIgdbApikey, ctx *command.Ctx) error {
-	if cmd.Apikey != "" { // allow clearing this without testing
+	if cmd.Validation && cmd.Apikey != "" {
 		if _, err := igdbapi.New(cmd.Apikey).GameById(ctx.Ctx, "20025"); err != nil {
 			return fmt.Errorf("failed validating API key: %w", err)
 		}
