@@ -1,5 +1,8 @@
 // "Bolt Light ORM", doesn't do much else than persist structs into Bolt..
 // this was born because: https://github.com/asdine/storm/issues/222#issuecomment-472791001
+//
+// Warning: don't Each() and Delete() at the same time. Deletion messes with the iteration
+//          order somehow, and I observed half of the records was deleted when I tried to delete all.
 package blorm
 
 import (
