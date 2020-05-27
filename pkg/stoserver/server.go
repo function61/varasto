@@ -53,6 +53,7 @@ var (
 type ServerConfigFile struct {
 	DbLocation                   string `json:"db_location"`
 	DisableReplicationController bool   `json:"disable_replication_controller"`
+	DisableMediaScanner          bool   `json:"disable_media_scanner"`
 }
 
 func runServer(
@@ -133,7 +134,7 @@ func runServer(
 	serverConfig.ThumbServer = &subsystem{
 		id:        stoservertypes.SubsystemIdThumbnailGenerator,
 		httpMount: "/api/mediascanner",
-		enabled:   true,
+		enabled:   !scf.DisableMediaScanner,
 		controller: childprocesscontroller.New(
 			[]string{os.Args[0], "server", stomediascanner.Verb, "--addr", "domainsocket://" + thumbnailerSockAddr},
 			"Media scanner",
@@ -472,6 +473,15 @@ func readServerConfigFile() (*ServerConfigFile, error) {
 	scf := &ServerConfigFile{}
 	if err := jsonfile.Read("config.json", &scf, true); err != nil {
 		return nil, err
+	}
+
+	// TODO: for each "STO_" prefixed, make sure we processed them all to prevent typos
+	if os.Getenv("STO_DISABLE_REPLICATION_CONTROLLER") != "" {
+		scf.DisableReplicationController = true
+	}
+
+	if os.Getenv("STO_DISABLE_MEDIASCANNER") != "" {
+		scf.DisableMediaScanner = true
 	}
 
 	return scf, nil
