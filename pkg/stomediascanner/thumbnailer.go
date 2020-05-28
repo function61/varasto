@@ -138,6 +138,25 @@ func collectionThumbnails(
 		}
 	}
 
+	alreadyThumbnailed := func(file stotypes.File) bool {
+		thumbPath := collectionThumbPath(file)
+
+		// since thumbPath is based on file content, "foo.jpg" and "foo (Copy).jpg" have
+		// same thumb path (if they have same content)
+		if _, alreadyCommitted := collFiles[thumbPath]; alreadyCommitted {
+			return true
+		}
+
+		// these are files that we created just now for this soon-to-commit.
+		for _, createdFile := range createdFiles {
+			if createdFile.Path == thumbPath {
+				return true
+			}
+		}
+
+		return false
+	}
+
 	for _, file := range collFiles {
 		// do not touch meta files (could already be thumbnails etc)
 		if strings.HasPrefix(file.Path, ".sto/") {
@@ -148,7 +167,7 @@ func collectionThumbnails(
 			continue
 		}
 
-		if _, alreadyThumbnailed := collFiles[collectionThumbPath(file)]; alreadyThumbnailed {
+		if alreadyThumbnailed(file) {
 			continue
 		}
 
