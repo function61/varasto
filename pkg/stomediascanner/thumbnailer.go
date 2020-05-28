@@ -271,7 +271,7 @@ func thumbnailable(filePath string) bool {
 func downloadImage(ctx context.Context, imageUrl string) (io.ReadCloser, error) {
 	resp, err := ezhttp.Get(ctx, imageUrl)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("downloadImage: %s: %w", imageUrl, err)
 	}
 
 	typ := resp.Header.Get("Content-Type")
