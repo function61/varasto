@@ -61,7 +61,8 @@ func collectionThumbnails(
 	if !hasBanner {
 		bannerUrl, err := discoverBannerUrl(ctx, coll, conf)
 		if err != nil {
-			return err // TODO: worth dying over?
+			// not worth stopping mediascanner for
+			logl.Error.Printf("discoverBannerUrl: %v", err)
 		}
 
 		if bannerUrl != "" {
