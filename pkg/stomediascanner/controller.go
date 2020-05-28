@@ -78,7 +78,26 @@ func (c *Controller) runTask(ctx context.Context) error {
 
 	c.logl.Debug.Printf("start state at: %s", state)
 
-	updateServerStateInterval := time.Tick(3 * time.Second)
+	// save progress to server on this interval. it doesn't matter much if we lose any progress
+	// tracking, since we'd just revisit some already processed collections and we'd just
+	// discover that there's no more work to do
+	updateServerStateInterval := time.Tick(5 * time.Second)
+
+	updateServerState := func() error {
+		if serverState == state { // nothing to do
+			return nil
+		}
+
+		c.logl.Info.Printf("state advanced to %s (from %s); saving to server", state, serverState)
+
+		if err := setState(ctx, state, c.clientConf); err != nil {
+			return err
+		}
+
+		serverState = state
+
+		return nil
+	}
 
 	for {
 		changefeed, err := discoverChanges(ctx, state, c.clientConf)
@@ -93,24 +112,24 @@ func (c *Controller) runTask(ctx context.Context) error {
 
 			// move state forward
 			state = item.Cursor
+
+			select {
+			case <-updateServerStateInterval:
+				if err := updateServerState(); err != nil {
+					return err
+				}
+			default:
+			}
 		}
 
 		select {
 		case <-ctx.Done():
 			return nil
 		case <-updateServerStateInterval:
-			if serverState == state { // nothing to do
-				continue
-			}
-
-			c.logl.Info.Printf("state advanced to %s (from %s); saving to server", state, serverState)
-
-			if err := setState(ctx, state, c.clientConf); err != nil {
+			if err := updateServerState(); err != nil {
 				return err
 			}
-
-			serverState = state
-		case <-time.After(5 * time.Second): // sleep for a while as not to hammer the server
+		case <-time.After(3 * time.Second): // sleep for a while as not to hammer the server
 			c.logl.Debug.Printf("polling; last time processed (%d) changefeed items\n", len(changefeed))
 		}
 	}
