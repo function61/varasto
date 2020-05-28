@@ -6,7 +6,7 @@ You can configure the "security dial" of Varasto between maximum convenience and
 security - even on a per-directory-tree basis.
 
 (The **data on disk is always encrypted with strong encryption**, but how the data encryption
-keys are accessible is configurable for convenience.)
+keys are *accessible* is configurable for convenience.)
 
 ![](dial.png)
 
