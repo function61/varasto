@@ -68,27 +68,28 @@ func collectionThumbnails(
 		if bannerUrl != "" {
 			bannerImage, err := downloadImage(ctx, bannerUrl)
 			if err != nil {
-				return err // TODO: don't error out?
+				logl.Error.Printf("downloadImage: %v", err)
+			} else {
+				defer bannerImage.Close()
+
+				fileModifiedTime := time.Now()
+
+				bannerFile, err := stoclient.ScanAndDiscoverBlobs(
+					ctx,
+					stoservertypes.BannerPath,
+					bannerImage,
+					0,
+					fileModifiedTime, // created
+					fileModifiedTime, // modified
+					collectionId,
+					blobUploader,
+				)
+				if err != nil {
+					return err
+				}
+
+				createdFiles = append(createdFiles, *bannerFile)
 			}
-			defer bannerImage.Close()
-
-			fileModifiedTime := time.Now()
-
-			bannerFile, err := stoclient.ScanAndDiscoverBlobs(
-				ctx,
-				stoservertypes.BannerPath,
-				bannerImage,
-				0,
-				fileModifiedTime, // created
-				fileModifiedTime, // modified
-				collectionId,
-				blobUploader,
-			)
-			if err != nil {
-				return err
-			}
-
-			createdFiles = append(createdFiles, *bannerFile)
 		}
 	}
 
@@ -291,7 +292,7 @@ func thumbnailable(filePath string) bool {
 func downloadImage(ctx context.Context, imageUrl string) (io.ReadCloser, error) {
 	resp, err := ezhttp.Get(ctx, imageUrl)
 	if err != nil {
-		return nil, fmt.Errorf("downloadImage: %s: %w", imageUrl, err)
+		return nil, fmt.Errorf("%s: %w", imageUrl, err)
 	}
 
 	typ := resp.Header.Get("Content-Type")
