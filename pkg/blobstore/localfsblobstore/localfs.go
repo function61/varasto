@@ -72,18 +72,18 @@ func (l *localFs) RoutingCost() int {
 }
 
 func (l *localFs) getPath(ref stotypes.BlobRef) string {
-	bsn := toBlobstoreName(ref)
+	return RefToPath(ref, l.path)
+}
+
+func RefToPath(ref stotypes.BlobRef, basePath string) string {
+	// windows has case insensitive filesystem (sensitivity is a recent opt-in), so lowest
+	// common denominator that's better than hex encoding is base32
+	hexits := base32CustomWithoutPadding.EncodeToString([]byte(ref))
 
 	// this should yield 32 768 directories as maximum (see test file for clarification)
 	return filepath.Join(
-		l.path,
-		bsn[0:1], // 5 bits
-		bsn[1:3], // 10 bits
-		bsn[3:])
-}
-
-func toBlobstoreName(ref stotypes.BlobRef) string {
-	// windows has case insensitive filesystem (sensitivity is a recent opt-in), so lowest
-	// common denominator that's better than hex encoding is base32
-	return base32CustomWithoutPadding.EncodeToString([]byte(ref))
+		basePath,
+		hexits[0:1], // 5 bits
+		hexits[1:3], // 10 bits
+		hexits[3:])
 }
