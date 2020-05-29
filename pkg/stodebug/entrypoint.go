@@ -2,8 +2,8 @@ package stodebug
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/spf13/cobra"
@@ -21,18 +21,11 @@ func Entrypoint() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			ref, err := stotypes.BlobRefFromHex(args[0])
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			fmt.Println(localfsblobstore.RefToPath(*ref, "/"))
 		},
 	})
 
 	return debug
-}
-
-func exitIfError(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
 }

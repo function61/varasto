@@ -13,6 +13,7 @@ import (
 	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/jsonfile"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
 )
@@ -100,13 +101,13 @@ func configInitEntrypoint() *cobra.Command {
 			fuseMountPath := args[2]
 
 			confPath, err := ConfigFilePath()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			exists, err := fileexists.Exists(confPath)
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			if exists {
-				exitIfError(errors.New("config file already exists"))
+				osutil.ExitIfError(errors.New("config file already exists"))
 			}
 
 			conf := &ClientConfig{
@@ -115,7 +116,7 @@ func configInitEntrypoint() *cobra.Command {
 				FuseMountPath: fuseMountPath,
 			}
 
-			exitIfError(WriteConfig(conf))
+			osutil.ExitIfError(WriteConfig(conf))
 		},
 	}
 }
@@ -127,12 +128,12 @@ func configPrintEntrypoint() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			confPath, err := ConfigFilePath()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			fmt.Printf("file: %s\n", confPath)
 
 			exists, err := fileexists.Exists(confPath)
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			if !exists {
 				fmt.Printf(".. does not exist. To configure, run:\n    $ %s config-init\n", os.Args[0])
@@ -140,11 +141,11 @@ func configPrintEntrypoint() *cobra.Command {
 			}
 
 			file, err := os.Open(confPath)
-			exitIfError(err)
+			osutil.ExitIfError(err)
 			defer file.Close()
 
 			_, err = io.Copy(os.Stdout, file)
-			exitIfError(err)
+			osutil.ExitIfError(err)
 		},
 	}
 }

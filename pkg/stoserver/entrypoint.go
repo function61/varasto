@@ -7,7 +7,7 @@ import (
 	"os"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/gokit/systemdinstaller"
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/restartcontroller"
@@ -28,7 +28,7 @@ func serverMain() error {
 	restartable := restartcontroller.New(logex.Prefix("restartcontroller", rootLogger))
 
 	return restartable.Run(
-		ossignal.InterruptOrTerminateBackgroundCtx(rootLogger),
+		osutil.CancelOnInterruptOrTerminate(rootLogger),
 		func(ctx context.Context) error {
 			// we'll pass restart API to the server so it can request us to restart itself
 			return runServer(
@@ -45,7 +45,7 @@ func Entrypoint() *cobra.Command {
 		Short: "Starts the server component",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(serverMain())
+			osutil.ExitIfError(serverMain())
 		},
 	}
 
@@ -55,9 +55,9 @@ func Entrypoint() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			scf, err := readServerConfigFile()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
-			exitIfError(stodbimportexport.Import(os.Stdin, scf.DbLocation))
+			osutil.ExitIfError(stodbimportexport.Import(os.Stdin, scf.DbLocation))
 		},
 	})
 
@@ -69,7 +69,7 @@ func Entrypoint() *cobra.Command {
 			// systemd doesn't set HOME env, and at least our thumbnailer and FUSE projector
 			// need it to read Varasto client config to be able to reach the server process
 			homeDir, err := os.UserHomeDir()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			serviceFile := systemdinstaller.SystemdServiceFile(
 				"varasto",
@@ -79,7 +79,7 @@ func Entrypoint() *cobra.Command {
 				systemdinstaller.Docs("https://github.com/function61/varasto", "https://function61.com/"),
 				systemdinstaller.RequireNetworkOnline)
 
-			exitIfError(systemdinstaller.Install(serviceFile))
+			osutil.ExitIfError(systemdinstaller.Install(serviceFile))
 
 			fmt.Println(systemdinstaller.GetHints(serviceFile))
 		},
@@ -88,11 +88,4 @@ func Entrypoint() *cobra.Command {
 	cmd.AddCommand(stomediascanner.Entrypoint())
 
 	return cmd
-}
-
-func exitIfError(err error) {
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
 }

@@ -3,14 +3,13 @@ package stofuse
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/spf13/cobra"
@@ -32,7 +31,7 @@ func Entrypoint() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			ctx, cancel := context.WithCancel(ossignal.InterruptOrTerminateBackgroundCtx(
+			ctx, cancel := context.WithCancel(osutil.CancelOnInterruptOrTerminate(
 				rootLogger))
 			defer cancel()
 
@@ -46,10 +45,7 @@ func Entrypoint() *cobra.Command {
 				cancel()
 			}()
 
-			if err := serve(ctx, addr, unmountFirst, rootLogger); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
+			osutil.ExitIfError(serve(ctx, addr, unmountFirst, rootLogger))
 		},
 	}
 

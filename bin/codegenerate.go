@@ -1,12 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/function61/eventkit/codegen"
 	"github.com/function61/eventkit/codegen/codegentemplates"
 	"github.com/function61/gokit/dynversion/precompilationversion"
+	"github.com/function61/gokit/osutil"
 )
 
 //go:generate go run codegenerate.go
@@ -15,13 +15,10 @@ import (
 //go:generate rm ../frontend/generated/stofuse/stofusetypes_endpoints.ts
 
 func main() {
-	if err := mainLogic(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+	osutil.ExitIfError(logic())
 }
 
-func mainLogic() error {
+func logic() error {
 	// normalize to root of the project
 	if err := os.Chdir(".."); err != nil {
 		return err

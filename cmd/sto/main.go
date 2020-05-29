@@ -1,10 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/function61/gokit/dynversion"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stodebug"
 	"github.com/function61/varasto/pkg/stofuse/stofuseentrypoint"
@@ -31,8 +31,5 @@ func main() {
 	rootCmd.AddCommand(stomvu.Entrypoint())
 	rootCmd.AddCommand(stodebug.Entrypoint())
 
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	osutil.ExitIfError(rootCmd.Execute())
 }

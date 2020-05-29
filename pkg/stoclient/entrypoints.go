@@ -4,11 +4,11 @@ package stoclient
 import (
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
-	"github.com/function61/gokit/ossignal"
+	"github.com/function61/gokit/logex"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/fssnapshot"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +21,7 @@ func cloneEntrypoint() *cobra.Command {
 		Short: "Downloads a collection from server to workdir",
 		Args:  cobra.RangeArgs(1, 2),
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(wrapWithStopSupport(func(ctx context.Context) error {
+			osutil.ExitIfError(wrapWithStopSupport(func(ctx context.Context) error {
 				dirName := ""
 				if len(args) > 1 {
 					dirName = args[1]
@@ -49,10 +49,10 @@ func logEntrypoint() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			cwd, err := os.Getwd()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			wd, err := NewWorkdirLocation(cwd)
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
 			for _, item := range wd.manifest.Collection.Changesets {
 				fmt.Printf(
@@ -75,7 +75,7 @@ func pushEntrypoint() *cobra.Command {
 		Short: "Uploads a collection from workdir to server",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(wrapWithStopSupport(func(ctx context.Context) error {
+			osutil.ExitIfError(wrapWithStopSupport(func(ctx context.Context) error {
 				cwd, err := os.Getwd()
 				if err != nil {
 					return err
@@ -90,7 +90,7 @@ func pushEntrypoint() *cobra.Command {
 				}
 
 				defer func() { // always release snapshot
-					exitIfError(snapshotter.Release(*snapshot))
+					osutil.ExitIfError(snapshotter.Release(*snapshot))
 				}()
 
 				// now read the workdir from within the snapshot (and not the actual cwd)
@@ -115,7 +115,7 @@ func pushOneEntrypoint() *cobra.Command {
 		Short: "Uploads a single file to a collection",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(wrapWithStopSupport(func(ctx context.Context) error {
+			osutil.ExitIfError(wrapWithStopSupport(func(ctx context.Context) error {
 				return pushOne(ctx, args[0], args[1])
 			}))
 		},
@@ -128,7 +128,7 @@ func stEntrypoint() *cobra.Command {
 		Short: "Shows working directory status compared to the parent revision",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			exitIfError(wrapWithStopSupport(func(ctx context.Context) error {
+			osutil.ExitIfError(wrapWithStopSupport(func(ctx context.Context) error {
 				cwd, err := os.Getwd()
 				if err != nil {
 					return err
@@ -177,19 +177,5 @@ func Entrypoints() []*cobra.Command {
 }
 
 func wrapWithStopSupport(fn func(ctx context.Context) error) error {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	stopWaitingForSignals := make(chan interface{}, 1)
-	defer close(stopWaitingForSignals)
-
-	go func() {
-		select {
-		case sig := <-ossignal.InterruptOrTerminate():
-			log.Printf("got %s; stopping", sig)
-			cancel()
-		case <-stopWaitingForSignals:
-		}
-	}()
-
-	return fn(ctx)
+	return fn(osutil.CancelOnInterruptOrTerminate(logex.StandardLogger()))
 }

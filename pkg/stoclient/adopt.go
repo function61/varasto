@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
 )
@@ -55,9 +56,9 @@ func adoptEntrypoint() *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			fullPath, err := os.Getwd()
-			exitIfError(err)
+			osutil.ExitIfError(err)
 
-			exitIfError(adopt(fullPath, args[0]))
+			osutil.ExitIfError(adopt(fullPath, args[0]))
 		},
 	}
 }

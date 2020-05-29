@@ -15,7 +15,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
 	github.com/function61/eventkit v0.0.0-20200514113038-e1374b8d4469
-	github.com/function61/gokit v0.0.0-20200505133340-ea23da4315bb
+	github.com/function61/gokit v0.0.0-20200529115225-83640b4df272
 	github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1
 	github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692
 	github.com/golang/groupcache v0.0.0-20190129154638-5b532d6fd5ef

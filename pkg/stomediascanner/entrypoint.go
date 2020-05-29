@@ -2,7 +2,6 @@ package stomediascanner
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -12,7 +11,7 @@ import (
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/httputils"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/ossignal"
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
@@ -62,7 +61,7 @@ func Entrypoint() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			rootLogger := logex.StandardLogger()
 
-			ctx, cancel := context.WithCancel(ossignal.InterruptOrTerminateBackgroundCtx(rootLogger))
+			ctx, cancel := context.WithCancel(osutil.CancelOnInterruptOrTerminate(rootLogger))
 
 			go func() {
 				// wait for stdin EOF (or otherwise broken pipe)
@@ -73,10 +72,7 @@ func Entrypoint() *cobra.Command {
 				cancel()
 			}()
 
-			if err := logic(ctx, addr, rootLogger); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-				os.Exit(1)
-			}
+			osutil.ExitIfError(logic(ctx, addr, rootLogger))
 		},
 	}
 
