@@ -2,7 +2,7 @@ Observe how Varasto is doing from key metrics like:
 
 - Per-volume:
 	* Used and free space
-	* Blob count ("file chunk count")
+	* Blob count
 	* Read/write requests, errors and byte counts
 	* Replication progress
 - HTTP server request counts partitioned over status code and method
