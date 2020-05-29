@@ -557,7 +557,6 @@ func toDbFiles(files []stoservertypes.File) []stotypes.File {
 func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stoservertypes.Changeset, w http.ResponseWriter, r *http.Request) {
 	coll := commitChangesetInternal(
 		w,
-		r,
 		mux.Vars(r)["id"],
 		stotypes.NewChangeset(
 			changeset.ID,
@@ -581,7 +580,6 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 // output automatically)
 func commitChangesetInternal(
 	w http.ResponseWriter,
-	r *http.Request,
 	collectionId string,
 	changeset stotypes.CollectionChangeset,
 	db *bbolt.DB,
