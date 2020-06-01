@@ -83,6 +83,7 @@ func collectionThumbnailsOneBatch(
 	collFiles := collHead.Files()
 
 	createdFiles := []stotypes.File{}
+	updatedFiles := []stotypes.File{}
 	deletedFiles := []string{}
 
 	_, hasBanner := collFiles[stoservertypes.BannerPath]
@@ -143,22 +144,26 @@ func collectionThumbnailsOneBatch(
 			usWithoutExt := file.Path[0 : len(file.Path)-len(ourExt)]
 
 			// "funny video.mp4" => "funny video.jpg"
-			thumbnailCounterpart := usWithoutExt + ".jpg"
+			thumbnailCounterpartName := usWithoutExt + ".jpg"
 
-			logl.Debug.Printf("thumbnailCounterpart<%s>", thumbnailCounterpart)
+			logl.Debug.Printf("thumbnailCounterpart<%s>", thumbnailCounterpartName)
 
-			if counterpart, has := collFiles[thumbnailCounterpart]; has {
-				// TODO: support moves? right now we're doing delete + create
-				// TODO: if we auto-made thumbnail for (now-)thumbnail, remove the thumbnail
-				//       for thumbnail?
-
-				// delete counterpart from original location
-				deletedFiles = append(deletedFiles, counterpart.Path)
+			if thumb, has := collFiles[thumbnailCounterpartName]; has {
+				// delete from original location
+				deletedFiles = append(deletedFiles, thumb.Path)
 
 				// move into thumb path, assume it has sensible dimensions (suitable as a thumbnail)
-				counterpart.Path = collectionThumbPath(file)
+				thumbPath := collectionThumbPath(file)
 
-				createdFiles = append(createdFiles, counterpart)
+				// there already exists thumbnail? delete it (by updating)
+				if toReplace, thumbExists := collFiles[thumbPath]; thumbExists {
+					toReplace.CopyEverythingExceptPath(thumb)
+
+					updatedFiles = append(updatedFiles, toReplace)
+				} else {
+					thumb.Path = thumbPath
+					createdFiles = append(createdFiles, thumb)
+				}
 
 				// delete from file map so the thumbnailer range won't come across our thumbnail
 				// again.
@@ -251,7 +256,7 @@ func collectionThumbnailsOneBatch(
 		coll.Head,
 		time.Now(),
 		createdFiles,
-		[]stotypes.File{},
+		updatedFiles,
 		deletedFiles)
 
 	_, err = stoclient.Commit(

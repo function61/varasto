@@ -120,6 +120,14 @@ type File struct {
 	BlobRefs []string // TODO: use explicit datatype?
 }
 
+func (f *File) CopyEverythingExceptPath(other File) {
+	f.Sha256 = other.Sha256
+	f.Created = other.Created
+	f.Modified = other.Modified
+	f.Size = other.Size
+	f.BlobRefs = other.BlobRefs
+}
+
 type Blob struct {
 	Ref                       BlobRef
 	EncryptionKeyId           string
