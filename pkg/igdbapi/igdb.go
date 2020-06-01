@@ -125,6 +125,33 @@ func (c *Client) GameScreenshotUrls(ctx context.Context, id string) ([]string, e
 	return urls, nil
 }
 
+func (c *Client) GameCoverUrls(ctx context.Context, id string) ([]string, error) {
+	query := fmt.Sprintf("fields image_id,url; where game = %s;", id)
+
+	covers := []struct { // NOTE: more fields available than what we specify here
+		ImageId string `json:"image_id"`
+		// the response deceptively also has "url", but that points to a so small thumbnail
+		// image it must be for ants
+	}{}
+	if _, err := ezhttp.Post(
+		ctx,
+		endpointV3("/covers"),
+		ezhttp.Header("Accept", "application/json"),
+		ezhttp.Header("user-key", c.apiKey),
+		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
+		ezhttp.RespondsJson(&covers, true),
+	); err != nil {
+		return nil, err
+	}
+
+	urls := []string{}
+	for _, cover := range covers {
+		urls = append(urls, originalImageURL(cover.ImageId))
+	}
+
+	return urls, nil
+}
+
 func (c *Client) WebsitesByGameId(ctx context.Context, id string) ([]Website, error) {
 	query := fmt.Sprintf("fields category,game,trusted,url; where game=%s;", id)
 

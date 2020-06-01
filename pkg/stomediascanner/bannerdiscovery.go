@@ -99,6 +99,17 @@ func discoverBannerUrl(
 		if len(screenshotUrls) > 0 {
 			return screenshotUrls[0], nil
 		}
+
+		// no screenshots - try to get a cover instead
+
+		coverUrls, err := igdb.GameCoverUrls(ctx, igdbId)
+		if err != nil {
+			return "", err
+		}
+
+		if len(coverUrls) > 0 {
+			return coverUrls[0], nil
+		}
 	}
 
 	return "", nil

@@ -35,7 +35,7 @@ type Game struct {
 	AggregatedRating      int    `json:"aggregated_rating"`
 	AggregatedRatingCount int    `json:"aggregated_rating_count"`
 	Category              int    `json:"category"`
-	Cover                 int    `json:"cover"`
+	Cover                 *uint64 `json:"cover"`
 	CreatedAt             int    `json:"created_at"`
 	ExternalGames         []int  `json:"external_games"`
 	GameModes             []int  `json:"game_modes"`
