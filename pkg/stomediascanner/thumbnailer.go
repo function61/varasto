@@ -35,6 +35,35 @@ func collectionThumbnails(
 	conf *stoclient.ClientConfig,
 	logl *logex.Leveled,
 ) error {
+	for {
+		more, err := collectionThumbnailsOneBatch(
+			ctx,
+			collectionId,
+			moveNamedThumbnails,
+			conf,
+			logl,
+		)
+		if err != nil {
+			return err
+		}
+
+		if !more {
+			return nil
+		}
+	}
+}
+
+// bool return is "more" - whether we need to call this worker again to continue with
+// more batches
+func collectionThumbnailsOneBatch(
+	ctx context.Context,
+	collectionId string,
+	moveNamedThumbnails bool,
+	conf *stoclient.ClientConfig,
+	logl *logex.Leveled,
+) (bool, error) {
+	more := false
+
 	blobUploader := stoclient.NewBackgroundUploader(
 		ctx,
 		stoclient.BackgroundUploaderConcurrency,
@@ -43,12 +72,12 @@ func collectionThumbnails(
 
 	coll, err := stoclient.FetchCollectionMetadata(*conf, collectionId)
 	if err != nil {
-		return err
+		return more, err
 	}
 
 	collHead, err := stateresolver.ComputeStateAtHead(*coll)
 	if err != nil {
-		return err
+		return more, err
 	}
 
 	collFiles := collHead.Files()
@@ -85,7 +114,7 @@ func collectionThumbnails(
 					blobUploader,
 				)
 				if err != nil {
-					return err
+					return more, err
 				}
 
 				createdFiles = append(createdFiles, *bannerFile)
@@ -172,6 +201,14 @@ func collectionThumbnails(
 			continue
 		}
 
+		maxBatchSize := 100
+
+		if len(createdFiles) > maxBatchSize {
+			more = true
+			logl.Info.Printf("max batch size of %d reached - doing intermediate commit", maxBatchSize)
+			break
+		}
+
 		logl.Debug.Printf("thumbnailing %s\n", file.Path)
 
 		fileModifiedTime := time.Now()
@@ -195,18 +232,18 @@ func collectionThumbnails(
 		)
 		if err != nil {
 			// TODO: skip-and-log or not? (like we do above)
-			return err
+			return more, err
 		}
 
 		createdFiles = append(createdFiles, *createdThumbnail)
 	}
 
 	if err := blobUploader.WaitFinished(); err != nil {
-		return err
+		return more, err
 	}
 
 	if len(createdFiles) == 0 {
-		return nil // no-op
+		return more, nil // no-op
 	}
 
 	changeset := stotypes.NewChangeset(
@@ -222,7 +259,7 @@ func collectionThumbnails(
 		collectionId,
 		*conf)
 
-	return err
+	return more, err
 }
 
 func collectionThumbPath(f stotypes.File) string {
