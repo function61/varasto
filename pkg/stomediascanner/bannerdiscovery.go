@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"sync"
+	"time"
 
+	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/igdbapi"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/function61/varasto/pkg/stoclient"
@@ -19,25 +22,11 @@ func discoverBannerUrl(
 	ctx context.Context,
 	coll *stotypes.Collection,
 	conf *stoclient.ClientConfig,
+	logl *logex.Leveled,
 ) (string, error) {
-	theMovieDbApikey, err := fetchServerConfig(ctx, stoservertypes.CfgTheMovieDbApikey, conf)
+	tmdb, igdb, err := getCachedClients(ctx, conf, logl)
 	if err != nil {
 		return "", err
-	}
-
-	igdbApikey, err := fetchServerConfig(ctx, stoservertypes.CfgIgdbApikey, conf)
-	if err != nil {
-		return "", err
-	}
-
-	var tmdb *themoviedbapi.Client
-	if theMovieDbApikey != "" {
-		tmdb = themoviedbapi.New(theMovieDbApikey)
-	}
-
-	var igdb *igdbapi.Client
-	if igdbApikey != "" {
-		igdb = igdbapi.New(igdbApikey)
 	}
 
 	tmdbMovieId, isMovie := coll.Metadata[stoservertypes.MetadataTheMovieDbMovieId]
@@ -113,4 +102,54 @@ func discoverBannerUrl(
 	}
 
 	return "", nil
+}
+
+// zero value is useful for initial "cached entry expired" situation
+type cachedClients struct {
+	ttl  time.Time
+	tmdb *themoviedbapi.Client
+	igdb *igdbapi.Client
+}
+
+var (
+	clientCache   = &cachedClients{}
+	clientCacheMu = sync.Mutex{}
+)
+
+// caches returned clients for 15 seconds (along with their fetched API keys)
+func getCachedClients(
+	ctx context.Context,
+	conf *stoclient.ClientConfig,
+	logl *logex.Leveled,
+) (*themoviedbapi.Client, *igdbapi.Client, error) {
+	clientCacheMu.Lock()
+	defer clientCacheMu.Unlock()
+
+	if clientCache.ttl.Before(time.Now()) {
+		logl.Debug.Println("refreshing API client cache")
+
+		theMovieDbApikey, err := fetchServerConfig(ctx, stoservertypes.CfgTheMovieDbApikey, conf)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		igdbApikey, err := fetchServerConfig(ctx, stoservertypes.CfgIgdbApikey, conf)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		clientCache = &cachedClients{
+			ttl: time.Now().Add(15 * time.Second),
+		}
+
+		if theMovieDbApikey != "" {
+			clientCache.tmdb = themoviedbapi.New(theMovieDbApikey)
+		}
+
+		if igdbApikey != "" {
+			clientCache.igdb = igdbapi.New(igdbApikey)
+		}
+	}
+
+	return clientCache.tmdb, clientCache.igdb, nil
 }
