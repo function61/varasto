@@ -20,8 +20,6 @@ import {
 	MetadataWikipediaSlug,
 	BannerPath,
 	CollectionSubsetWithMeta,
-	HeadRevisionId,
-	RootPathDotBase64FIXME,
 	MetadataVideoRevenueDollars,
 	MetadataVideoRuntimeMins,
 } from 'generated/stoserver/stoservertypes_types';
@@ -95,8 +93,6 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 			<a
 				href={collectionUrl({
 					id: coll.Id,
-					rev: HeadRevisionId,
-					path: RootPathDotBase64FIXME,
 				})}>
 				{banner}
 			</a>

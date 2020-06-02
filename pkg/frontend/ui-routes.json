@@ -14,8 +14,8 @@
 		"id": "collection",
 		"path": "/coll/{id}",
 		"query_params": [
-			{"key": "rev", "type": {"_": "string"}},
-			{"key": "path", "type": {"_": "string"}},
+			{"key": "rev", "type": {"_": "string", "nullable": true}},
+			{"key": "path", "type": {"_": "string", "nullable": true}},
 			{"key": "view", "type": {"_": "string", "nullable": true}},
 			{"key": "page", "type": {"_": "integer", "nullable": true}}
 		]

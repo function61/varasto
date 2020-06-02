@@ -41,10 +41,8 @@ import {
 	DirectoryOutput,
 	DirectoryType,
 	DocRef,
-	HeadRevisionId,
 	DirectoryAndMeta,
 	MetadataImdbId,
-	RootPathDotBase64FIXME,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
@@ -235,8 +233,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								<a
 									href={collectionUrl({
 										id: coll.Id,
-										rev: HeadRevisionId,
-										path: RootPathDotBase64FIXME,
 									})}>
 									{coll.Name}
 								</a>
@@ -365,8 +361,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 											redirect: (id) =>
 												collectionUrl({
 													id,
-													rev: HeadRevisionId,
-													path: RootPathDotBase64FIXME,
 												}),
 										})}
 									/>

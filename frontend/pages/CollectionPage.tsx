@@ -57,10 +57,10 @@ import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 
 interface CollectionPageProps {
 	id: string;
-	rev: string;
-	page?: number;
-	view?: string;
-	pathBase64: string;
+	rev?: string; // default: head revision
+	page?: number; // default: 1st
+	view?: string; // default: autodetect
+	pathBase64?: string; // default: root
 }
 
 interface CollectionPageState {
@@ -156,6 +156,7 @@ export default class CollectionPage extends React.Component<
 								id: coll.Id,
 								rev: changeset.Id,
 								path: this.props.pathBase64,
+								view: this.props.view,
 							})}>
 							{changeset.Id}
 						</a>
@@ -184,9 +185,7 @@ export default class CollectionPage extends React.Component<
 		const imdbIdExpectedButMissing =
 			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);
 
-		const thumbViewAvailable = eligibleForThumbnail.length > 0;
-
-		const thumbnailView = thumbViewAvailable && !this.props.view;
+		const haveAnyThumbnails = eligibleForThumbnail.length > 0;
 
 		return (
 			<div>
@@ -199,7 +198,10 @@ export default class CollectionPage extends React.Component<
 							showDetails={true}
 						/>
 
-						{thumbnailView ? this.thumbnailView(collOutput) : this.listView(collOutput)}
+						{(this.props.view === undefined && haveAnyThumbnails) ||
+						this.props.view === 'thumb'
+							? this.thumbnailView(collOutput)
+							: this.listView(collOutput)}
 					</div>
 					<div className="col-md-4">
 						{inSeriesHierarchy && this.nextPreviousButtons(collOutput, directoryOutput)}
@@ -397,6 +399,7 @@ export default class CollectionPage extends React.Component<
 								id: this.props.id,
 								rev: this.props.rev,
 								path: btoa(subDir),
+								view: this.props.view,
 							})}>
 							{filenameFromPath(subDir)}/
 						</a>
@@ -591,6 +594,7 @@ export default class CollectionPage extends React.Component<
 					id: this.props.id,
 					rev: this.props.rev,
 					path: btoa(pd),
+					view: this.props.view,
 				}),
 			};
 		};
@@ -615,7 +619,7 @@ export default class CollectionPage extends React.Component<
 				url: collectionUrl({
 					id: this.props.id,
 					rev: this.props.rev,
-					path: RootPathDotBase64FIXME,
+					view: this.props.view,
 				}),
 			});
 		}
@@ -665,7 +669,7 @@ export default class CollectionPage extends React.Component<
 				aria-label="Next / previous"
 				style={{ marginBottom: '16px' }}>
 				{np.prev && (
-					<AnchorButton href={collectionUrlDefault(np.prev.Id)}>
+					<AnchorButton href={collectionUrl({ id: np.prev.Id })}>
 						<Glyphicon icon="chevron-left" />
 						&nbsp;
 						{np.prev.Name}
@@ -675,7 +679,7 @@ export default class CollectionPage extends React.Component<
 					{collOutput.CollectionWithMeta.Collection.Name}
 				</span>
 				{np.next && (
-					<AnchorButton href={collectionUrlDefault(np.next.Id)}>
+					<AnchorButton href={collectionUrl({ id: np.next.Id })}>
 						{np.next.Name}
 						&nbsp;
 						<Glyphicon icon="chevron-right" />
@@ -697,6 +701,7 @@ export default class CollectionPage extends React.Component<
 						id: this.props.id,
 						rev: this.props.rev,
 						path: this.props.pathBase64,
+						view: 'thumb',
 					})}>
 					Thumbnail view
 				</a>
@@ -719,8 +724,8 @@ export default class CollectionPage extends React.Component<
 
 		const collectionOutputPromise = getCollectiotAtRev(
 			this.props.id,
-			this.props.rev,
-			this.props.pathBase64,
+			this.props.rev || HeadRevisionId,
+			this.props.pathBase64 || RootPathDotBase64FIXME,
 		);
 
 		this.state.collectionOutput.load(() => collectionOutputPromise);
@@ -737,14 +742,6 @@ export default class CollectionPage extends React.Component<
 // 'foo.txt' => 'foo.txt'
 function filenameFromPath(path: string): string {
 	return /\/?([^/]+)$/.exec(path)![1];
-}
-
-function collectionUrlDefault(id: string) {
-	return collectionUrl({
-		id,
-		rev: HeadRevisionId,
-		path: RootPathDotBase64FIXME,
-	});
 }
 
 function makeThumbPath(sha256: string): string {
