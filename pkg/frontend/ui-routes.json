@@ -5,15 +5,27 @@
 	},
 	{
 		"id": "browse",
-		"path": "/dir/{dir}?view={view}"
+		"path": "/dir/{dir}",
+		"query_params": [
+			{"key": "view", "type": {"_": "string"}}
+		]
 	},
 	{
 		"id": "collection",
-		"path": "/coll/{id}?rev={rev}&path={path}"
+		"path": "/coll/{id}",
+		"query_params": [
+			{"key": "rev", "type": {"_": "string"}},
+			{"key": "path", "type": {"_": "string"}},
+			{"key": "view", "type": {"_": "string", "nullable": true}},
+			{"key": "page", "type": {"_": "integer", "nullable": true}}
+		]
 	},
 	{
 		"id": "gettingStarted",
-		"path": "/getting_started?section={section}"
+		"path": "/getting_started",
+		"query_params": [
+			{"key": "section", "type": {"_": "string"}}
+		]
 	},
 	{
 		"id": "downloadClientApp",
@@ -25,7 +37,10 @@
 	},
 	{
 		"id": "metadataBackup",
-		"path": "/admin/backup/metadata?view={view}"
+		"path": "/admin/backup/metadata",
+		"query_params": [
+			{"key": "view", "type": {"_": "string"}}
+		]
 	},
 	{
 		"id": "users",

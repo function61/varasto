@@ -39,6 +39,8 @@ class Handlers implements r.RouteHandlers {
 				key={`${opts.id}/${opts.rev}/${opts.path}`}
 				id={opts.id}
 				rev={opts.rev}
+				page={opts.page}
+				view={opts.view}
 				pathBase64={opts.path}
 			/>
 		);

@@ -1,6 +1,7 @@
 import { tmdbMovieAutocomplete } from 'component/autocompletes';
 import { AssetImg } from 'component/assetimg';
 import { collectionDropdown } from 'component/collectiondropdown';
+import { relativeDateFormat, shouldAlwaysSucceed } from 'f61ui/utils';
 import { filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { FileUploadArea } from 'component/fileupload';
 import { metadataKvsToKv, MetadataPanel, imageNotAvailable } from 'component/metadata';
@@ -9,6 +10,7 @@ import { Result } from 'f61ui/component/result';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
 import { RatingEditor } from 'component/rating';
+import { Pager, PagerData } from 'f61ui/component/pager';
 import { InfoAlert } from 'f61ui/component/alerts';
 import {
 	DefaultLabel,
@@ -16,6 +18,7 @@ import {
 	AnchorButton,
 	Glyphicon,
 	Panel,
+	GridRowMaker,
 } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -23,7 +26,6 @@ import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandInlineForm } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	CollectionMoveFilesIntoAnotherCollection,
 	CollectionDeleteFiles,
@@ -56,6 +58,8 @@ import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 interface CollectionPageProps {
 	id: string;
 	rev: string;
+	page?: number;
+	view?: string;
 	pathBase64: string;
 }
 
@@ -165,32 +169,6 @@ export default class CollectionPage extends React.Component<
 
 		const changesetsReversed = coll.Changesets.slice().reverse();
 
-		const toThumbnail = (file: File2) => {
-			const dl = downloadFileUrl(coll.Id, collOutput.ChangesetId, file.Path);
-
-			const thumbPath = makeThumbPath(file.Sha256);
-
-			const thumbUrl =
-				collOutput.CollectionWithMeta.FilesInMeta.indexOf(thumbPath) !== -1
-					? downloadFileUrl(
-							coll.Id,
-							collOutput.CollectionWithMeta.FilesInMetaAt,
-							thumbPath,
-					  )
-					: imageNotAvailable();
-
-			return (
-				<a href={dl} target="_blank" title={file.Path} className="margin-left">
-					<img src={thumbUrl} className="img-thumbnail" />
-				</a>
-			);
-		};
-
-		const noFilesOrSubdirs =
-			collOutput.SelectedPathContents.SubDirs.length +
-				collOutput.SelectedPathContents.Files.length ===
-			0;
-
 		const metadataKv = metadataKvsToKv(coll.Metadata);
 
 		const inMoviesOrSeriesHierarchy =
@@ -205,6 +183,10 @@ export default class CollectionPage extends React.Component<
 			).length > 0;
 		const imdbIdExpectedButMissing =
 			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);
+
+		const thumbViewAvailable = eligibleForThumbnail.length > 0;
+
+		const thumbnailView = thumbViewAvailable && !this.props.view;
 
 		return (
 			<div>
@@ -477,6 +459,118 @@ export default class CollectionPage extends React.Component<
 		);
 	}
 
+	private thumbnailView(collOutput: CollectionOutput): JSX.Element {
+		const coll = collOutput.CollectionWithMeta.Collection; // shorthand
+
+		const fileToThumbnail = (file: File2) => {
+			const dl = downloadFileUrl(coll.Id, collOutput.ChangesetId, file.Path);
+
+			const thumbPath = makeThumbPath(file.Sha256);
+
+			const thumbUrl =
+				collOutput.CollectionWithMeta.FilesInMeta.indexOf(thumbPath) !== -1
+					? downloadFileUrl(
+							coll.Id,
+							collOutput.CollectionWithMeta.FilesInMetaAt,
+							thumbPath,
+					  )
+					: imageNotAvailable();
+
+			return (
+				<div className="thumbnail">
+					<a
+						href={dl}
+						target="_blank"
+						title={
+							relativeDateFormat(file.Modified) +
+							' ' +
+							bytesToHumanReadable(file.Size)
+						}>
+						<img src={thumbUrl} />
+					</a>
+					<div className="caption">
+						<p>{file.Path}</p>
+					</div>
+				</div>
+			);
+		};
+
+		const subDirToThumbnail = (subDir: string) => {
+			return (
+				<div className="thumbnail">
+					<a
+						href={collectionUrl({
+							id: this.props.id,
+							rev: this.props.rev,
+							path: btoa(subDir),
+						})}>
+						<img src={imageNotAvailable()} />
+					</a>
+					<div className="caption">
+						<p>{filenameFromPath(subDir)}/</p>
+					</div>
+				</div>
+			);
+		};
+
+		const pagerData = new PagerData(
+			this.props.page !== undefined ? this.props.page : 1,
+			collOutput.SelectedPathContents.Files.length,
+			30,
+		);
+
+		const pagerPageUrlMaker = (idx: number) =>
+			collectionUrl({
+				id: coll.Id,
+				rev: this.props.rev,
+				path: this.props.pathBase64,
+				page: idx,
+			});
+
+		const rows = new GridRowMaker(3);
+
+		interface FileOrSubdir {
+			file?: File2;
+			subDir?: string;
+		}
+
+		collOutput.SelectedPathContents.SubDirs.map(
+			(subDir): FileOrSubdir => {
+				return { subDir };
+			},
+		)
+			.concat(
+				collOutput.SelectedPathContents.Files.map(
+					(file): FileOrSubdir => {
+						return { file };
+					},
+				),
+			)
+			.filter(pagerData.idxFilter())
+			.forEach((fos) => {
+				if (fos.file) {
+					rows.push(fileToThumbnail(fos.file));
+				} else if (fos.subDir) {
+					rows.push(subDirToThumbnail(fos.subDir));
+				} else {
+					throw new Error('Should not happen');
+				}
+			});
+
+		return (
+			<div>
+				<div className="clearfix margin-bottom">
+					<span className="pull-left">
+						<Pager data={pagerData} pageUrl={pagerPageUrlMaker} />
+					</span>
+					<span className="pull-right">{this.thumbVsListViewSwitcher(true)}</span>
+				</div>
+				{rows.finalize()}
+				<Pager data={pagerData} pageUrl={pagerPageUrlMaker} />
+			</div>
+		);
+	}
+
 	private renderBreadcrumbs(
 		collectionOutput: CollectionOutput,
 		directoryOutput: DirectoryOutput,
@@ -587,6 +681,35 @@ export default class CollectionPage extends React.Component<
 						<Glyphicon icon="chevron-right" />
 					</AnchorButton>
 				)}
+			</div>
+		);
+	}
+
+	private thumbVsListViewSwitcher(currentlyInThumbView: boolean): JSX.Element {
+		const pickClass = (active: boolean) =>
+			active ? 'btn btn-primary disabled' : 'btn btn-default';
+
+		return (
+			<div className="btn-group" role="group" aria-label="View type">
+				<a
+					className={pickClass(currentlyInThumbView)}
+					href={collectionUrl({
+						id: this.props.id,
+						rev: this.props.rev,
+						path: this.props.pathBase64,
+					})}>
+					Thumbnail view
+				</a>
+				<a
+					className={pickClass(!currentlyInThumbView)}
+					href={collectionUrl({
+						id: this.props.id,
+						rev: this.props.rev,
+						path: this.props.pathBase64,
+						view: 'list',
+					})}>
+					List view
+				</a>
 			</div>
 		);
 	}
