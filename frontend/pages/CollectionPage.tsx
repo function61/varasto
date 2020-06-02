@@ -267,6 +267,10 @@ export default class CollectionPage extends React.Component<
 					dir.Directory.Type === DirectoryType.Movies ||
 					dir.Directory.Type === DirectoryType.Series,
 			).length > 0;
+		const inSeriesHierarchy =
+			directoryOutput.Parents.concat(directoryOutput.Directory).filter(
+				(dir) => dir.Directory.Type === DirectoryType.Series,
+			).length > 0;
 		const imdbIdExpectedButMissing =
 			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);
 
@@ -327,8 +331,7 @@ export default class CollectionPage extends React.Component<
 						)}
 					</div>
 					<div className="col-md-4">
-						{inMoviesOrSeriesHierarchy &&
-							this.nextPreviousButtons(collOutput, directoryOutput)}
+						{inSeriesHierarchy && this.nextPreviousButtons(collOutput, directoryOutput)}
 
 						<Panel
 							heading={
