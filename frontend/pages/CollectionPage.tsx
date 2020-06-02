@@ -142,74 +142,6 @@ export default class CollectionPage extends React.Component<
 				-1,
 		);
 
-		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-			// remove from currently selected, so depending on checked we can add or not add it
-			const selectedFileHashes = this.state.selectedFileHashes.filter(
-				(sel) => sel !== e.target.value,
-			);
-
-			if (e.target.checked) {
-				selectedFileHashes.push(e.target.value);
-			}
-
-			this.setState({ selectedFileHashes });
-		};
-
-		const fileToRow = (file: File2) => {
-			const dl = downloadFileUrl(coll.Id, collOutput.ChangesetId, file.Path);
-
-			return (
-				<tr key={file.Path}>
-					<td>
-						<input
-							type="checkbox"
-							onChange={fileCheckedChange}
-							checked={this.state.selectedFileHashes.indexOf(file.Path) !== -1}
-							value={file.Path}
-						/>
-					</td>
-					<td>
-						<AssetImg
-							width={22}
-							height={22}
-							src={'/filetypes/' + iconForFiletype(filetypeForFile(file))}
-						/>
-					</td>
-					<td>
-						<a href={dl} target="_blank">
-							{filenameFromPath(file.Path)}
-						</a>
-					</td>
-					<td>
-						<Timestamp ts={file.Modified} />
-					</td>
-					<td>{bytesToHumanReadable(file.Size)}</td>
-				</tr>
-			);
-		};
-
-		const subDirToRow = (subDir: string) => {
-			return (
-				<tr>
-					<td />
-					<td>
-						<Glyphicon icon="folder-open" />
-					</td>
-					<td>
-						<a
-							href={collectionUrl({
-								id: this.props.id,
-								rev: this.props.rev,
-								path: btoa(subDir),
-							})}>
-							{filenameFromPath(subDir)}/
-						</a>
-					</td>
-					<td colSpan={99} />
-				</tr>
-			);
-		};
-
 		const changesetToItem = (changeset: ChangesetSubset) => {
 			return (
 				<tr>
@@ -285,50 +217,7 @@ export default class CollectionPage extends React.Component<
 							showDetails={true}
 						/>
 
-						{eligibleForThumbnail.length > 0 && (
-							<Panel heading="Thumbs">{eligibleForThumbnail.map(toThumbnail)}</Panel>
-						)}
-
-						<Panel heading="Files">
-							<table className={tableClassStripedHover}>
-								<thead>
-									<tr>
-										<td style={{ width: '1%' }} />
-										<td style={{ width: '1%' }} />
-										<td colSpan={99} />
-									</tr>
-								</thead>
-								<tbody>
-									{collOutput.SelectedPathContents.SubDirs.map(subDirToRow)}
-									{collOutput.SelectedPathContents.Files.map(fileToRow)}
-								</tbody>
-							</table>
-
-							{noFilesOrSubdirs && (
-								<InfoAlert>Collection is currently empty.</InfoAlert>
-							)}
-						</Panel>
-
-						{this.state.selectedFileHashes.length > 0 && (
-							<div>
-								<span className="margin-right">
-									<CommandButton
-										command={CollectionMoveFilesIntoAnotherCollection(
-											coll.Id,
-											this.state.selectedFileHashes,
-										)}
-									/>
-								</span>
-								<span className="margin-right">
-									<CommandButton
-										command={CollectionDeleteFiles(
-											coll.Id,
-											this.state.selectedFileHashes,
-										)}
-									/>
-								</span>
-							</div>
-						)}
+						{thumbnailView ? this.thumbnailView(collOutput) : this.listView(collOutput)}
 					</div>
 					<div className="col-md-4">
 						{inSeriesHierarchy && this.nextPreviousButtons(collOutput, directoryOutput)}
@@ -460,6 +349,130 @@ export default class CollectionPage extends React.Component<
 						</Panel>
 					</div>
 				</div>
+			</div>
+		);
+	}
+
+	private listView(collOutput: CollectionOutput): JSX.Element {
+		const coll = collOutput.CollectionWithMeta.Collection; // shorthand
+
+		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+			// remove from currently selected, so depending on checked we can add or not add it
+			const selectedFileHashes = this.state.selectedFileHashes.filter(
+				(sel) => sel !== e.target.value,
+			);
+
+			if (e.target.checked) {
+				selectedFileHashes.push(e.target.value);
+			}
+
+			this.setState({ selectedFileHashes });
+		};
+
+		const fileToRow = (file: File2) => {
+			const dl = downloadFileUrl(coll.Id, collOutput.ChangesetId, file.Path);
+
+			return (
+				<tr key={file.Path}>
+					<td>
+						<input
+							type="checkbox"
+							onChange={fileCheckedChange}
+							checked={this.state.selectedFileHashes.indexOf(file.Path) !== -1}
+							value={file.Path}
+						/>
+					</td>
+					<td>
+						<AssetImg
+							width={22}
+							height={22}
+							src={'/filetypes/' + iconForFiletype(filetypeForFile(file))}
+						/>
+					</td>
+					<td>
+						<a href={dl} target="_blank">
+							{filenameFromPath(file.Path)}
+						</a>
+					</td>
+					<td>
+						<Timestamp ts={file.Modified} />
+					</td>
+					<td>{bytesToHumanReadable(file.Size)}</td>
+				</tr>
+			);
+		};
+
+		const subDirToRow = (subDir: string) => {
+			return (
+				<tr>
+					<td />
+					<td>
+						<Glyphicon icon="folder-open" />
+					</td>
+					<td>
+						<a
+							href={collectionUrl({
+								id: this.props.id,
+								rev: this.props.rev,
+								path: btoa(subDir),
+							})}>
+							{filenameFromPath(subDir)}/
+						</a>
+					</td>
+					<td colSpan={99} />
+				</tr>
+			);
+		};
+
+		const noFilesOrSubdirs =
+			collOutput.SelectedPathContents.SubDirs.length +
+				collOutput.SelectedPathContents.Files.length ===
+			0;
+
+		return (
+			<div>
+				<div className="clearfix margin-bottom">
+					<span className="pull-right">{this.thumbVsListViewSwitcher(false)}</span>
+				</div>
+
+				<Panel heading="Files">
+					<table className={tableClassStripedHover}>
+						<thead>
+							<tr>
+								<td style={{ width: '1%' }} />
+								<td style={{ width: '1%' }} />
+								<td colSpan={99} />
+							</tr>
+						</thead>
+						<tbody>
+							{collOutput.SelectedPathContents.SubDirs.map(subDirToRow)}
+							{collOutput.SelectedPathContents.Files.map(fileToRow)}
+						</tbody>
+					</table>
+
+					{noFilesOrSubdirs && <InfoAlert>Collection is currently empty.</InfoAlert>}
+				</Panel>
+
+				{this.state.selectedFileHashes.length > 0 && (
+					<div>
+						<span className="margin-right">
+							<CommandButton
+								command={CollectionMoveFilesIntoAnotherCollection(
+									coll.Id,
+									this.state.selectedFileHashes,
+								)}
+							/>
+						</span>
+						<span className="margin-right">
+							<CommandButton
+								command={CollectionDeleteFiles(
+									coll.Id,
+									this.state.selectedFileHashes,
+								)}
+							/>
+						</span>
+					</div>
+				)}
 			</div>
 		);
 	}
