@@ -583,7 +583,7 @@ export default class CollectionPage extends React.Component<
 
 			return {
 				title: dir.Name,
-				url: browseUrl({ dir: dir.Id, view: '' }),
+				url: browseUrl({ dir: dir.Id }),
 			};
 		};
 

@@ -50,7 +50,7 @@ import { browseUrl, collectionUrl, serverInfoUrl } from 'generated/frontend_uiro
 
 interface BrowsePageProps {
 	directoryId: string;
-	view: string;
+	view?: string; // defaults to autodetect
 }
 
 interface BrowsePageState {
@@ -109,7 +109,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 		const content = ((): React.ReactNode => {
 			switch (this.props.view) {
-				case '': // = "auto"
+				case undefined: // = "auto"
 					if (showTabController) {
 						return this.richView(output);
 					} else {
@@ -158,7 +158,6 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 									{
 										url: browseUrl({
 											dir: this.props.directoryId,
-											view: '',
 										}),
 										title: 'Metadata view',
 									},

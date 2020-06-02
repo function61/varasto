@@ -31,7 +31,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 		}
 
 		const navLinks: NavLink[] = [
-			mkLink('Browse', 'folder-open', browseUrl({ dir: RootFolderId, view: '' })),
+			mkLink('Browse', 'folder-open', browseUrl({ dir: RootFolderId })),
 			mkLink('Help', 'book', gettingStartedUrl({ section: 'welcome' })),
 			mkLink('Admin', 'cog', serverInfoUrl()),
 		];
@@ -50,7 +50,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 						style={{ height: '40px' }}
 					/>
 				}
-				logoClickUrl={browseUrl({ dir: RootFolderId, view: '' })}
+				logoClickUrl={browseUrl({ dir: RootFolderId })}
 				breadcrumbs={this.props.breadcrumbs.concat({
 					title: this.props.titleElem || this.props.title,
 				})}

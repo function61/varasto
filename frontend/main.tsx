@@ -25,7 +25,7 @@ import * as r from 'generated/frontend_uiroutes';
 
 class Handlers implements r.RouteHandlers {
 	root() {
-		navigateTo(r.browseUrl({ dir: RootFolderId, view: '' }));
+		navigateTo(r.browseUrl({ dir: RootFolderId }));
 		return <h1>Redirect</h1>;
 	}
 

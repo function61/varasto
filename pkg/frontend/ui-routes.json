@@ -7,7 +7,7 @@
 		"id": "browse",
 		"path": "/dir/{dir}",
 		"query_params": [
-			{"key": "view", "type": {"_": "string"}}
+			{"key": "view", "type": {"_": "string", "nullable": true}}
 		]
 	},
 	{

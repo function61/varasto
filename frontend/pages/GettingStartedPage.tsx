@@ -427,7 +427,7 @@ export default class GettingStartedPage extends React.Component<
 			<div>
 				<p>
 					Go to{' '}
-					<a href={browseUrl({ dir: RootFolderId, view: '' })} target="_blank">
+					<a href={browseUrl({ dir: RootFolderId })} target="_blank">
 						browse
 					</a>{' '}
 					and click <SmallWell>{CollectionCreate('').title}</SmallWell>.
