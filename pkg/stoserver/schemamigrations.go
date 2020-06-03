@@ -88,19 +88,19 @@ func validateSchemaVersionAndMigrateIfNeededInternal(tx *bbolt.Tx, logger *log.L
 }
 
 func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
-	switch schemaVersionInDb {
-	case 2:
-		return from2to3(tx)
-	case 3:
-		return from3to4(tx)
-	case 4:
-		return from4to5(tx)
-	default:
+	migrator, found := map[uint32]func(tx *bbolt.Tx) error{
+		2: from2to3,
+		3: from3to4,
+		4: from4to5,
+	}[schemaVersionInDb]
+	if !found {
 		return fmt.Errorf(
 			"schema migration %d -> %d not supported",
 			schemaVersionInDb,
 			schemaVersionInDb+1)
 	}
+
+	return migrator(tx)
 }
 
 // sets these attributes:
