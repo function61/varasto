@@ -231,6 +231,7 @@
 			"name": "Directory",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
+				"Created": {"_": "datetime"},
 				"Parent": {"_": "string"},
 				"Name": {"_": "string"},
 				"MetaCollectionId": {"_": "string"},

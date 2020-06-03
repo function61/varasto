@@ -23,6 +23,7 @@ func convertDir(dir stotypes.Directory) stoservertypes.Directory {
 
 	return stoservertypes.Directory{
 		Id:                dir.ID,
+		Created:           dir.Created,
 		Parent:            dir.Parent,
 		MetaCollectionId:  dir.MetaCollection,
 		Name:              dir.Name,

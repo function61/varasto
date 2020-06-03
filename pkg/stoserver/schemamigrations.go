@@ -3,6 +3,7 @@ package stoserver
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -92,6 +93,7 @@ func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
 		2: from2to3,
 		3: from3to4,
 		4: from4to5,
+		5: from5to6,
 	}[schemaVersionInDb]
 	if !found {
 		return fmt.Errorf(
@@ -236,6 +238,16 @@ func from4to5(tx *bbolt.Tx) error {
 			}
 		}
 
+		return stodb.DirectoryRepository.Update(dir, tx)
+	}, tx)
+}
+
+func from5to6(tx *bbolt.Tx) error {
+	now := time.Now()
+
+	return stodb.DirectoryRepository.Each(func(record interface{}) error {
+		dir := record.(*stotypes.Directory)
+		dir.Created = now
 		return stodb.DirectoryRepository.Update(dir, tx)
 	}, tx)
 }

@@ -1,4 +1,5 @@
 import { collectionDropdown } from 'component/collectiondropdown';
+import { Timestamp } from 'f61ui/component/timestamp';
 import { DocLink } from 'component/doclink';
 import { replicationPolicyAutocomplete, tmdbTvAutocomplete } from 'component/autocompletes';
 import { metadataKvsToKv, imageNotAvailable, MetadataPanel } from 'component/metadata';
@@ -445,6 +446,12 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 								{thousandSeparate(output.SubDirectories.length)} subdirectories
 								<br />
 								{thousandSeparate(output.Collections.length)} collections
+							</td>
+						</tr>
+						<tr>
+							<th>Created</th>
+							<td>
+								<Timestamp ts={dir.Created} />
 							</td>
 						</tr>
 						<tr>

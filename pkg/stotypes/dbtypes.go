@@ -64,6 +64,7 @@ type VolumeMount struct {
 
 type Directory struct {
 	ID                string
+	Created           time.Time
 	MetaCollection    string // backing collection for directory's metadata
 	Parent            string
 	Name              string
@@ -207,10 +208,11 @@ func NewChangeset(
 
 func NewDirectory(id string, parent string, name string, typ string) *Directory {
 	return &Directory{
-		ID:     id,
-		Parent: parent,
-		Name:   name,
-		Type:   typ,
+		ID:      id,
+		Created: time.Now(),
+		Parent:  parent,
+		Name:    name,
+		Type:    typ,
 	}
 }
 
