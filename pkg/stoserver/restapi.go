@@ -1560,23 +1560,12 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 			volumesOverQuota = append(volumesOverQuota, vol.Label)
 		}
 
-		replicationController, hasReplicationController := conf.ReplicationControllers[vol.ID]
-		if hasReplicationController {
-			replicationProgress := replicationController.Progress()
-
-			if replicationProgress != 100 {
-				replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
-					vol.Label,
-					stoservertypes.HealthStatusWarn,
-					fmt.Sprintf("Progress at %d %%", replicationProgress),
-					nil))
-			} else {
-				replicationQueues = append(replicationQueues, stohealth.NewStaticHealthNode(
-					vol.Label,
-					stoservertypes.HealthStatusPass,
-					"Realtime",
-					nil))
-			}
+		volReplicationHealth, err := healthVolReplication(vol, tx, conf)
+		if err != nil {
+			return err
+		}
+		if volReplicationHealth != nil {
+			replicationQueues = append(replicationQueues, volReplicationHealth)
 		}
 
 		// even if we have report but SMART has been disabled afterwards, we shouldn't

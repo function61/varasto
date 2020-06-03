@@ -165,11 +165,9 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 	jobs := []*replicationJob{}
 
-	toVolBytes := []byte(fmt.Sprintf("%d", c.toVolumeId))
-
 	nextContinueToken := stodb.StartFromFirst
 
-	return jobs, nextContinueToken, stodb.BlobsPendingReplicationByVolumeIndex.Query(toVolBytes, continueToken, func(id []byte) error {
+	err = stodb.BlobsPendingReplicationByVolumeIndex.Query(VolIdToBytesForIndex(c.toVolumeId), continueToken, func(id []byte) error {
 		if len(jobs) == batchLimit {
 			nextContinueToken = id
 
@@ -205,6 +203,12 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 		return nil
 	}, tx)
+
+	return jobs, nextContinueToken, err
+}
+
+func VolIdToBytesForIndex(volId int) []byte {
+	return []byte(fmt.Sprintf("%d", volId))
 }
 
 type atomicInt32 struct {

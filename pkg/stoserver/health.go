@@ -8,6 +8,7 @@ import (
 	"github.com/function61/varasto/pkg/duration"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stohealth"
+	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
@@ -196,6 +197,44 @@ func healthSubsystems(subsystems ...*subsystem) stohealth.HealthChecker {
 		"Subsystems",
 		stoservertypes.HealthKindSubsystems.Ptr(),
 		subsysHealths...)
+}
+
+func healthVolReplication(
+	vol *stotypes.Volume,
+	tx *bbolt.Tx,
+	conf *ServerConfig,
+) (stohealth.HealthChecker, error) {
+	volReplHealth := staticHealthBuilder(vol.Label, nil)
+
+	replicationController, hasReplicationController := conf.ReplicationControllers[vol.ID]
+	if hasReplicationController {
+		replicationProgress := replicationController.Progress()
+
+		if replicationProgress != 100 {
+			return volReplHealth.Warn(fmt.Sprintf("Progress at %d %%", replicationProgress)), nil
+		} else {
+			return volReplHealth.Pass("Realtime"), nil
+		}
+	} else {
+		anyQueued := false
+		if err := stodb.BlobsPendingReplicationByVolumeIndex.Query(
+			storeplication.VolIdToBytesForIndex(vol.ID),
+			stodb.StartFromFirst,
+			func(_ []byte) error {
+				anyQueued = true
+				return stodb.StopIteration
+			},
+			tx,
+		); err != nil {
+			return nil, err
+		}
+
+		if anyQueued {
+			return volReplHealth.Fail("Queued I/Os but replication paused"), nil
+		} else {
+			return nil, nil
+		}
+	}
 }
 
 type staticHealthFactory struct {
