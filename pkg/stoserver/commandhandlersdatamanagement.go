@@ -19,6 +19,8 @@ import (
 type ReconciliationCompletionReport struct {
 	Timestamp                         time.Time // of report start (because that's what the tx sees)
 	TotalCollections                  int
+	EmptyCollectionIds                []string
+	EmptyDirectoryIds                 []string
 	CollectionsWithNonCompliantPolicy []collectionToReconcile
 }
 
@@ -40,6 +42,8 @@ var latestReconciliationReport *ReconciliationCompletionReport
 func NewReconciliationCompletionReport() *ReconciliationCompletionReport {
 	return &ReconciliationCompletionReport{
 		Timestamp:                         time.Now(),
+		EmptyCollectionIds:                []string{},
+		EmptyDirectoryIds:                 []string{},
 		CollectionsWithNonCompliantPolicy: []collectionToReconcile{},
 	}
 }
@@ -278,6 +282,12 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
+	notBrandNew := func(ts time.Time) bool {
+		return time.Since(ts) > 2*time.Hour
+	}
+
+	logl := logex.Levels(logex.Prefix("reconciliation", c.logger))
+
 	// load all policies into memory for quick access
 	policyById := map[string]*stotypes.ReplicationPolicy{}
 
@@ -310,6 +320,10 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		policy := policyById[effectiveReplPolicyId]
 		if policy == nil {
 			panic("policy not found") // should not happen
+		}
+
+		if len(coll.Changesets) == 0 && notBrandNew(coll.Created) {
+			report.EmptyCollectionIds = append(report.EmptyCollectionIds, coll.ID)
 		}
 
 		collReport := collectionToReconcile{
@@ -374,10 +388,9 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		return err
 	}
 
-	if err := iterateDirectoriesRecursively(root, "", tx, func(dir *stotypes.Directory, effectiveReplPolicyId string) error {
-		colls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
-		if err != nil {
-			return err
+	if err := iterateDirectoriesRecursively(root, "", tx, func(dir *stotypes.Directory, colls []stotypes.Collection, numSubdirs int, effectiveReplPolicyId string) error {
+		if len(colls)+numSubdirs == 0 && notBrandNew(dir.Created) {
+			report.EmptyDirectoryIds = append(report.EmptyDirectoryIds, dir.ID)
 		}
 
 		for _, coll := range colls {
@@ -393,7 +406,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 
 	if fixedReplPolicies > 0 {
-		logex.Levels(logex.Prefix("reconciliation", c.logger)).Info.Printf("fixed %d replication policies", fixedReplPolicies)
+		logl.Info.Printf("fixed %d replication policies", fixedReplPolicies)
 	}
 
 	latestReconciliationReport = report
@@ -495,18 +508,23 @@ func iterateDirectoriesRecursively(
 	dir *stotypes.Directory,
 	effectiveReplPolicyId string,
 	tx *bbolt.Tx,
-	visitor func(dir *stotypes.Directory, effectiveReplPolicyId string) error,
+	visitor func(dir *stotypes.Directory, colls []stotypes.Collection, numSubdirs int, effectiveReplPolicyId string) error,
 ) error {
 	if dir.ReplicationPolicy != "" {
 		effectiveReplPolicyId = dir.ReplicationPolicy
 	}
 
-	if err := visitor(dir, effectiveReplPolicyId); err != nil {
+	colls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
+	if err != nil {
 		return err
 	}
 
 	subDirs, err := stodb.Read(tx).SubDirectories(dir.ID)
 	if err != nil {
+		return err
+	}
+
+	if err := visitor(dir, colls, len(subDirs), effectiveReplPolicyId); err != nil {
 		return err
 	}
 

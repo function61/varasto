@@ -144,9 +144,20 @@ func healthNoReconciliationConflicts() stohealth.HealthChecker {
 
 	if since > scanTooOldThreshold {
 		return policyHealth.Warn(fmt.Sprintf(
-			"OK %s ago (scan older than %s)",
+			"Last checked %s ago (scan older than %s)",
 			sinceHumanized,
 			duration.Humanize(scanTooOldThreshold)))
+	}
+
+	// warn about empty collections and directories (in case it's an accident and user
+	// forgot to upload content)
+
+	if len(latestReconciliationReport.EmptyCollectionIds) > 0 {
+		return policyHealth.Warn(fmt.Sprintf("Empty collections: %s", strings.Join(latestReconciliationReport.EmptyCollectionIds, ", ")))
+	}
+
+	if len(latestReconciliationReport.EmptyDirectoryIds) > 0 {
+		return policyHealth.Warn(fmt.Sprintf("Empty directories: %s", strings.Join(latestReconciliationReport.EmptyDirectoryIds, ", ")))
 	}
 
 	return policyHealth.Pass(fmt.Sprintf("OK %s ago", sinceHumanized))
