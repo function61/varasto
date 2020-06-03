@@ -179,7 +179,8 @@ export default class CollectionPage extends React.Component<
 		const metadataKv = metadataKvsToKv(coll.Metadata);
 
 		const dirInheritedType = directoryInheritedType(directoryOutput);
-		const imdbIdExpectedButMissing = DirectoryType.Movies && !(MetadataImdbId in metadataKv);
+		const imdbIdExpectedButMissing =
+			dirInheritedType === DirectoryType.Movies && !(MetadataImdbId in metadataKv);
 
 		const haveAnyThumbnails = eligibleForThumbnail.length > 0;
 
