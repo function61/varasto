@@ -65,6 +65,11 @@ func validateSchemaVersionAndMigrateIfNeededInternal(tx *bbolt.Tx, logger *log.L
 			return nil
 		}
 
+		logex.Levels(logger).Info.Printf(
+			"schemaVersionInDb %d, CurrentSchemaVersion %d",
+			schemaVersionInDb,
+			stodb.CurrentSchemaVersion)
+
 		schemaVersionAfterMigration := schemaVersionInDb + 1
 
 		logex.Levels(logger).Info.Printf(
