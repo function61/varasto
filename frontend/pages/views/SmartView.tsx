@@ -31,7 +31,9 @@ export default class SmartView extends React.Component<SmartViewProps, {}> {
 	}
 
 	private reports() {
-		const volumesWithSmart = this.props.volumes.filter((vol) => !!vol.Smart.LatestReport);
+		const volumesWithSmart = this.props.volumes.filter(
+			(vol) => vol.Smart.LatestReport !== null && vol.Smart.Id !== '',
+		);
 
 		return (
 			<table className={tableClassStripedHover}>

@@ -1579,7 +1579,9 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 			}
 		}
 
-		if vol.SmartReport == "" {
+		// even if we have report but SMART has been disabled afterwards, we shouldn't
+		// use the report anymore b/c most likely it's outdated
+		if vol.SmartReport == "" || vol.SmartId == "" {
 			return nil
 		}
 
@@ -1596,16 +1598,22 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 				nil))
 		}
 
-		smartStatus := stoservertypes.HealthStatusPass
-		if !report.Passed {
-			smartStatus = stoservertypes.HealthStatusFail
-		}
+		smarts = append(smarts, func() stohealth.HealthChecker {
+			volHealth := staticHealthBuilder(vol.Label, nil)
 
-		smarts = append(smarts, stohealth.NewStaticHealthNode(
-			vol.Label,
-			smartStatus,
-			fmt.Sprintf("Checked %s ago", duration.Humanize(now.Sub(report.Time))),
-			nil))
+			reportAge := now.Sub(report.Time)
+			agoText := fmt.Sprintf("Checked %s ago", duration.Humanize(reportAge))
+
+			if !report.Passed {
+				return volHealth.Fail(agoText)
+			}
+
+			if reportAge > 24*time.Hour {
+				return volHealth.Warn(fmt.Sprintf("%s (check too old)", agoText))
+			}
+
+			return volHealth.Pass(agoText)
+		}())
 
 		return nil
 	}, tx); err != nil {
