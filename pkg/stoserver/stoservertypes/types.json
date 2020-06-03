@@ -117,7 +117,7 @@
 			"name": "SubsystemId",
 			"type": "string",
 			"stringMembers": [
-				"thumbnail-generator",
+				"mediascanner",
 				"fuse-projector"
 			]
 		},

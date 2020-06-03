@@ -370,7 +370,7 @@ func (h *handlers) GetSubsystemStatuses(rctx *httpauth.RequestContext, w http.Re
 	}
 
 	return &[]stoservertypes.SubsystemStatus{
-		convert(h.conf.ThumbServer),
+		convert(h.conf.MediaScanner),
 		convert(h.conf.FuseProjector),
 	}
 }
@@ -1635,7 +1635,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 	}
 
 	checkers = append(checkers,
-		healthSubsystems(conf.ThumbServer, conf.FuseProjector),
+		healthSubsystems(conf.MediaScanner, conf.FuseProjector),
 		healthForScheduledJobs(tx),
 		stohealth.NewHealthFolder(
 			"Replication queue",

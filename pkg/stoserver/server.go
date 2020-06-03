@@ -129,19 +129,19 @@ func runServer(
 	// - transcoding server
 	// - (possible microservice) generic user/auth microservice (pluggable for Lambda-hosted function61 one)
 	// - blobstore drivers, so integrity verification jobs can be ionice'd?
-	thumbnailerSockAddr := "/tmp/sto-thumbnailer.sock"
+	mediascannerSockAddr := "/tmp/sto-mediascanner.sock"
 
-	serverConfig.ThumbServer = &subsystem{
-		id:        stoservertypes.SubsystemIdThumbnailGenerator,
+	serverConfig.MediaScanner = &subsystem{
+		id:        stoservertypes.SubsystemIdMediascanner,
 		httpMount: "/api/mediascanner",
 		enabled:   !scf.DisableMediaScanner,
 		controller: childprocesscontroller.New(
-			[]string{os.Args[0], "server", stomediascanner.Verb, "--addr", "domainsocket://" + thumbnailerSockAddr},
+			[]string{os.Args[0], "server", stomediascanner.Verb, "--addr", "domainsocket://" + mediascannerSockAddr},
 			"Media scanner",
 			logex.Prefix("manager(mediascanner)", logger),
 			logex.Prefix("mediascanner", logger),
 			func(task func(context.Context) error) { tasks.Start("manager(mediascanner)", task) }),
-		sockPath: thumbnailerSockAddr,
+		sockPath: mediascannerSockAddr,
 	}
 
 	fuseProjectorSockAddr := "/tmp/sto-fuseprojector.sock"
@@ -202,7 +202,7 @@ func runServer(
 		}
 	}
 
-	mountSubsystem(serverConfig.ThumbServer)
+	mountSubsystem(serverConfig.MediaScanner)
 	mountSubsystem(serverConfig.FuseProjector)
 
 	eventLog, err := createNonPersistingEventLog()
@@ -326,7 +326,7 @@ type ServerConfig struct {
 	LogTail                *logtee.StringTail
 	ReplicationControllers map[int]*storeplication.Controller
 	Scheduler              *scheduler.Controller
-	ThumbServer            *subsystem
+	MediaScanner           *subsystem
 	FuseProjector          *subsystem
 	TlsCertificate         wrappedKeypair
 	KeyStore               *stokeystore.Store

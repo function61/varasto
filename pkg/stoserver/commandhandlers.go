@@ -945,9 +945,9 @@ func (c *cHandlers) VolumeSmartSetId(cmd *stoservertypes.VolumeSmartSetId, ctx *
 }
 
 func (c *cHandlers) getSubsystem(id stoservertypes.SubsystemId) *subsystem {
-	switch stoservertypes.SubsystemIdExhaustived3ed3e(id) {
-	case stoservertypes.SubsystemIdThumbnailGenerator:
-		return c.conf.ThumbServer
+	switch stoservertypes.SubsystemIdExhaustive057882(id) {
+	case stoservertypes.SubsystemIdMediascanner:
+		return c.conf.MediaScanner
 	case stoservertypes.SubsystemIdFuseProjector:
 		return c.conf.FuseProjector
 	default:
