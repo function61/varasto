@@ -172,18 +172,8 @@ export default class CollectionPage extends React.Component<
 
 		const metadataKv = metadataKvsToKv(coll.Metadata);
 
-		const inMoviesOrSeriesHierarchy =
-			directoryOutput.Parents.concat(directoryOutput.Directory).filter(
-				(dir) =>
-					dir.Directory.Type === DirectoryType.Movies ||
-					dir.Directory.Type === DirectoryType.Series,
-			).length > 0;
-		const inSeriesHierarchy =
-			directoryOutput.Parents.concat(directoryOutput.Directory).filter(
-				(dir) => dir.Directory.Type === DirectoryType.Series,
-			).length > 0;
-		const imdbIdExpectedButMissing =
-			inMoviesOrSeriesHierarchy && !(MetadataImdbId in metadataKv);
+		const dirInheritedType = directoryInheritedType(directoryOutput);
+		const imdbIdExpectedButMissing = DirectoryType.Movies && !(MetadataImdbId in metadataKv);
 
 		const haveAnyThumbnails = eligibleForThumbnail.length > 0;
 
@@ -204,7 +194,8 @@ export default class CollectionPage extends React.Component<
 							: this.listView(collOutput)}
 					</div>
 					<div className="col-md-4">
-						{inSeriesHierarchy && this.nextPreviousButtons(collOutput, directoryOutput)}
+						{dirInheritedType === DirectoryType.Series &&
+							this.nextPreviousButtons(collOutput, directoryOutput)}
 
 						<Panel
 							heading={
@@ -736,6 +727,24 @@ export default class CollectionPage extends React.Component<
 			getDirectory(collectionOutput.CollectionWithMeta.Collection.Directory),
 		);
 	}
+}
+
+// given a tree:
+//
+// Series
+// └── Homeland
+//     └── S1
+//         └── S1E01
+//
+// If the root "Series/" has type=Series, then querying directoryType(S1E01)==Series
+// because the type is inherited for the whole subtree for dirs that don't specify a type.
+function directoryInheritedType(directoryOutput: DirectoryOutput): DirectoryType {
+	// in order from last specific to most specific
+	const specialDirs = directoryOutput.Parents.concat(directoryOutput.Directory).filter(
+		(dir) => dir.Directory.Type !== DirectoryType.Generic,
+	);
+	const mostSpecificSpecialDir = specialDirs.slice(-1)[0]; // last
+	return mostSpecificSpecialDir ? mostSpecificSpecialDir.Directory.Type : DirectoryType.Generic;
 }
 
 // 'subdir/subsubdir/foo.txt' => 'foo.txt'
