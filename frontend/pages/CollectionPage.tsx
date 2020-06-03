@@ -55,11 +55,17 @@ import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
 import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 
+enum ViewType {
+	Auto = 'auto',
+	Thumb = 'thumb',
+	List = 'list',
+}
+
 interface CollectionPageProps {
 	id: string;
 	rev?: string; // default: head revision
 	page?: number; // default: 1st
-	view?: string; // default: autodetect
+	view: ViewType;
 	pathBase64?: string; // default: root
 }
 
@@ -188,8 +194,8 @@ export default class CollectionPage extends React.Component<
 							showDetails={true}
 						/>
 
-						{(this.props.view === undefined && haveAnyThumbnails) ||
-						this.props.view === 'thumb'
+						{(this.props.view === ViewType.Auto && haveAnyThumbnails) ||
+						this.props.view === ViewType.Thumb
 							? this.thumbnailView(collOutput)
 							: this.listView(collOutput)}
 					</div>
@@ -755,4 +761,18 @@ function filenameFromPath(path: string): string {
 
 function makeThumbPath(sha256: string): string {
 	return '.sto/thumb/' + sha256.substr(0, 10) + '.jpg';
+}
+
+// this is needed until we can pass enums in URL parameters
+export function viewTypeFromString(str: string | undefined): ViewType {
+	switch (str) {
+		case undefined:
+			return ViewType.Auto;
+		case 'thumb':
+			return ViewType.Thumb;
+		case 'list':
+			return ViewType.List;
+		default:
+			throw new Error(`unrecognized value: ${str}`);
+	}
 }

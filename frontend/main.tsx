@@ -4,7 +4,7 @@ import { navigateTo } from 'f61ui/browserutils';
 import { GlobalConfig } from 'f61ui/globalconfig';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import BrowsePage from 'pages/BrowsePage';
-import CollectionPage from 'pages/CollectionPage';
+import CollectionPage, { viewTypeFromString } from 'pages/CollectionPage';
 import ContentMetadataPage from 'pages/ContentMetadataPage';
 import DownloadClientAppPage from 'pages/DownloadClientAppPage';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
@@ -40,7 +40,7 @@ class Handlers implements r.RouteHandlers {
 				id={opts.id}
 				rev={opts.rev}
 				page={opts.page}
-				view={opts.view}
+				view={viewTypeFromString(opts.view)}
 				pathBase64={opts.path}
 			/>
 		);
