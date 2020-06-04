@@ -3,10 +3,12 @@ package childprocesscontroller
 
 import (
 	"context"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -95,6 +97,7 @@ func (s *Controller) setStatus(st *Status) {
 
 func (s *Controller) handler(ctx context.Context) error {
 	var cmd *exec.Cmd
+	var cmdStdinCloser io.Closer
 
 	desiredRunning := false
 	isRunning := func() bool {
@@ -104,9 +107,19 @@ func (s *Controller) handler(ctx context.Context) error {
 	stopSubprocess := func() {
 		s.controlLogger.Info.Printf("interrupting pid %d", cmd.Process.Pid)
 
-		// TODO: interrupt does not work on Windows
-		if err := cmd.Process.Signal(os.Interrupt); err != nil {
-			s.controlLogger.Error.Printf("Signal(): %v", err)
+		if runtime.GOOS != "windows" {
+			if err := cmd.Process.Signal(os.Interrupt); err != nil {
+				s.controlLogger.Error.Printf("Interrupt(): %v", err)
+			}
+		} else {
+			// JFC, the glue huffers at Microsoft don't have a way to send "please stop"
+			// signal to a process (their "Ctrl+c" signal sending works on process groups).
+			//
+			// therefore for Windows as a hack we close the stdin sentinel, which is meant
+			// for the sub-process as a signal to stop because the parent died.
+			if err := cmdStdinCloser.Close(); err != nil {
+				s.controlLogger.Error.Printf("cmdStdinCloser: %v", err)
+			}
 		}
 
 		waitForExit := func() (bool, error) {
@@ -138,10 +151,15 @@ func (s *Controller) handler(ctx context.Context) error {
 		}
 
 		cmd = nil
+		cmdStdinCloser = nil
 		s.setStatus(nil)
 	}
 
 	startChildProcess := func() {
+		// intentionally not using exec.CommandContext()'s context cancellation, because
+		// we want SIGINT but it sends un-graceful SIGKILL and thus we can't access
+		// sub-process exit code AND
+		// "This only kills the Process itself, not any other processes it may have started."
 		cmd = exec.Command(s.cmd[0], s.cmd[1:]...)
 		// child should receive full env of parent
 		cmd.Env = append(cmd.Env, os.Environ()...)
@@ -156,7 +174,8 @@ func (s *Controller) handler(ctx context.Context) error {
 
 		// open stdin that does nothing, so that subprocess can detect closure of its
 		// stdin to mean that its parent process has died disgracefully
-		_, err := cmd.StdinPipe()
+		var err error
+		cmdStdinCloser, err = cmd.StdinPipe()
 		if err != nil {
 			s.exited <- err
 			return
