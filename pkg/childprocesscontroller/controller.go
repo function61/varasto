@@ -97,7 +97,7 @@ func (s *Controller) setStatus(st *Status) {
 
 func (s *Controller) handler(ctx context.Context) error {
 	var cmd *exec.Cmd
-	var cmdStdinCloser io.Closer
+	var cmdStdinSentinel io.Closer
 
 	desiredRunning := false
 	isRunning := func() bool {
@@ -117,8 +117,8 @@ func (s *Controller) handler(ctx context.Context) error {
 			//
 			// therefore for Windows as a hack we close the stdin sentinel, which is meant
 			// for the sub-process as a signal to stop because the parent died.
-			if err := cmdStdinCloser.Close(); err != nil {
-				s.controlLogger.Error.Printf("cmdStdinCloser: %v", err)
+			if err := cmdStdinSentinel.Close(); err != nil {
+				s.controlLogger.Error.Printf("cmdStdinSentinel: %v", err)
 			}
 		}
 
@@ -151,7 +151,7 @@ func (s *Controller) handler(ctx context.Context) error {
 		}
 
 		cmd = nil
-		cmdStdinCloser = nil
+		cmdStdinSentinel = nil
 		s.setStatus(nil)
 	}
 
