@@ -129,7 +129,7 @@ func runServer(
 	// - transcoding server
 	// - (possible microservice) generic user/auth microservice (pluggable for Lambda-hosted function61 one)
 	// - blobstore drivers, so integrity verification jobs can be ionice'd?
-	mediascannerSockAddr := "/tmp/sto-mediascanner.sock"
+	mediascannerSockAddr := "mediascanner.sock"
 
 	serverConfig.MediaScanner = &subsystem{
 		id:        stoservertypes.SubsystemIdMediascanner,
@@ -144,7 +144,7 @@ func runServer(
 		sockPath: mediascannerSockAddr,
 	}
 
-	fuseProjectorSockAddr := "/tmp/sto-fuseprojector.sock"
+	fuseProjectorSockAddr := "fuseprojector.sock"
 
 	serverConfig.FuseProjector = &subsystem{
 		id:        stoservertypes.SubsystemIdFuseProjector,
