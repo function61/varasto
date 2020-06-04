@@ -106,6 +106,17 @@ To restore a database, run:
 $ sto server dbimport < backupfile
 ```
 
+!!! warning "Beware of side effects"
+	If you're testing restoring a backup to another instance of Varasto, make sure that
+	there are no side effects, i.e. if you're restoring to same machine, make sure the test
+	instance can't mount your volumes to make changes and/or that any components of Varasto
+	that could make changes (replication controller, metadata scanner, scheduled jobs) are
+	disabled.
+
+	There are some
+	[yet-to-be-documented ENV variables](https://github.com/function61/varasto/blob/4752c84fe18b47516218eb4370d089f426e8bb12/pkg/stoserver/server.go#L479)
+	to help with this.
+
 
 Using external backup program
 -----------------------------
