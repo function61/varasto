@@ -175,7 +175,7 @@ func (s *Controller) handler(ctx context.Context) error {
 		// open stdin that does nothing, so that subprocess can detect closure of its
 		// stdin to mean that its parent process has died disgracefully
 		var err error
-		cmdStdinCloser, err = cmd.StdinPipe()
+		cmdStdinSentinel, err = cmd.StdinPipe()
 		if err != nil {
 			s.exited <- err
 			return
