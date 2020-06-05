@@ -1,15 +1,11 @@
 package stomediascanner
 
-// below side effects have to be imported to transparently support their decoding
-
 import (
 	"bytes"
 	"context"
 	"fmt"
 	"image"
-	_ "image/gif"
 	"image/jpeg"
-	_ "image/png"
 	"io"
 	"math"
 	"path/filepath"
@@ -24,7 +20,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
-	_ "golang.org/x/image/bmp"
 	"golang.org/x/image/draw"
 )
 
