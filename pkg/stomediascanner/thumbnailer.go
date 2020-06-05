@@ -89,7 +89,7 @@ func collectionThumbnailsOneBatch(
 	_, hasBanner := collFiles[stoservertypes.BannerPath]
 
 	if !hasBanner {
-		bannerUrl, err := discoverBannerUrl(ctx, coll, conf)
+		bannerUrl, err := discoverBannerUrl(ctx, coll, conf, logl)
 		if err != nil {
 			// not worth stopping mediascanner for
 			logl.Error.Printf("discoverBannerUrl: %v", err)
