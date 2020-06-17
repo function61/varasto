@@ -7,8 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: install buildx
+      uses: crazy-max/ghaction-docker-buildx@v1
+      with:
+        buildx-version: v0.4.1
+        qemu-version: latest
     - name: Download Turbo Bob
-      run: curl --fail --location --output bob https://dl.bintray.com/function61/dl/turbobob/20200407_0605_f1ed41bf/bob_linux-amd64 && chmod +x bob
+      run: curl --fail --location --output bob https://dl.bintray.com/function61/dl/turbobob/20200617_1714_f75007f3/bob_linux-amd64 && chmod +x bob
     - name: Build with Turbo Bob
       run: CI_REVISION_ID="$GITHUB_SHA" ./bob build --publish-artefacts
       # unfortunately there doesn't seem to be a way to "expose all secrets", so you must

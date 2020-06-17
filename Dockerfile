@@ -2,6 +2,11 @@
 # alpine:latest (mine could be older) had 6.6
 FROM alpine:edge
 
+# "amd64" | "arm" | ...
+ARG TARGETARCH
+# usually empty. for "linux/arm/v7" => "v7"
+ARG TARGETVARIANT
+
 WORKDIR /varasto
 
 # stores Varasto state (files' metadata)
@@ -21,7 +26,7 @@ RUN mkdir -p /varasto \
 	&& apk add --update smartmontools fuse \
 	&& echo '{"db_location": "/varasto-db/varasto.db"}' > /varasto/config.json
 
-COPY rel/sto_linux-amd64 /varasto/sto
+COPY "rel/sto_linux-$TARGETARCH" /varasto/sto
 
 ADD rel/public.tar.gz /varasto/
 

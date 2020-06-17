@@ -53,7 +53,6 @@
 			"mount_destination": "/workspace",
 			"commands": {
 				"publish": ["publish-gh.sh", "function61/varasto", "rel/"],
-				"build": ["true"],
 				"dev": ["bash"]
 			},
 			"pass_envs": [
@@ -72,6 +71,7 @@
 		{
 			"image": "fn61/varasto",
 			"dockerfile_path": "Dockerfile",
+			"platforms": ["linux/amd64", "linux/arm/v7"],
 			"auth_type": "creds_from_env"
 		}
 	]
