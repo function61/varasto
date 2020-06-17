@@ -53,6 +53,7 @@
 			"mount_destination": "/workspace",
 			"commands": {
 				"publish": ["publish-gh.sh", "function61/varasto", "rel/"],
+				"build": ["true"],
 				"dev": ["bash"]
 			},
 			"pass_envs": [
