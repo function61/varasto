@@ -19,11 +19,11 @@
 			"dev_pro_tips": [
 				"to mess with FUSE, 'apt install fuse', add to Docker: --privileged --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse"
 			],
+			"dev_http_ingress": "443",
 			"commands": {
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
-			},
-			"dev_ports": ["8066:8066"]
+			}
 		},
 		{
 			"name": "frontend",
@@ -39,6 +39,7 @@
 			"uses": "docker://fn61/buildkit-mkdocs:20200406_1529_aac78367",
 			"mount_destination": "/workspace",
 			"workdir": "/workspace",
+			"dev_http_ingress": "8000",
 			"dev_pro_tips": [
 				"for preview: $ preview.sh"
 			],
