@@ -510,6 +510,7 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChan
 			return err
 		}
 
+		// saves dir if metaColl is created on-the-fly
 		metaColl, err := metaCollForDir(dir, tx, c.conf.KeyStore)
 		if err != nil {
 			return err
@@ -517,7 +518,7 @@ func (c *cHandlers) DirectoryChangeDescription(cmd *stoservertypes.DirectoryChan
 
 		metaColl.Description = cmd.Description
 
-		return stodb.CollectionRepository.Update(dir, tx)
+		return stodb.CollectionRepository.Update(metaColl, tx)
 	})
 }
 
