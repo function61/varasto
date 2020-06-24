@@ -8,9 +8,9 @@ Linux (Docker)
 We have two Docker start examples available:
 
 - Direct `$ docker run ...` command
-- Docker compose file
+- Docker Compose file
 	* If you're not familiar with this, you might want to start with the run command. You
-	  can switch to using the compose file later if you want.
+	  can switch to using the Compose file later if you want.
 
 
 Start Varasto
@@ -32,9 +32,9 @@ Start Varasto
 	```
 
 	??? info "Explanations for the Docker options"
-		The options are documented in the Docker compose file (the other tab)
+		The options are documented in the Docker Compose file (the other tab)
 
-=== "Docker compose"
+=== "Docker Compose"
 	Save as `docker-compose.yml`:
 	
 	```yaml
@@ -115,6 +115,12 @@ Troubleshooting
 
 Check the logs to see what's the problem:
 
-```console
-docker logs varasto
-```
+=== "Docker run"
+	```console
+	docker logs varasto
+	```
+
+=== "Docker Compose"
+	```console
+	docker logs varasto_varasto_1
+	```
