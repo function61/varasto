@@ -9,6 +9,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -88,6 +89,15 @@ func (c *cHandlers) VolumeDecommission(cmd *stoservertypes.VolumeDecommission, c
 			return nil
 		}, tx); err != nil {
 			return err
+		}
+
+		hasQueuedWrites, err := storeplication.HasQueuedWriteIOsForVolume(vol.ID, tx)
+		if err != nil {
+			return err
+		}
+
+		if hasQueuedWrites {
+			return fmt.Errorf("volume %s has queued write I/Os", vol.Label)
 		}
 
 		vol.Decommissioned = &ctx.Meta.Timestamp

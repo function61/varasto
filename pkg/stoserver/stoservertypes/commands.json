@@ -253,7 +253,7 @@
 		"title": "Decommission the volume",
 		"info": [
 			"Volume will be hidden from most places in the UI.",
-			"For your safety, these things will be checked: volume has to be unmounted & empty, SMART polling be disabled and none of the replication policies shall refer to it."
+			"For your safety, these things will be checked before decommissioning: volume has to be unmounted, empty and shall have no queued write I/Os. SMART polling must be disabled and none of the replication policies shall refer to it."
 		],
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
