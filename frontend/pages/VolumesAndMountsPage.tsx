@@ -677,6 +677,25 @@ export default class VolumesAndMountsPage extends React.Component<
 			return loadingOrError;
 		}
 
+		interface ReplicationStatusAndVolume {
+			status: ReplicationStatus;
+			volume: Volume;
+		}
+
+		let statusesWithVolumes: ReplicationStatusAndVolume[] = [];
+
+		// iterating from volumes' perspective to preserve meaningful volume
+		// sort order from API
+		volumes.forEach((volume) => {
+			statusesWithVolumes = statusesWithVolumes.concat(
+				replicationStatuses
+					.filter((status) => status.VolumeId === volume.Id)
+					.map((status) => {
+						return { status, volume };
+					}),
+			);
+		});
+
 		return (
 			<table className={tableClassStripedHover}>
 				<thead>
@@ -686,13 +705,12 @@ export default class VolumesAndMountsPage extends React.Component<
 					</tr>
 				</thead>
 				<tbody>
-					{replicationStatuses.map((status) => {
-						const volume = volumes.filter((vol) => vol.Id === status.VolumeId);
-						const volumeName = volume.length === 1 ? volume[0].Label : '(error)';
+					{statusesWithVolumes.map((statusWithVolume) => {
+						const [status, volume] = [statusWithVolume.status, statusWithVolume.volume];
 
 						return (
 							<tr key={status.VolumeId}>
-								<td>{volumeName}</td>
+								<td>{volume.Label}</td>
 								<td>
 									{status.Progress === 100 ? (
 										'Realtime'
@@ -707,6 +725,7 @@ export default class VolumesAndMountsPage extends React.Component<
 			</table>
 		);
 	}
+
 	private fetchData() {
 		this.state.volumes.load(() => getVolumes());
 		this.state.volumesDecommissioned.load(() => getDecommissionedVolumes());

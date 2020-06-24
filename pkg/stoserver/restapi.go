@@ -401,7 +401,7 @@ func (h *handlers) getVolumesInternal(
 	r *http.Request,
 	filter func(vol stotypes.Volume) bool,
 ) *[]stoservertypes.Volume {
-	ret := []stoservertypes.Volume{}
+	volumes := []stoservertypes.Volume{}
 
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
@@ -453,7 +453,7 @@ func (h *handlers) getVolumesInternal(
 			}
 		}
 
-		ret = append(ret, stoservertypes.Volume{
+		volumes = append(volumes, stoservertypes.Volume{
 			Id:             dbObject.ID,
 			Uuid:           dbObject.UUID,
 			Label:          dbObject.Label,
@@ -473,7 +473,9 @@ func (h *handlers) getVolumesInternal(
 		})
 	}
 
-	return &ret
+	sort.Slice(volumes, func(i, j int) bool { return volumes[i].Label < volumes[j].Label })
+
+	return &volumes
 }
 
 func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.VolumeMount {
@@ -856,8 +858,6 @@ func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.
 			Progress: controller.Progress(),
 		})
 	}
-
-	sort.Slice(statuses, func(i, j int) bool { return statuses[i].VolumeId < statuses[j].VolumeId })
 
 	return &statuses
 }
