@@ -59,6 +59,7 @@ nav:
   - Photos: content/photos/index.md
   - Movies: content/movies/index.md
   - TV shows: content/tvshows/index.md
+  - Magazines & comics: content/magazines-comics/index.md
   - Games: content/games/index.md
   # - Podcasts (TODO): stuff.md
 - Security:

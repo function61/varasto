@@ -25,6 +25,11 @@ Web UI
 !!! note ""
 	![](../content/photos/screenshot.png)
 
+### Magazines & comics
+
+!!! note ""
+	![](../content/magazines-comics/screenshot.png)
+
 ### Games
 
 !!! note ""
