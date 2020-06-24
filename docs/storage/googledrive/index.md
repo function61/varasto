@@ -12,20 +12,39 @@ When you mount Google Drive (or G Suite) volume in Varasto, you'll be asked for 
 This document covers how we obtain these values.
 
 
-Create a folder in Drive
-------------------------
+Which GDrive folder to store Varasto blobs in?
+----------------------------------------------
 
-Varasto stores all your blobs in Drive inside one folder - let's create it now. (Drive has
-no limit of files per folder and it is not a performance issue.)
+!!! danger "Important! Read carefully"
+	Google recently added a limitation of 500 k files / folder (for non-root directories),
+	[when previously there was no limitation](https://stackoverflow.com/a/62520242).
 
-If you named your volume `Example`, I recommend you name your folder in Drive
-`varasto-example` for clarity (the name is technically arbitrary).
+	Therefore we **recommend not creating a directory** and using GDrive root to store
+	your blobs (which can have unlimited files).
 
-Open the folder to discover its ID from URL:
+	This has the unfortunate side effect of having blobs and regular files in same
+	directory if you store non-Varasto files in your Google Drive. We'll investigate using
+	nested subdirectories for blobs, but that has to be carefully thought out (creating
+		dirs on-demand could yield in race conditions in clustered setups if not done
+		correctly).
 
-![](folder-id.png)
 
-In my case my ID was `1znjU234YCcLW96u6_WrZtms2vFvGy55e`. Specify this as `Drive folder ID`
+=== "I'll use GDrive root for blobs"
+
+	For `Drive folder ID` specify `root` (literally, "root" is an ID alias)
+
+=== "Use subdirectory for blobs (DANGEROUS)"
+
+	Varasto stores all your blobs in Drive inside one folder - let's create it now.
+
+	If you named your volume `Example`, I recommend you name your folder in Drive
+	`varasto-example` for clarity (the name is technically arbitrary).
+
+	Open the folder to discover its ID from URL:
+
+	![](folder-id.png)
+
+	For my `Drive folder ID` I specified `1znjU234YCcLW96u6_WrZtms2vFvGy55e`
 
 
 Create an API app in Google developers
