@@ -317,8 +317,8 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		report.TotalCollections++
 
 		policy := policyById[effectiveReplPolicyId]
-		if policy == nil {
-			panic("policy not found") // should not happen
+		if policy == nil { // should not happen
+			return fmt.Errorf("policy not found: %s", effectiveReplPolicyId)
 		}
 
 		if len(coll.Changesets) == 0 && notBrandNew(coll.Created) {
