@@ -167,7 +167,7 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 	nextContinueToken := stodb.StartFromFirst
 
-	err = stodb.BlobsPendingReplicationByVolumeIndex.Query(VolIdToBytesForIndex(c.toVolumeId), continueToken, func(id []byte) error {
+	err = stodb.BlobsPendingReplicationByVolumeIndex.Query(volIdToBytesForIndex(c.toVolumeId), continueToken, func(id []byte) error {
 		if len(jobs) == batchLimit {
 			nextContinueToken = id
 
@@ -207,7 +207,24 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 	return jobs, nextContinueToken, err
 }
 
-func VolIdToBytesForIndex(volId int) []byte {
+func HasQueuedWriteIOsForVolume(volId int, tx *bbolt.Tx) (bool, error) {
+	anyQueued := false
+	if err := stodb.BlobsPendingReplicationByVolumeIndex.Query(
+		volIdToBytesForIndex(volId),
+		stodb.StartFromFirst,
+		func(_ []byte) error {
+			anyQueued = true
+			return stodb.StopIteration
+		},
+		tx,
+	); err != nil {
+		return false, err
+	}
+
+	return anyQueued, nil
+}
+
+func volIdToBytesForIndex(volId int) []byte {
 	return []byte(fmt.Sprintf("%d", volId))
 }
 

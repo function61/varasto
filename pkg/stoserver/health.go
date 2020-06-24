@@ -216,16 +216,8 @@ func healthVolReplication(
 			return volReplHealth.Pass("Realtime"), nil
 		}
 	} else {
-		anyQueued := false
-		if err := stodb.BlobsPendingReplicationByVolumeIndex.Query(
-			storeplication.VolIdToBytesForIndex(vol.ID),
-			stodb.StartFromFirst,
-			func(_ []byte) error {
-				anyQueued = true
-				return stodb.StopIteration
-			},
-			tx,
-		); err != nil {
+		anyQueued, err := storeplication.HasQueuedWriteIOsForVolume(vol.ID, tx)
+		if err != nil {
 			return nil, err
 		}
 
