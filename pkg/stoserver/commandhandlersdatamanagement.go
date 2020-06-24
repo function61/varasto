@@ -3,7 +3,6 @@ package stoserver
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/function61/eventkit/command"
@@ -149,7 +148,7 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 }
 
 func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.DatabaseReconcileReplicationPolicy, ctx *command.Ctx) error {
-	collIds := strings.Split(cmd.Id, ",")
+	collIds := *cmd.Collections
 
 	if err := c.db.Update(func(tx *bbolt.Tx) error {
 		targetVol, err := stodb.Read(tx).Volume(cmd.Volume)

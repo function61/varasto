@@ -393,7 +393,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 									<div>
 										<CommandButton
 											command={DatabaseReconcileReplicationPolicy(
-												this.state.selectedCollIds.join(','),
+												this.state.selectedCollIds,
 												{ Volume: volumeAutocomplete },
 											)}
 										/>

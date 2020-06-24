@@ -649,11 +649,11 @@
 	{
 		"command": "database.ReconcileReplicationPolicy",
 		"chain": "public",
-		"ctor": ["Id"],
+		"ctor": ["Collections"],
 		"crudNature": "update",
 		"title": "Replicate to volume",
 		"fields": [
-			{ "key": "Id", "max_length": 4096, "hideIfDefaultValue": true },
+			{ "key": "Collections", "type": "StringList", "hideIfDefaultValue": true },
 			{ "key": "Volume", "type": "custom/integer" }
 		]
 	},
