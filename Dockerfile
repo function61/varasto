@@ -2,6 +2,9 @@
 # alpine:latest (mine could be older) had 6.6
 FROM alpine:edge
 
+# NOTE: because of these args, if you want to build this manually you've to add
+#       e.g. --build-arg TARGETARCH=amd64 to $ docker build ...
+
 # "amd64" | "arm" | ...
 ARG TARGETARCH
 # usually empty. for "linux/arm/v7" => "v7"
