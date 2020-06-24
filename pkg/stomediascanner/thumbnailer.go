@@ -126,7 +126,7 @@ func collectionThumbnailsOneBatch(
 			}
 
 			// only process non-thumbnailable files like videos
-			if thumbnailable(file.Path) {
+			if thumbnailable(file.Path) != nil {
 				continue
 			}
 
@@ -193,7 +193,8 @@ func collectionThumbnailsOneBatch(
 			continue
 		}
 
-		if !thumbnailable(file.Path) {
+		imgObtainer := thumbnailable(file.Path)
+		if imgObtainer == nil {
 			continue
 		}
 
@@ -215,7 +216,11 @@ func collectionThumbnailsOneBatch(
 
 		thumbOutput := &bytes.Buffer{}
 
-		if err := makeThumbForFile(ctx, file, thumbOutput, collectionId, *conf); err != nil {
+		if err := makeThumbForFile(ctx, downloadFileFromVarastoDetails{
+			file:         file,
+			collectionId: collectionId,
+			clientConfig: *conf,
+		}, imgObtainer, thumbOutput); err != nil {
 			logl.Error.Printf("makeThumbForFile %s: %v", file.Path, err)
 			continue
 		}
@@ -272,18 +277,18 @@ func collectionThumbPath(f stotypes.File) string {
 // - thumb already exists
 func makeThumbForFile(
 	ctx context.Context,
-	file stotypes.File,
+	varastoFile downloadFileFromVarastoDetails,
+	imgObtainer imageObtainer,
 	thumbOutput io.Writer,
-	collectionId string,
-	clientConfig stoclient.ClientConfig,
 ) error {
-	origBuffer := &bytes.Buffer{}
-	if err := stoclient.DownloadOneFile(ctx, file, collectionId, origBuffer, clientConfig); err != nil {
+	imgBytes, err := imgObtainer(ctx, varastoFile)
+	if err != nil {
 		return err
 	}
+	defer imgBytes.Close()
 
 	// needed to correctly open JPEGs with EXIF "you should rotate this image" -metadata
-	orig, _, err := imageorient.Decode(origBuffer)
+	orig, _, err := imageorient.Decode(imgBytes)
 	if err != nil {
 		return err // TODO: how to react?
 	}
@@ -317,12 +322,16 @@ func resizedDimensionsInternal(width, height, targetw, targeth float64) (int, in
 	return int(width * math.Min(ratiow, ratioh)), int(height * math.Min(ratiow, ratioh))
 }
 
-func thumbnailable(filePath string) bool {
+func thumbnailable(filePath string) imageObtainer {
 	switch strings.ToLower(filepath.Ext(filePath)) {
+	case ".cbr":
+		return cbrObtainer
+	case ".cbz":
+		return cbzObtainer
 	case ".jpg", ".jpeg", ".png", ".gif", ".bmp":
-		return true
+		return alreadyAnImageObtainer
 	default:
-		return false
+		return nil
 	}
 }
 

@@ -32,6 +32,7 @@ require (
 	github.com/mattn/go-runewidth v0.0.8
 	github.com/minio/sha256-simd v0.1.1
 	github.com/nsf/termbox-go v0.0.0-20190817171036-93860e161317
+	github.com/nwaples/rardecode v1.1.0
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/prometheus/client_golang v1.4.1
