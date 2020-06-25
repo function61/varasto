@@ -1,10 +1,10 @@
 {
   "dependencies": {
     "@types/bootstrap": "3.4.0",
-    "@types/jquery": "3.3.33",
+    "@types/jquery": "3.5.0",
     "@types/react-dom": "16.9.5",
     "react": "16.13.1",
-    "jquery": "3.4.1",
+    "jquery": "3.5.0",
     "date-fns": "2.0.0-alpha.27",
     "react-autocomplete": "1.8.1",
     "react-dom": "16.13.1",
