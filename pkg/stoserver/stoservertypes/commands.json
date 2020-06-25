@@ -234,6 +234,20 @@
 		]
 	},
 	{
+		"command": "volume.RemoveQueuedReplications",
+		"chain": "public",
+		"ctor": ["From"],
+		"crudNature": "delete",
+		"title": "Remove queued replications",
+		"info": [
+			"This is for when you need to cancel queued replications (write I/Os) - maybe because you need to decommission the volume or for some other reason it can't accept writes anymore (maybe quota is full).",
+			"After cancelling the I/Os that were queued, the possible discrepancy between desired and actual replica counts is discoverable for the reconciliation process."
+		],
+		"fields": [
+			{ "key": "From", "type": "integer", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "volume.MarkDataLost",
 		"chain": "public",
 		"ctor": ["Id"],

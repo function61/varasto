@@ -107,6 +107,57 @@ func (c *cHandlers) VolumeDecommission(cmd *stoservertypes.VolumeDecommission, c
 	})
 }
 
+func (c *cHandlers) VolumeRemoveQueuedReplications(cmd *stoservertypes.VolumeRemoveQueuedReplications, ctx *command.Ctx) error {
+	from := cmd.From // shorthand
+
+	if _, hasReplicationController := c.conf.ReplicationControllers[from]; hasReplicationController {
+		// no other danger but the controller reads a batch of work (blob refs) into memory,
+		// so it could operate on canceled work for a while if we let this happen
+		return fmt.Errorf(
+			"Volume %d has replication controller running. Please stop it first, e.g. by unmounting the volume.",
+			from)
+	}
+
+	totalBlobs := 0
+	removed := 0
+
+	if err := c.db.Update(func(tx *bbolt.Tx) error {
+		return stodb.BlobRepository.Each(func(record interface{}) error {
+			blob := record.(*stotypes.Blob)
+
+			totalBlobs++
+
+			if !sliceutil.ContainsInt(blob.VolumesPendingReplication, from) {
+				return nil
+			}
+
+			removed++
+
+			blob.VolumesPendingReplication = sliceutil.FilterInt(blob.VolumesPendingReplication, func(vol int) bool {
+				return vol != from
+			})
+
+			return stodb.BlobRepository.Update(blob, tx)
+		}, tx)
+	}); err != nil {
+		return err
+	}
+
+	if removed == 0 {
+		return fmt.Errorf(
+			"Volume %d (with %d blobs) didn't have any queued replications",
+			from,
+			totalBlobs)
+	}
+
+	logex.Levels(c.logger).Info.Printf(
+		"VolumeRemoveQueuedReplications %d/%d",
+		removed,
+		totalBlobs)
+
+	return nil
+}
+
 func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		volToPurge, err := stodb.Read(tx).Volume(cmd.Id)

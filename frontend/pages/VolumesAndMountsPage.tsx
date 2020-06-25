@@ -28,6 +28,7 @@ import {
 	VolumeMarkDataLost,
 	VolumeDecommission,
 	VolumeMigrateData,
+	VolumeRemoveQueuedReplications,
 	VolumeMountGoogleDrive,
 	VolumeMountLocal,
 	VolumeMountS3,
@@ -415,6 +416,11 @@ export default class VolumesAndMountsPage extends React.Component<
 								command={VolumeMarkDataLost(obj.Id, {
 									disambiguation: obj.Label,
 									helpUrl: DocUrlLatest(DocRef.DocsUsingWhenADiskFailsIndexMd),
+								})}
+							/>
+							<CommandLink
+								command={VolumeRemoveQueuedReplications(obj.Id, {
+									disambiguation: obj.Label,
 								})}
 							/>
 							<CommandLink
