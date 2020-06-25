@@ -112,11 +112,15 @@ github.com/function61/gokit v0.0.0-20200505133340-ea23da4315bb/go.mod h1:qkZftFp
 github.com/function61/gokit v0.0.0-20200528091203-69cbdf9f1ec6 h1:Ou1m3nypnvUCB0WMlaHBGnBbE5mxC+2uNIFpLRgaD/E=
 github.com/function61/gokit v0.0.0-20200529115225-83640b4df272 h1:ItekDnSIahsbekV4EZzDjZqQKVbRXjH/8xgyUUHp9Lg=
 github.com/function61/gokit v0.0.0-20200529115225-83640b4df272/go.mod h1:qkZftFp+nvc6BitjWRb9GXS4A1tQ2BuASctzscHa9Io=
+github.com/function61/gokit v0.0.0-20200625073631-b31f1be1a654 h1:Yc9J0fEfzsN5LaoxyNNP06eiLnv2+4aupe5wmRwvR/M=
+github.com/function61/gokit v0.0.0-20200625073631-b31f1be1a654/go.mod h1:qkZftFp+nvc6BitjWRb9GXS4A1tQ2BuASctzscHa9Io=
 github.com/function61/lambda-alertmanager v1.0.0/go.mod h1:9e4VH+6LqHdGh32ZYkaeo3kdWi9h2CiMPIveDbrW0tw=
 github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1 h1:/JifQnaG1jIVufKhsVrmqX4UwkG7vRhsGh0qf5lGQjw=
 github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1/go.mod h1:xEFSqRukETpU1ijzEZpY3ohSj01MzntOpL0eUHYp92M=
 github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692 h1:S/mz0st5MdQxa3Gv7u0lJQH9zie9+tipwgAi2iYZXbI=
 github.com/function61/ubackup v0.0.0-20200324092557-577ef2e5c692/go.mod h1:yuxdbQgveBkUzACCjSFJcbjf4B583EmSsRgQSGs16V8=
+github.com/function61/ubackup v0.0.0-20200625081923-f624fa1cb786 h1:I64jc+6yKWy2YtPDoaNFtR/BSwHe6tswoPSUipzyqX0=
+github.com/function61/ubackup v0.0.0-20200625081923-f624fa1cb786/go.mod h1:GUeRKs+1H7CttnOqR6eZYu8nUWiqXMh9IfiF30nYRTs=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/gliderlabs/ssh v0.1.1/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-kit/kit v0.8.0/go.mod h1:xBxKIO96dXMWWy0MnWVtmwkA9/13aqxPnvrjFYMA2as=

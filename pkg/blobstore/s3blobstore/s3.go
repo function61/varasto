@@ -15,6 +15,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
@@ -22,9 +23,8 @@ import (
 )
 
 type s3blobstore struct {
-	bucket    string
 	blobNamer *s3BlobNamer
-	client    *s3.S3
+	bucket    *s3facade.BucketContext
 	logl      *logex.Leveled
 }
 
@@ -38,22 +38,29 @@ func New(opts string, logger *log.Logger) (*s3blobstore, error) {
 		return nil, fmt.Errorf("prefix needs to end in '/'; got '%s'", conf.Prefix)
 	}
 
-	client, err := s3facade.Client(conf.AccessKeyId, conf.AccessKeySecret, conf.RegionId)
+	staticCreds := credentials.NewStaticCredentials(
+		conf.AccessKeyId,
+		conf.AccessKeySecret,
+		"")
+
+	bucket, err := s3facade.Bucket(
+		conf.Bucket,
+		s3facade.Credentials(staticCreds),
+		conf.RegionId)
 	if err != nil {
 		return nil, err
 	}
 
 	return &s3blobstore{
-		bucket:    conf.Bucket,
 		blobNamer: &s3BlobNamer{conf.Prefix},
-		client:    client,
+		bucket:    bucket,
 		logl:      logex.Levels(logger),
 	}, nil
 }
 
 func (g *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
-	res, err := g.client.GetObjectWithContext(ctx, &s3.GetObjectInput{
-		Bucket: &g.bucket,
+	res, err := g.bucket.S3.GetObjectWithContext(ctx, &s3.GetObjectInput{
+		Bucket: g.bucket.Name,
 		Key:    g.blobNamer.Ref(ref),
 	})
 	if err != nil {
@@ -75,8 +82,8 @@ func (g *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 		return err
 	}
 
-	if _, err := g.client.PutObjectWithContext(ctx, &s3.PutObjectInput{
-		Bucket: &g.bucket,
+	if _, err := g.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		Bucket: g.bucket.Name,
 		Key:    g.blobNamer.Ref(ref),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
