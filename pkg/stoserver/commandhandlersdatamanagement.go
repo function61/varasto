@@ -212,6 +212,11 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 	collIds := *cmd.Collections
 
 	if err := c.db.Update(func(tx *bbolt.Tx) error {
+		volumeById, err := buildVolumeByIdLookup(tx)
+		if err != nil {
+			return err
+		}
+
 		targetVol, err := stodb.Read(tx).Volume(cmd.Volume)
 		if err != nil {
 			return err
@@ -223,14 +228,27 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 				return err
 			}
 
+			policy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
+			if err != nil {
+				return err
+			}
+
 			if err := eachBlobOfCollection(coll, func(ref stotypes.BlobRef) error {
 				blob, err := stodb.Read(tx).Blob(ref)
 				if err != nil {
 					return err
 				}
 
-				if sliceutil.ContainsInt(blob.Volumes, targetVol.ID) || sliceutil.ContainsInt(blob.VolumesPendingReplication, targetVol.ID) {
-					return nil // nothing to do
+				problemRedundancy, problemZoning := blobProblems(blob, policy, volumeById)
+
+				if !problemRedundancy && !problemZoning {
+					return nil // nothing to fix
+				}
+
+				volsAndPendings := append(blob.Volumes, blob.VolumesPendingReplication...)
+
+				if sliceutil.ContainsInt(volsAndPendings, targetVol.ID) {
+					return nil // blob already exists (or does soon) in this volume
 				}
 
 				blob.VolumesPendingReplication = append(blob.VolumesPendingReplication, targetVol.ID)
@@ -360,13 +378,8 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 
 	// load all volumes into memory for quick access
-	volumeById := map[int]*stotypes.Volume{}
-
-	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
-		vol := record.(*stotypes.Volume)
-		volumeById[vol.ID] = vol
-		return nil
-	}, tx); err != nil {
+	volumeById, err := buildVolumeByIdLookup(tx)
+	if err != nil {
 		return err
 	}
 
@@ -386,13 +399,6 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			report.EmptyCollectionIds = append(report.EmptyCollectionIds, coll.ID)
 		}
 
-		collReport := collectionToReconcile{
-			collectionId:    coll.ID,
-			desiredReplicas: len(policy.DesiredVolumes),
-			presence:        map[int]int{},
-			blobCount:       0,
-		}
-
 		if coll.ReplicationPolicy != effectiveReplPolicyId {
 			coll.ReplicationPolicy = effectiveReplPolicyId
 
@@ -403,40 +409,13 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			fixedReplPolicies++
 		}
 
-		if err := eachBlobOfCollection(coll, func(ref stotypes.BlobRef) error {
-			collReport.blobCount++
-
-			blob, err := stodb.Read(tx).Blob(ref)
-			if err != nil {
-				return err
-			}
-
-			volsAndPendings := append(blob.Volumes, blob.VolumesPendingReplication...)
-
-			uniqueZones := map[string]bool{}
-
-			for _, vol := range volsAndPendings {
-				// zero value (when not found from map) conveniently works out for us
-				collReport.presence[vol] = collReport.presence[vol] + 1
-
-				uniqueZones[volumeById[vol].Zone] = true
-			}
-
-			if len(volsAndPendings) < policy.ReplicaCount() {
-				collReport.problemRedundancy = true
-			}
-
-			if len(uniqueZones) < policy.MinZones {
-				collReport.problemZoning = true
-			}
-
-			return nil
-		}); err != nil {
+		collReport, err := reconciliationReportForCollection(coll, policy, volumeById, tx)
+		if err != nil {
 			return err
 		}
 
 		if collReport.anyProblems() {
-			report.CollectionsWithNonCompliantPolicy = append(report.CollectionsWithNonCompliantPolicy, collReport)
+			report.CollectionsWithNonCompliantPolicy = append(report.CollectionsWithNonCompliantPolicy, *collReport)
 		}
 
 		return nil
@@ -472,6 +451,52 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	latestReconciliationReport = report
 
 	return tx.Commit()
+}
+
+// detect problems for each blob of collection and wrap it in a reconciliation report for
+// UI (how many desired replicas, which volumes have blobs for this collection etc.)
+func reconciliationReportForCollection(
+	coll *stotypes.Collection,
+	policy *stotypes.ReplicationPolicy,
+	volumeById map[int]*stotypes.Volume,
+	tx *bbolt.Tx,
+) (*collectionToReconcile, error) {
+	collReport := &collectionToReconcile{
+		collectionId:    coll.ID,
+		desiredReplicas: len(policy.DesiredVolumes),
+		presence:        map[int]int{},
+		blobCount:       0,
+	}
+
+	if err := eachBlobOfCollection(coll, func(ref stotypes.BlobRef) error {
+		collReport.blobCount++
+
+		blob, err := stodb.Read(tx).Blob(ref)
+		if err != nil {
+			return err
+		}
+
+		problemRedundancy, problemZoning := blobProblems(blob, policy, volumeById)
+
+		for _, vol := range append(blob.Volumes, blob.VolumesPendingReplication...) {
+			// zero value (when not found from map) conveniently works out for us
+			collReport.presence[vol] = collReport.presence[vol] + 1
+		}
+
+		if problemRedundancy {
+			collReport.problemRedundancy = true
+		}
+
+		if problemZoning {
+			collReport.problemZoning = true
+		}
+
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	return collReport, nil
 }
 
 func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbandoned, ctx *command.Ctx) error {
@@ -616,4 +641,36 @@ func noReplicationPolicyPlacesNewDataToVolume(volId int, tx *bbolt.Tx) error {
 
 		return nil
 	}, tx)
+}
+
+// check if blob has redundancy or zoning problems according to a given policy
+func blobProblems(
+	blob *stotypes.Blob,
+	policy *stotypes.ReplicationPolicy,
+	volumeById map[int]*stotypes.Volume,
+) (bool, bool) {
+	volsAndPendings := append(blob.Volumes, blob.VolumesPendingReplication...)
+	uniqueZones := map[string]bool{}
+	for _, vol := range volsAndPendings {
+		uniqueZones[volumeById[vol].Zone] = true
+	}
+
+	problemRedundancy := len(volsAndPendings) < policy.ReplicaCount()
+	problemZoning := len(uniqueZones) < policy.MinZones
+
+	return problemRedundancy, problemZoning
+}
+
+func buildVolumeByIdLookup(tx *bbolt.Tx) (map[int]*stotypes.Volume, error) {
+	volumeById := map[int]*stotypes.Volume{}
+
+	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
+		vol := record.(*stotypes.Volume)
+		volumeById[vol.ID] = vol
+		return nil
+	}, tx); err != nil {
+		return nil, err
+	}
+
+	return volumeById, nil
 }
