@@ -86,7 +86,7 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	rarPassword := ""
 	archive, err := rardecode.NewReader(data, rarPassword)
 	if err != nil {
-		return nil, fmt.Errorf("%s: rardecode: %w", err)
+		return nil, fmt.Errorf("%s: rardecode: %w", varastoFile.file.Path, err)
 	}
 
 	// TODO: assumption that archive is alphabetically ordered is wrong
@@ -96,7 +96,7 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	}
 
 	if !strings.HasSuffix(header.Name, ".jpg") && !strings.HasSuffix(header.Name, ".jpeg") && !strings.HasSuffix(header.Name, ".png") {
-		return nil, fmt.Errorf("%s: wrong file type: %s", header.Name)
+		return nil, fmt.Errorf("%s: wrong file type: %s", varastoFile.file.Path, header.Name)
 	}
 
 	return ioutil.NopCloser(archive), nil
