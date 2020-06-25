@@ -37,6 +37,7 @@ class SmallWell extends React.Component<SmallWellProps, {}> {
 
 type section =
 	| 'welcome'
+	| 'managingExpectations'
 	| 'createUser'
 	| 'setUpEncryption'
 	| 'yourFirstVolume'
@@ -93,6 +94,12 @@ export default class GettingStartedPage extends React.Component<
 		return (
 			<HelpLayout title="Getting started" breadcrumbs={[]}>
 				{panel(null, 'Welcome to Varasto!', 'welcome', this.welcome)}
+				{panel(
+					null,
+					'Managing expectations',
+					'managingExpectations',
+					this.managingExpectations,
+				)}
 				{panel(null, 'Create user', 'createUser', this.createUser)}
 				{panel(null, 'Set up encryption', 'setUpEncryption', this.setUpEncryption)}
 				{panel(null, 'Your first volume', 'yourFirstVolume', this.yourFirstVolume)}
@@ -153,6 +160,43 @@ export default class GettingStartedPage extends React.Component<
 					great love, to try to make it short enough to read but still give you a good
 					picture of how things work!
 				</p>
+
+				{this.phaseNavBar(currSection)}
+			</div>
+		);
+	}
+
+	private managingExpectations(currSection: section): React.ReactNode {
+		return (
+			<div>
+				<p>
+					Varasto is somewhat new project, and thus there are a few missing features and
+					the occasional rough edge that you should be aware of.
+				</p>
+
+				<p>Largest limitations of Varasto currently:</p>
+
+				<ul>
+					<li>
+						Access controls (user accounts, authentication) are missing => do not expose
+						Varasto server to public internet.
+					</li>
+					<li>
+						While deletes are supported, <b>file history deletion</b> is not yet
+						supported, so you can't reclaim any space by deleting files yet.
+					</li>
+					<li>
+						Updates between versions can be tedious. Most are automatic, but sometimes
+						there can be manual steps. If that does happen, there will be good
+						instructions, however!
+					</li>
+					<li>
+						For the most pressing issues, check out the{' '}
+						<a href="https://github.com/function61/varasto/milestone/4">
+							milestone currently being worked at!
+						</a>
+					</li>
+				</ul>
 
 				{this.phaseNavBar(currSection)}
 			</div>
@@ -560,6 +604,8 @@ export default class GettingStartedPage extends React.Component<
 	private nextSection(currSection: section): section | null {
 		switch (currSection) {
 			case 'welcome':
+				return 'managingExpectations';
+			case 'managingExpectations':
 				return 'createUser';
 			case 'createUser':
 				return 'setUpEncryption';

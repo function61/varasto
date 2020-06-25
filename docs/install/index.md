@@ -1,8 +1,3 @@
-!!! warning "Managing expectations"
-    Varasto is in beta, and thus there are a few missing features and the occasional rough
-    edge that you should be aware of. [Read more](limitations-of-beta-version.md).
-
-
 Server installation
 -------------------
 
