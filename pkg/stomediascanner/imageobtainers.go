@@ -7,8 +7,9 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"strings"
+	"path/filepath"
 
+	"github.com/function61/gokit/mime"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/nwaples/rardecode"
@@ -66,6 +67,10 @@ func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	// TODO: assumption that archive is alphabetically ordered is wrong
 	firstFile := cbz.File[0]
 
+	if err := assertFilenameIsImage(firstFile.Name); err != nil {
+		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path)
+	}
+
 	return firstFile.Open()
 }
 
@@ -95,8 +100,8 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 		return nil, fmt.Errorf("%s: no first file: %w", varastoFile.file.Path, err)
 	}
 
-	if !strings.HasSuffix(header.Name, ".jpg") && !strings.HasSuffix(header.Name, ".jpeg") && !strings.HasSuffix(header.Name, ".png") {
-		return nil, fmt.Errorf("%s: wrong file type: %s", varastoFile.file.Path, header.Name)
+	if err := assertFilenameIsImage(header.Name); err != nil {
+		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path)
 	}
 
 	return ioutil.NopCloser(archive), nil
