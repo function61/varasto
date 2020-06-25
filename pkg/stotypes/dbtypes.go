@@ -49,7 +49,7 @@ type Volume struct {
 	WarrantyEnds       time.Time
 	Quota              int64
 	BlobSizeTotal      int64 // @ compressed & deduplicated
-	BlobCount          int64 // does not include volume descriptor blob (sha256=0000..)
+	BlobCount          int64 // does not include queued writes or volume descriptor blob (sha256=0000..)
 	Decommissioned     *time.Time
 	DecommissionReason string
 }
