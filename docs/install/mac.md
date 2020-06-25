@@ -22,8 +22,8 @@ Docker works on macOS so you may have success:
 Use via Linux VM
 ----------------
 
-If you already have a Linux VM (or want to set up one - we don't have instructions for
-it :) ), then then go back to [Installation](index.md) and follow the Linux instructions.
+If you already have a Linux VM (or want to set up one for this), then then go back to
+[Installation](index.md) and follow the Linux instructions.
 
 
 Use natively

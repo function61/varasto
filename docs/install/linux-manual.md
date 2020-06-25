@@ -42,7 +42,5 @@ Just follow above instructions (again, you might need `sudo`).
 After Varasto is started
 ------------------------
 
-Now you can navigate your browser to `https://localhost/` and **hit "Help" from the menu
-to reach the getting started wizard** which will help you set up everything.
-
+Now you can navigate your browser to [https://localhost/](https://localhost/).
 (You'll have to approve the "insecure certificate" warning.)

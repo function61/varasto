@@ -1,13 +1,11 @@
 import { boot, makeRouter } from 'f61ui/appcontroller';
 import { DangerAlert } from 'f61ui/component/alerts';
-import { navigateTo } from 'f61ui/browserutils';
 import { GlobalConfig } from 'f61ui/globalconfig';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import BrowsePage from 'pages/BrowsePage';
 import CollectionPage, { viewTypeFromString } from 'pages/CollectionPage';
 import ContentMetadataPage from 'pages/ContentMetadataPage';
 import DownloadClientAppPage from 'pages/DownloadClientAppPage';
-import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import FuseServerPage from 'pages/FuseServerPage';
 import GettingStartedPage from 'pages/GettingStartedPage';
 import LogsPage from 'pages/LogsPage';
@@ -16,6 +14,7 @@ import NodesPage from 'pages/NodesPage';
 import MetricsPage from 'pages/MetricsPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
 import ScheduledJobsPage from 'pages/ScheduledJobsPage';
+import RootRedirectPage from 'pages/RootRedirectPage';
 import ServerInfoPage from 'pages/ServerInfoPage';
 import SubsystemsPage from 'pages/SubsystemsPage';
 import UsersPage from 'pages/UsersPage';
@@ -25,8 +24,7 @@ import * as r from 'generated/frontend_uiroutes';
 
 class Handlers implements r.RouteHandlers {
 	root() {
-		navigateTo(r.browseUrl({ dir: RootFolderId }));
-		return <h1>Redirect</h1>;
+		return <RootRedirectPage />;
 	}
 
 	browse(opts: r.BrowseOpts) {
