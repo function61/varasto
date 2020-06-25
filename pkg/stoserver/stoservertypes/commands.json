@@ -159,8 +159,8 @@
 		"crudNature": "create",
 		"title": "Mount a local volume",
 		"info": [
-			"If you're testing out Varasto and don't want to dedicate a partition to Varasto yet, you don't need to mount anything and just specify something like '/mnt/varasto/test/varasto-test' as the path",
-			"If you want to dedicate a disk/partition for Varasto use, mount it in '/mnt/varasto/VOL_NAME' and use '/mnt/varasto/VOL_NAME/varasto-volname' as the path",
+			"If you want to dedicate a disk/partition for Varasto use, mount it in '/mnt/varasto/VOL_NAME' and use '/mnt/varasto/VOL_NAME/varasto-VOL_NAME' as the path",
+			"If you're testing out Varasto OR don't want to dedicate a partition to Varasto yet, you can just specify something like '/mnt/varasto/test/varasto-test' as the path",
 			"If the directory does not exist, it will be created for you",
 			"NOTE: The volume will be seen as 'offline' for the first a few seconds"
 		],
