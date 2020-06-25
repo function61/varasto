@@ -68,7 +68,7 @@ func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	firstFile := cbz.File[0]
 
 	if err := assertFilenameIsImage(firstFile.Name); err != nil {
-		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path)
+		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path, err)
 	}
 
 	return firstFile.Open()
@@ -101,7 +101,7 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	}
 
 	if err := assertFilenameIsImage(header.Name); err != nil {
-		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path)
+		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path, err)
 	}
 
 	return ioutil.NopCloser(archive), nil
