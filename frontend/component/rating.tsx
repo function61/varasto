@@ -51,9 +51,11 @@ export class RatingEditor extends React.Component<RatingEditorProps, RatingEdito
 				style={{ color: lit ? 'gold' : '#c0c0c0', cursor: 'pointer' }}
 				onClick={() => {
 					this.state.saveProgress.load(() =>
-						new CommandExecutor(
-							CollectionRate(this.props.collId, n),
-						).executeAndRedirectOnSuccess(),
+						toVoidPromise(
+							new CommandExecutor(
+								CollectionRate(this.props.collId, n),
+							).executeAndRedirectOnSuccess(),
+						),
 					);
 				}}
 				onMouseOver={() => {
@@ -96,4 +98,10 @@ export class RatingViewer extends React.Component<RatingViewerProps, {}> {
 			</span>
 		);
 	}
+}
+
+// if you have a specific return type from a promise, and need to convert it into a void
+// (essentially only interested on the completion)
+function toVoidPromise<T>(input: Promise<T>): Promise<void> {
+	return input.then();
 }
