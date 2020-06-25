@@ -191,6 +191,11 @@ export default class GettingStartedPage extends React.Component<
 						instructions, however!
 					</li>
 					<li>
+						Some major actions like mounting/unmounting, generating encryption keys will
+						internally restart Varasto, so expect to see some error messages for a few
+						seconds if you move around the UI right after doing a major action.
+					</li>
+					<li>
 						For the most pressing issues, check out the{' '}
 						<a href="https://github.com/function61/varasto/milestone/4">
 							milestone currently being worked at!
