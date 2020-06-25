@@ -1,6 +1,4 @@
-# alpine:edge required for smartmontools 7.0
-# alpine:latest (mine could be older) had 6.6
-FROM alpine:edge
+FROM alpine:latest
 
 # NOTE: because of these args, if you want to build this manually you've to add
 #       e.g. --build-arg TARGETARCH=amd64 to $ docker build ...

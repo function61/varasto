@@ -28,7 +28,7 @@ func discoverChanges(
 }
 
 // for reset:
-//   $ curl -k -H 'Content-Type: application/json' -d '{"State":""}' https://localhost/command/config.SetThumbnailerState
+//   $ curl -k -H 'Content-Type: application/json' -d '{"State":""}' https://localhost/command/config.SetMediascannerState
 
 func discoverState(ctx context.Context, conf *stoclient.ClientConfig) (string, error) {
 	return fetchServerConfig(ctx, stoservertypes.CfgMediascannerState, conf)
