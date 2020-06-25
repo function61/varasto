@@ -147,8 +147,11 @@ func (c *Controller) discoverAndRunReplicationJobs(
 }
 
 func (c *Controller) replicateJob(job *replicationJob) error {
+	// intentionally using background context as not to unnecessarily cancel write to a
+	// blobstore driver - one blob write is expected to take so little time we can wait the
+	// pending ones out).
 	return c.diskAccess.Replicate(
-		context.TODO(),
+		context.Background(),
 		job.FromVolumeId,
 		c.toVolumeId,
 		job.Ref)
