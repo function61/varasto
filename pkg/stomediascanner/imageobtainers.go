@@ -106,3 +106,13 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 
 	return ioutil.NopCloser(archive), nil
 }
+
+func assertFilenameIsImage(filename string) error {
+	contentType := mime.TypeByExtension(filepath.Ext(filename), mime.NoFallback)
+
+	if mime.Is(contentType, mime.TypeImage) {
+		return fmt.Errorf("%s: not image: %s", filename, contentType)
+	}
+
+	return nil
+}
