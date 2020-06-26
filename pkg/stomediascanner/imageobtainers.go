@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -61,14 +62,14 @@ func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	}
 
 	if len(cbz.File) == 0 {
-		return nil, fmt.Errorf("%s: empty zip", varastoFile.file.Path)
+		return nil, errors.New("empty zip")
 	}
 
 	// TODO: assumption that archive is alphabetically ordered is wrong
 	firstFile := cbz.File[0]
 
 	if err := assertFilenameIsImage(firstFile.Name); err != nil {
-		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path, err)
+		return nil, err
 	}
 
 	return firstFile.Open()
@@ -91,17 +92,17 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	rarPassword := ""
 	archive, err := rardecode.NewReader(data, rarPassword)
 	if err != nil {
-		return nil, fmt.Errorf("%s: rardecode: %w", varastoFile.file.Path, err)
+		return nil, fmt.Errorf("rardecode: %w", err)
 	}
 
 	// TODO: assumption that archive is alphabetically ordered is wrong
 	header, err := archive.Next()
 	if err != nil {
-		return nil, fmt.Errorf("%s: no first file: %w", varastoFile.file.Path, err)
+		return nil, fmt.Errorf("no first file: %w", err)
 	}
 
 	if err := assertFilenameIsImage(header.Name); err != nil {
-		return nil, fmt.Errorf("%s: %w", varastoFile.file.Path, err)
+		return nil, err
 	}
 
 	return ioutil.NopCloser(archive), nil
