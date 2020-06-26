@@ -422,6 +422,9 @@
 		"ctor": ["Collection"],
 		"crudNature": "update",
 		"title": "Metadata: pull from TMDb",
+		"info": [
+			"You'll see an \"Image is not available\" because it takes a few seconds for the banner to be downloaded in the background, if one is found."
+		],
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
 			{ "key": "ForeignKey", "title": "Title in TMDb", "placeholder": "Top Gun", "type": "custom/string" },
@@ -434,6 +437,9 @@
 		"ctor": ["Collection"],
 		"crudNature": "update",
 		"title": "Metadata: pull from IGDB",
+		"info": [
+			"You'll see an \"Image is not available\" because it takes a few seconds for the screenshot to be downloaded in the background, if one is found."
+		],
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
 			{ "key": "ForeignKey", "title": "Title in IGDB", "placeholder": "Duke Nukem 3D", "type": "custom/string" },
