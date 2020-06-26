@@ -149,7 +149,7 @@ export default class GettingStartedPage extends React.Component<
 				<p>
 					Every time you see icon like this:{' '}
 					<Info text="Here will be helpful info text." /> you should hover over it,
-					because we've written useful tips to help understand this system.
+					because we've written useful tips to help understand the system.
 				</p>
 
 				<h3>Pro-tip: documentation links</h3>
@@ -171,10 +171,8 @@ export default class GettingStartedPage extends React.Component<
 			<div>
 				<p>
 					Varasto is somewhat new project, and thus there are a few missing features and
-					the occasional rough edge that you should be aware of.
+					the occasional rough edge that you should be aware of:
 				</p>
-
-				<p>Largest limitations of Varasto currently:</p>
 
 				<ul>
 					<li>
