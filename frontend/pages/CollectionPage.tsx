@@ -56,7 +56,7 @@ import * as React from 'react';
 import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 
 enum ViewType {
-	Auto = 'auto',
+	Auto = 'auto', // not broadcasted in URL
 	Thumb = 'thumb',
 	List = 'list',
 }
@@ -162,7 +162,7 @@ export default class CollectionPage extends React.Component<
 								id: coll.Id,
 								rev: changeset.Id,
 								path: this.props.pathBase64,
-								view: this.props.view,
+								view: viewTypeToString(this.props.view),
 							})}>
 							{changeset.Id}
 						</a>
@@ -179,6 +179,7 @@ export default class CollectionPage extends React.Component<
 		const metadataKv = metadataKvsToKv(coll.Metadata);
 
 		const dirInheritedType = directoryInheritedType(directoryOutput);
+		// TODO: lint
 		const imdbIdExpectedButMissing =
 			dirInheritedType === DirectoryType.Movies && !(MetadataImdbId in metadataKv);
 
@@ -397,7 +398,7 @@ export default class CollectionPage extends React.Component<
 								id: this.props.id,
 								rev: this.props.rev,
 								path: btoa(subDir),
-								view: this.props.view,
+								view: viewTypeToString(this.props.view),
 							})}>
 							{filenameFromPath(subDir)}/
 						</a>
@@ -592,7 +593,7 @@ export default class CollectionPage extends React.Component<
 					id: this.props.id,
 					rev: this.props.rev,
 					path: btoa(pd),
-					view: this.props.view,
+					view: viewTypeToString(this.props.view),
 				}),
 			};
 		};
@@ -617,7 +618,7 @@ export default class CollectionPage extends React.Component<
 				url: collectionUrl({
 					id: this.props.id,
 					rev: this.props.rev,
-					view: this.props.view,
+					view: viewTypeToString(this.props.view),
 				}),
 			});
 		}
@@ -762,6 +763,11 @@ function filenameFromPath(path: string): string {
 
 function makeThumbPath(sha256: string): string {
 	return '.sto/thumb/' + sha256.substr(0, 10) + '.jpg';
+}
+
+// for prettiness' sake, ViewType=auto is not passed around in the URL
+function viewTypeToString(viewType: ViewType): string | undefined {
+	return viewType !== ViewType.Auto ? viewType : undefined;
 }
 
 // this is needed until we can pass enums in URL parameters
