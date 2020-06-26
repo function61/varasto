@@ -55,6 +55,15 @@ file: /home/joonas/varastoclient-config.json
 
 Running `$ sto config-init` without any arguments will give you instructions.
 
+You'll find `authToken` under `Web UI > Users > API keys`
+
+After you've run `config-init` successfully, run `config-print` again to check config's
+validity and what it contains.
+
+!!! tip
+	You'll have to change `tls_insecure_skip_validation` to `true`, unless you'll have
+	configured a custom SSL certificate.
+
 
 How does the cloning interface look like?
 -----------------------------------------

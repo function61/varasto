@@ -93,8 +93,11 @@ func ConfigFilePath() (string, error) {
 func configInitEntrypoint() *cobra.Command {
 	return &cobra.Command{
 		Use:   "config-init [serverAddr] [authToken] [fuseMountPath]",
-		Short: "Initialize configuration, use https://localhost for dev",
-		Args:  cobra.ExactArgs(3),
+		Short: "Initialize configuration (helps writing JSON file)",
+		Long: `	serverAddr looks like https://localhost
+	authToken looks like dTPM59uxWm_uloW4...
+	fuseMountPath looks like /mnt/varasto/stofuse OR leave it as empty ("")`,
+		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			serverAddr := args[0]
 			authToken := args[1]
