@@ -1005,13 +1005,13 @@ func (h *handlers) GetLogs(rctx *httpauth.RequestContext, w http.ResponseWriter,
 
 func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.File {
 	collectionId := mux.Vars(r)["id"]
-	mtimeUnixMillis, err := strconv.Atoi(r.URL.Query().Get("mtime"))
+	mtimeUnixMillis, err := strconv.ParseInt(r.URL.Query().Get("mtime"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return nil
 	}
 
-	mtime := time.Unix(int64(mtimeUnixMillis/1000), 0)
+	mtime := time.Unix(mtimeUnixMillis/1000, 0)
 
 	// TODO: reuse the logic found in the client package?
 	wholeFileHash := sha256.New()
