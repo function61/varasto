@@ -354,16 +354,19 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 
 							{this.state.selectedCollIds.length === 0 && (
 								<div>
-									<CommandButton command={DirectoryCreate(dir.Id)} />
-
-									<CommandButton
-										command={CollectionCreate(dir.Id, {
-											redirect: (id) =>
-												collectionUrl({
-													id,
-												}),
-										})}
-									/>
+									<span className="margin-right">
+										<CommandButton command={DirectoryCreate(dir.Id)} />
+									</span>
+									<span className="margin-right">
+										<CommandButton
+											command={CollectionCreate(dir.Id, {
+												redirect: (id) =>
+													collectionUrl({
+														id,
+													}),
+											})}
+										/>
+									</span>
 								</div>
 							)}
 						</td>
