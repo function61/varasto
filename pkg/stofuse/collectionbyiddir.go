@@ -9,7 +9,6 @@ import (
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
 	"github.com/function61/varasto/pkg/mutexmap"
-	"github.com/function61/varasto/pkg/stoclient"
 )
 
 type byIdDir struct {
@@ -61,7 +60,7 @@ func (b *byIdDir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 		return node, nil
 	}
 
-	collection, err := stoclient.FetchCollectionMetadata(b.srv.clientConfig, collId)
+	collection, err := b.srv.client.FetchCollectionMetadata(ctx, collId)
 	if err != nil {
 		return nil, fuse.ENOENT
 	}

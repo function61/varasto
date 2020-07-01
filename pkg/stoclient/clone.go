@@ -29,7 +29,7 @@ func clone(
 		return err
 	}
 
-	collection, err := FetchCollectionMetadata(*clientConfig, collectionId)
+	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return err
 	}
@@ -180,17 +180,20 @@ func cloneOneFile(ctx context.Context, wd *workdirLocation, file stotypes.File) 
 	return os.Rename(filenameTemp, filename)
 }
 
-func FetchCollectionMetadata(clientConfig ClientConfig, id string) (*stotypes.Collection, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
+func (c *Client) FetchCollectionMetadata(
+	ctx context.Context,
+	id string,
+) (*stotypes.Collection, error) {
+	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
 	collection := &stotypes.Collection{}
-	_, err := ezhttp.Get(
+	if _, err := ezhttp.Get(
 		ctx,
-		clientConfig.UrlBuilder().GetCollection(id),
-		ezhttp.AuthBearer(clientConfig.AuthToken),
+		c.conf.UrlBuilder().GetCollection(id),
+		ezhttp.AuthBearer(c.conf.AuthToken),
 		ezhttp.RespondsJson(collection, false),
-		ezhttp.Client(clientConfig.HttpClient()),
+		ezhttp.Client(c.conf.HttpClient()),
 	); err != nil {
 		return nil, fmt.Errorf("FetchCollectionMetadata(%s): %w", id, err)
 	}

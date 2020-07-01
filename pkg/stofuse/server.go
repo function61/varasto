@@ -49,7 +49,7 @@ func fuseServe(
 	}
 	defer fuseConn.Close()
 
-	srv := NewFsServer(conf, logl)
+	srv := NewFsServer(conf.Client(), logl)
 
 	byIdDir := NewByIdDir(srv)
 
@@ -109,16 +109,16 @@ func fuseServe(
 }
 
 type FsServer struct {
-	clientConfig stoclient.ClientConfig
-	blobCache    *BlobCache
-	logl         *logex.Leveled
+	client    *stoclient.Client
+	blobCache *BlobCache
+	logl      *logex.Leveled
 }
 
-func NewFsServer(clientConfig stoclient.ClientConfig, logl *logex.Leveled) *FsServer {
+func NewFsServer(client *stoclient.Client, logl *logex.Leveled) *FsServer {
 	return &FsServer{
-		clientConfig: clientConfig,
-		blobCache:    NewBlobCache(clientConfig, logl),
-		logl:         logl,
+		client:    client,
+		blobCache: NewBlobCache(client.Config(), logl),
+		logl:      logl,
 	}
 }
 

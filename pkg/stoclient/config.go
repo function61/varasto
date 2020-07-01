@@ -22,11 +22,28 @@ const (
 	configFilename = "varastoclient-config.json"
 )
 
+type Client struct {
+	conf ClientConfig
+}
+
+func New(conf ClientConfig) *Client {
+	return &Client{conf}
+}
+
+func (c *Client) Config() ClientConfig {
+	return c.conf
+}
+
 type ClientConfig struct {
 	ServerAddr                string `json:"server_addr"` // example: "https://localhost"
 	AuthToken                 string `json:"auth_token"`
 	FuseMountPath             string `json:"fuse_mount_path"`
 	TlsInsecureSkipValidation bool   `json:"tls_insecure_skip_validation"`
+}
+
+// TODO: this should be temporary
+func (c *ClientConfig) Client() *Client {
+	return New(*c)
 }
 
 func (c *ClientConfig) CommandClient() *httpcommandclient.Client {

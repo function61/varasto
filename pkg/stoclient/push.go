@@ -270,7 +270,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 		return err
 	}
 
-	coll, err := FetchCollectionMetadata(*clientConfig, collectionId)
+	coll, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return err
 	}

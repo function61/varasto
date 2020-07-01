@@ -6,22 +6,18 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/spf13/cobra"
 )
 
-func adopt(fullPath string, parentDirectoryId string) error {
+func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error {
 	// cloneCollectionExistingDir() also checks for this, but we must do this before asking
 	// server to create a collection because we don't want it to be created and error when
 	// we begin cloning
 	if err := assertStatefileNotExists(fullPath); err != nil {
 		return err
 	}
-
-	ctx, cancel := context.WithTimeout(context.TODO(), ezhttp.DefaultTimeout10s)
-	defer cancel()
 
 	clientConfig, err := ReadConfig()
 	if err != nil {
@@ -37,7 +33,7 @@ func adopt(fullPath string, parentDirectoryId string) error {
 		return err
 	}
 
-	collection, err := FetchCollectionMetadata(*clientConfig, collectionId)
+	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return err
 	}
@@ -58,7 +54,10 @@ func adoptEntrypoint() *cobra.Command {
 			fullPath, err := os.Getwd()
 			osutil.ExitIfError(err)
 
-			osutil.ExitIfError(adopt(fullPath, args[0]))
+			osutil.ExitIfError(adopt(
+				osutil.CancelOnInterruptOrTerminate(nil),
+				fullPath,
+				args[0]))
 		},
 	}
 }

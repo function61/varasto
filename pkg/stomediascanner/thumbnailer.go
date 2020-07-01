@@ -65,7 +65,7 @@ func collectionThumbnailsOneBatch(
 		*conf,
 		stoclient.NewNullUploadProgressListener())
 
-	coll, err := stoclient.FetchCollectionMetadata(*conf, collectionId)
+	coll, err := conf.Client().FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return more, err
 	}
