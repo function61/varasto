@@ -3,6 +3,7 @@ package stoclient
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -189,9 +190,12 @@ func FetchCollectionMetadata(clientConfig ClientConfig, id string) (*stotypes.Co
 		clientConfig.UrlBuilder().GetCollection(id),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.RespondsJson(collection, false),
-		ezhttp.Client(clientConfig.HttpClient()))
+		ezhttp.Client(clientConfig.HttpClient()),
+	); err != nil {
+		return nil, fmt.Errorf("FetchCollectionMetadata(%s): %w", id, err)
+	}
 
-	return collection, err
+	return collection, nil
 }
 
 // verifies chunk integrity on-the-fly
