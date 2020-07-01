@@ -54,7 +54,7 @@ func (c *Controller) TriggerScan(rctx *httpauth.RequestContext, w http.ResponseW
 		c.clientConf,
 		c.logl,
 	); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, fmt.Errorf("collectionThumbnails: %w", err).Error(), http.StatusInternalServerError)
 	}
 }
 
