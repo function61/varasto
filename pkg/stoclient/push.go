@@ -241,22 +241,22 @@ func ScanAndDiscoverBlobs(
 	return bfile, nil
 }
 
-func Commit(
-	changeset stotypes.CollectionChangeset,
+func (c *Client) Commit(
+	ctx context.Context,
 	collectionId string,
-	clientConfig ClientConfig,
+	changeset stotypes.CollectionChangeset,
 ) (*stotypes.Collection, error) {
-	ctx, cancel := context.WithTimeout(context.TODO(), 60*3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 60*3*time.Second)
 	defer cancel()
 
 	updatedCollection := &stotypes.Collection{}
 	if _, err := ezhttp.Post(
 		ctx,
-		clientConfig.UrlBuilder().CommitChangeset(collectionId),
-		ezhttp.AuthBearer(clientConfig.AuthToken),
+		c.conf.UrlBuilder().CommitChangeset(collectionId),
+		ezhttp.AuthBearer(c.conf.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false),
-		ezhttp.Client(clientConfig.HttpClient()),
+		ezhttp.Client(c.conf.HttpClient()),
 	); err != nil {
 		return nil, fmt.Errorf("CommitChangeset: %v", err)
 	}
@@ -270,7 +270,9 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 		return err
 	}
 
-	coll, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
+	client := clientConfig.Client()
+
+	coll, err := client.FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return err
 	}
@@ -310,7 +312,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 		[]stotypes.File{},
 		[]string{})
 
-	_, err = Commit(changeset, coll.ID, *clientConfig)
+	_, err = client.Commit(ctx, coll.ID, changeset)
 	return err
 }
 
@@ -335,7 +337,7 @@ func push(ctx context.Context, wd *workdirLocation) error {
 		return err
 	}
 
-	updatedCollection, err := Commit(*ch, wd.manifest.Collection.ID, wd.clientConfig)
+	updatedCollection, err := wd.clientConfig.Client().Commit(ctx, wd.manifest.Collection.ID, *ch)
 	if err != nil {
 		return err
 	}

@@ -259,10 +259,10 @@ func collectionThumbnailsOneBatch(
 		updatedFiles,
 		deletedFiles)
 
-	_, err = stoclient.Commit(
-		changeset,
+	_, err = conf.Client().Commit(
+		ctx,
 		collectionId,
-		*conf)
+		changeset)
 
 	return more, err
 }
