@@ -19,7 +19,7 @@ import (
 type downloadFileFromVarastoDetails struct {
 	file         stotypes.File
 	collectionId string
-	clientConfig stoclient.ClientConfig
+	client       *stoclient.Client
 }
 
 type imageObtainer func(context.Context, downloadFileFromVarastoDetails) (io.ReadCloser, error)
@@ -30,12 +30,11 @@ type imageObtainer func(context.Context, downloadFileFromVarastoDetails) (io.Rea
 func alreadyAnImageObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails) (io.ReadCloser, error) {
 	data := &bytes.Buffer{}
 
-	if err := stoclient.DownloadOneFile(
+	if err := varastoFile.client.DownloadOneFile(
 		ctx,
-		varastoFile.file,
 		varastoFile.collectionId,
+		varastoFile.file,
 		data,
-		varastoFile.clientConfig,
 	); err != nil {
 		return nil, err
 	}
@@ -46,12 +45,11 @@ func alreadyAnImageObtainer(ctx context.Context, varastoFile downloadFileFromVar
 func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails) (io.ReadCloser, error) {
 	data := &bytes.Buffer{}
 
-	if err := stoclient.DownloadOneFile(
+	if err := varastoFile.client.DownloadOneFile(
 		ctx,
-		varastoFile.file,
 		varastoFile.collectionId,
+		varastoFile.file,
 		data,
-		varastoFile.clientConfig,
 	); err != nil {
 		return nil, err
 	}
@@ -79,12 +77,11 @@ func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails) (io.ReadCloser, error) {
 	data := &bytes.Buffer{}
 
-	if err := stoclient.DownloadOneFile(
+	if err := varastoFile.client.DownloadOneFile(
 		ctx,
-		varastoFile.file,
 		varastoFile.collectionId,
+		varastoFile.file,
 		data,
-		varastoFile.clientConfig,
 	); err != nil {
 		return nil, err
 	}

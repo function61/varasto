@@ -115,12 +115,11 @@ func cloneCollection(
 	return cloneCollectionExistingDir(ctx, path, revisionId, collection)
 }
 
-func DownloadOneFile(
+func (c *Client) DownloadOneFile(
 	ctx context.Context,
-	file stotypes.File,
 	collectionId string,
+	file stotypes.File,
 	destination io.Writer,
-	config ClientConfig,
 ) error {
 	for _, chunkDigest := range file.BlobRefs {
 		blobRef, err := stotypes.BlobRefFromHex(chunkDigest)
@@ -130,7 +129,7 @@ func DownloadOneFile(
 
 		childCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 
-		verifiedBody, closeBody, err := DownloadChunk(childCtx, *blobRef, collectionId, config)
+		verifiedBody, closeBody, err := DownloadChunk(childCtx, *blobRef, collectionId, c.conf)
 		if err != nil {
 			cancel()
 			return err
@@ -165,13 +164,15 @@ func cloneOneFile(ctx context.Context, wd *workdirLocation, file stotypes.File) 
 	if err != nil {
 		return err
 	}
-	defer fileHandle.Close()
+	defer fileHandle.Close() // double close intentional
 
-	if err := DownloadOneFile(ctx, file, wd.manifest.Collection.ID, fileHandle, wd.clientConfig); err != nil {
+	if err := New(wd.clientConfig).DownloadOneFile(ctx, wd.manifest.Collection.ID, file, fileHandle); err != nil {
 		return err
 	}
 
-	fileHandle.Close() // even though we have the defer above - we probably need this for Chtimes()
+	if err := fileHandle.Close(); err != nil { // need this here for Chtimes()
+		return err
+	}
 
 	if err := os.Chtimes(filenameTemp, time.Now(), file.Modified); err != nil {
 		return err

@@ -59,13 +59,15 @@ func collectionThumbnailsOneBatch(
 ) (bool, error) {
 	more := false
 
+	client := conf.Client()
+
 	blobUploader := stoclient.NewBackgroundUploader(
 		ctx,
 		stoclient.BackgroundUploaderConcurrency,
 		*conf,
 		stoclient.NewNullUploadProgressListener())
 
-	coll, err := conf.Client().FetchCollectionMetadata(ctx, collectionId)
+	coll, err := client.FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return more, err
 	}
@@ -219,7 +221,7 @@ func collectionThumbnailsOneBatch(
 		if err := makeThumbForFile(ctx, downloadFileFromVarastoDetails{
 			file:         file,
 			collectionId: collectionId,
-			clientConfig: *conf,
+			client:       client,
 		}, imgObtainer, thumbOutput); err != nil {
 			logl.Error.Printf("makeThumbForFile %s: %v", file.Path, err)
 			continue
@@ -259,7 +261,7 @@ func collectionThumbnailsOneBatch(
 		updatedFiles,
 		deletedFiles)
 
-	_, err = conf.Client().Commit(
+	_, err = client.Commit(
 		ctx,
 		collectionId,
 		changeset)
