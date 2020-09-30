@@ -667,6 +667,7 @@
 		"ctor": [],
 		"crudNature": "update",
 		"title": "Discover reconcilable replication policies",
+		"info": ["This can take a few minutes if you have lots of data."],
 		"fields": []
 	},
 	{
