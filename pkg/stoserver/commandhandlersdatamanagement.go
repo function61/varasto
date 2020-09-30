@@ -395,7 +395,8 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			return fmt.Errorf("policy not found: %s", effectiveReplPolicyId)
 		}
 
-		if len(coll.Changesets) == 0 && notBrandNew(coll.Created) {
+		// don't count "dir meta" collections, as they are allowed to be empty
+		if len(coll.Changesets) == 0 && notBrandNew(coll.Created) && coll.Name != stoservertypes.StoDirMetaName {
 			report.EmptyCollectionIds = append(report.EmptyCollectionIds, coll.ID)
 		}
 
