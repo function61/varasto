@@ -306,6 +306,8 @@ export default class ReplicationPoliciesPage extends React.Component<
 			this.setState({ selectedCollIds });
 		};
 
+		const anySelected = this.state.selectedCollIds.length > 0;
+
 		return (
 			<div>
 				<p>
@@ -389,7 +391,7 @@ export default class ReplicationPoliciesPage extends React.Component<
 					<tfoot>
 						<tr>
 							<td colSpan={2}>
-								{this.state.selectedCollIds.length > 0 && (
+								{anySelected && (
 									<div>
 										<CommandButton
 											command={DatabaseReconcileReplicationPolicy(
@@ -412,7 +414,10 @@ export default class ReplicationPoliciesPage extends React.Component<
 					</tfoot>
 				</table>
 
-				<CommandButton command={DatabaseDiscoverReconcilableReplicationPolicies()} />
+				<CommandButton
+					disabled={anySelected}
+					command={DatabaseDiscoverReconcilableReplicationPolicies()}
+				/>
 			</div>
 		);
 	}
