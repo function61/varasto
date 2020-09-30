@@ -423,7 +423,7 @@
 		"crudNature": "update",
 		"title": "Metadata: pull from TMDb",
 		"info": [
-			"You'll see an \"Image is not available\" because it takes a few seconds for the banner to be downloaded in the background, if one is found."
+			"You'll see \"Image not available\" for a few seconds because the banner is downloaded in the background."
 		],
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
@@ -438,7 +438,7 @@
 		"crudNature": "update",
 		"title": "Metadata: pull from IGDB",
 		"info": [
-			"You'll see an \"Image is not available\" because it takes a few seconds for the screenshot to be downloaded in the background, if one is found."
+			"You'll see \"Image not available\" for a few seconds because the artwork is downloaded in the background."
 		],
 		"fields": [
 			{ "key": "Collection", "hideIfDefaultValue": true },
