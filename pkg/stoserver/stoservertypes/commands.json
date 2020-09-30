@@ -592,7 +592,7 @@
 		"title": "Change desired volumes",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true },
-			{ "key": "Volume1", "type": "custom/integer", "optional": true, "title": "First volume", "placeholder": "Fry" },
+			{ "key": "Volume1", "type": "custom/integer", "optional": true, "title": "First volume", "placeholder": "Fry", "help": "First volume is special - it's where the synchronous part of the replica is placed first (before the asynchronous replication kicks off)" },
 			{ "key": "Volume2", "type": "custom/integer", "optional": true, "title": "Second volume", "placeholder": "Leela" },
 			{ "key": "Volume3", "type": "custom/integer", "optional": true, "title": "Third volume" },
 			{ "key": "Volume4", "type": "custom/integer", "optional": true, "title": "Fourth volume" }
