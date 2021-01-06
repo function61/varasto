@@ -5,6 +5,7 @@ import (
 
 	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
+	"github.com/function61/varasto/pkg/stodupremover"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/spf13/cobra"
 )
@@ -26,6 +27,8 @@ func Entrypoint() *cobra.Command {
 			fmt.Println(localfsblobstore.RefToPath(*ref, "/"))
 		},
 	})
+
+	debug.AddCommand(stodupremover.Entrypoint())
 
 	return debug
 }
