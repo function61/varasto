@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/function61/gokit/osutil"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/spf13/cobra"
 )
@@ -16,11 +17,11 @@ func tvEntrypoint() *cobra.Command {
 		Short: "Renames TV episodes",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			plan, err := computePlan(episodeFromFilename)
-			panicIfError(err)
+			plan, err := ComputePlan("./", episodeFromFilename)
+			osutil.ExitIfError(err)
 
 			if doIt {
-				panicIfError(executePlan(plan))
+				osutil.ExitIfError(ExecutePlan(plan))
 			} else {
 				explainPlan(plan, os.Stdout)
 			}
@@ -32,6 +33,7 @@ func tvEntrypoint() *cobra.Command {
 	return cmd
 }
 
+// logic is already tested in seasonepisodedetector package
 func episodeFromFilename(input string) string {
 	result := seasonepisodedetector.Detect(input)
 	if result == nil {

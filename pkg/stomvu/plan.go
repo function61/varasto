@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -15,9 +16,25 @@ type PlanTarget struct {
 }
 
 type Plan struct {
+	Dir              string // directory in which both FileTargets and DirectoryTargets reside
 	FileTargets      []*PlanTarget
 	DirectoryTargets []*PlanTarget
 	Dunno            []string // includes both files and folders
+}
+
+// total number of sources in all plan targets (= num of files and directories to move)
+func (p *Plan) NumSources() int {
+	numSources := func(over []*PlanTarget) int {
+		num := 0
+
+		for _, target := range over {
+			num += len(target.Sources)
+		}
+
+		return num
+	}
+
+	return numSources(p.FileTargets) + numSources(p.DirectoryTargets)
 }
 
 func (p *Plan) InsertFile(source string, targetDir string) {
@@ -35,14 +52,15 @@ func (p *Plan) InsertFile(source string, targetDir string) {
 	})
 }
 
-func computePlan(targetFn func(string) string) (*Plan, error) {
+func ComputePlan(dir string, targetFn func(string) string) (*Plan, error) {
 	plan := Plan{
+		Dir:              dir,
 		FileTargets:      []*PlanTarget{},
 		DirectoryTargets: []*PlanTarget{},
 		Dunno:            []string{},
 	}
 
-	dentries, err := ioutil.ReadDir(".")
+	dentries, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}
@@ -80,22 +98,27 @@ func computePlan(targetFn func(string) string) (*Plan, error) {
 	return &plan, nil
 }
 
-func executePlan(plan *Plan) error {
+// does what plan suggested to do
+func ExecutePlan(plan *Plan) error {
+	// files which to move into other directories
 	for _, target := range plan.FileTargets {
 		for _, source := range target.Sources {
-			if err := os.MkdirAll(target.Target, 0755); err != nil {
+			targetDir := filepath.Join(plan.Dir, target.Target)
+
+			if err := os.MkdirAll(targetDir, 0755); err != nil {
 				return err
 			}
 
-			if err := os.Rename(source, target.Target+"/"+source); err != nil {
+			if err := os.Rename(filepath.Join(plan.Dir, source), filepath.Join(targetDir, source)); err != nil {
 				return err
 			}
 		}
 	}
 
+	// directories which to rename
 	for _, target := range plan.DirectoryTargets {
 		for _, source := range target.Sources {
-			if err := os.Rename(source, target.Target); err != nil {
+			if err := os.Rename(filepath.Join(plan.Dir, source), filepath.Join(plan.Dir, target.Target)); err != nil {
 				return err
 			}
 		}

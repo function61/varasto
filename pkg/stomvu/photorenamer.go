@@ -4,6 +4,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/function61/gokit/osutil"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +32,7 @@ func detectPhotoVideoDate(filename string) *PhotoResult {
 	}
 }
 
-func photoDateFromFilename(name string) string {
+func PhotoOrVideoDateFromFilename(name string) string {
 	result := detectPhotoVideoDate(name)
 	if result == nil {
 		return ""
@@ -45,14 +46,14 @@ func photoEntrypoint() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "photo",
-		Short: "Renames photos & videos",
+		Short: "Organize photos & videos to '<year>-<month> - Unsorted' subdirectories",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			plan, err := computePlan(photoDateFromFilename)
-			panicIfError(err)
+			plan, err := ComputePlan("./", PhotoOrVideoDateFromFilename)
+			osutil.ExitIfError(err)
 
 			if doIt {
-				panicIfError(executePlan(plan))
+				osutil.ExitIfError(ExecutePlan(plan))
 			} else {
 				explainPlan(plan, os.Stdout)
 			}

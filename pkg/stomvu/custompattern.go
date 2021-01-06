@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/function61/gokit/osutil"
 	"github.com/spf13/cobra"
 )
 
@@ -37,11 +38,11 @@ func customMonthlyPatternEntrypoint() *cobra.Command {
 		Short: "Custom date pattern for moving to monthly folders. The first capture group must be the timestamp",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			plan, err := computePlan(customMonthlyPattern(args[0], args[1]))
-			panicIfError(err)
+			plan, err := ComputePlan("./", customMonthlyPattern(args[0], args[1]))
+			osutil.ExitIfError(err)
 
 			if doIt {
-				panicIfError(executePlan(plan))
+				osutil.ExitIfError(ExecutePlan(plan))
 			} else {
 				explainPlan(plan, os.Stdout)
 			}

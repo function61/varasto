@@ -16,9 +16,3 @@ func Entrypoint() *cobra.Command {
 
 	return cmd
 }
-
-func panicIfError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
