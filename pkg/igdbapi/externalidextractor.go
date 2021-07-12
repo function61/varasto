@@ -29,7 +29,8 @@ var extractorByCategory = map[int]idExtractor{
 	// https://www.gog.com/game/worms_world_party_remastered
 	WebsiteGog: regex(`gog.com/game/([^/]+)`, func(key string, ids *ExternalIds) { ids.GogSlug = &key }),
 	// https://en.wikipedia.org/wiki/Battle_City_(video_game)
-	WebsiteWikipedia: regex(`en.wikipedia.org/wiki/(.+)`, func(key string, ids *ExternalIds) { ids.EnglishWikipediaSlug = &key }),
+	// https://wikipedia.org/wiki/Sonic_Colors
+	WebsiteWikipedia: regex(`(?:en.)?wikipedia.org/wiki/(.+)`, func(key string, ids *ExternalIds) { ids.EnglishWikipediaSlug = &key }),
 	// https://www.reddit.com/r/dukenukem/
 	WebsiteReddit: regex(`reddit.com/r/([^/]+)`, func(key string, ids *ExternalIds) { ids.RedditSlug = &key }),
 	// https://play.google.com/store/apps/details?id=com.frogmind.badland&hl=en
