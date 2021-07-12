@@ -113,9 +113,10 @@ func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobR
 		toGoogleDriveName(ref),
 		g.varastoDirectoryId)
 
+	<-g.reqThrottle
+
 	// we're searching with a unique sha256 hash,
 	// so we should get exactly one result
-	<-g.reqThrottle
 	listFilesResponse, err := g.srv.Files.List().PageSize(2).
 		Fields("files(id, name)").
 		Q(exactFilenameInExactFolderQuery).
