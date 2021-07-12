@@ -12,10 +12,10 @@ jobs:
       with:
         buildx-version: v0.4.1
         qemu-version: latest
-    - name: Download Turbo Bob
-      run: curl --fail --location --output bob https://dl.bintray.com/function61/dl/turbobob/20200617_1743_510a0529/bob_linux-amd64 && chmod +x bob
-    - name: Build with Turbo Bob
-      run: CI_REVISION_ID="$GITHUB_SHA" ./bob build --publish-artefacts
+    - name: Build
+      run: |
+        curl --fail --location --silent --output bob https://function61.com/go/turbobob-latest-linux-amd64 && chmod +x bob
+        CI_REVISION_ID="$GITHUB_SHA" ./bob build --publish-artefacts
       # unfortunately there doesn't seem to be a way to "expose all secrets", so you must
       # list here each secret to pass on to the build
       env:
