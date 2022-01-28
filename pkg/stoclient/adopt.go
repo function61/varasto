@@ -2,6 +2,7 @@ package stoclient
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -46,18 +47,37 @@ func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error
 }
 
 func adoptEntrypoint() *cobra.Command {
-	return &cobra.Command{
+	push := false
+
+	cmd := &cobra.Command{
 		Use:   "adopt [parentDirectoryId]",
 		Short: "Adopts current directory as Varasto collection",
 		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			fullPath, err := os.Getwd()
-			osutil.ExitIfError(err)
+			osutil.ExitIfError(func(parentDirectoryId string) error {
+				ctx := osutil.CancelOnInterruptOrTerminate(nil)
 
-			osutil.ExitIfError(adopt(
-				osutil.CancelOnInterruptOrTerminate(nil),
-				fullPath,
-				args[0]))
+				fullPath, err := os.Getwd()
+				if err != nil {
+					return err
+				}
+
+				if err := adopt(ctx, fullPath, parentDirectoryId); err != nil {
+					return err
+				}
+
+				if push {
+					if err := pushCurrentWorkdir(ctx); err != nil {
+						return fmt.Errorf("push: %w", err)
+					}
+				}
+
+				return nil
+			}(args[0]))
 		},
 	}
+
+	cmd.Flags().BoolVarP(&push, "push", "", push, "Push after adopting")
+
+	return cmd
 }

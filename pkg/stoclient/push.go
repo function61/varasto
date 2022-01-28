@@ -17,6 +17,8 @@ import (
 
 	"github.com/djherbis/times"
 	"github.com/function61/gokit/ezhttp"
+	"github.com/function61/gokit/osutil"
+	"github.com/function61/varasto/pkg/fssnapshot"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -26,6 +28,33 @@ import (
 const (
 	BackgroundUploaderConcurrency = 3
 )
+
+func pushCurrentWorkdir(ctx context.Context) error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+
+	// take filesystem snapshot, so our reads within the file tree are atomic
+	snapshotter := fssnapshot.NullSnapshotter()
+	// snapshotter := fssnapshot.PlatformSpecificSnapshotter()
+	snapshot, err := snapshotter.Snapshot(cwd)
+	if err != nil {
+		return err
+	}
+
+	defer func() { // always release snapshot
+		osutil.ExitIfError(snapshotter.Release(*snapshot))
+	}()
+
+	// now read the workdir from within the snapshot (and not the actual cwd)
+	wd, err := NewWorkdirLocation(snapshot.OriginInSnapshotPath)
+	if err != nil {
+		return err
+	}
+
+	return push(ctx, wd)
+}
 
 func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAtHead(wd.manifest.Collection)

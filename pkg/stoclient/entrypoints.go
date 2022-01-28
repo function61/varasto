@@ -9,7 +9,6 @@ import (
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/osutil"
-	"github.com/function61/varasto/pkg/fssnapshot"
 	"github.com/spf13/cobra"
 )
 
@@ -75,32 +74,7 @@ func pushEntrypoint() *cobra.Command {
 		Short: "Uploads a collection from workdir to server",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(wrapWithStopSupport(func(ctx context.Context) error {
-				cwd, err := os.Getwd()
-				if err != nil {
-					return err
-				}
-
-				// take filesystem snapshot, so our reads within the file tree are atomic
-				snapshotter := fssnapshot.NullSnapshotter()
-				// snapshotter := fssnapshot.PlatformSpecificSnapshotter()
-				snapshot, err := snapshotter.Snapshot(cwd)
-				if err != nil {
-					return err
-				}
-
-				defer func() { // always release snapshot
-					osutil.ExitIfError(snapshotter.Release(*snapshot))
-				}()
-
-				// now read the workdir from within the snapshot (and not the actual cwd)
-				wd, err := NewWorkdirLocation(snapshot.OriginInSnapshotPath)
-				if err != nil {
-					return err
-				}
-
-				return push(ctx, wd)
-			}))
+			osutil.ExitIfError(wrapWithStopSupport(pushCurrentWorkdir))
 		},
 	}
 
