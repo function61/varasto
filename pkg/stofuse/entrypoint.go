@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/osutil"
@@ -49,6 +50,38 @@ func Entrypoint() *cobra.Command {
 	serveCmd.Flags().BoolVarP(&stopIfStdinCloses, "stop-if-stdin-closes", "", stopIfStdinCloses, "Stop the server if stdin closes (= detect if parent process dies)")
 
 	cmd.AddCommand(serveCmd)
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "install",
+		Short: "Make this service start automatically on system startup",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			// TODO: use gokit once we can update to version that supports user services
+			const unitContent = `[Unit]
+Description=Varasto FUSE server
+
+[Install]
+WantedBy=default.target
+
+[Service]
+ExecStart=/usr/bin/sto fuse serve
+Restart=always
+RestartSec=10s
+`
+
+			osutil.ExitIfError(func() error {
+				confDir, err := os.UserConfigDir()
+				if err != nil {
+					return err
+				}
+
+				return os.WriteFile(
+					filepath.Join(confDir, "systemd", "user", "varasto-fuse.service"),
+					[]byte(unitContent),
+					0600)
+			}())
+		},
+	})
 
 	return cmd
 }
