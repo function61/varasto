@@ -151,7 +151,7 @@ func runServer(
 		httpMount: "/api/fuse",
 		enabled:   false,
 		controller: childprocesscontroller.New(
-			[]string{os.Args[0], "fuse", "serve", "--addr", "domainsocket://" + fuseProjectorSockAddr},
+			[]string{os.Args[0], "fuse", "serve", "--stop-if-stdin-closes", "--addr=domainsocket://" + fuseProjectorSockAddr},
 			"FUSE projector",
 			logex.Prefix("manager(fuse)", logger),
 			logex.Prefix("fuse", logger),

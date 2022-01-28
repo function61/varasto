@@ -23,6 +23,7 @@ func Entrypoint() *cobra.Command {
 
 	addr := ":8689"
 	unmountFirst := false
+	stopIfStdinCloses := false
 
 	serveCmd := &cobra.Command{
 		Use:   "serve",
@@ -35,15 +36,9 @@ func Entrypoint() *cobra.Command {
 				rootLogger))
 			defer cancel()
 
-			go func() {
-				// wait for stdin EOF (or otherwise broken pipe)
-				_, _ = io.Copy(ioutil.Discard, os.Stdin)
-
-				logex.Levels(rootLogger).Error.Println(
-					"parent process died (detected by closed stdin) - stopping")
-
-				cancel()
-			}()
+			if stopIfStdinCloses {
+				registerStdinCloseAsCancellationSignal(cancel, rootLogger)
+			}
 
 			osutil.ExitIfError(serve(ctx, addr, unmountFirst, rootLogger))
 		},
@@ -51,6 +46,7 @@ func Entrypoint() *cobra.Command {
 
 	serveCmd.Flags().StringVarP(&addr, "addr", "", addr, "Address to listen on")
 	serveCmd.Flags().BoolVarP(&unmountFirst, "unmount-first", "u", unmountFirst, "Umount the mount-path first (maybe unclean shutdown previously)")
+	serveCmd.Flags().BoolVarP(&stopIfStdinCloses, "stop-if-stdin-closes", "", stopIfStdinCloses, "Stop the server if stdin closes (= detect if parent process dies)")
 
 	cmd.AddCommand(serveCmd)
 
@@ -81,4 +77,16 @@ func serve(ctx context.Context, addr string, unmountFirst bool, logger *log.Logg
 	})
 
 	return tasks.Wait()
+}
+
+func registerStdinCloseAsCancellationSignal(cancel context.CancelFunc, logger *log.Logger) {
+	go func() {
+		// wait for stdin EOF (or otherwise broken pipe)
+		_, _ = io.Copy(ioutil.Discard, os.Stdin)
+
+		logex.Levels(logger).Error.Println(
+			"parent process died (detected by closed stdin) - stopping")
+
+		cancel()
+	}()
 }
