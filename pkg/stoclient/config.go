@@ -18,10 +18,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	configFilename = "varastoclient-config.json"
-)
-
 type Client struct {
 	conf ClientConfig
 }
@@ -98,13 +94,14 @@ func ReadConfig() (*ClientConfig, error) {
 	return conf, nil
 }
 
+// returns ~/.config/varasto/varastoclient-config.json
 func ConfigFilePath() (string, error) {
-	usersHomeDirectory, err := os.UserHomeDir()
+	userConfigDir, err := os.UserConfigDir()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("ConfigFilePath: %w", err)
 	}
 
-	return filepath.Join(usersHomeDirectory, configFilename), nil
+	return filepath.Join(userConfigDir, "varasto", "client-config.json"), nil
 }
 
 func configInitEntrypoint() *cobra.Command {
@@ -116,27 +113,33 @@ func configInitEntrypoint() *cobra.Command {
 	fuseMountPath looks like /mnt/varasto/stofuse OR leave it as empty ("")`,
 		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			serverAddr := args[0]
-			authToken := args[1]
-			fuseMountPath := args[2]
+			osutil.ExitIfError(func(serverAddr string, authToken string, fuseMountPath string) error {
+				confPath, err := ConfigFilePath()
+				if err != nil {
+					return err
+				}
 
-			confPath, err := ConfigFilePath()
-			osutil.ExitIfError(err)
+				if err := os.MkdirAll(filepath.Dir(confPath), 0700); err != nil {
+					return err
+				}
 
-			exists, err := fileexists.Exists(confPath)
-			osutil.ExitIfError(err)
+				exists, err := fileexists.Exists(confPath)
+				if err != nil {
+					return err
+				}
 
-			if exists {
-				osutil.ExitIfError(errors.New("config file already exists"))
-			}
+				if exists {
+					return errors.New("config file already exists")
+				}
 
-			conf := &ClientConfig{
-				ServerAddr:    serverAddr,
-				AuthToken:     authToken,
-				FuseMountPath: fuseMountPath,
-			}
+				conf := &ClientConfig{
+					ServerAddr:    serverAddr,
+					AuthToken:     authToken,
+					FuseMountPath: fuseMountPath,
+				}
 
-			osutil.ExitIfError(WriteConfig(conf))
+				return WriteConfig(conf)
+			}(args[0], args[1], args[2]))
 		},
 	}
 }
