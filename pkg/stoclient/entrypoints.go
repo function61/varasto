@@ -104,14 +104,8 @@ func pushEntrypoint() *cobra.Command {
 		},
 	}
 
-	cmd.AddCommand(bulkUploadScriptEntrypoint())
-
-	return cmd
-}
-
-func pushOneEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "pushone [collectionId] [file]",
+	cmd.AddCommand(&cobra.Command{
+		Use:   "one [collectionId] [file]",
 		Short: "Uploads a single file to a collection",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
@@ -119,7 +113,11 @@ func pushOneEntrypoint() *cobra.Command {
 				return pushOne(ctx, args[0], args[1])
 			}))
 		},
-	}
+	})
+
+	cmd.AddCommand(bulkUploadScriptEntrypoint())
+
+	return cmd
 }
 
 func statusEntrypoint() *cobra.Command {
@@ -171,7 +169,6 @@ func Entrypoints() []*cobra.Command {
 		cloneEntrypoint(),
 		logEntrypoint(),
 		pushEntrypoint(),
-		pushOneEntrypoint(),
 		configInitEntrypoint(),
 		configPrintEntrypoint(),
 	}
