@@ -122,11 +122,12 @@ func pushOneEntrypoint() *cobra.Command {
 	}
 }
 
-func stEntrypoint() *cobra.Command {
+func statusEntrypoint() *cobra.Command {
 	return &cobra.Command{
-		Use:   "st",
-		Short: "Shows working directory status compared to the parent revision",
-		Args:  cobra.NoArgs,
+		Use:     "status",
+		Aliases: []string{"st"},
+		Short:   "Shows working directory status compared to the parent revision",
+		Args:    cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
 			osutil.ExitIfError(wrapWithStopSupport(func(ctx context.Context) error {
 				cwd, err := os.Getwd()
@@ -165,7 +166,7 @@ func stEntrypoint() *cobra.Command {
 func Entrypoints() []*cobra.Command {
 	return []*cobra.Command{
 		adoptEntrypoint(),
-		stEntrypoint(),
+		statusEntrypoint(),
 		rmEntrypoint(),
 		cloneEntrypoint(),
 		logEntrypoint(),
