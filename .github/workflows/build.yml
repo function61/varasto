@@ -7,17 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: install buildx
-      uses: crazy-max/ghaction-docker-buildx@v1
-      with:
-        buildx-version: v0.4.1
-        qemu-version: latest
+
+    - uses: docker/setup-buildx-action@v1
+
     - name: Build
       run: |
-        curl --fail --location --silent --output bob https://function61.com/go/turbobob-latest-linux-amd64 && chmod +x bob
-        CI_REVISION_ID="$GITHUB_SHA" ./bob build --publish-artefacts
-      # unfortunately there doesn't seem to be a way to "expose all secrets", so you must
-      # list here each secret to pass on to the build
+        curl --fail --location --silent --output bob https://function61.com/go/turbobob-latest-stable-linux-amd64 && chmod +x bob
+        ./bob build in-ci-autodetect-settings
       env:
         DOCKER_CREDS: ${{ secrets.DOCKER_CREDS }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

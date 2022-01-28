@@ -73,8 +73,7 @@
 		{
 			"image": "fn61/varasto",
 			"dockerfile_path": "Dockerfile",
-			"platforms": ["linux/amd64", "linux/arm/v7"],
-			"auth_type": "creds_from_env"
+			"platforms": ["linux/amd64", "linux/arm/v7"]
 		}
 	]
 }
