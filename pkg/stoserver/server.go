@@ -242,6 +242,7 @@ func runServer(
 		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
 		Handler: serverConfig.Metrics.WrapHttpServer(router),
 		TLSConfig: &tls.Config{
+			MinVersion:   tls.VersionTLS12, // require TLS 1.2 minimum
 			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},
 		},
 	}
