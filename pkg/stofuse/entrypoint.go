@@ -21,7 +21,7 @@ func Entrypoint() *cobra.Command {
 		Short: "Varasto-FUSE integration",
 	}
 
-	addr := ":8689"
+	rpcAddr := ""
 	unmountFirst := false
 	stopIfStdinCloses := false
 
@@ -40,11 +40,11 @@ func Entrypoint() *cobra.Command {
 				registerStdinCloseAsCancellationSignal(cancel, rootLogger)
 			}
 
-			osutil.ExitIfError(serve(ctx, addr, unmountFirst, rootLogger))
+			osutil.ExitIfError(serve(ctx, rpcAddr, unmountFirst, rootLogger))
 		},
 	}
 
-	serveCmd.Flags().StringVarP(&addr, "addr", "", addr, "Address to listen on")
+	serveCmd.Flags().StringVarP(&rpcAddr, "addr", "", rpcAddr, "TCP address or Unix socket to listen on")
 	serveCmd.Flags().BoolVarP(&unmountFirst, "unmount-first", "u", unmountFirst, "Umount the mount-path first (maybe unclean shutdown previously)")
 	serveCmd.Flags().BoolVarP(&stopIfStdinCloses, "stop-if-stdin-closes", "", stopIfStdinCloses, "Stop the server if stdin closes (= detect if parent process dies)")
 
@@ -53,7 +53,7 @@ func Entrypoint() *cobra.Command {
 	return cmd
 }
 
-func serve(ctx context.Context, addr string, unmountFirst bool, logger *log.Logger) error {
+func serve(ctx context.Context, rpcAddr string, unmountFirst bool, logger *log.Logger) error {
 	logl := logex.Levels(logger)
 
 	conf, err := stoclient.ReadConfig()
@@ -68,8 +68,10 @@ func serve(ctx context.Context, addr string, unmountFirst bool, logger *log.Logg
 
 	// do this before starting other tasks, because we're not cancelling the tasks that
 	// come after rpcStart()
-	if err := rpcStart(addr, sigs, tasks); err != nil {
-		return err
+	if rpcAddr != "" {
+		if err := rpcStart(rpcAddr, sigs, tasks); err != nil {
+			return err
+		}
 	}
 
 	tasks.Start("fusesrv", func(ctx context.Context) error {
