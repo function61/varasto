@@ -349,5 +349,5 @@ func push(ctx context.Context, wd *workdirLocation) error {
 }
 
 func backslashesToForwardSlashes(in string) string {
-	return strings.Replace(in, `\`, "/", -1)
+	return strings.ReplaceAll(in, `\`, "/")
 }

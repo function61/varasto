@@ -37,7 +37,7 @@ func convertDbCollection(
 	coll stotypes.Collection,
 	changesets []stoservertypes.ChangesetSubset,
 	state *stateresolver.StateAt,
-) (*stoservertypes.CollectionSubsetWithMeta, error) {
+) *stoservertypes.CollectionSubsetWithMeta {
 	encryptionKeyIds := []string{}
 	for _, encryptionKey := range coll.EncryptionKeys {
 		encryptionKeyIds = append(encryptionKeyIds, encryptionKey.KeyId)
@@ -75,7 +75,7 @@ func convertDbCollection(
 		Collection:    subset,
 		FilesInMeta:   filesInMeta,
 		FilesInMetaAt: subset.Head,
-	}, nil
+	}
 }
 
 func convertFile(file stotypes.File) stoservertypes.File {
@@ -130,10 +130,7 @@ func newDirectoryAndMeta(dir stoservertypes.Directory, tx *bbolt.Tx) (*stoserver
 			return nil, err
 		}
 
-		metaCollection, err = convertDbCollection(*metaCollectionDb, []stoservertypes.ChangesetSubset{}, state)
-		if err != nil {
-			return nil, err
-		}
+		metaCollection = convertDbCollection(*metaCollectionDb, []stoservertypes.ChangesetSubset{}, state)
 	}
 
 	return &stoservertypes.DirectoryAndMeta{

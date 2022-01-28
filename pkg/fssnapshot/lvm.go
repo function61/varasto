@@ -1,4 +1,5 @@
-// +build linux
+//go:build linux
+
 // must exclude from Windows build due to syscall.Mount(), syscall.Unmount()
 
 package fssnapshot
@@ -49,6 +50,7 @@ func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
 
 	snapshotId := randomSnapId()
 
+	//nolint:gosec // ok
 	lvcreateOutput, err := exec.Command(
 		"lvcreate",
 		"--snapshot",

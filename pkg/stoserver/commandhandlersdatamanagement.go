@@ -245,7 +245,8 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 					return nil // nothing to fix
 				}
 
-				volsAndPendings := append(blob.Volumes, blob.VolumesPendingReplication...)
+				volsAndPendings := append([]int{}, blob.Volumes...)
+				volsAndPendings = append(volsAndPendings, blob.VolumesPendingReplication...)
 
 				if sliceutil.ContainsInt(volsAndPendings, targetVol.ID) {
 					return nil // blob already exists (or does soon) in this volume
@@ -481,7 +482,7 @@ func reconciliationReportForCollection(
 
 		for _, vol := range append(blob.Volumes, blob.VolumesPendingReplication...) {
 			// zero value (when not found from map) conveniently works out for us
-			collReport.presence[vol] = collReport.presence[vol] + 1
+			collReport.presence[vol]++
 		}
 
 		if problemRedundancy {
@@ -650,7 +651,8 @@ func blobProblems(
 	policy *stotypes.ReplicationPolicy,
 	volumeById map[int]*stotypes.Volume,
 ) (bool, bool) {
-	volsAndPendings := append(blob.Volumes, blob.VolumesPendingReplication...)
+	volsAndPendings := append([]int{}, blob.Volumes...)
+	volsAndPendings = append(volsAndPendings, blob.VolumesPendingReplication...)
 	uniqueZones := map[string]bool{}
 	for _, vol := range volsAndPendings {
 		uniqueZones[volumeById[vol].Zone] = true

@@ -60,7 +60,7 @@ func defineRestApi(
 	ivController *stointegrityverifier.Controller,
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
-) error {
+) {
 	var han stoservertypes.HttpHandlers = &handlers{
 		db,
 		conf,
@@ -70,8 +70,6 @@ func defineRestApi(
 	}
 
 	stoservertypes.RegisterRoutes(han, mwares, muxregistrator.New(router))
-
-	return nil
 }
 
 func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.DirectoryOutput {
@@ -114,10 +112,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 			return httpErr(err, http.StatusInternalServerError)
 		}
 
-		collWithMeta, err := convertDbCollection(dbColl, nil, state)
-		if err != nil {
-			return httpErr(err, http.StatusInternalServerError)
-		}
+		collWithMeta := convertDbCollection(dbColl, nil, state)
 
 		collsWithMeta = append(collsWithMeta, *collWithMeta)
 	}
@@ -226,10 +221,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		})
 	}
 
-	collApi, err := convertDbCollection(*coll, changesetsConverted, state)
-	if err != nil {
-		return httpErr(err, http.StatusInternalServerError)
-	}
+	collApi := convertDbCollection(*coll, changesetsConverted, state)
 
 	return &stoservertypes.CollectionOutput{
 		TotalSize: int(totalSize), // FIXME
@@ -396,9 +388,9 @@ func (h *handlers) GetDecommissionedVolumes(rctx *httpauth.RequestContext, w htt
 }
 
 func (h *handlers) getVolumesInternal(
-	rctx *httpauth.RequestContext,
-	w http.ResponseWriter,
-	r *http.Request,
+	_ *httpauth.RequestContext,
+	_ http.ResponseWriter,
+	_ *http.Request,
 	filter func(vol stotypes.Volume) bool,
 ) *[]stoservertypes.Volume {
 	volumes := []stoservertypes.Volume{}
@@ -625,7 +617,8 @@ func commitChangesetInternal(
 		return httpErr(err.Error(), http.StatusInternalServerError)
 	}
 
-	createdAndUpdated := append(changeset.FilesCreated, changeset.FilesUpdated...)
+	createdAndUpdated := append([]stotypes.File{}, changeset.FilesCreated...)
+	createdAndUpdated = append(createdAndUpdated, changeset.FilesUpdated...)
 
 	for _, file := range createdAndUpdated {
 		for _, refHex := range file.BlobRefs {
@@ -701,9 +694,9 @@ func (h *handlers) GetReplicationPolicies(rctx *httpauth.RequestContext, w http.
 }
 
 func (h *handlers) getReplicationPoliciesInternal(
-	rctx *httpauth.RequestContext,
-	w http.ResponseWriter,
-	r *http.Request,
+	_ *httpauth.RequestContext,
+	_ http.ResponseWriter,
+	_ *http.Request,
 	filter func(stotypes.ReplicationPolicy) bool,
 ) *[]stoservertypes.ReplicationPolicy {
 	policies := []stoservertypes.ReplicationPolicy{}

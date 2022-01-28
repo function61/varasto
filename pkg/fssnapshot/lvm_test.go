@@ -1,4 +1,5 @@
-// +build !windows
+//go:build !windows
+
 // must exclude from Windows build due to syscall.Mount(), syscall.Unmount()
 
 package fssnapshot

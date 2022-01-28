@@ -48,10 +48,7 @@ func loadDatabase(acceptOldDb bool) (*database, error) {
 	}
 
 	// ee5903536331ff79d84418db1bfc64b367219511e2da7e982ac6e0be72126124 tortoisehg-2.1.4-hg-1.9.3-x64.msi
-	hashAndFilenameParseRe, err := regexp.Compile("^([0-9a-f]{64}) (.+)")
-	if err != nil {
-		return nil, err
-	}
+	hashAndFilenameParseRe := regexp.MustCompile("^([0-9a-f]{64}) (.+)")
 
 	lines := bufio.NewScanner(f)
 	for lines.Scan() {

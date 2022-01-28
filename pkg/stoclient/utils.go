@@ -6,7 +6,7 @@ import (
 
 func BlobIdxFromOffset(offset int64) (int, int64) {
 	blobIdx := int(offset / stotypes.BlobSize)
-	return blobIdx, int64(offset) - (int64(blobIdx) * stotypes.BlobSize)
+	return blobIdx, offset - (int64(blobIdx) * stotypes.BlobSize)
 }
 
 func boolToStr(input bool) string {

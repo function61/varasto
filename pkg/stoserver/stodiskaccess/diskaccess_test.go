@@ -3,7 +3,7 @@ package stodiskaccess
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec // not used in cryptographic context
 	"encoding/hex"
 	"io"
 	"io/ioutil"
@@ -362,6 +362,7 @@ func TestVolumeDescriptorRef(t *testing.T) {
 }
 
 func md5Hex(input []byte) string {
+	//nolint:gosec // not used in cryptographic context
 	sum := md5.Sum(input)
 	return hex.EncodeToString(sum[:])
 }

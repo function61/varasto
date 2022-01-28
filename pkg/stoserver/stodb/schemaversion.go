@@ -34,7 +34,7 @@ func WriteSchemaVersion(version uint32, tx *bbolt.Tx) error {
 	}
 
 	schemaVersionInDb := make([]byte, 4)
-	binary.LittleEndian.PutUint32(schemaVersionInDb[:], version)
+	binary.LittleEndian.PutUint32(schemaVersionInDb, version)
 
 	return metaBucket.Put(schemaVersionKey, schemaVersionInDb)
 }

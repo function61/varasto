@@ -33,6 +33,8 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 	// Microsoft being the usual dick that M$FT is, they disable creating snapshots from
 	// vssadmin on non-server OSs, therefore we must bypass the restriction by using wmic
 	// instead. https://superuser.com/a/1125605/284803
+	//
+	//nolint:gosec // ok
 	createSnapshotOutput, err := exec.Command(
 		"wmic",
 		"shadowcopy",
@@ -63,6 +65,7 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		}
 	}()
 
+	//nolint:gosec // ok
 	getSnapshotDetailsOutput, err := exec.Command(
 		"vssadmin",
 		"list",
@@ -90,6 +93,8 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 	// doesn't seem to support directory type links on Windows. additionally, "mklink" is
 	// a cmd-builtin, so we must invoke cmd to run mklink. Windows + CLI = LOLOLOL.
 	// https://twitter.com/joonas_fi/status/1067810155872563200
+	//
+	//nolint:gosec // ok
 	mklinkCmd := exec.Command(
 		"cmd",
 		"/c",
@@ -128,6 +133,7 @@ func (w *windowsSnapshotter) Release(snap Snapshot) error {
 }
 
 func deleteSnapshot(shadowId string) error {
+	//nolint:gosec // ok
 	removeSnapshotCmd := exec.Command(
 		"vssadmin",
 		"delete",
@@ -149,7 +155,7 @@ func deleteSnapshot(shadowId string) error {
 // '/' => '\'
 // FIXME: maybe Go has more idiomatic way for this?
 func windowsPath(in string) string {
-	return strings.Replace(in, "/", `\`, -1)
+	return strings.ReplaceAll(in, "/", `\`)
 }
 
 func driveLetterFromPath(path string) string {

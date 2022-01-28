@@ -63,7 +63,7 @@ func (i *qualifiedIndexRef) Drop(tx *bbolt.Tx) error {
 
 func indexBucketRefForWrite(ref *qualifiedIndexRef, tx *bbolt.Tx) *bbolt.Bucket {
 	// directories:by_parent
-	indexBucket, err := tx.CreateBucketIfNotExists([]byte(ref.indexName))
+	indexBucket, err := tx.CreateBucketIfNotExists(ref.indexName)
 	if err != nil {
 		panic(err)
 	}

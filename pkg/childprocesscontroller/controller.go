@@ -160,6 +160,8 @@ func (s *Controller) handler(ctx context.Context) error {
 		// we want SIGINT but it sends un-graceful SIGKILL and thus we can't access
 		// sub-process exit code AND
 		// "This only kills the Process itself, not any other processes it may have started."
+		//
+		//nolint:gosec // ok
 		cmd = exec.Command(s.cmd[0], s.cmd[1:]...)
 		// child should receive full env of parent
 		cmd.Env = append(cmd.Env, os.Environ()...)

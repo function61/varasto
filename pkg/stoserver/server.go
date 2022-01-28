@@ -171,16 +171,14 @@ func runServer(
 		logex.Prefix("integrityctrl", logger),
 		func(run func(context.Context) error) { tasks.Start("integrityctrl", run) })
 
-	if err := defineRestApi(
+	defineRestApi(
 		router,
 		serverConfig,
 		db,
 		ivController,
 		mwares,
 		logex.Prefix("restapi", logger),
-	); err != nil {
-		return withErrButWaitTasks(err)
-	}
+	)
 
 	mountSubsystem := func(subsys *subsystem) {
 		router.PathPrefix(subsys.httpMount).Handler(&httputil.ReverseProxy{
@@ -234,9 +232,7 @@ func runServer(
 		"/metrics",
 		serverConfig.Metrics.MetricsHttpHandler())
 
-	if err := defineUi(router); err != nil {
-		return withErrButWaitTasks(err)
-	}
+	defineUi(router)
 
 	srv := &http.Server{
 		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
@@ -282,7 +278,7 @@ func runServer(
 	return tasks.Wait()
 }
 
-func defineUi(router *mux.Router) error {
+func defineUi(router *mux.Router) {
 	assetsPath := "/assets"
 
 	publicFiles := http.FileServer(http.Dir("./public/"))
@@ -294,8 +290,6 @@ func defineUi(router *mux.Router) error {
 	uiHandler := f61ui.IndexHtmlHandler(assetsPath)
 
 	frontend.RegisterUiRoutes(router, uiHandler)
-
-	return nil
 }
 
 type discardEventLog struct{}

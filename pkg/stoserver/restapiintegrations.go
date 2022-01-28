@@ -55,7 +55,7 @@ func (h *handlers) SearchTmdbTv(rctx *httpauth.RequestContext, w http.ResponseWr
 }
 
 func (h *handlers) searchTmdbInternal(
-	rctx *httpauth.RequestContext,
+	_ *httpauth.RequestContext,
 	w http.ResponseWriter,
 	r *http.Request,
 	query string,
