@@ -41,15 +41,7 @@ function updateServer {
 # make sure parent dir exits, under which FUSE projector will mount itself
 mkdir -p /mnt/stofuse
 
-source /build-common.sh
-
-BINARY_NAME="sto"
-COMPILE_IN_DIRECTORY="cmd/sto"
-
-# vendor dir contains non-gofmt code..
-GOFMT_TARGETS="cmd/ pkg/"
-
-standardBuildProcess
+build-go-project.sh --directory=cmd/sto/ --binary-basename=sto
 
 (docsDeployerSpec)
 
