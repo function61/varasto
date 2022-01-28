@@ -1,3 +1,5 @@
+⬆️ For table of contents, click the above icon
+
 ![Build status](https://github.com/function61/varasto/workflows/Build/badge.svg)
 [![Download & install](docs/assets/Download-install-green.svg)](https://function61.com/varasto/docs/install/)
 
