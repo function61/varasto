@@ -18,6 +18,8 @@ func main() {
 		Use:     os.Args[0],
 		Short:   `Varasto CLI: sto ("STOrage without the rage")`,
 		Version: dynversion.Version,
+		// hide the default "completion" subcommand from polluting UX (it can still be used). https://github.com/spf13/cobra/issues/1507
+		CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
 	}
 
 	// client's commands are at the root level somewhat unhygienically for convenience's
