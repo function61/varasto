@@ -22,6 +22,7 @@
 			],
 			"dev_http_ingress": "443",
 			"commands": {
+				"prepare": ["bash","-c","exec go generate ./bin"],
 				"build": ["bin/build.sh"],
 				"dev": ["bash"]
 			}
@@ -31,7 +32,7 @@
 			"uses": "docker://fn61/buildkit-js:20200323_0913_131f6b10",
 			"mount_destination": "/workspace",
 			"commands": {
-				"build": ["bin/build-frontend.sh"],
+				"prepare": ["bin/build-frontend.sh"],
 				"dev": ["bash"]
 			}
 		},
@@ -76,5 +77,8 @@
 			"dockerfile_path": "Dockerfile",
 			"platforms": ["linux/amd64", "linux/arm/v7"]
 		}
-	]
+	],
+	"experiments_i_consent_to_breakage": {
+		"prepare_step": true
+	}
 }

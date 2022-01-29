@@ -82,7 +82,7 @@ This one depends on how you installed Varasto:
 	[original installation instructions](../linux-docker.md).
 
 === "Manual installation"
-	Updating means replacing the `sto` binary and `public.tar.gz` with newer versions.
+	Updating means replacing the `sto` binary with newer versions.
 
 	!!! info "This guide assumes Linux"
 		If you're on some other system, improvise.
@@ -93,18 +93,14 @@ This one depends on how you installed Varasto:
 	systemctl stop varasto
 	```
 
-	Delete the old executable, `public.tar.gz` archive and its extracted directory:
+	Delete the old executable:
 
 	```console
-	rm -rf sto public.tar.gz public/
+	rm -rf sto
 	```
 
 	You can go over the [original installation instructions](../linux-manual.md) if you want,
-	but only do these:
-
-	- download the binary
-	- and optionally the `public.tar.gz` file (it's downloaded automatically if it's not found)
-
+	but only download the binary according to the instructions.
 	(i.e. configuration and service auto-start installation should not be done again)
 
 	Start Varasto.

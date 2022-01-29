@@ -22,7 +22,6 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/taskrunner"
-	"github.com/function61/pi-security-module/pkg/extractpublicfiles"
 	"github.com/function61/pi-security-module/pkg/f61ui"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
@@ -42,6 +41,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/public"
 	"github.com/gorilla/mux"
 	"go.etcd.io/bbolt"
 )
@@ -68,16 +68,6 @@ func runServer(
 	confReloader := &configReloader{restarter: restarter}
 
 	logl := logex.Levels(logger)
-
-	// if public.tar.gz is not present in our working directory, try to download & extract it automatically
-	if err := extractpublicfiles.Run(githubAssetUrl(
-		dynversion.Version,
-		extractpublicfiles.PublicFilesArchiveFilename),
-		extractpublicfiles.PublicFilesArchiveFilename,
-		logger,
-	); err != nil {
-		return err
-	}
 
 	scf, err := readServerConfigFile()
 	if err != nil {
@@ -232,7 +222,7 @@ func runServer(
 		"/metrics",
 		serverConfig.Metrics.MetricsHttpHandler())
 
-	defineUi(router)
+	defineUI(router)
 
 	srv := &http.Server{
 		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
@@ -278,11 +268,13 @@ func runServer(
 	return tasks.Wait()
 }
 
-func defineUi(router *mux.Router) {
+func defineUI(router *mux.Router) {
 	assetsPath := "/assets"
 
-	publicFiles := http.FileServer(http.Dir("./public/"))
+	publicFiles := http.FileServer(http.FS(public.Content))
 
+	//    "/assets/style.css"
+	// => "/style.css"
 	router.PathPrefix(assetsPath + "/").Handler(http.StripPrefix(assetsPath+"/", publicFiles))
 	router.Handle("/favicon.ico", publicFiles)
 	router.Handle("/robots.txt", publicFiles)
@@ -704,8 +696,4 @@ func (r *configReloader) ReloadConfig() {
 			panic(err)
 		}
 	})
-}
-
-func githubAssetUrl(release string, filename string) string {
-	return "https://github.com/function61/varasto/releases/download/" + release + "/" + filename
 }

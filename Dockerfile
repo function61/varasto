@@ -21,14 +21,10 @@ CMD ["server"]
 # this config is used for server subsystems (thumbnailing, FUSE projector) to communicate
 # with the server.
 
-RUN mkdir -p /varasto \
+RUN mkdir -p /varasto /root/.config/varasto \
 	&& ln -s /varasto/sto /bin/sto \
-	&& ln -s /varasto-db/varastoclient-config.json /root/varastoclient-config.json \
+	&& ln -s /varasto-db/client-config.json /root/.config/varasto/client-config.json \
 	&& apk add --update smartmontools fuse \
 	&& echo '{"db_location": "/varasto-db/varasto.db"}' > /varasto/config.json
 
 COPY "rel/sto_linux-$TARGETARCH" /varasto/sto
-
-ADD rel/public.tar.gz /varasto/
-
-RUN chmod +x /varasto/sto
