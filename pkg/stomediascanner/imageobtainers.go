@@ -12,6 +12,7 @@ import (
 
 	"github.com/function61/gokit/mime"
 	"github.com/function61/varasto/pkg/stoclient"
+	"github.com/function61/varasto/pkg/stomediascanner/pdfthumbnailer"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/nwaples/rardecode"
 )
@@ -103,6 +104,36 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 	}
 
 	return ioutil.NopCloser(archive), nil
+}
+
+func pdfObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails) (io.ReadCloser, error) {
+	data := &bytes.Buffer{}
+
+	if err := varastoFile.client.DownloadOneFile(
+		ctx,
+		varastoFile.collectionId,
+		varastoFile.file,
+		data,
+	); err != nil {
+		return nil, err
+	}
+
+	thumbnailOutput := &bytes.Buffer{}
+
+	if err := pdfthumbnailer.FirstPageAsPng(data, thumbnailOutput); err != nil {
+		return nil, err
+	}
+	return ioutil.NopCloser(thumbnailOutput), nil
+	/*
+		client, err := pdfrasterizerclient.New(pdfrasterizerclient.Function61, func() (string, error) {
+			return "dummytok", nil
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		return client.RasterizeToPng(ctx, data)
+	*/
 }
 
 func assertFilenameIsImage(filename string) error {
