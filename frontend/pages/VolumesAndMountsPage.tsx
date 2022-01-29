@@ -453,6 +453,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				SerialNumber: '',
 				Smart: {
 					Id: '',
+					Backend: null,
 					LatestReport: null,
 				},
 				Id: 0,

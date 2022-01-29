@@ -8,6 +8,7 @@ import (
 	"os/exec"
 )
 
+// output is JSON compatible with SmartCtlJsonReport
 type Backend func(device string) ([]byte, error)
 
 func Scan(device string, back Backend) (*SmartCtlJsonReport, error) {
@@ -22,7 +23,7 @@ func Scan(device string, back Backend) (*SmartCtlJsonReport, error) {
 func SmartCtlBackend(device string) ([]byte, error) {
 	stdout, err := exec.Command("smartctl", "--json", "--all", device).Output()
 
-	return stdout, silenceSmartCtlAutomationHostileErrors(err)
+	return stdout, SilenceSmartCtlAutomationHostileErrors(err)
 }
 
 /*	joonas/smartmontools built from simple Dockerfile:
@@ -47,7 +48,7 @@ func SmartCtlViaDockerBackend(device string) ([]byte, error) {
 		device,
 	).Output()
 
-	return stdout, silenceSmartCtlAutomationHostileErrors(err)
+	return stdout, SilenceSmartCtlAutomationHostileErrors(err)
 }
 
 func parseSmartCtlJsonReport(reportJson []byte) (*SmartCtlJsonReport, error) {
@@ -64,12 +65,19 @@ func parseSmartCtlJsonReport(reportJson []byte) (*SmartCtlJsonReport, error) {
 	return rep, nil
 }
 
-func silenceSmartCtlAutomationHostileErrors(err error) error {
+// exported because used from outside
+func SilenceSmartCtlAutomationHostileErrors(err error) error {
 	if err != nil {
 		if exitError, is := err.(*exec.ExitError); is {
-			// unset bits 4-8 because they're not errors in getting the report itself
-			// https://sourceforge.net/p/smartmontools/mailman/message/7330895/
-			masked := exitError.ExitCode() &^ 0xf8
+			/* https://linux.die.net/man/8/smartctl documents $ smartctl return values:
+
+			bits 0-1 as actually smartctl invocation errors
+			bit 2 should be an error, but I got syntactically valid reports back with this up
+			bits 3-7 are not smartctl invocation errors, but drive pre-fail or fail errors
+
+			therefore we need to unset bits 2-7 (conservative unset would be 3-7)
+			*/
+			masked := exitError.ExitCode() &^ 0b11111100
 
 			if masked == 0 { // not error anymore
 				return nil

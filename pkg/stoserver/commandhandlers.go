@@ -1,11 +1,13 @@
 package stoserver
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"sort"
@@ -14,6 +16,7 @@ import (
 	"github.com/function61/eventkit/command"
 	"github.com/function61/eventkit/eventlog"
 	"github.com/function61/eventkit/httpcommand"
+	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/sliceutil"
@@ -939,7 +942,20 @@ func (c *cHandlers) VolumeSmartSetId(cmd *stoservertypes.VolumeSmartSetId, ctx *
 			return err
 		}
 
+		smartBackend := func() stoservertypes.SmartBackend {
+			if cmd.SmartBackend != "" {
+				return cmd.SmartBackend
+			} else {
+				return c.conf.SelfNodeSmartBackend
+			}
+		}()
+
 		vol.SmartId = cmd.SmartId
+		vol.SmartBackend = &smartBackend
+
+		if cmd.TestOnSave {
+			return errors.New("TestOnSave not yet implemented")
+		}
 
 		return stodb.VolumeRepository.Update(vol, tx)
 	})
@@ -1003,9 +1019,11 @@ func (c *cHandlers) NodeChangeSmartBackend(cmd *stoservertypes.NodeChangeSmartBa
 
 func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {
 	type smartCapableVolume struct {
-		volId   int
-		smartId string
-		report  *stoservertypes.SmartReport
+		volId        int
+		smartId      string
+		smartBackend stoservertypes.SmartBackend
+		report       *stoservertypes.SmartReport
+		raw          *smart.SmartCtlJsonReport
 	}
 
 	scans := []*smartCapableVolume{}
@@ -1016,13 +1034,14 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 			vol := record.(*stotypes.Volume)
 
 			// skip volume if SMART collection is not enabled for it (OR it's not mounted)
-			if vol.SmartId == "" || !c.conf.DiskAccess.IsMounted(vol.ID) {
+			if vol.SmartId == "" || vol.SmartBackend == nil || !c.conf.DiskAccess.IsMounted(vol.ID) {
 				return nil
 			}
 
 			scans = append(scans, &smartCapableVolume{
-				volId:   vol.ID,
-				smartId: vol.SmartId,
+				volId:        vol.ID,
+				smartId:      vol.SmartId,
+				smartBackend: *vol.SmartBackend,
 			})
 
 			return nil
@@ -1031,12 +1050,12 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 		return err
 	}
 
-	smartBackend, err := getSmartBackend(c.conf.SelfNodeSmartBackend)
-	if err != nil {
-		return fmt.Errorf("getSmartBackend: %v", err)
-	}
-
 	for _, scan := range scans {
+		smartBackend, err := getSmartBackend(scan.smartBackend)
+		if err != nil {
+			return fmt.Errorf("getSmartBackend: %d: %v", scan.volId, err)
+		}
+
 		report, err := smart.Scan(scan.smartId, smartBackend)
 		if err != nil {
 			return fmt.Errorf("vol %d (%s) SMART: %v", scan.volId, scan.smartId, err)
@@ -1058,13 +1077,23 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 			powerCycleCount = &report.PowerCycleCount
 		}
 
+		rawReport, err := func() (string, error) {
+			asJson, err := json.MarshalIndent(report, "", "  ")
+			return string(asJson), err
+		}()
+		if err != nil {
+			return err
+		}
+
 		scan.report = &stoservertypes.SmartReport{
 			Time:            time.Now(),
 			Passed:          report.SmartStatus.Passed,
 			Temperature:     temp,
 			PowerCycleCount: powerCycleCount,
 			PowerOnTime:     powerOnTime,
+			RawReport:       &rawReport,
 		}
+		scan.raw = report
 	}
 
 	// nothing to do
@@ -1077,6 +1106,20 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 			vol, err := stodb.Read(tx).Volume(scan.volId)
 			if err != nil {
 				return err
+			}
+
+			reportRaw := scan.raw
+
+			// watch out for serial number mismatches. if user relies on Smart ID being e.g. "/dev/sda"
+			// or in more elaborate setups (e.g. QNAP TR-004) when we've to refer to drive by
+			// hot plug bay # (because computers were a mistake..), we can easily end up in situation
+			// where we'd log SMART reports for incorrect drives unless we're careful
+			if vol.SerialNumber != "" && reportRaw.SerialNumber != "" && vol.SerialNumber != reportRaw.SerialNumber {
+				return fmt.Errorf(
+					"SerialNumber mismatch (vol %d): expected=%s got=%s",
+					scan.volId,
+					vol.SerialNumber,
+					reportRaw.SerialNumber)
 			}
 
 			// update back into db
@@ -1181,12 +1224,30 @@ func validateUniqueNameWithinSiblings(dirId string, name string, tx *bbolt.Tx) e
 }
 
 func getSmartBackend(typ stoservertypes.SmartBackend) (smart.Backend, error) {
-	switch stoservertypes.SmartBackendExhaustive7712fd(typ) {
+	switch stoservertypes.SmartBackendExhaustive02361d(typ) {
 	case stoservertypes.SmartBackendSmartCtlViaDocker:
 		return smart.SmartCtlViaDockerBackend, nil
 	case stoservertypes.SmartBackendSmartCtl:
 		return smart.SmartCtlBackend, nil
+	case stoservertypes.SmartBackendRemoteHTTP:
+		return smartBackendRemoteHTTP, nil
 	default:
 		return nil, fmt.Errorf("unsupported SmartBackend: %s", typ)
 	}
 }
+
+func smartBackendRemoteHTTP(identifier string) ([]byte, error) {
+	res, err := ezhttp.Get(context.Background(), identifier)
+	if err != nil {
+		return nil, fmt.Errorf("smartBackendRemoteHTTP: %w", err)
+	}
+	defer res.Body.Close()
+	reportJSON, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("smartBackendRemoteHTTP: %w", err)
+	}
+
+	return reportJSON, nil
+}
+
+var _ smart.Backend = smartBackendRemoteHTTP

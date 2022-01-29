@@ -6,6 +6,7 @@ import {
 	SuccessLabel,
 	DefaultLabel,
 	CollapsePanel,
+	Glyphicon,
 	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
@@ -19,11 +20,21 @@ interface SmartViewProps {
 	volumes: Volume[];
 }
 
-export default class SmartView extends React.Component<SmartViewProps, {}> {
+interface SmartViewState {
+	rawReport?: string;
+}
+
+export default class SmartView extends React.Component<SmartViewProps, SmartViewState> {
+	state: SmartViewState = {};
+
 	render() {
 		return (
 			<div>
 				{this.reports()}
+
+				{this.state.rawReport ? (
+					<span style={{ whiteSpace: 'pre' }}>{this.state.rawReport}</span>
+				) : null}
 
 				{this.configurator()}
 			</div>
@@ -46,6 +57,7 @@ export default class SmartView extends React.Component<SmartViewProps, {}> {
 						<th>Temperature</th>
 						<th>PowerCycleCount</th>
 						<th>PowerOnTime</th>
+						<th></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -78,6 +90,16 @@ export default class SmartView extends React.Component<SmartViewProps, {}> {
 								</td>
 								<td>
 									{smart.PowerOnTime ? thousandSeparate(smart.PowerOnTime) : null}
+								</td>
+								<td>
+									<Glyphicon
+										icon="search"
+										click={() => {
+											this.setState({
+												rawReport: smart.RawReport || undefined,
+											});
+										}}
+									/>
 								</td>
 							</tr>
 						);
@@ -134,9 +156,14 @@ export default class SmartView extends React.Component<SmartViewProps, {}> {
 								<td>
 									{vol.Smart.Id}{' '}
 									<CommandIcon
-										command={VolumeSmartSetId(vol.Id, vol.Smart.Id, {
-											disambiguation: vol.Label,
-										})}
+										command={VolumeSmartSetId(
+											vol.Id,
+											vol.Smart.Id,
+											vol.Smart.Backend!,
+											{
+												disambiguation: vol.Label,
+											},
+										)}
 									/>
 								</td>
 							</tr>

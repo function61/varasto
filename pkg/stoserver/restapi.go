@@ -432,6 +432,7 @@ func (h *handlers) getVolumesInternal(
 
 		smartAttrs := stoservertypes.VolumeSmartAttrs{
 			Id:           dbObject.SmartId,
+			Backend:dbObject.SmartBackend,
 			LatestReport: latestReport,
 		}
 
@@ -1206,6 +1207,8 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 
 	ms := &runtime.MemStats{}
 	runtime.ReadMemStats(ms)
+
+	// TODO: add SchemaVersion (if not to UI, here anyway?)
 
 	return &stoservertypes.ServerInfo{
 		AppVersion:   dynversion.Version,

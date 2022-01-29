@@ -41,7 +41,8 @@ type Volume struct {
 	SerialNumber       string
 	Technology         string
 	SmartId            string
-	SmartReport        string
+	SmartBackend       *stoservertypes.SmartBackend
+	SmartReport        string // latest SMART report
 	Zone               string
 	Enclosure          string
 	EnclosureSlot      int // 0 = not defined

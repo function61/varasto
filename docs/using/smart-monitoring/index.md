@@ -66,6 +66,7 @@ backend is configurable. These backends are available:
 |---------------------|------------------------------|
 | `SmartCtl`          | Directly                     |
 | `SmartCtlViaDocker` | Via smartctl Docker image having the proper version |
+| `RemoteHTTP`        | Over HTTP API. This is for more elaborate setups. |
 
 Why is this important-seeming explanation in troubleshooting section? Because Varasto
 auto-detects which backend to use when it starts for the first time - so for most users

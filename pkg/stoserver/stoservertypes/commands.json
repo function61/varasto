@@ -96,7 +96,7 @@
 	{
 		"command": "volume.SmartSetId",
 		"chain": "public",
-		"ctor": ["Id", "SmartId"],
+		"ctor": ["Id", "SmartId", "SmartBackend"],
 		"crudNature": "update",
 		"title": "Set SMART ID",
 		"info": [
@@ -105,7 +105,9 @@
 		],
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "SmartId", "title": "SMART ID", "placeholder": "/dev/disk/0122023d-a355-44fa-865d-1744a9bb0c3b", "help": "Usually path to the Linux disk device", "optional": true }
+			{ "key": "SmartId", "title": "SMART ID", "placeholder": "/dev/disk/0122023d-a355-44fa-865d-1744a9bb0c3b", "help": "Usually path to the Linux disk device", "optional": true },
+			{ "key": "TestOnSave", "title": "Test before saving", "type": "checkbox", "help": "Test that reading SMART works before saving" },
+			{ "key": "SmartBackend", "title": "SMART backend", "help": "Needed if different than node's SMART backend", "type": "SmartBackend" }
 		]
 	},
 	{

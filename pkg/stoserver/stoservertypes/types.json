@@ -135,7 +135,8 @@
 			"type": "string",
 			"stringMembers": [
 				"SmartCtl",
-				"SmartCtlViaDocker"
+				"SmartCtlViaDocker",
+				"RemoteHTTP"
 			]
 		},
 		{
@@ -399,6 +400,7 @@
 			"name": "VolumeSmartAttrs",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
+				"Backend": {"_": "SmartBackend", "nullable":true},
 				"LatestReport": {"_": "SmartReport", "nullable": true}
 			}}
 		},
@@ -409,7 +411,8 @@
 				"Passed": {"_": "boolean"},
 				"Temperature": {"_": "integer", "nullable": true},
 				"PowerCycleCount": {"_": "integer", "nullable": true},
-				"PowerOnTime": {"_": "integer", "nullable": true}
+				"PowerOnTime": {"_": "integer", "nullable": true},
+				"RawReport": {"_": "string", "nullable": true}
 			}}
 		},
 		{

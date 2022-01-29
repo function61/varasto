@@ -1,7 +1,8 @@
 package smart
 
 type SmartCtlJsonReport struct {
-	JsonFormatVersion  []int `json:"json_format_version"`
+	JsonFormatVersion  []int  `json:"json_format_version"`
+	SerialNumber       string `json:"serial_number"`
 	AtaSmartAttributes struct {
 		Revision int                 `json:"revision"`
 		Table    []AtaSmartAttribute `json:"table"`
