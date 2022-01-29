@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:versionCode="1"
+    android:versionName="1.0"
+    package="com.function61.varasto"
+    platformBuildVersionCode="28"
+    platformBuildVersionName="4.0.4-1406430">
+
+    <!-- manual declaration of uses-sdk in AndroidManifest.xml not supported -->
+    <!-- manual declaration of android:icon in AndroidManifest.xml not supported -->
+    <!-- android:requestLegacyExternalStorage="true" -->
+
+    <application android:label="Varasto" android:debuggable="true">
+        <activity android:label="Varasto" android:name="org.golang.app.GoNativeActivity" android:configChanges="keyboardHidden|orientation">
+            <meta-data android:name="android.app.lib_name" android:value="varasto"/>
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+</manifest>

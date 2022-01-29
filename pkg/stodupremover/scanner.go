@@ -56,7 +56,6 @@ func scan(removeDuplicates bool, acceptOutdatedDb bool) error {
 	return actioner.Finish()
 }
 
-// TODO: this is awfully duplicated-like (is there anything we can use in stoclient?)
 func hashFileContent(path string) (string, error) {
 	fil, err := os.Open(path)
 	if err != nil {

@@ -27,7 +27,7 @@ const (
 	BackgroundUploaderConcurrency = 3
 )
 
-func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
+func ComputeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAtHead(wd.manifest.Collection)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 				maybeChanged := !before.Modified.Equal(fileInfo.ModTime())
 
 				if definitelyChanged || maybeChanged {
-					fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
+					fil, err := ScanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
 					if err != nil {
 						return err
 					}
@@ -79,7 +79,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 					}
 				}
 			} else {
-				fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
+				fil, err := ScanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
 				if err != nil {
 					return err
 				}
@@ -134,7 +134,7 @@ func blobExists(blobRef stotypes.BlobRef, clientConfig ClientConfig) (bool, erro
 	return true, nil
 }
 
-func scanFileAndDiscoverBlobs(
+func ScanFileAndDiscoverBlobs(
 	ctx context.Context,
 	absolutePath string,
 	relativePath string,
@@ -196,7 +196,8 @@ func ScanAndDiscoverBlobs(
 	for {
 		select {
 		case <-discoveryCancel:
-			return nil, errors.New("discovery canceled")
+			// TODO: return error
+			return nil, errors.New("discovery listener canceled")
 		case <-ctx.Done():
 			return nil, ctx.Err()
 		default:
@@ -295,7 +296,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 		*clientConfig,
 		textUiUploadProgressOutputIfInTerminal())
 
-	file, err := scanFileAndDiscoverBlobs(ctx, absolutePath, path, fileInfo, collectionId, buploader)
+	file, err := ScanFileAndDiscoverBlobs(ctx, absolutePath, path, fileInfo, collectionId, buploader)
 	if err != nil {
 		return err
 	}
@@ -316,14 +317,14 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 	return err
 }
 
-func push(ctx context.Context, wd *workdirLocation) error {
+func Push(ctx context.Context, wd *workdirLocation, uploadProgressListener UploadProgressListener) error {
 	buploader := NewBackgroundUploader(
 		ctx,
 		BackgroundUploaderConcurrency,
 		wd.clientConfig,
-		textUiUploadProgressOutputIfInTerminal())
+		uploadProgressListener)
 
-	ch, err := computeChangeset(ctx, wd, buploader)
+	ch, err := ComputeChangeset(ctx, wd, buploader)
 	if err != nil {
 		return err
 	}
@@ -345,7 +346,11 @@ func push(ctx context.Context, wd *workdirLocation) error {
 	wd.manifest.ChangesetId = updatedCollection.Head
 	wd.manifest.Collection = *updatedCollection
 
-	return wd.SaveToDisk()
+	if err := wd.SaveToDisk(); err != nil {
+		return fmt.Errorf("committing succeeded but updating local state: %w", err)
+	}
+
+	return nil
 }
 
 func backslashesToForwardSlashes(in string) string {

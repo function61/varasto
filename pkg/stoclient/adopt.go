@@ -12,6 +12,15 @@ import (
 )
 
 func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error {
+	clientConfig, err := ReadConfig()
+	if err != nil {
+		return err
+	}
+
+	return clientConfig.Adopt(ctx, fullPath, parentDirectoryId)
+}
+
+func (c *ClientConfig) Adopt(ctx context.Context, fullPath string, parentDirectoryId string) error {
 	// cloneCollectionExistingDir() also checks for this, but we must do this before asking
 	// server to create a collection because we don't want it to be created and error when
 	// we begin cloning
@@ -19,13 +28,8 @@ func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error
 		return err
 	}
 
-	clientConfig, err := ReadConfig()
-	if err != nil {
-		return err
-	}
-
 	// TODO: maybe the struct ctor should be codegen'd?
-	collectionId, err := clientConfig.CommandClient().ExecExpectingCreatedRecordId(ctx, &stoservertypes.CollectionCreate{
+	collectionId, err := c.CommandClient().ExecExpectingCreatedRecordId(ctx, &stoservertypes.CollectionCreate{
 		ParentDir: parentDirectoryId,
 		Name:      filepath.Base(fullPath),
 	})
@@ -33,7 +37,7 @@ func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error
 		return err
 	}
 
-	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
+	collection, err := c.Client().FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return err
 	}
@@ -42,7 +46,7 @@ func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error
 
 	// since we created an empty collection, there's actually nothing to download,
 	// but this does other important housekeeping
-	return cloneCollectionExistingDir(ctx, fullPath, "", collection)
+	return c.cloneCollectionExistingDir(ctx, fullPath, "", collection)
 }
 
 func adoptEntrypoint() *cobra.Command {

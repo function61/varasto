@@ -5,6 +5,7 @@ go 1.13
 require (
 	bazil.org/fuse v0.0.0-20180421153158-65cc252bf669
 	cloud.google.com/go v0.37.2
+	fyne.io/fyne v1.4.2
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/aws/aws-sdk-go v1.29.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
@@ -46,10 +47,10 @@ require (
 	go.etcd.io/bbolt v1.3.2
 	go.opencensus.io v0.19.2
 	golang.org/x/crypto v0.0.0-20191108234033-bd318be0434a
-	golang.org/x/image v0.0.0-20190321063152-3fc05d484e9f
+	golang.org/x/image v0.0.0-20200430140353-33d19683fad8
 	golang.org/x/net v0.0.0-20200324143707-d3edc9973b7e
 	golang.org/x/oauth2 v0.0.0-20190319182350-c85d3e98c914
-	golang.org/x/sys v0.0.0-20200331124033-c3d80250170d
+	golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666
 	golang.org/x/text v0.3.2
 	google.golang.org/api v0.3.0
 	google.golang.org/appengine v1.4.0

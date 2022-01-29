@@ -101,7 +101,7 @@ func NewBackgroundUploader(
 func (b *backgroundUploader) BlobDiscovered(attrs blobDiscoveredAttrs) {
 	// send "0 bytes uploaded" progress event so UI starts showing 0 % for this file,
 	// because the next event is sent after blob is uploaded
-	b.uploadProgress.ReportUploadProgress(fileProgressEvent{
+	b.uploadProgress.ReportUploadProgress(FileUploadProgress{
 		filePath:            attrs.filePath,
 		bytesInFileTotal:    attrs.size,
 		bytesUploadedInBlob: 0,
@@ -187,7 +187,7 @@ func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscove
 	}
 
 	notifyProgress := func() {
-		b.uploadProgress.ReportUploadProgress(fileProgressEvent{
+		b.uploadProgress.ReportUploadProgress(FileUploadProgress{
 			filePath:            job.filePath,
 			bytesInFileTotal:    job.size,
 			bytesUploadedInBlob: int64(len(job.content)),

@@ -16,13 +16,18 @@ func rm(ctx context.Context, path string) error {
 		return err
 	}
 
-	// will error out if not a workdir
-	wd, err := NewWorkdirLocation(dir)
+	client, err := ReadConfig()
 	if err != nil {
 		return err
 	}
 
-	ch, err := computeChangeset(ctx, wd, NewBlobDiscoveredNoopListener())
+	// will error out if not a workdir
+	wd, err := client.NewWorkdirLocation(dir)
+	if err != nil {
+		return err
+	}
+
+	ch, err := ComputeChangeset(ctx, wd, NewBlobDiscoveredNoopListener())
 	if err != nil {
 		return err
 	}

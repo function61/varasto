@@ -32,7 +32,12 @@ func cloneEntrypoint() *cobra.Command {
 					return err
 				}
 
-				return clone(ctx, args[0], rev, parentDir, dirName)
+				client, err := ReadConfig()
+				if err != nil {
+					return err
+				}
+
+				return client.Clone(ctx, args[0], rev, parentDir, dirName)
 			}))
 		},
 	}
@@ -51,7 +56,10 @@ func logEntrypoint() *cobra.Command {
 			cwd, err := os.Getwd()
 			osutil.ExitIfError(err)
 
-			wd, err := NewWorkdirLocation(cwd)
+			client, err := ReadConfig()
+			osutil.ExitIfError(err)
+
+			wd, err := client.NewWorkdirLocation(cwd)
 			osutil.ExitIfError(err)
 
 			for _, item := range wd.manifest.Collection.Changesets {
@@ -81,6 +89,11 @@ func pushEntrypoint() *cobra.Command {
 					return err
 				}
 
+				client, err := ReadConfig()
+				if err != nil {
+					return err
+				}
+
 				// take filesystem snapshot, so our reads within the file tree are atomic
 				snapshotter := fssnapshot.NullSnapshotter()
 				// snapshotter := fssnapshot.PlatformSpecificSnapshotter()
@@ -94,12 +107,15 @@ func pushEntrypoint() *cobra.Command {
 				}()
 
 				// now read the workdir from within the snapshot (and not the actual cwd)
-				wd, err := NewWorkdirLocation(snapshot.OriginInSnapshotPath)
+				wd, err := client.NewWorkdirLocation(snapshot.OriginInSnapshotPath)
 				if err != nil {
 					return err
 				}
 
-				return push(ctx, wd)
+				return Push(
+					ctx,
+					wd,
+					textUiUploadProgressOutputIfInTerminal())
 			}))
 		},
 	}
@@ -134,12 +150,17 @@ func stEntrypoint() *cobra.Command {
 					return err
 				}
 
-				wd, err := NewWorkdirLocation(cwd)
+				client, err := ReadConfig()
 				if err != nil {
 					return err
 				}
 
-				ch, err := computeChangeset(ctx, wd, NewBlobDiscoveredNoopListener())
+				wd, err := client.NewWorkdirLocation(cwd)
+				if err != nil {
+					return err
+				}
+
+				ch, err := ComputeChangeset(ctx, wd, NewBlobDiscoveredNoopListener())
 				if err != nil {
 					return err
 				}

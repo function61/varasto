@@ -17,19 +17,14 @@ import (
 	"github.com/function61/varasto/pkg/stoutils"
 )
 
-func clone(
+func (c *ClientConfig) Clone(
 	ctx context.Context,
 	collectionId string,
 	revisionId string,
 	parentDir string,
 	dirName string,
 ) error {
-	clientConfig, err := ReadConfig()
-	if err != nil {
-		return err
-	}
-
-	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
+	collection, err := c.Client().FetchCollectionMetadata(ctx, collectionId)
 	if err != nil {
 		return err
 	}
@@ -38,10 +33,10 @@ func clone(
 		dirName = collection.Name
 	}
 
-	return cloneCollection(ctx, filepath.Join(parentDir, dirName), revisionId, collection)
+	return c.cloneCollection(ctx, filepath.Join(parentDir, dirName), revisionId, collection)
 }
 
-func cloneCollectionExistingDir(
+func (c *ClientConfig) cloneCollectionExistingDir(
 	ctx context.Context,
 	path string,
 	revisionId string,
@@ -67,7 +62,7 @@ func cloneCollectionExistingDir(
 
 	// now that properly initialized manifest was saved to disk (= bootstrapped),
 	// reload it back from disk in a normal fashion
-	wd, err := NewWorkdirLocation(path)
+	wd, err := c.NewWorkdirLocation(path)
 	if err != nil {
 		return err
 	}
@@ -87,7 +82,7 @@ func cloneCollectionExistingDir(
 }
 
 // used both by collection create and collection download
-func cloneCollection(
+func (c *ClientConfig) cloneCollection(
 	ctx context.Context,
 	path string,
 	revisionId string,
@@ -112,7 +107,7 @@ func cloneCollection(
 		return err
 	}
 
-	return cloneCollectionExistingDir(ctx, path, revisionId, collection)
+	return c.cloneCollectionExistingDir(ctx, path, revisionId, collection)
 }
 
 func (c *Client) DownloadOneFile(
