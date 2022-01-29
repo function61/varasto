@@ -66,7 +66,7 @@ nav:
   - Encryption in Varasto: security/encryption/index.md
   - Ransomware protection: security/ransomware-protection/index.md
   - Your privacy: security/privacy/index.md
-  - Security policy: security.md
+  - Security policy: https://github.com/function61/varasto/security/policy
 - Developers:
   - API overview: developers/api-overview.md
   - Codebase layout: developers/codebase/index.md
