@@ -8,7 +8,7 @@
 			"source": "https://github.com/function61/f61ui.git",
 			"kind": "git",
 			"destination": "frontend/f61ui",
-			"revision": "c28d1a4"
+			"revision": "dab10d8"
 		}
 	],
 	"builders": [
