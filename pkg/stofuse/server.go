@@ -42,8 +42,7 @@ func fuseServe(
 		conf.FuseMountPath,
 		// fuse.ReadOnly(),
 		fuse.FSName("varasto"),
-		fuse.Subtype("varasto1fs"),
-		fuse.AllowOther())
+		fuse.Subtype("varasto1fs"))
 	if err != nil {
 		return err
 	}
