@@ -9,11 +9,11 @@ The files are:
 ```
 .
 |-- blob-volumes.tar
-|-- varastoclient-config.json
+|-- client-config.json
 `-- varasto.db
 ```
 
-Client config (`varastoclient-config.json`) is needed for some server subsystems as well.
+Client config (`client-config.json`) is needed for some server subsystems as well.
 
 The tar contains two volumes. It has all the collection's blobs in volume A, and volume B
 is empty (it has the volume UUID though, so it can be mounted):

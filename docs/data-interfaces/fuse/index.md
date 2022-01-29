@@ -74,8 +74,8 @@ Since Varasto FUSE projector is a client, we need to configure how to connect to
 Your config would look about like this:
 
 ```console
-$ sto config-print
-path: /home/joonas/varastoclient-config.json
+$ sto config print
+path: /home/joonas/.config/varasto/client-config.json
 {
 	"server_addr": "https://localhost",
 	"auth_token": "qZKcP...",
@@ -86,7 +86,7 @@ path: /home/joonas/varastoclient-config.json
 Note: `$ sto ...` commands unless prefixed with `$ sto server` are Varasto **client**
 commands since you'll use the client more often.
 
-You can run `$ sto config-init` to generate the config file.
+You can run `$ sto config init` to generate the config file.
 
 For `auth_token` you need to create an API token in `Settings > Users`.
 

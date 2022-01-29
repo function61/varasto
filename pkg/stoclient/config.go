@@ -1,7 +1,6 @@
 package stoclient
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -104,9 +103,14 @@ func ConfigFilePath() (string, error) {
 	return filepath.Join(userConfigDir, "varasto", "client-config.json"), nil
 }
 
-func configInitEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "config-init [serverAddr] [authToken] [fuseMountPath]",
+func configEntrypoint() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "config",
+		Short: "Client configuration file management",
+	}
+
+	cmd.AddCommand(&cobra.Command{
+		Use:   "init [serverAddr] [authToken] [fuseMountPath]",
 		Short: "Initialize configuration (helps writing JSON file)",
 		Long: `	serverAddr looks like https://localhost
 	authToken looks like dTPM59uxWm_uloW4...
@@ -129,7 +133,7 @@ func configInitEntrypoint() *cobra.Command {
 				}
 
 				if exists {
-					return errors.New("config file already exists")
+					return fmt.Errorf("config file '%s' already exists", confPath)
 				}
 
 				conf := &ClientConfig{
@@ -141,12 +145,10 @@ func configInitEntrypoint() *cobra.Command {
 				return WriteConfig(conf)
 			}(args[0], args[1], args[2]))
 		},
-	}
-}
+	})
 
-func configPrintEntrypoint() *cobra.Command {
-	return &cobra.Command{
-		Use:   "config-print",
+	cmd.AddCommand(&cobra.Command{
+		Use:   "print",
 		Short: "Prints path to config file & its contents",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -159,7 +161,7 @@ func configPrintEntrypoint() *cobra.Command {
 			osutil.ExitIfError(err)
 
 			if !exists {
-				fmt.Printf(".. does not exist. To configure, run:\n    $ %s config-init\n", os.Args[0])
+				fmt.Printf(".. does not exist. To configure, run:\n    $ %s config init\n", os.Args[0])
 				return
 			}
 
@@ -170,5 +172,7 @@ func configPrintEntrypoint() *cobra.Command {
 			_, err = io.Copy(os.Stdout, file)
 			osutil.ExitIfError(err)
 		},
-	}
+	})
+
+	return cmd
 }

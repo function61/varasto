@@ -44,20 +44,20 @@ This makes it so that you can run `$ sto` from anywhere.
 
 ### Configuration
 
-If you haven't configured Varasto client yet, `config-print` will give you instructions to fix it:
+If you haven't configured Varasto client yet, `config print` will give you instructions to fix it:
 
 ```console
-$ sto config-print
-file: /home/joonas/varastoclient-config.json
+$ sto config print
+file: /home/joonas/.config/varasto/client-config.json
 .. does not exist. To configure, run:
-    $ sto config-init
+    $ sto config init
 ```
 
-Running `$ sto config-init` without any arguments will give you instructions.
+Running `$ sto config init` without any arguments will give you instructions.
 
 You'll find `authToken` under `Web UI > Users > API keys`
 
-After you've run `config-init` successfully, run `config-print` again to check config's
+After you've run the init command successfully, run the print command again to check config's
 validity and what it contains.
 
 !!! tip
