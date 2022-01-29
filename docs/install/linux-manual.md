@@ -31,8 +31,7 @@ Now make it start on system boot (you may need to run this with `sudo`):
 $ ./sto server install
 Wrote unit file to /etc/systemd/system/varasto.service
 Run to enable on boot & to start now:
-        $ systemctl enable varasto
-        $ systemctl start varasto
+        $ systemctl enable --now varasto
         $ systemctl status varasto
 ```
 
