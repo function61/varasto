@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path/filepath"
 	"time"
 
 	"bazil.org/fuse"
@@ -11,6 +12,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/retry"
 	"github.com/function61/varasto/pkg/stoclient"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 )
 
 func fuseServe(
@@ -37,6 +39,9 @@ func fuseServe(
 		}
 	}
 
+	// there's fuse.AllowRoot() available but it doesn't seem to be supported by "$ fusermount" binary.
+	// https://github.com/bazil/fuse/issues/144
+
 	// AllowOther() needed to get our Samba use case working
 	fuseConn, err := fuse.Mount(
 		conf.FuseMountPath,
@@ -49,7 +54,7 @@ func fuseServe(
 	}
 	defer fuseConn.Close()
 
-	srv := NewFsServer(conf.Client(), logl)
+	srv := NewFsServer(conf.Client(), conf.FuseMountPath, logl)
 
 	byIdDir := NewByIdDir(srv)
 
@@ -87,7 +92,21 @@ func fuseServe(
 		// this succeeding will unblock <-fuseConn.Ready
 	}()
 
-	varastoFsRoot, err := NewVarastoFSRoot(byIdDir, srv)
+	dirByID := NewDirByIDQuery(srv)
+
+	varastoFsRoot, err := NewVarastoFSRoot([]stoEntry{
+		newStoEntry(fuse.Dirent{
+			Name:  "id",
+			Type:  fuse.DT_Dir,
+			Inode: byIdDir.inode,
+		}, byIdDir),
+		newStoEntry(fuse.Dirent{
+			Name:  "dir",
+			Type:  fuse.DT_Dir,
+			Inode: dirByID.inode,
+		}, dirByID),
+		newStoSymlink(srv.AbsoluteSymlinkUnderFUSEMount("dir", stoservertypes.RootFolderId)).MakeStoEntry("browse"),
+	}, srv)
 	if err != nil {
 		return err
 	}
@@ -109,27 +128,37 @@ func fuseServe(
 }
 
 type FsServer struct {
-	client    *stoclient.Client
-	blobCache *BlobCache
-	logl      *logex.Leveled
+	client        *stoclient.Client
+	blobCache     *BlobCache
+	fuseMountPath string // needed for making absolute symlinks
+	logl          *logex.Leveled
 }
 
-func NewFsServer(client *stoclient.Client, logl *logex.Leveled) *FsServer {
+func NewFsServer(client *stoclient.Client, fuseMountPath string, logl *logex.Leveled) *FsServer {
 	return &FsServer{
-		client:    client,
-		blobCache: NewBlobCache(client.Config(), logl),
-		logl:      logl,
+		client:        client,
+		blobCache:     NewBlobCache(client.Config(), logl),
+		fuseMountPath: fuseMountPath,
+		logl:          logl,
 	}
 }
 
+// absolute paths are better because relative ones don't seem to work over multiple symlink levels
+// (or something else level-dependent breaks on them..)
+func (f *FsServer) AbsoluteSymlinkUnderFUSEMount(component0 string, components ...string) string {
+	allComponents := append([]string{f.fuseMountPath, component0}, components...)
+	return filepath.Join(allComponents...)
+}
+
+// TODO: make the root return "backup exclude" xattr
 type VarastoFSRoot struct {
 	srv     *FsServer
 	inode   uint64
-	byIdDir *byIdDir
+	entries []stoEntry
 }
 
-func NewVarastoFSRoot(byIdDir *byIdDir, srv *FsServer) (*VarastoFSRoot, error) {
-	return &VarastoFSRoot{srv, nextInode(), byIdDir}, nil
+func NewVarastoFSRoot(entries []stoEntry, srv *FsServer) (*VarastoFSRoot, error) {
+	return &VarastoFSRoot{srv, nextInode(), entries}, nil
 }
 
 // implements fs.FS
@@ -144,20 +173,20 @@ func (v *VarastoFSRoot) Attr(ctx context.Context, a *fuse.Attr) error {
 }
 
 func (v *VarastoFSRoot) Lookup(ctx context.Context, name string) (fs.Node, error) {
-	switch name {
-	case "id":
-		return v.byIdDir, nil
-	default:
-		return nil, fuse.ENOENT
+	for _, item := range v.entries {
+		if item.dirent.Name == name {
+			return item.node, nil
+		}
 	}
+
+	return nil, fuse.ENOENT
 }
 
 func (v *VarastoFSRoot) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
-	return []fuse.Dirent{
-		{
-			Name:  "id",
-			Type:  fuse.DT_Dir,
-			Inode: v.byIdDir.inode,
-		},
-	}, nil
+	dentries := []fuse.Dirent{}
+	for _, entry := range v.entries {
+		dentries = append(dentries, entry.dirent)
+	}
+
+	return dentries, nil
 }
