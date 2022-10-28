@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -71,7 +72,7 @@ func runServer(
 
 	scf, err := readServerConfigFile()
 	if err != nil {
-		return err
+		return err // has enough context
 	}
 
 	db, err := stodb.Open(scf.DbLocation)
@@ -459,7 +460,11 @@ func getDriver(
 func readServerConfigFile() (*ServerConfigFile, error) {
 	scf := &ServerConfigFile{}
 	if err := jsonfile.Read("config.json", &scf, true); err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			return nil, errors.New("'config.json' not found; did you read installation instructions:\n  https://function61.com/varasto/docs/install/")
+		} else { // some other error
+			return nil, err
+		}
 	}
 
 	// TODO: for each "STO_" prefixed, make sure we processed them all to prevent typos
