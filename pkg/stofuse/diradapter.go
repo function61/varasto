@@ -84,7 +84,12 @@ func (b *dirAdapter) computeCache(ctx context.Context) error {
 	conf := b.srv.client.Config()
 
 	dirOutput := &stoservertypes.DirectoryOutput{}
-	if _, err := ezhttp.Get(ctx, conf.UrlBuilder().GetDirectory(b.dirID), ezhttp.RespondsJson(dirOutput, false)); err != nil {
+	if _, err := ezhttp.Get(
+		ctx,
+		conf.UrlBuilder().GetDirectory(b.dirID),
+		ezhttp.RespondsJson(dirOutput, false),
+		ezhttp.Client(conf.HttpClient()),
+	); err != nil {
 		return err
 	}
 
