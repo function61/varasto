@@ -1,6 +1,10 @@
 package stoclient
 
 import (
+	"io/fs"
+	"net/http"
+
+	"github.com/function61/gokit/ezhttp"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
@@ -15,4 +19,16 @@ func boolToStr(input bool) string {
 	} else {
 		return "false"
 	}
+}
+
+func translate404ToFSErrNotExist(err error) error {
+	if err != nil {
+		if ezhttp.ErrorIs(err, http.StatusNotFound) {
+			return fs.ErrNotExist
+		} else { // some other error
+			return err
+		}
+	}
+
+	return nil // no error
 }

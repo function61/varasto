@@ -181,6 +181,7 @@ func cloneOneFile(ctx context.Context, wd *workdirLocation, file stotypes.File) 
 	return os.Rename(filenameTemp, filename)
 }
 
+// if collection doesn't exist: os.IsNotExist(err) will return true
 func (c *Client) FetchCollectionMetadata(
 	ctx context.Context,
 	id string,
@@ -196,7 +197,7 @@ func (c *Client) FetchCollectionMetadata(
 		ezhttp.RespondsJson(collection, false),
 		ezhttp.Client(c.conf.HttpClient()),
 	); err != nil {
-		return nil, fmt.Errorf("FetchCollectionMetadata(%s): %w", id, err)
+		return nil, fmt.Errorf("FetchCollectionMetadata(%s): %w", id, translate404ToFSErrNotExist(err))
 	}
 
 	return collection, nil

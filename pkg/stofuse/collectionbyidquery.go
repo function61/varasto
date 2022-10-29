@@ -62,7 +62,11 @@ func (b *byIdDir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 
 	collection, err := b.srv.client.FetchCollectionMetadata(ctx, collId)
 	if err != nil {
-		return nil, fuse.ENOENT
+		if os.IsNotExist(err) {
+			return nil, fuse.ENOENT
+		} else { // actually unexpected error
+			return nil, fuse.EIO
+		}
 	}
 
 	dir, err := adaptCollectionToDirectory(collection, b.srv)
