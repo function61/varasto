@@ -1,7 +1,6 @@
 package stomvu
 
 import (
-	"os"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -38,14 +37,7 @@ func customMonthlyPatternEntrypoint() *cobra.Command {
 		Short: "Custom date pattern for moving to monthly folders. The first capture group must be the timestamp",
 		Args:  cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			plan, err := ComputePlan("./", customMonthlyPattern(args[0], args[1]))
-			osutil.ExitIfError(err)
-
-			if doIt {
-				osutil.ExitIfError(ExecutePlan(plan))
-			} else {
-				explainPlan(plan, os.Stdout)
-			}
+			osutil.ExitIfError(runOrExplainPlan(customMonthlyPattern(args[0], args[1]), doIt))
 		},
 	}
 

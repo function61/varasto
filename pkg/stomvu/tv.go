@@ -1,7 +1,6 @@
 package stomvu
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/function61/gokit/osutil"
@@ -17,14 +16,7 @@ func tvEntrypoint() *cobra.Command {
 		Short: "Renames TV episodes",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			plan, err := ComputePlan("./", episodeFromFilename)
-			osutil.ExitIfError(err)
-
-			if doIt {
-				osutil.ExitIfError(ExecutePlan(plan))
-			} else {
-				explainPlan(plan, os.Stdout)
-			}
+			osutil.ExitIfError(runOrExplainPlan(episodeFromFilename, doIt))
 		},
 	}
 

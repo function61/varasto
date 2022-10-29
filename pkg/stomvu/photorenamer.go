@@ -1,7 +1,6 @@
 package stomvu
 
 import (
-	"os"
 	"regexp"
 
 	"github.com/function61/gokit/osutil"
@@ -49,14 +48,7 @@ func photoEntrypoint() *cobra.Command {
 		Short: "Organize photos & videos to '<year>-<month> - Unsorted' subdirectories",
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			plan, err := ComputePlan("./", PhotoOrVideoDateFromFilename)
-			osutil.ExitIfError(err)
-
-			if doIt {
-				osutil.ExitIfError(ExecutePlan(plan))
-			} else {
-				explainPlan(plan, os.Stdout)
-			}
+			osutil.ExitIfError(runOrExplainPlan(PhotoOrVideoDateFromFilename, doIt))
 		},
 	}
 
