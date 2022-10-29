@@ -15,6 +15,7 @@ func Entrypoint() *cobra.Command {
 	cmd.AddCommand(tvEntrypoint())
 	cmd.AddCommand(photoEntrypoint())
 	cmd.AddCommand(customMonthlyPatternEntrypoint())
+	cmd.AddCommand(fileModificationTimeEntrypoint())
 
 	return cmd
 }
