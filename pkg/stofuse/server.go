@@ -15,6 +15,17 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 )
 
+// guaranteed non-null
+// FIXME: dirty
+var home = func() string {
+	val := os.Getenv("HOME")
+	if val == "" {
+		panic("HOME ENV not set")
+	}
+
+	return val
+}()
+
 func fuseServe(
 	ctx context.Context,
 	sigs *sigFabric,

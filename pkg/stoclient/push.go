@@ -77,7 +77,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 		}
 
 		if !fileInfo.IsDir() { // don't handle directories
-			if fileInfo.Name() == localStatefile { // skip .varasto files
+			if fileInfo.Name() == LocalStatefile { // skip .varasto files
 				return nil
 			}
 

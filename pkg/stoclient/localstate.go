@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	localStatefile = ".varasto"
+	LocalStatefile = ".varasto"
 )
 
 type BupManifest struct {
@@ -31,7 +31,7 @@ func (w *workdirLocation) Join(comp string) string {
 }
 
 func (w *workdirLocation) SaveToDisk() error {
-	return jsonfile.Write(w.Join(localStatefile), w.manifest)
+	return jsonfile.Write(w.Join(LocalStatefile), w.manifest)
 }
 
 func NewWorkdirLocation(path string) (*workdirLocation, error) {
@@ -45,7 +45,7 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 		clientConfig: *clientConfig,
 	}
 
-	statefile, err := os.Open(loc.Join(localStatefile))
+	statefile, err := os.Open(loc.Join(LocalStatefile))
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil, fmt.Errorf("not a Varasto workdir: %s", loc.path)
@@ -66,7 +66,7 @@ func statefileExists(path string) (bool, error) {
 		path: path,
 	}
 
-	return fileexists.Exists(halfBakedWd.Join(localStatefile))
+	return fileexists.Exists(halfBakedWd.Join(LocalStatefile))
 }
 
 func assertStatefileNotExists(path string) error {
@@ -75,7 +75,7 @@ func assertStatefileNotExists(path string) error {
 			return err
 		}
 
-		return fmt.Errorf("%s already exists in %s - adopting would be dangerous", localStatefile, path)
+		return fmt.Errorf("%s already exists in %s - adopting would be dangerous", LocalStatefile, path)
 	}
 
 	return nil

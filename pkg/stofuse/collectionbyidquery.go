@@ -2,6 +2,7 @@ package stofuse
 
 import (
 	"context"
+	"log"
 	"os"
 	"regexp"
 	"sync"
@@ -12,12 +13,13 @@ import (
 )
 
 type byIdDir struct {
-	srv           *FsServer
-	inode         uint64
-	fetchByCollId *mutexmap.M
-	cache         map[string]fs.Node
-	cacheDents    []fuse.Dirent
-	cacheMu       sync.Mutex
+	srv             *FsServer
+	inode           uint64
+	fetchByCollId   *mutexmap.M
+	cache           map[string]fs.Node
+	cacheDents      []fuse.Dirent
+	cacheDentInodes []uint64
+	cacheMu         sync.Mutex
 }
 
 var _ interface {
@@ -25,14 +27,22 @@ var _ interface {
 	fs.NodeStringLookuper
 } = (*byIdDir)(nil)
 
+// FIXME: dirty
+var collectionByIdQuerySingleton *byIdDir
+
 func NewByIdDir(srv *FsServer) *byIdDir {
-	return &byIdDir{
-		srv:           srv,
-		inode:         nextInode(),
-		fetchByCollId: mutexmap.New(),
-		cache:         map[string]fs.Node{},
-		cacheDents:    []fuse.Dirent{},
+	inst := &byIdDir{
+		srv:             srv,
+		inode:           nextInode(),
+		fetchByCollId:   mutexmap.New(),
+		cache:           map[string]fs.Node{},
+		cacheDents:      []fuse.Dirent{},
+		cacheDentInodes: []uint64{},
 	}
+
+	collectionByIdQuerySingleton = inst
+
+	return inst
 }
 
 // internally means emptying caches, so previously used collections
@@ -43,6 +53,7 @@ func (b *byIdDir) ForgetDirs() {
 
 	b.cache = map[string]fs.Node{}
 	b.cacheDents = []fuse.Dirent{}
+	b.cacheDentInodes = []uint64{}
 }
 
 func (b *byIdDir) Attr(ctx context.Context, a *fuse.Attr) error {
@@ -97,16 +108,40 @@ func (b *byIdDir) getCached(collId string) fs.Node {
 	return b.cache[collId]
 }
 
-func (b *byIdDir) setCached(collId string, cad *CollectionAsDir) {
+func (b *byIdDir) setCached(collId string, cad *CollectionDirNode) {
 	b.cacheMu.Lock()
 	defer b.cacheMu.Unlock()
 
 	b.cache[collId] = cad
 	b.cacheDents = append(b.cacheDents, fuse.Dirent{
 		Inode: cad.inode,
-		Name:  encodeDirRef(collId, cad.name),
+		Name:  encodeDirRef(collId, mkFsSafe(cad.collection.Name)),
 		Type:  fuse.DT_Dir,
 	})
+	b.cacheDentInodes = append(b.cacheDentInodes, cad.inode)
+}
+
+func (b *byIdDir) forgetCollection(ctx context.Context, collId string) {
+	node := b.getCached(collId)
+	if node == nil {
+		return
+	}
+
+	nodeAttr := fuse.Attr{}
+	if err := node.Attr(ctx, &nodeAttr); err != nil {
+		panic(err)
+	}
+
+	delete(b.cache, collId)
+
+	for idx, inode := range b.cacheDentInodes {
+		if inode == nodeAttr.Inode {
+			b.cacheDents = append(b.cacheDents[:idx], b.cacheDents[idx+1:]...)
+			b.cacheDentInodes = append(b.cacheDentInodes[:idx], b.cacheDentInodes[idx+1:]...)
+
+			break
+		}
+	}
 }
 
 func encodeDirRef(id string, name string) string {
