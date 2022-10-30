@@ -22,7 +22,10 @@ type dirByIDQuery struct {
 	cacheMu      sync.Mutex
 }
 
-var _ DirContract = (*dirByIDQuery)(nil)
+var _ interface {
+	fs.Node
+	fs.NodeStringLookuper
+} = (*dirByIDQuery)(nil)
 
 func NewDirByIDQuery(srv *FsServer) *dirByIDQuery {
 	return &dirByIDQuery{

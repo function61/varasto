@@ -20,7 +20,10 @@ type byIdDir struct {
 	cacheMu       sync.Mutex
 }
 
-var _ DirContract = (*byIdDir)(nil)
+var _ interface {
+	fs.Node
+	fs.NodeStringLookuper
+} = (*byIdDir)(nil)
 
 func NewByIdDir(srv *FsServer) *byIdDir {
 	return &byIdDir{

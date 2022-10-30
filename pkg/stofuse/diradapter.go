@@ -26,7 +26,10 @@ type dirAdapter struct {
 	entriesCached []stoEntry
 }
 
-var _ DirContract = (*dirAdapter)(nil)
+var _ interface {
+	fs.Node
+	fs.NodeStringLookuper
+} = (*dirAdapter)(nil)
 
 func NewDirAdapter(dirID string, srv *FsServer) *dirAdapter {
 	return &dirAdapter{
