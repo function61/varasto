@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -59,7 +60,7 @@ func pushCurrentWorkdir(ctx context.Context) error {
 func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscoveredListener) (*stotypes.CollectionChangeset, error) {
 	parentState, err := stateresolver.ComputeStateAtHead(wd.manifest.Collection)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ComputeStateAtHead: %w", err)
 	}
 
 	collectionId := wd.manifest.Collection.ID
@@ -74,6 +75,10 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 	errWalk := filepath.Walk(wd.path, func(path string, fileInfo os.FileInfo, err error) error {
 		if err != nil {
 			return err // stop if encountering Walk() errors
+		}
+
+		if fileInfo.Mode()&fs.ModeSymlink != 0 {
+			return fmt.Errorf("symlinks not yet supported: %s", path)
 		}
 
 		if !fileInfo.IsDir() { // don't handle directories
@@ -98,7 +103,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 				if definitelyChanged || maybeChanged {
 					fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
 					if err != nil {
-						return err
+						return fmt.Errorf("scanFileAndDiscoverBlobs: %w", err)
 					}
 
 					// TODO: allow commit to change metadata like modification time or
@@ -110,7 +115,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 			} else {
 				fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
 				if err != nil {
-					return err
+					return fmt.Errorf("scanFileAndDiscoverBlobs: %w", err)
 				}
 
 				created = append(created, *fil)
@@ -120,7 +125,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 		return nil
 	})
 	if errWalk != nil {
-		return nil, errWalk
+		return nil, fmt.Errorf("walk: %w", errWalk)
 	}
 
 	deleted := []string{}
