@@ -55,10 +55,10 @@ func healthForScheduledJobs(tx *bbolt.Tx) stohealth.HealthChecker {
 }
 
 /*
-	<=5 freezing (fail)
-	5-45 => ok (pass)
-	45-50 => uncomfortable  (warn)
-	>=50 => too hot (fail)
+<=5 freezing (fail)
+5-45 => ok (pass)
+45-50 => uncomfortable  (warn)
+>=50 => too hot (fail)
 */
 func temperatureToHealthStatus(tempC int) stoservertypes.HealthStatus {
 	switch {

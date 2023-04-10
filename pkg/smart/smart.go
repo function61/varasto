@@ -25,10 +25,11 @@ func SmartCtlBackend(device string) ([]byte, error) {
 	return stdout, silenceSmartCtlAutomationHostileErrors(err)
 }
 
-/*	joonas/smartmontools built from simple Dockerfile:
+/*
+joonas/smartmontools built from simple Dockerfile:
 
-	FROM alpine:edge
-	RUN apk add --update smartmontools
+FROM alpine:edge
+RUN apk add --update smartmontools
 */
 func SmartCtlViaDockerBackend(device string) ([]byte, error) {
 	// disks in /dev are visible without --privileged (by mapping /dev:/dev) but

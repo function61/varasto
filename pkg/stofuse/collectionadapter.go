@@ -499,10 +499,11 @@ func (a *changedFileInWorkdir) Open(ctx context.Context, req *fuse.OpenRequest, 
 	return &changedFileInWorkdirHandle{hdl}, nil
 }
 
-/*	To test
+/*
+To test
 
-	$ apt install -y attr
-	$ setfattr -n user.foo -v hihi foobar.txt
+$ apt install -y attr
+$ setfattr -n user.foo -v hihi foobar.txt
 */
 func (a *changedFileInWorkdir) Listxattr(ctx context.Context, req *fuse.ListxattrRequest, resp *fuse.ListxattrResponse) error {
 	log.Printf("Listxattr %s", a.backingFilePath)

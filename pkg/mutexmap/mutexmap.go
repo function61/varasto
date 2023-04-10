@@ -9,7 +9,8 @@ import (
 // When you TryLock():
 // a) it won't open if it's already occupied. (because it's locked inside) decide to do something else
 // b) it opens and you get in and the stall gets reserved/locked for you. When you get out
-//    you call the unlock callback you obtained from TryLock() to return the stall for use.
+//
+//	you call the unlock callback you obtained from TryLock() to return the stall for use.
 type M struct {
 	// value is chan that Lock() can use to listen for unlock event (close of channel)
 	locks    map[string]chan bool

@@ -982,7 +982,8 @@ func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.R
 // robustness of the metadata database. that's why we have this export endpoint - to get
 // backups. more confidence will come when this whole system is hooked up to Event Horizon.
 // Run this with:
-// 	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" https://localhost/api/db/export
+//
+//	$ curl -H "Authorization: Bearer $BUP_AUTHTOKEN" https://localhost/api/db/export
 func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
 	tx, err := h.db.Begin(false)
 	panicIfError(err)
