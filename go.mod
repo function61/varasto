@@ -37,6 +37,7 @@ require (
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/openzipkin/zipkin-go v0.1.6 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible
+	github.com/pkg/xattr v0.4.9
 	github.com/prometheus/client_golang v1.4.1
 	github.com/prometheus/procfs v0.0.8
 	github.com/raviqqe/liche v0.0.0-20200229003944-f57a5d1c5be4 // indirect
@@ -52,7 +53,7 @@ require (
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
-	golang.org/x/sys v0.0.0-20211205182925-97ca703d548d
+	golang.org/x/sys v0.0.0-20220408201424-a24fb2fb8a0f
 	golang.org/x/text v0.3.7
 	google.golang.org/api v0.62.0
 	google.golang.org/appengine v1.6.7
