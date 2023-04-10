@@ -34,6 +34,7 @@ import {
 	VolumeMountS3,
 	VolumeRename,
 	VolumeSetManufacturingDate,
+	VolumeForceMarkDataMigrated,
 	VolumeSetSerialNumber,
 	VolumeSetTechnology,
 	VolumeSetWarrantyEndDate,
@@ -407,6 +408,13 @@ export default class VolumesAndMountsPage extends React.Component<
 							/>
 							<CommandLink
 								command={VolumeMigrateData(
+									obj.Id,
+									{ To: volumeAutocomplete },
+									{ disambiguation: obj.Label },
+								)}
+							/>
+							<CommandLink
+								command={VolumeForceMarkDataMigrated(
 									obj.Id,
 									{ To: volumeAutocomplete },
 									{ disambiguation: obj.Label },

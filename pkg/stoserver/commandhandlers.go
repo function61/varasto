@@ -408,6 +408,42 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 	})
 }
 
+// "mark any blobs that were on this volume, to also be present in another volume"
+// use case = manual copy of data from volume A to B, so that `B = Abefore + Bbefore`
+func (c *cHandlers) VolumeForceMarkDataMigrated(cmd *stoservertypes.VolumeForceMarkDataMigrated, ctx *command.Ctx) error {
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		from, err := stodb.Read(tx).Volume(cmd.From)
+		if err != nil {
+			return err
+		}
+
+		to, err := stodb.Read(tx).Volume(cmd.To)
+		if err != nil {
+			return err
+		}
+
+		if from.ID == to.ID {
+			return fmt.Errorf("from == to (%d)", from.ID)
+		}
+
+		return stodb.BlobRepository.Each(func(record interface{}) error {
+			blob := record.(*stotypes.Blob)
+
+			if !sliceutil.ContainsInt(blob.Volumes, from.ID) { // doesn't fit our criteria
+				return nil
+			}
+
+			if sliceutil.ContainsInt(blob.Volumes, to.ID) { // is already in target volume
+				return nil
+			}
+
+			blob.Volumes = append(blob.Volumes, to.ID)
+
+			return stodb.BlobRepository.Update(blob, tx)
+		}, tx)
+	})
+}
+
 func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegrity, ctx *command.Ctx) error {
 	jobId := stoutils.NewIntegrityVerificationJobId()
 

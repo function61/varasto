@@ -234,6 +234,17 @@
 		]
 	},
 	{
+		"command": "volume.ForceMarkDataMigrated",
+		"chain": "public",
+		"ctor": ["From"],
+		"crudNature": "update",
+		"title": "Force-mark data as migrated",
+		"fields": [
+			{ "key": "From", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "To", "title": "Migrate to", "placeholder": "(volume)", "type": "custom/integer" }
+		]
+	},
+	{
 		"command": "volume.RemoveQueuedReplications",
 		"chain": "public",
 		"ctor": ["From"],
