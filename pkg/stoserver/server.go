@@ -31,6 +31,7 @@ import (
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/childprocesscontroller"
 	"github.com/function61/varasto/pkg/frontend"
+	"github.com/function61/varasto/pkg/gokitbp"
 	"github.com/function61/varasto/pkg/logtee"
 	"github.com/function61/varasto/pkg/restartcontroller"
 	"github.com/function61/varasto/pkg/scheduler"
@@ -226,8 +227,9 @@ func runServer(
 	defineUI(router)
 
 	srv := &http.Server{
-		Addr:    "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
-		Handler: serverConfig.Metrics.WrapHttpServer(router),
+		Addr:              "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
+		Handler:           serverConfig.Metrics.WrapHttpServer(router),
+		ReadHeaderTimeout: gokitbp.DefaultReadHeaderTimeout,
 		TLSConfig: &tls.Config{
 			MinVersion:   tls.VersionTLS12, // require TLS 1.2 minimum
 			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},

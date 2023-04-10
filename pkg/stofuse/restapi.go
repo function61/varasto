@@ -9,6 +9,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
+	"github.com/function61/varasto/pkg/gokitbp"
 	"github.com/function61/varasto/pkg/stofuse/stofusetypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
@@ -35,7 +36,8 @@ func rpcStart(addr string, sigs *sigFabric, tasks *taskrunner.Runner) error {
 	}
 
 	srv := &http.Server{
-		Handler: router,
+		Handler:           router,
+		ReadHeaderTimeout: gokitbp.DefaultReadHeaderTimeout,
 	}
 
 	tasks.Start("rpc "+addr, func(_ context.Context) error {
