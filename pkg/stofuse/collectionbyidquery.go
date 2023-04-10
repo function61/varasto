@@ -2,7 +2,6 @@ package stofuse
 
 import (
 	"context"
-	"log"
 	"os"
 	"regexp"
 	"sync"
