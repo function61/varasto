@@ -471,7 +471,8 @@ func (a *changedFileInWorkdir) Setattr(ctx context.Context, req *fuse.SetattrReq
 			}
 		}
 
-		existingATime := timespecToTime(existing.Sys().(*syscall.Stat_t).Atim)
+		// some platforms don't support fetching access time.
+		existingATime := accessTimeFromStatt(existing.Sys().(*syscall.Stat_t), existing.ModTime())
 
 		// TODO: use herbis times
 
