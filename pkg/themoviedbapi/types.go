@@ -54,5 +54,6 @@ type Episode struct {
 type ImageSize string
 
 const (
-	ImageSizeOriginal ImageSize = "original"
+	ImageSizeOriginal           ImageSize = "original"
+	ImageSizew138_and_h175_face ImageSize = "w138_and_h175_face"
 )
