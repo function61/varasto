@@ -40,8 +40,8 @@ func discoverBannerUrl(
 			return "", err // TODO: don't error out
 		}
 
-		if info.BackdropPath != "" {
-			return themoviedbapi.ImagePath(info.BackdropPath, themoviedbapi.ImageSizeOriginal), nil
+		if info.BackdropPath != nil {
+			return info.BackdropPath.URL(themoviedbapi.ImageSizeOriginal), nil
 		}
 	}
 
@@ -60,8 +60,8 @@ func discoverBannerUrl(
 		}
 
 		for _, episode := range episodes {
-			if strconv.Itoa(int(episode.Id)) == tmdbTvEpisodeId && episode.StillPath != "" {
-				return themoviedbapi.ImagePath(episode.StillPath, themoviedbapi.ImageSizeOriginal), nil
+			if strconv.Itoa(int(episode.Id)) == tmdbTvEpisodeId && episode.StillPath != nil {
+				return episode.StillPath.URL(themoviedbapi.ImageSizeOriginal), nil
 			}
 		}
 	}
@@ -74,8 +74,8 @@ func discoverBannerUrl(
 			return "", err
 		}
 
-		if info.BackdropPath != "" {
-			return themoviedbapi.ImagePath(info.BackdropPath, themoviedbapi.ImageSizeOriginal), nil
+		if info.BackdropPath != nil {
+			return info.BackdropPath.URL(themoviedbapi.ImageSizeOriginal), nil
 		}
 	}
 

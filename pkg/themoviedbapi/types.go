@@ -28,27 +28,34 @@ type Movie struct {
 	RuntimeMinutes int         `json:"runtime"`
 	ReleaseDate    string      `json:"release_date"` // yyyy-mm-dd
 	RevenueDollars int64       `json:"revenue"`
-	BackdropPath   string      `json:"backdrop_path"`
+	BackdropPath   *ImageID    `json:"backdrop_path"`
 }
 
 type Tv struct {
 	Id           int64       `json:"id"`
 	Name         string      `json:"name"`
 	Overview     string      `json:"overview"`
-	BackdropPath string      `json:"backdrop_path"`
-	PosterPath   string      `json:"poster_path"`
+	BackdropPath *ImageID    `json:"backdrop_path"`
+	PosterPath   *ImageID    `json:"poster_path"`
 	Homepage     string      `json:"homepage"`
 	ExternalIds  ExternalIds `json:"external_ids"`
 }
 
 type Episode struct {
-	Id            uint64 `json:"id"`
-	SeasonNumber  int    `json:"season_number"`
-	EpisodeNumber int    `json:"episode_number"`
-	Name          string `json:"name"`
-	Overview      string `json:"overview"`
-	AirDate       string `json:"air_date"` // yyyy-mm-dd
-	StillPath     string `json:"still_path"`
+	Id            uint64   `json:"id"`
+	SeasonNumber  int      `json:"season_number"`
+	EpisodeNumber int      `json:"episode_number"`
+	Name          string   `json:"name"`
+	Overview      string   `json:"overview"`
+	AirDate       string   `json:"air_date"` // yyyy-mm-dd
+	StillPath     *ImageID `json:"still_path"`
+}
+
+// something like "/421cSReX2Fktldac8SyY2k0yLwY.jpg" which is used as input to calculate the full image path.
+type ImageID string
+
+func (i ImageID) URL(size ImageSize) string {
+	return ImagePath(string(i), size)
 }
 
 type ImageSize string
