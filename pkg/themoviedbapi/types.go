@@ -1,5 +1,9 @@
 package themoviedbapi
 
+import (
+	"fmt"
+)
+
 type ExternalIds struct {
 	Id     int64  `json:"id"`
 	ImdbId string `json:"imdb_id"`
@@ -51,6 +55,41 @@ type Episode struct {
 	StillPath     *ImageID `json:"still_path"`
 }
 
+type CreditsCastItem struct {
+	ID          PersonID
+	Name        string
+	ProfilePath *ImageID `json:"profile_path"` // actually means profile *picture* path
+	Character   string
+}
+
+type CreditsCrewItem struct {
+	ID          PersonID
+	Name        string
+	ProfilePath *ImageID `json:"profile_path"` // actually means profile *picture* path
+	Job         string
+}
+
+type Credits struct {
+	Cast []CreditsCastItem
+	Crew []CreditsCrewItem
+}
+
+func (c *Credits) Director() *string {
+	for _, crew := range c.Crew {
+		if crew.Job == JobDirector {
+			return &crew.Name
+		}
+	}
+
+	return nil
+}
+
+type PersonID int
+
+func (p PersonID) URL() string {
+	return fmt.Sprintf("https://www.themoviedb.org/person/%d", p)
+}
+
 // something like "/421cSReX2Fktldac8SyY2k0yLwY.jpg" which is used as input to calculate the full image path.
 type ImageID string
 
@@ -63,4 +102,10 @@ type ImageSize string
 const (
 	ImageSizeOriginal           ImageSize = "original"
 	ImageSizew138_and_h175_face ImageSize = "w138_and_h175_face"
+)
+
+type Job string
+
+const (
+	JobDirector = "Director"
 )

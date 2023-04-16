@@ -127,6 +127,18 @@ func (c *Client) MultiSearch(ctx context.Context, query string) ([]MultiSearchRe
 	return res.Results, nil
 }
 
+func (c *Client) MovieCredits(ctx context.Context, id string) (*Credits, error) {
+	credits := &Credits{}
+	_, err := ezhttp.Get(ctx, endpointV3("/movie/"+id+"/credits?api_key="+c.apiKey), ezhttp.RespondsJson(credits, true))
+	return credits, err
+}
+
+func (c *Client) TVCredits(ctx context.Context, id string, season int, episode int) (*Credits, error) {
+	credits := &Credits{}
+	_, err := ezhttp.Get(ctx, endpointV3(fmt.Sprintf("/tv/%s/season/%d/episode/%d/credits?api_key=%s", id, season, episode, c.apiKey)), ezhttp.RespondsJson(credits, true))
+	return credits, err
+}
+
 func (c *Client) findMovieByImdbId(ctx context.Context, imdbId string) (string, error) {
 	return c.findMovieOrTvByImdbId(ctx, imdbId, true)
 }
