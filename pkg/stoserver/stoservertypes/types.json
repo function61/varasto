@@ -33,6 +33,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/logs", "produces": {"_": "list", "of": {"_": "string"}}, "name": "getLogs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/movies?q={query}", "produces": {"_": "list", "of": {"_": "TmdbSearchResult"}}, "name": "searchTmdbMovies" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/tv?q={query}", "produces": {"_": "list", "of": {"_": "TmdbSearchResult"}}, "name": "searchTmdbTv" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/credits?collection={collection}", "produces": {"_": "list", "of": {"_": "TmdbCredit"}}, "name": "tmdbCredits" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/games?q={query}", "produces": {"_": "list", "of": {"_": "MetadataIgdbGame"}}, "name": "searchIgdb" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/igdb/game-redir/{id}", "name": "igdbIntegrationRedir" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/replicationpolicies_for_directories", "produces": {"_": "list", "of": {"_": "ReplicationPolicyForDirectory"}}, "name": "getReplicationPoliciesForDirectories" },
@@ -577,6 +578,15 @@
 			"type": {"_": "object", "fields": {
 				"Cursor": {"_": "string"},
 				"CollectionId": {"_": "string"}
+			}}
+		},
+		{
+			"name": "TmdbCredit",
+			"type": {"_": "object", "fields": {
+				"Name": {"_": "string"},
+				"Character": {"_": "string"},
+				"PersonURL": {"_": "string"},
+				"ProfilePictureURL": {"_": "string", "nullable": true}
 			}}
 		},
 		{

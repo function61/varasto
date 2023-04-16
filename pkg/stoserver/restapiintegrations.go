@@ -7,9 +7,14 @@ import (
 	"time"
 
 	"github.com/function61/gokit/httpauth"
+	"github.com/function61/varasto/pkg/gokitbp"
+	"github.com/function61/varasto/pkg/seasonepisodedetector"
+	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/themoviedbapi"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
+	"go.etcd.io/bbolt"
 )
 
 func (h *handlers) SearchIgdb(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.MetadataIgdbGame {
@@ -149,4 +154,92 @@ func (h *handlers) IgdbIntegrationRedir(rctx *httpauth.RequestContext, w http.Re
 	}
 
 	http.Redirect(w, r, game.Url, http.StatusFound)
+}
+
+func (h *handlers) TmdbCredits(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.TmdbCredit {
+	collectionID := r.URL.Query().Get("collection")
+
+	tmdbPK, err := tmdbMovieOrTVEpisodePrimaryKeyForCollection(collectionID, h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	tmdb, err := themoviedbapiClient(h.db)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	credits, err := func() (*themoviedbapi.Credits, error) {
+		if tmdbPK.movieID != "" {
+			return tmdb.MovieCredits(r.Context(), tmdbPK.movieID)
+		} else {
+			return tmdb.TVCredits(r.Context(), tmdbPK.tvID, tmdbPK.season, tmdbPK.episode)
+		}
+	}()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	// transform to our own data structure (to insulate us from remote datatype changes)
+	return gokitbp.Pointer(lo.Map(credits.Cast, func(cast themoviedbapi.CreditsCastItem, _ int) stoservertypes.TmdbCredit {
+		if cast.ID == 0 { // verify assumption
+			panic("no cast ID")
+		}
+
+		return stoservertypes.TmdbCredit{
+			Name:      cast.Name,
+			PersonURL: cast.ID.URL(),
+			Character: cast.Character,
+			ProfilePictureURL: func() *string {
+				if cast.ProfilePath == nil {
+					return nil
+				} else {
+					return gokitbp.Pointer(cast.ProfilePath.URL(themoviedbapi.ImageSizew138_and_h175_face))
+				}
+			}(),
+		}
+	}))
+}
+
+// a reference to a movie (simple id) or a TV episode (need: 1) TV show ID 2) season number 3) episode number)
+// (even though they have individual IDs for the episodes, the API just doesn't seem to support referencing via it...)
+type tmdbPrimaryKey struct {
+	movieID string
+
+	tvID    string
+	season  int
+	episode int
+}
+
+func tmdbMovieOrTVEpisodePrimaryKeyForCollection(collectionID string, db *bbolt.DB) (*tmdbPrimaryKey, error) {
+	withErr := func(err error) (*tmdbPrimaryKey, error) { return nil, err }
+
+	tx, err := db.Begin(false)
+	if err != nil {
+		return withErr(err)
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	coll, err := stodb.Read(tx).Collection(collectionID)
+	if err != nil {
+		return withErr(err)
+	}
+
+	if id, has := coll.Metadata[stoservertypes.MetadataTheMovieDbMovieId]; has {
+		return &tmdbPrimaryKey{movieID: id}, nil
+	}
+
+	if id, has := coll.Metadata[stoservertypes.MetadataTheMovieDbTvId]; has {
+		seasonEpisode := seasonepisodedetector.Detect(coll.Name)
+		if seasonEpisode == nil {
+			return withErr(fmt.Errorf("not able to detect season/episode from: %s", coll.Name))
+		}
+
+		return &tmdbPrimaryKey{tvID: id, season: gokitbp.Must(strconv.Atoi(seasonEpisode.Season)), episode: gokitbp.Must(strconv.Atoi(seasonEpisode.Episode))}, nil
+	}
+
+	return withErr(fmt.Errorf("coll not a movie and not a serie: %s", collectionID))
 }

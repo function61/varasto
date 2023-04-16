@@ -25,6 +25,7 @@ require (
 	github.com/prometheus/client_golang v1.4.1
 	github.com/prometheus/procfs v0.0.8
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/samber/lo v1.38.1
 	github.com/spf13/cobra v1.3.0
 	go.etcd.io/bbolt v1.3.2
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
@@ -53,6 +54,7 @@ require (
 	github.com/vmihailenco/msgpack v4.0.1+incompatible // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
 	golang.org/x/sys v0.0.0-20220408201424-a24fb2fb8a0f // indirect
 	golang.org/x/text v0.3.7 // indirect
