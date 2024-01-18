@@ -486,7 +486,7 @@ export default class VolumesAndMountsPage extends React.Component<
 							<td colSpan={99}>{loadingOrError}</td>
 						</tr>
 					) : null}
-					<tr>
+					<tr class="text-muted">
 						<td />
 						<td />
 						<td>{blobCount(totals)}</td>
