@@ -136,9 +136,9 @@ type Blob struct {
 	VolumesPendingReplication []int
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
 	IsCompressed              bool
-	Size                      int32 // 32 bits is enough, usually blobs are 4 MB
-	SizeOnDisk                int32 // after optional compression
-	Crc32                     []byte
+	Size                      int32  // 32 bits is enough, usually blobs are 4 MB
+	SizeOnDisk                int32  // after optional compression
+	Crc32                     []byte // so we can check file integrity without needing to decrypt (= have access to encryption keys)
 }
 
 type IntegrityVerificationJob struct {

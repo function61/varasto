@@ -8,6 +8,7 @@ import (
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/byteshuman"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
@@ -511,7 +512,7 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 	logl := logex.Levels(logex.Prefix("abandonedscanner", c.logger))
 
 	blobCount := 0
-	totalSize := int64(0)
+	totalSize := uint64(0)
 
 	knownEncryptionKeys := map[string]bool{}
 
@@ -531,7 +532,7 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 		blob := record.(*stotypes.Blob)
 
 		blobCount++
-		totalSize += int64(blob.Size)
+		totalSize += uint64(blob.Size)
 
 		if len(blob.Volumes) == 0 {
 			logl.Error.Printf("Blob[%s] without a volume", blob.Ref.AsHex())
@@ -553,7 +554,10 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 		return err
 	}
 
-	logl.Info.Printf("Completed with %d blob(s) with total size (not counting redundancy) %d byte(s) scanned", blobCount, totalSize)
+	logl.Info.Printf(
+		"Completed with %d blob(s) with total size (not counting redundancy) %s scanned",
+		blobCount,
+		byteshuman.Humanize(totalSize))
 
 	return nil
 }
