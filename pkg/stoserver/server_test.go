@@ -20,6 +20,7 @@ HpwVUGEkVsDp0Kl556XftcOJcKLkjgeMLERt4TUiAiEAqJZvB40TFLrAShtovcc5
 /FwjIqnJX8kT6Pox3QYSspI=
 -----END CERTIFICATE-----`
 
+	//nolint:gosec // intentionally insecure key
 	keyPem := `-----BEGIN EC PRIVATE KEY-----
 MHcCAQEEINTwTX5Xt26rkBv44y2dXEwetcT54HZr6v20FBFhW7hboAoGCCqGSM49
 AwEHoUQDQgAExER1ikX4DnifPRJ1i9Ra9H9IGq7CaKbBFgofAo5c63l+pYd+/7Zr

@@ -72,7 +72,7 @@ func (t UnixTime) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.FormatInt(time.Time(t).Unix(), 10)), nil
 }
 
-func (t *UnixTime) UnmarshalJSON(s []byte) (err error) {
+func (t *UnixTime) UnmarshalJSON(s []byte) error {
 	q, err := strconv.ParseInt(string(s), 10, 64)
 	if err != nil {
 		return err

@@ -66,6 +66,7 @@ func keyStoreWith(privateKeys ...string) *Store {
 }
 
 var (
+	//nolint:gosec // intentionally insecure key
 	testPrivateKey1 = `-----BEGIN RSA PRIVATE KEY-----
 MIICWwIBAAKBgQCCgb7Ua7ERt9gyln4op+R6J/DqHoeP3hi0yP7mpcDdW0d1OkdO
 fr+x1fCSplZS3CqaEV4RQiswilW+lLhZLpAQ81dMKq1p0udPnlwZWGfV+4cRXHI0
@@ -81,6 +82,7 @@ btym8YMyD/p0+y2KE5ER56qbXisLpHwuQZUiRl8uZU5fg0miPSWoXJWMegWlTC0/
 Q+cajnwuTtUcvi7D4QJAKCzbJ0KnvxU8ePUxZts+JrVyG0LbPy0GRGPVMVobZ8fP
 synk8J2O0CZlhuXHUKCYpANTGk6J06MFeDCBz0sPlA==
 -----END RSA PRIVATE KEY-----`
+	//nolint:gosec // intentionally insecure key
 	testPrivateKey2 = `-----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQDIVQVgAw5bDA5hPG5IqXMVdbrRqhd10jcwrb5bl5eaqERrQVkd
 ws1njow/6yetRllUmeaZZrUefl56oHdIiSoEf10A7GBD5gdedJZzKxrX4mUNyDgr
@@ -96,6 +98,7 @@ yixt0dK0tAVOUJvoKcGaw8vSxYGshngXdk4oZdLdYgVL+MefWPW+ubzZIQJBAK0l
 ZkCHyBhJvnWz2xqrwYECQQDXa9Hi1+UgHkHDLMF+tYrD3MvPyqiG1nLcjvcg5cKl
 mXKJchGABaSe9g50Ym8REPaavbkXGGQh2tCHOwqjmYOC
 -----END RSA PRIVATE KEY-----`
+	//nolint:gosec // intentionally insecure key
 	testPrivateKey3 = `-----BEGIN RSA PRIVATE KEY-----
 MIICXQIBAAKBgQDqdbUG7b98RtMpof/kFSslI8QeAfHHfdDjqL9uUBRwGnXUeW3v
 0khe/QjNIIuHxkr0dUoLsbRj3mlnXWX7xwK13eA4I4ghxeYdW3CCSfkUj901m9OY

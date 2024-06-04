@@ -800,10 +800,13 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 	for _, dbJob := range dbJobs {
 		var lastRun *stoservertypes.SchedulerJobLastRun
 		if dbJob.LastRun != nil {
-			var errorStrPtr *string
-			if dbJob.LastRun.Error != "" {
-				errorStrPtr = &dbJob.LastRun.Error
-			}
+			errorStrPtr := func() *string {
+				if dbJob.LastRun.Error != "" {
+					return &dbJob.LastRun.Error
+				} else {
+					return nil
+				}
+			}()
 
 			lastRun = &stoservertypes.SchedulerJobLastRun{
 				Error:    errorStrPtr,
