@@ -511,6 +511,11 @@ export default class VolumesAndMountsPage extends React.Component<
 			return null;
 		}
 
+		// show recently decommissioned first
+		volumesDecommissioned
+			.sort((a, b) => (a.Decommissioned!.At < b.Decommissioned!.At ? -1 : 1))
+			.reverse();
+
 		return (
 			<CollapsePanel
 				heading={`${volumesDecommissioned.length} decommissioned volumes`}
