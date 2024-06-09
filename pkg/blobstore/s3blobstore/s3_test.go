@@ -23,11 +23,32 @@ func TestDeserializeConfig(t *testing.T) {
 	assert.EqualString(t, conf.AccessKeyId, "AKIAUZHTE3U35WCD5EHB")
 	assert.EqualString(t, conf.AccessKeySecret, "wXQJhB...")
 	assert.EqualString(t, conf.RegionId, "eu-central-1")
+	assert.EqualString(t, conf.Endpoint, "")
+}
+
+func TestDeserializeConfigWithEndpoint(t *testing.T) {
+	// serialize + deserialize to cover both directions
+	conf, err := deserializeConfig((&Config{
+		Bucket:          "varasto-test",
+		Prefix:          "/",
+		AccessKeyId:     "AKIAUZHTE3U35WCD5EHB",
+		AccessKeySecret: "wXQJhB...",
+		RegionId:        "eu-central-1",
+		Endpoint:        "s3.us-east-1.amazonaws.com",
+	}).Serialize())
+	assert.Assert(t, err == nil)
+
+	assert.EqualString(t, conf.Bucket, "varasto-test")
+	assert.EqualString(t, conf.Prefix, "/")
+	assert.EqualString(t, conf.AccessKeyId, "AKIAUZHTE3U35WCD5EHB")
+	assert.EqualString(t, conf.AccessKeySecret, "wXQJhB...")
+	assert.EqualString(t, conf.RegionId, "eu-central-1")
+	assert.EqualString(t, conf.Endpoint, "s3.us-east-1.amazonaws.com")
 }
 
 func TestDeserializeConfigInvalid(t *testing.T) {
 	_, err := deserializeConfig("varasto-test:/:AKIAUZHTE3U35WCD5EHB.missingSecret:eu-central-1")
-	assert.EqualString(t, err.Error(), "s3 options not in format bucket:prefix:accessKeyId:secret:region")
+	assert.EqualString(t, err.Error(), "s3 options not in format bucket:prefix:accessKeyId:secret:region[:endpoint]")
 }
 
 func TestBlobNamer(t *testing.T) {

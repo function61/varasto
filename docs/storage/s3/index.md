@@ -1,3 +1,13 @@
+AWS S3 vs. third parties
+------------------------
+
+While this document focuses on AWS's S3, we also support other S3-compatible implementations, for
+example [DigitalOcean Spaces](https://www.digitalocean.com/products/spaces).
+
+For configuring non-AWS S3 it's not properly documented but there's
+[notes in the ticket](https://github.com/function61/varasto/issues/243#issuecomment-2156688334).
+
+
 Create S3 bucket in AWS
 -----------------------
 

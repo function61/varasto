@@ -180,6 +180,7 @@
 			{ "key": "Bucket", "placeholder": "myorg-varasto-fry" },
 			{ "key": "PathPrefix", "title": "Path prefix", "placeholder": "/varasto-fry/", "help": "If you don't want prefix, use \"/\"", "validation_regex": "/$" },
 			{ "key": "RegionId", "placeholder": "eu-central-1" },
+			{ "key": "Endpoint", "title": "Endpoint", "placeholder": "s3.eu-central-1.amazonaws.com", "optional": true, "help": "If you use AWS S3 you can leave this empty. This is used when you use some other S3-compatible service e.g. DigitalOcean Spaces." },
 			{ "key": "AccessKeyId", "placeholder": "AKIAUZHTE3U35WCD5EHB" },
 			{ "key": "AccessKeySecret", "placeholder": "wXQJhB..." }
 		]

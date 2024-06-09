@@ -16,15 +16,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/function61/gokit/aws/s3facade"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
+type BucketContext struct {
+	Name *string
+	S3   *s3.S3
+}
+
 type s3blobstore struct {
 	blobNamer *s3BlobNamer
-	bucket    *s3facade.BucketContext
+	bucket    *BucketContext
 	logl      *logex.Leveled
 }
 
@@ -38,17 +43,21 @@ func New(opts string, logger *log.Logger) (*s3blobstore, error) {
 		return nil, fmt.Errorf("prefix needs to end in '/'; got '%s'", conf.Prefix)
 	}
 
-	staticCreds := credentials.NewStaticCredentials(
-		conf.AccessKeyId,
-		conf.AccessKeySecret,
-		"")
+	config := aws.NewConfig().WithRegion(conf.RegionId).WithCredentials(credentials.NewStaticCredentials(conf.AccessKeyId, conf.AccessKeySecret, ""))
+	if conf.Endpoint != "" {
+		config = config.WithEndpoint(conf.Endpoint)
+	}
 
-	bucket, err := s3facade.Bucket(
-		conf.Bucket,
-		s3facade.Credentials(staticCreds),
-		conf.RegionId)
+	awsSession, err := session.NewSession()
 	if err != nil {
 		return nil, err
+	}
+
+	bucket := &BucketContext{
+		Name: &conf.Bucket,
+		S3: s3.New(
+			awsSession,
+			config),
 	}
 
 	return &s3blobstore{
@@ -111,6 +120,7 @@ type Config struct {
 	RegionId        string
 	AccessKeyId     string
 	AccessKeySecret string
+	Endpoint        string
 }
 
 func (c *Config) Serialize() string {
@@ -120,13 +130,26 @@ func (c *Config) Serialize() string {
 		c.AccessKeyId,
 		c.AccessKeySecret,
 		c.RegionId,
+		c.Endpoint,
 	}, ":")
 }
 
 func deserializeConfig(serialized string) (*Config, error) {
 	match := strings.Split(serialized, ":")
-	if len(match) != 5 {
-		return nil, errors.New("s3 options not in format bucket:prefix:accessKeyId:secret:region")
+
+	// endpoint was added later, so parse it conditionally
+	endpoint, err := func() (string, error) {
+		switch len(match) {
+		case 5:
+			return "", nil
+		case 6:
+			return match[5], nil
+		default:
+			return "", errors.New("s3 options not in format bucket:prefix:accessKeyId:secret:region[:endpoint]")
+		}
+	}()
+	if err != nil {
+		return nil, err
 	}
 
 	return &Config{
@@ -135,5 +158,6 @@ func deserializeConfig(serialized string) (*Config, error) {
 		AccessKeyId:     match[2],
 		AccessKeySecret: match[3],
 		RegionId:        match[4],
+		Endpoint:        endpoint,
 	}, nil
 }

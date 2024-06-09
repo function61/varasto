@@ -289,6 +289,7 @@ func (c *cHandlers) VolumeMountS3(cmd *stoservertypes.VolumeMountS3, ctx *comman
 			AccessKeyId:     cmd.AccessKeyId,
 			AccessKeySecret: cmd.AccessKeySecret,
 			RegionId:        cmd.RegionId,
+			Endpoint:        cmd.Endpoint,
 		}).Serialize(),
 		ctx)
 }
