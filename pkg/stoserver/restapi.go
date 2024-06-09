@@ -1254,6 +1254,9 @@ func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http
 		return nil
 	}
 
+	// order: most recent first
+	sort.Slice(backups, func(i, j int) bool { return backups[i].Timestamp.After(backups[j].Timestamp) })
+
 	return &backups
 }
 
