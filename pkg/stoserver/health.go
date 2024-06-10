@@ -210,6 +210,10 @@ func healthVolReplication(
 	if hasReplicationController {
 		replicationProgress := replicationController.Progress()
 
+		if err := replicationController.Error(); err != nil {
+			return volReplHealth.Fail(err.Error()), nil
+		}
+
 		if replicationProgress != 100 {
 			return volReplHealth.Warn(fmt.Sprintf("Progress at %d %%", replicationProgress)), nil
 		} else {

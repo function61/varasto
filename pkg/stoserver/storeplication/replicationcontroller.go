@@ -24,12 +24,18 @@ type replicationJob struct {
 	FromVolumeId int
 }
 
+type replicationStats struct {
+	blobVolumeNotAccessible int64
+	otherErrors             int64
+}
+
 type Controller struct {
 	toVolumeId int
 	progress   *atomicInt32
 	logl       *logex.Leveled
 	db         *bbolt.DB
 	diskAccess *stodiskaccess.Controller
+	stats      replicationStats
 }
 
 // returns controller API and a function you must call (maybe in a separate goroutine) to run the logic
@@ -57,6 +63,15 @@ func (c *Controller) Progress() int {
 	return int(c.progress.Get())
 }
 
+// reports if the controller is having any errors
+func (c *Controller) Error() error {
+	if c.stats.blobVolumeNotAccessible > 0 || c.stats.otherErrors > 0 {
+		return fmt.Errorf("blobVolumeNotAccessible=%d otherErrors=%d", c.stats.blobVolumeNotAccessible, c.stats.otherErrors)
+	}
+
+	return nil
+}
+
 func (c *Controller) run(ctx context.Context) error {
 	continueToken := stodb.StartFromFirst
 
@@ -74,14 +89,16 @@ func (c *Controller) run(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-fiveSeconds.C:
+			atBeginning := bytes.Equal(continueToken, stodb.StartFromFirst)
+			if atBeginning { // probably looped to beginning from previously passing it fully ..
+				// .. hence start stats from over
+				c.stats = replicationStats{}
+			}
+
 			nextContinueToken, err := c.discoverAndRunReplicationJobs(ctx, continueToken)
 			if err != nil {
 				c.logl.Error.Printf("discoverAndRunReplicationJobs: %v", err)
 				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
-			}
-
-			if bytes.Equal(nextContinueToken, stodb.StartFromFirst) {
-				c.progress.Set(100)
 			}
 
 			continueToken = nextContinueToken
@@ -112,7 +129,8 @@ func (c *Controller) discoverAndRunReplicationJobs(
 		for job := range jobQueue {
 			if err := c.replicateJob(job); err != nil {
 				c.logl.Error.Printf("replicating blob %s: %v", job.Ref.AsHex(), err)
-				time.Sleep(3 * time.Second) // to not bombard with errors at full speed
+				c.stats.otherErrors++
+				time.Sleep(1 * time.Second) // to not bombard with errors at full speed
 			}
 		}
 	}
@@ -141,6 +159,11 @@ func (c *Controller) discoverAndRunReplicationJobs(
 		// with random distribution, so we can estimate progress by looking at first
 		// 16 bits of hash
 		c.progress.Set(int32(float64(binary.BigEndian.Uint16(job.Ref[0:2])) / 65536.0 * 100.0))
+	}
+
+	// if we didn't find any jobs there'd be no `progress.Set()` call from the above loop
+	if bytes.Equal(nextContinueToken, stodb.StartFromFirst) {
+		c.progress.Set(100)
 	}
 
 	return nextContinueToken, nil
@@ -196,7 +219,13 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 		bestFromVolume, err := c.diskAccess.BestVolumeId(blob.Volumes)
 		if err != nil {
-			return err
+			if err == stotypes.ErrBlobNotAccessibleOnThisNode {
+				c.stats.blobVolumeNotAccessible++
+				return nil
+			} else {
+				c.stats.otherErrors++
+				return err
+			}
 		}
 
 		jobs = append(jobs, &replicationJob{
