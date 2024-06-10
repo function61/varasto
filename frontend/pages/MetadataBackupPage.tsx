@@ -6,6 +6,7 @@ import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
+import { Info } from 'f61ui/component/info';
 import { MonospaceContent } from 'f61ui/component/monospacecontent';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
@@ -108,7 +109,8 @@ export default class MetadataBackupPage extends React.Component<
 			accessKeySecret,
 			encryptionPublicKey,
 			alertmanagerBaseUrl,
-		] = backupConfig.Value ? JSON.parse(backupConfig.Value) : ['', '', '', '', '', ''];
+			encryptionPrivateKeyStorageLocationDescription,
+		] = backupConfig.Value ? JSON.parse(backupConfig.Value) : ['', '', '', '', '', '', ''];
 
 		return (
 			<Panel
@@ -150,7 +152,17 @@ export default class MetadataBackupPage extends React.Component<
 							</td>
 						</tr>
 						<tr>
-							<th>EncryptionPublicKey</th>
+							<th>
+								EncryptionPublicKey
+								{encryptionPrivateKeyStorageLocationDescription ? (
+									<Info
+										text={
+											'Private key storage location description: ' +
+											encryptionPrivateKeyStorageLocationDescription
+										}
+									/>
+								) : null}
+							</th>
 							<td>
 								<MonospaceContent>{encryptionPublicKey}</MonospaceContent>
 							</td>

@@ -36,6 +36,7 @@ func (c *cHandlers) DatabaseBackupConfigure(cmd *stoservertypes.DatabaseBackupCo
 		cmd.AccessKeySecret,
 		cmd.EncryptionPublicKey,
 		cmd.AlertmanagerBaseUrl,
+		cmd.EncryptionPrivateKeyStorageLocationDescription,
 	})
 	if err != nil {
 		return err
@@ -107,8 +108,9 @@ func parseSerializedUbConfig(serializedUbConfig []byte) (*ubconfig.Config, error
 		return nil, err
 	}
 
-	if len(parts) != 6 {
-		return nil, fmt.Errorf("unexpected number of parts: %d", len(parts))
+	// encryptionPrivateKeyStorageLocationDescription was added later (though not used in backend so it's not read here)
+	if partCount := len(parts); partCount != 6 && partCount != 7 {
+		return nil, fmt.Errorf("unexpected number of parts: %d", partCount)
 	}
 
 	return &ubconfig.Config{

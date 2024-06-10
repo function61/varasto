@@ -703,6 +703,7 @@
 			{ "key": "AccessKeyId", "title": "Access Key ID", "placeholder": "AKIAIOSFODNN7EXAMPLE" },
 			{ "key": "AccessKeySecret", "title": "Secret Access Key", "placeholder": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" },
 			{ "key": "EncryptionPublicKey", "title": "µbackup encryption public key", "type": "multiline", "placeholder": "-----BEGIN RSA PUBLIC KEY-----\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo6U17l0YhFiFpxxU4pTk3Lifz9R3zsIsu\n..." },
+			{ "key": "EncryptionPrivateKeyStorageLocationDescription", "title": "µbackup encryption private key storage location description", "placeholder": "In password manager with title ...", "help": "In case you forget where this is stored (the backups are useless without the key).", "optional": true },
 			{ "key": "AlertmanagerBaseUrl", "title": "AlertManager API URL", "placeholder": "https://abcdefghij.execute-api.us-east-1.amazonaws.com/prod", "help": "Only used if you're using lambda-alertmanager", "optional": true },
 			{ "key": "ConnectivityCheck", "title": "Perform connectivity check", "type": "checkbox", "help": "Try to connect to S3 to validate connection details" }
 		]
