@@ -1013,22 +1013,8 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 	// TODO: reuse the logic found in the client package?
 	wholeFileHash := sha256.New()
 
-	var volumeId int
-	if err := h.db.View(func(tx *bbolt.Tx) error {
-		coll, err := stodb.Read(tx).Collection(collectionId)
-		if err != nil {
-			return err
-		}
-
-		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
-		if err != nil {
-			return err
-		}
-
-		volumeId = replicationPolicy.DesiredVolumes[0]
-
-		return nil
-	}); err != nil {
+	volumeId, err := h.whichInitialVolumeToWriteCollectionBlobsTo(collectionId)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
 	}
@@ -1351,22 +1337,8 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 		return
 	}
 
-	var volumeId int
-	if err := h.db.View(func(tx *bbolt.Tx) error {
-		coll, err := stodb.Read(tx).Collection(collectionId)
-		if err != nil {
-			return err
-		}
-
-		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
-		if err != nil {
-			return err
-		}
-
-		volumeId = replicationPolicy.DesiredVolumes[0]
-
-		return nil
-	}); err != nil {
+	volumeId, err := h.whichInitialVolumeToWriteCollectionBlobsTo(collectionId)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -1484,6 +1456,25 @@ func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWri
 	return &stoservertypes.GeneratedIds{
 		Changeset: stoutils.NewCollectionChangesetId(),
 	}
+}
+
+func (h *handlers) whichInitialVolumeToWriteCollectionBlobsTo(collectionId string) (int, error) {
+	var volumeId int
+	return volumeId, h.db.View(func(tx *bbolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(collectionId)
+		if err != nil {
+			return err
+		}
+
+		replicationPolicy, err := stodb.Read(tx).ReplicationPolicy(coll.ReplicationPolicy)
+		if err != nil {
+			return err
+		}
+
+		// save the blob first on the best volume (the one which is mounted and various other heuristics)
+		volumeId, err = h.conf.DiskAccess.BestVolumeId(replicationPolicy.DesiredVolumes)
+		return err
+	})
 }
 
 func createDummyMiddlewares(conf *ServerConfig) httpauth.MiddlewareChainMap {
