@@ -44,21 +44,36 @@ export class FileUploadArea extends React.Component<FileUploadAreaProps, FileUpl
 	render() {
 		return (
 			<div>
-				<table className={tableClassStripedHover}>
-					<tbody>
-						{this.state.uploads.map((upload) => (
-							<tr>
-								<td style={{ width: '1%' }}>{upload.file.name}</td>
-								<td>{this.stateToNode(upload.state)}</td>
-							</tr>
-						))}
-					</tbody>
-				</table>
+				{this.state.uploads.length > 0 ? (
+					<table className={tableClassStripedHover}>
+						<tbody>
+							{this.state.uploads.map((upload) => (
+								<tr>
+									<td style={{ width: '1%' }}>{upload.file.name}</td>
+									<td>{this.stateToNode(upload.state)}</td>
+								</tr>
+							))}
+						</tbody>
+					</table>
+				) : null}
+
+				<h4>File</h4>
 
 				<input
 					type="file"
 					id="upload"
 					multiple={true}
+					onChange={(e) => {
+						this.filesForUploadSelected(e);
+					}}
+				/>
+
+				<h4>Camera</h4>
+
+				<input
+					type="file"
+					capture="environment"
+					accept="image/*"
 					onChange={(e) => {
 						this.filesForUploadSelected(e);
 					}}
