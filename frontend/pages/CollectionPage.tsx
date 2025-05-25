@@ -74,6 +74,7 @@ interface CollectionPageState {
 	directoryOutput: Result<DirectoryOutput>;
 	networkShareBaseUrl: Result<ConfigValue>;
 	selectedFileHashes: string[];
+	lastSelectedFileHash?: string;
 }
 
 export default class CollectionPage extends React.Component<
@@ -340,13 +341,43 @@ export default class CollectionPage extends React.Component<
 		const coll = collOutput.CollectionWithMeta.Collection; // shorthand
 
 		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+			const shiftPressed = e.nativeEvent instanceof MouseEvent && e.nativeEvent.shiftKey;
+			const selectMultiple = shiftPressed;
+
 			// remove from currently selected, so depending on checked we can add or not add it
 			const selectedFileHashes = this.state.selectedFileHashes.filter(
 				(sel) => sel !== e.target.value,
 			);
 
 			if (e.target.checked) {
-				selectedFileHashes.push(e.target.value);
+				if (selectMultiple) {
+					const startSelectingFromIndex = collOutput.SelectedPathContents.Files.findIndex(
+						(f) => f.Path === this.state.lastSelectedFileHash,
+					);
+					if (startSelectingFromIndex === -1) {
+						throw new Error('should not happen');
+					}
+
+					for (
+						let i = startSelectingFromIndex;
+						i < collOutput.SelectedPathContents.Files.length;
+						++i
+					) {
+						const path = collOutput.SelectedPathContents.Files[i].Path;
+						if (selectedFileHashes.indexOf(path) === -1) {
+							selectedFileHashes.push(path);
+						}
+
+						if (e.target.value === path) {
+							break;
+						}
+					}
+				} else {
+					const selected = e.target.value;
+					selectedFileHashes.push(selected);
+
+					this.state.lastSelectedFileHash = selected;
+				}
 			}
 
 			this.setState({ selectedFileHashes });
