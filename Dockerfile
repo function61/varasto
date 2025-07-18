@@ -17,6 +17,9 @@ ENTRYPOINT ["sto"]
 
 CMD ["server"]
 
+# uses the client to query the server's health endpoint
+HEALTHCHECK --interval=10s CMD ["sto", "health"]
+
 # symlink /root/varastoclient-config.json to /varasto-db/.. because it's stateful.
 # this config is used for server subsystems (thumbnailing, FUSE projector) to communicate
 # with the server.

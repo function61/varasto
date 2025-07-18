@@ -144,6 +144,7 @@ func Entrypoints() []*cobra.Command {
 		logEntrypoint(),
 		pushEntrypoint(),
 		configEntrypoint(),
+		healthEntrypoint(),
 	}
 }
 
