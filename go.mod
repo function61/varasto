@@ -1,6 +1,6 @@
 module github.com/function61/varasto
 
-go 1.18
+go 1.22
 
 require (
 	bazil.org/fuse v0.0.0-20180421153158-65cc252bf669
