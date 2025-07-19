@@ -10,12 +10,10 @@ require (
 	github.com/djherbis/times v1.1.0
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
-	github.com/function61/eventkit v0.0.0-20200602131610-b5adb775209f
+	github.com/function61/eventkit v0.0.0-20250719192337-a9607058d1b6
 	github.com/function61/gokit v0.0.0-20200908095654-561fcb44f8ea
-	github.com/function61/pi-security-module v0.0.0-20190220142443-5dc20d261fd1
 	github.com/function61/ubackup v0.0.0-20200625081923-f624fa1cb786
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
-	github.com/gorilla/mux v1.6.2
 	github.com/mattn/go-isatty v0.0.14
 	github.com/minio/sha256-simd v0.1.1
 	github.com/nsf/termbox-go v0.0.0-20190817171036-93860e161317
@@ -41,7 +39,6 @@ require (
 	github.com/disintegration/gift v1.2.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
-	github.com/gorilla/context v1.1.1 // indirect
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/kr/text v0.2.0 // indirect

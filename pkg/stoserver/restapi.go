@@ -27,7 +27,6 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/duration"
 	"github.com/function61/varasto/pkg/scheduler"
@@ -39,7 +38,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
-	"github.com/gorilla/mux"
 	"github.com/minio/sha256-simd"
 	"go.etcd.io/bbolt"
 )
@@ -53,7 +51,7 @@ type handlers struct {
 }
 
 func defineRestAPI(
-	router *mux.Router,
+	router *http.ServeMux,
 	conf *ServerConfig,
 	db *bbolt.DB,
 	ivController *stointegrityverifier.Controller,
@@ -68,7 +66,9 @@ func defineRestAPI(
 		logex.Levels(logger),
 	}
 
-	stoservertypes.RegisterRoutes(han, mwares, muxregistrator.New(router))
+	stoservertypes.RegisterRoutes(han, mwares, func(method, path string, fn http.HandlerFunc) {
+		router.HandleFunc(method+" "+path, fn)
+	})
 }
 
 func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.DirectoryOutput {
@@ -78,7 +78,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 		return nil
 	}
 
-	dirID := mux.Vars(r)["id"]
+	dirID := r.PathValue("id")
 
 	tx, err := h.db.Begin(false)
 	if err != nil {
@@ -164,9 +164,9 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		return nil
 	}
 
-	collectionID := mux.Vars(r)["id"]
-	changesetID := mux.Vars(r)["rev"]
-	pathBytes, err := base64.StdEncoding.DecodeString(mux.Vars(r)["path"])
+	collectionID := r.PathValue("id")
+	changesetID := r.PathValue("rev")
+	pathBytes, err := base64.StdEncoding.DecodeString(r.PathValue("path"))
 	if err != nil {
 		return httpErr(err, http.StatusBadRequest)
 	}
@@ -240,8 +240,8 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 
 // TODO: URL parameter comes via a hack in frontend
 func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
-	collectionID := mux.Vars(r)["id"]
-	changesetID := mux.Vars(r)["rev"]
+	collectionID := r.PathValue("id")
+	changesetID := r.PathValue("rev")
 
 	fileKey := r.URL.Query().Get("file")
 
@@ -502,7 +502,7 @@ func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.Respons
 		return nil
 	}
 
-	ref, err := stotypes.BlobRefFromHex(mux.Vars(r)["ref"])
+	ref, err := stotypes.BlobRefFromHex(r.PathValue("ref"))
 	if err != nil {
 		return httpErr(err, http.StatusBadRequest)
 	}
@@ -553,7 +553,7 @@ func toDBFiles(files []stoservertypes.File) []stotypes.File {
 func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stoservertypes.Changeset, w http.ResponseWriter, r *http.Request) {
 	coll := commitChangesetInternal(
 		w,
-		mux.Vars(r)["id"],
+		r.PathValue("id"),
 		stotypes.NewChangeset(
 			changeset.ID,
 			changeset.Parent,
@@ -1002,7 +1002,7 @@ func (h *handlers) GetLogs(rctx *httpauth.RequestContext, w http.ResponseWriter,
 }
 
 func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.File {
-	collectionID := mux.Vars(r)["id"]
+	collectionID := r.PathValue("id")
 	mtimeUnixMillis, err := strconv.ParseInt(r.URL.Query().Get("mtime"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -1145,7 +1145,7 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 		return nil
 	}
 
-	key := mux.Vars(r)["id"]
+	key := r.PathValue("id")
 
 	tx, err := h.db.Begin(false)
 	if err != nil {
@@ -1286,7 +1286,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 		return blobRef, blobMetadata
 	}
 
-	blobRef, blobMetadata := getBlobMetadata(mux.Vars(r)["ref"])
+	blobRef, blobMetadata := getBlobMetadata(r.PathValue("ref"))
 	if blobMetadata == nil {
 		return // error was handled in getBlobMetadata()
 	}
@@ -1333,7 +1333,7 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 		}
 	}
 
-	blobRef, err := stotypes.BlobRefFromHex(mux.Vars(r)["ref"])
+	blobRef, err := stotypes.BlobRefFromHex(r.PathValue("ref"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -1366,7 +1366,7 @@ func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseW
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	coll, err := stodb.Read(tx).Collection(mux.Vars(r)["id"])
+	coll, err := stodb.Read(tx).Collection(r.PathValue("id"))
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			http.Error(w, err.Error(), http.StatusNotFound)

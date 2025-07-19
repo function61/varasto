@@ -14,7 +14,6 @@ import (
 	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/varasto/pkg/gokitbp"
 	"github.com/function61/varasto/pkg/stoutils"
-	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +22,7 @@ const (
 )
 
 func logic(ctx context.Context, addr string, rootLogger *log.Logger) error {
-	router := mux.NewRouter()
+	router := http.NewServeMux()
 	logl := logex.Levels(rootLogger)
 
 	thumbController, err := NewController(router, createDummyMiddlewares(), rootLogger)

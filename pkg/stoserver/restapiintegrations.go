@@ -12,7 +12,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/themoviedbapi"
-	"github.com/gorilla/mux"
 	"github.com/samber/lo"
 	"go.etcd.io/bbolt"
 )
@@ -137,13 +136,15 @@ func (h *handlers) searchTmdbInternal(
 // to stay constant), so we have to use the API to fetch the current URL when user wants to
 // enter the site
 func (h *handlers) IgdbIntegrationRedir(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
 	igdb, err := igdbClient(h.db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	game, err := igdb.GameByID(r.Context(), mux.Vars(r)["id"])
+	game, err := igdb.GameByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -23,7 +23,7 @@ import (
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
 	"github.com/function61/gokit/taskrunner"
-	"github.com/function61/pi-security-module/pkg/f61ui"
+	"github.com/function61/varasto/internal/f61ui"
 	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
@@ -44,7 +44,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/public"
-	"github.com/gorilla/mux"
 	"github.com/samber/lo"
 	"go.etcd.io/bbolt"
 )
@@ -154,7 +153,7 @@ func runServer(
 
 	mwares := createDummyMiddlewares(serverConfig)
 
-	router := mux.NewRouter()
+	router := http.NewServeMux()
 
 	ivController := stointegrityverifier.NewController(
 		db,
@@ -174,7 +173,7 @@ func runServer(
 	)
 
 	mountSubsystem := func(subsys *subsystem) {
-		router.PathPrefix(subsys.httpMount).Handler(&httputil.ReverseProxy{
+		router.Handle(subsys.httpMount+"/", &httputil.ReverseProxy{
 			Transport: &http.Transport{
 				DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
 					return defaultDialer.DialContext(ctx, "unix", subsys.sockPath)
@@ -272,20 +271,20 @@ func runServer(
 	return tasks.Wait()
 }
 
-func defineUI(router *mux.Router) {
+func defineUI(router *http.ServeMux) {
 	assetsPath := "/assets"
 
 	publicFiles := http.FileServer(http.FS(public.Content))
 
 	//    "/assets/style.css"
 	// => "/style.css"
-	router.PathPrefix(assetsPath + "/").Handler(http.StripPrefix(assetsPath+"/", publicFiles))
+	router.Handle(assetsPath+"/", http.StripPrefix(assetsPath+"/", publicFiles))
 	router.Handle("/favicon.ico", publicFiles)
 	router.Handle("/robots.txt", publicFiles)
 
-	uiHandler := f61ui.IndexHtmlHandler(assetsPath)
+	uiHandler := f61ui.IndexHTMLHandler(assetsPath)
 
-	frontend.RegisterUiRoutes(router, uiHandler)
+	frontend.RegisterUIRoutes(router, uiHandler)
 }
 
 type discardEventLog struct{}
