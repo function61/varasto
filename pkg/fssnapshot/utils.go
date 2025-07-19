@@ -6,7 +6,7 @@ import (
 	"github.com/function61/gokit/cryptorandombytes"
 )
 
-func randomSnapId() string {
+func randomSnapID() string {
 	return "snap-" + cryptorandombytes.Hex(4)
 }
 

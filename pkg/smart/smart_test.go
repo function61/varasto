@@ -7,7 +7,7 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	rep, err := parseSmartCtlJsonReport([]byte(exampleOutput))
+	rep, err := parseSmartCtlJSONReport([]byte(exampleOutput))
 	assert.Assert(t, err == nil)
 
 	assert.Assert(t, rep.AtaSmartAttributes.Table[0].Name == "Raw_Read_Error_Rate")

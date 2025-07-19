@@ -80,7 +80,7 @@ func (c *cHandlers) NodeCheckForUpdates(cmd *stoservertypes.NodeCheckForUpdates,
 
 	// wrap status with StatusAt to record check timestamp.
 	// need to marshal this wrapped thing back to JSON so we can persist it.
-	statusAtJson, err := json.Marshal(&stoservertypes.UpdatesStatusAt{
+	statusAtJSON, err := json.Marshal(&stoservertypes.UpdatesStatusAt{
 		At:     time.Now().UTC(),
 		Status: status,
 	})
@@ -89,11 +89,11 @@ func (c *cHandlers) NodeCheckForUpdates(cmd *stoservertypes.NodeCheckForUpdates,
 	}
 
 	// check for validity before persisting
-	if _, err := deserializeUpdateStatusAt(string(statusAtJson)); err != nil {
+	if _, err := deserializeUpdateStatusAt(string(statusAtJSON)); err != nil {
 		return err
 	}
 
-	return c.setConfigValue(stodb.CfgUpdateStatusAt, string(statusAtJson))
+	return c.setConfigValue(stodb.CfgUpdateStatusAt, string(statusAtJSON))
 }
 
 // scheduled job for checking version updates

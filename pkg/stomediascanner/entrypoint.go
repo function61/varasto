@@ -3,7 +3,6 @@ package stomediascanner
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -32,7 +31,7 @@ func logic(ctx context.Context, addr string, rootLogger *log.Logger) error {
 		return err
 	}
 
-	listener, err := stoutils.CreateTcpOrDomainSocketListener(addr, logl)
+	listener, err := stoutils.CreateTCPOrDomainSocketListener(addr, logl)
 	if err != nil {
 		return err
 	}
@@ -67,7 +66,7 @@ func Entrypoint() *cobra.Command {
 
 			go func() {
 				// wait for stdin EOF (or otherwise broken pipe)
-				_, _ = io.Copy(ioutil.Discard, os.Stdin)
+				_, _ = io.Copy(io.Discard, os.Stdin)
 
 				logex.Levels(rootLogger).Error.Println("parent process died (detected by closed stdin) - stopping")
 

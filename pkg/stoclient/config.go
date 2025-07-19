@@ -33,7 +33,7 @@ type ClientConfig struct {
 	ServerAddr                string `json:"server_addr"` // example: "https://localhost"
 	AuthToken                 string `json:"auth_token"`
 	FuseMountPath             string `json:"fuse_mount_path"`
-	TlsInsecureSkipValidation bool   `json:"tls_insecure_skip_validation"`
+	TLSInsecureSkipValidation bool   `json:"tls_insecure_skip_validation"`
 }
 
 // TODO: this should be temporary
@@ -42,17 +42,17 @@ func (c *ClientConfig) Client() *Client {
 }
 
 func (c *ClientConfig) CommandClient() *httpcommandclient.Client {
-	return httpcommandclient.New(c.ServerAddr+"/command/", c.AuthToken, c.HttpClient())
+	return httpcommandclient.New(c.ServerAddr+"/command/", c.AuthToken, c.HTTPClient())
 }
 
-func (c *ClientConfig) UrlBuilder() *stoservertypes.RestClientUrlBuilder {
+func (c *ClientConfig) URLBuilder() *stoservertypes.RestClientUrlBuilder {
 	return stoservertypes.NewRestClientUrlBuilder(c.ServerAddr)
 }
 
-func (c *ClientConfig) HttpClient() *http.Client {
+func (c *ClientConfig) HTTPClient() *http.Client {
 	client := http.DefaultClient
 
-	if c.TlsInsecureSkipValidation {
+	if c.TLSInsecureSkipValidation {
 		client = ezhttp.InsecureTlsClient
 	}
 
@@ -76,15 +76,18 @@ func WriteConfigWithPath(conf *ClientConfig, confPath string) error {
 func ReadConfig() (*ClientConfig, error) {
 	confPath, err := ConfigFilePath()
 	if err != nil {
+		//nolint:staticcheck // capitalization in error message ok here
 		return nil, fmt.Errorf("Varasto client config: %v", err)
 	}
 
 	conf := &ClientConfig{}
 	if err := jsonfile.Read(confPath, conf, true); err != nil {
+		//nolint:staticcheck // capitalization in error message ok here
 		return nil, fmt.Errorf("Varasto client config: %v", err)
 	}
 
 	if strings.HasSuffix(conf.ServerAddr, "/") {
+		//nolint:staticcheck // capitalization in error message ok here
 		return nil, fmt.Errorf(
 			"Varasto client config: server_addr must not end in '/'; got %s",
 			conf.ServerAddr)

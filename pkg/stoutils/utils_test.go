@@ -58,7 +58,6 @@ func TestIsMaybeCompressible(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		tc := tc // pin
 		t.Run(tc.filename, func(t *testing.T) {
 			assert.Assert(t, IsMaybeCompressible(tc.filename) == tc.expectedMaybeCompressible)
 		})

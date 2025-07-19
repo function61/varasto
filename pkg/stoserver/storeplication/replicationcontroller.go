@@ -21,7 +21,7 @@ import (
 
 type replicationJob struct {
 	Ref          stotypes.BlobRef
-	FromVolumeId int
+	FromVolumeID int
 }
 
 type replicationStats struct {
@@ -30,7 +30,7 @@ type replicationStats struct {
 }
 
 type Controller struct {
-	toVolumeId int
+	toVolumeID int
 	progress   *atomicInt32
 	logl       *logex.Leveled
 	db         *bbolt.DB
@@ -40,14 +40,14 @@ type Controller struct {
 
 // returns controller API and a function you must call (maybe in a separate goroutine) to run the logic
 func New(
-	toVolumeId int,
+	toVolumeID int,
 	db *bbolt.DB,
 	diskAccess *stodiskaccess.Controller,
 	logger *log.Logger,
 	start func(fn func(context.Context) error),
 ) *Controller {
 	c := &Controller{
-		toVolumeId: toVolumeId,
+		toVolumeID: toVolumeID,
 		progress:   newAtomicInt32(0),
 		logl:       logex.Levels(logger),
 		db:         db,
@@ -175,8 +175,8 @@ func (c *Controller) replicateJob(job *replicationJob) error {
 	// pending ones out).
 	return c.diskAccess.Replicate(
 		context.Background(),
-		job.FromVolumeId,
-		c.toVolumeId,
+		job.FromVolumeID,
+		c.toVolumeID,
 		job.Ref)
 }
 
@@ -193,7 +193,7 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 	nextContinueToken := stodb.StartFromFirst
 
-	err = stodb.BlobsPendingReplicationByVolumeIndex.Query(volIdToBytesForIndex(c.toVolumeId), continueToken, func(id []byte) error {
+	err = stodb.BlobsPendingReplicationByVolumeIndex.Query(volIDToBytesForIndex(c.toVolumeID), continueToken, func(id []byte) error {
 		if len(jobs) == batchLimit {
 			nextContinueToken = id
 
@@ -210,14 +210,14 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 			return err
 		}
 
-		if !sliceutil.ContainsInt(blob.VolumesPendingReplication, c.toVolumeId) {
+		if !sliceutil.ContainsInt(blob.VolumesPendingReplication, c.toVolumeID) {
 			return fmt.Errorf(
 				"blob %s volume %d not pending replication (but found from index query)",
 				ref.AsHex(),
-				c.toVolumeId)
+				c.toVolumeID)
 		}
 
-		bestFromVolume, err := c.diskAccess.BestVolumeId(blob.Volumes)
+		bestFromVolume, err := c.diskAccess.BestVolumeID(blob.Volumes)
 		if err != nil {
 			if err == stotypes.ErrBlobNotAccessibleOnThisNode {
 				c.stats.blobVolumeNotAccessible++
@@ -230,7 +230,7 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 
 		jobs = append(jobs, &replicationJob{
 			Ref:          blob.Ref,
-			FromVolumeId: bestFromVolume,
+			FromVolumeID: bestFromVolume,
 		})
 
 		return nil
@@ -239,10 +239,10 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 	return jobs, nextContinueToken, err
 }
 
-func HasQueuedWriteIOsForVolume(volId int, tx *bbolt.Tx) (bool, error) {
+func HasQueuedWriteIOsForVolume(volID int, tx *bbolt.Tx) (bool, error) {
 	anyQueued := false
 	if err := stodb.BlobsPendingReplicationByVolumeIndex.Query(
-		volIdToBytesForIndex(volId),
+		volIDToBytesForIndex(volID),
 		stodb.StartFromFirst,
 		func(_ []byte) error {
 			anyQueued = true
@@ -256,8 +256,8 @@ func HasQueuedWriteIOsForVolume(volId int, tx *bbolt.Tx) (bool, error) {
 	return anyQueued, nil
 }
 
-func volIdToBytesForIndex(volId int) []byte {
-	return []byte(fmt.Sprintf("%d", volId))
+func volIDToBytesForIndex(volID int) []byte {
+	return []byte(fmt.Sprintf("%d", volID))
 }
 
 type atomicInt32 struct {

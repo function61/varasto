@@ -10,13 +10,13 @@ import (
 
 type Backend func(device string) ([]byte, error)
 
-func Scan(device string, back Backend) (*SmartCtlJsonReport, error) {
+func Scan(device string, back Backend) (*SmartCtlJSONReport, error) {
 	smartCtlOutput, err := back(device)
 	if err != nil {
 		return nil, fmt.Errorf("%v, output: %s", err, smartCtlOutput)
 	}
 
-	return parseSmartCtlJsonReport(smartCtlOutput)
+	return parseSmartCtlJSONReport(smartCtlOutput)
 }
 
 func SmartCtlBackend(device string) ([]byte, error) {
@@ -51,14 +51,14 @@ func SmartCtlViaDockerBackend(device string) ([]byte, error) {
 	return stdout, silenceSmartCtlAutomationHostileErrors(err)
 }
 
-func parseSmartCtlJsonReport(reportJson []byte) (*SmartCtlJsonReport, error) {
-	rep := &SmartCtlJsonReport{}
+func parseSmartCtlJSONReport(reportJSON []byte) (*SmartCtlJSONReport, error) {
+	rep := &SmartCtlJSONReport{}
 
-	if err := json.Unmarshal(reportJson, rep); err != nil {
+	if err := json.Unmarshal(reportJSON, rep); err != nil {
 		return nil, err
 	}
 
-	if len(rep.JsonFormatVersion) < 2 || rep.JsonFormatVersion[0] != 1 {
+	if len(rep.JSONFormatVersion) < 2 || rep.JSONFormatVersion[0] != 1 {
 		return nil, errors.New("invalid json_format_version")
 	}
 

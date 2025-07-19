@@ -19,7 +19,7 @@ func New(apiKey string) *Client {
 	return &Client{apiKey}
 }
 
-func (c *Client) GameById(ctx context.Context, id string) (*Game, error) {
+func (c *Client) GameByID(ctx context.Context, id string) (*Game, error) {
 	query := fmt.Sprintf(
 		"fields %s; where id = %s;",
 		gameFields,
@@ -62,7 +62,7 @@ func (c *Client) SearchGames(ctx context.Context, name string) ([]Game, error) {
 	return searchResults, nil
 }
 
-func (c *Client) GameYoutubeVideoIds(ctx context.Context, id string) ([]string, error) {
+func (c *Client) GameYoutubeVideoIDs(ctx context.Context, id string) ([]string, error) {
 	query := fmt.Sprintf("fields name,video_id; where game=%s;", id)
 
 	videos := []struct {
@@ -81,28 +81,28 @@ func (c *Client) GameYoutubeVideoIds(ctx context.Context, id string) ([]string, 
 		return nil, err
 	}
 
-	youtubeIds := []string{}
+	youtubeIDs := []string{}
 
-	maybeYoutubeVideoId := func(id string) bool { return len(id) == len("dQw4w9WgXcQ") }
+	maybeYoutubeVideoID := func(id string) bool { return len(id) == len("dQw4w9WgXcQ") }
 
 	for _, video := range videos {
 		// docs mention "usually youtube", but there's no field to separate these, so
 		// we'll have to do our best to filter out non-youtube videos.
-		if !maybeYoutubeVideoId(video.VideoID) {
+		if !maybeYoutubeVideoID(video.VideoID) {
 			continue
 		}
 
-		youtubeIds = append(youtubeIds, video.VideoID)
+		youtubeIDs = append(youtubeIDs, video.VideoID)
 	}
 
-	return youtubeIds, nil
+	return youtubeIDs, nil
 }
 
 func (c *Client) GameScreenshotUrls(ctx context.Context, id string) ([]string, error) {
 	query := fmt.Sprintf("fields image_id,url; where game = %s;", id)
 
 	screenshots := []struct { // NOTE: more fields available than what we specify here
-		ImageId string `json:"image_id"`
+		ImageID string `json:"image_id"`
 		// the response deceptively also has "url", but that points to a so small thumbnail
 		// image it must be for ants
 	}{}
@@ -119,17 +119,17 @@ func (c *Client) GameScreenshotUrls(ctx context.Context, id string) ([]string, e
 
 	urls := []string{}
 	for _, screenshot := range screenshots {
-		urls = append(urls, originalImageURL(screenshot.ImageId))
+		urls = append(urls, originalImageURL(screenshot.ImageID))
 	}
 
 	return urls, nil
 }
 
-func (c *Client) GameCoverUrls(ctx context.Context, id string) ([]string, error) {
+func (c *Client) GameCoverURLs(ctx context.Context, id string) ([]string, error) {
 	query := fmt.Sprintf("fields image_id,url; where game = %s;", id)
 
 	covers := []struct { // NOTE: more fields available than what we specify here
-		ImageId string `json:"image_id"`
+		ImageID string `json:"image_id"`
 		// the response deceptively also has "url", but that points to a so small thumbnail
 		// image it must be for ants
 	}{}
@@ -146,13 +146,13 @@ func (c *Client) GameCoverUrls(ctx context.Context, id string) ([]string, error)
 
 	urls := []string{}
 	for _, cover := range covers {
-		urls = append(urls, originalImageURL(cover.ImageId))
+		urls = append(urls, originalImageURL(cover.ImageID))
 	}
 
 	return urls, nil
 }
 
-func (c *Client) WebsitesByGameId(ctx context.Context, id string) ([]Website, error) {
+func (c *Client) WebsitesByGameID(ctx context.Context, id string) ([]Website, error) {
 	query := fmt.Sprintf("fields category,game,trusted,url; where game=%s;", id)
 
 	websites := []Website{}
@@ -175,17 +175,17 @@ func (c *Client) WebsitesByGameId(ctx context.Context, id string) ([]Website, er
 // - "com.frogmind.badland" on Google Play
 // - "269670" on Steam
 // - etc.
-func (c *Client) ExternalIdsByGameId(ctx context.Context, id string) (*ExternalIds, error) {
-	websites, err := c.WebsitesByGameId(ctx, id)
+func (c *Client) ExternalIDsByGameID(ctx context.Context, id string) (*ExternalIDs, error) {
+	websites, err := c.WebsitesByGameID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	ids := &ExternalIds{}
+	ids := &ExternalIDs{}
 
 	for _, website := range websites {
 		if extract, found := extractorByCategory[website.Category]; found {
-			if err := extract(website.Url, ids); err != nil {
+			if err := extract(website.URL, ids); err != nil {
 				return nil, err
 			}
 		}
@@ -194,8 +194,8 @@ func (c *Client) ExternalIdsByGameId(ctx context.Context, id string) (*ExternalI
 	return ids, nil
 }
 
-func originalImageURL(imageId string) string {
-	return fmt.Sprintf("https://images.igdb.com/igdb/image/upload/t_original/%s.jpg", imageId)
+func originalImageURL(imageID string) string {
+	return fmt.Sprintf("https://images.igdb.com/igdb/image/upload/t_original/%s.jpg", imageID)
 }
 
 func endpointV3(path string) string {

@@ -56,29 +56,29 @@ func validateSchemaVersionAndMigrateIfNeeded(db *bbolt.DB, logger *log.Logger) e
 func validateSchemaVersionAndMigrateIfNeededInternal(tx *bbolt.Tx, logger *log.Logger) error {
 	// the migrations will continue until morale improves
 	for {
-		schemaVersionInDb, err := stodb.ReadSchemaVersion(tx)
+		schemaVersionInDB, err := stodb.ReadSchemaVersion(tx)
 		if err != nil {
 			return err
 		}
 
 		// no migration needed (or migrations reached a happy level)
-		if schemaVersionInDb == stodb.CurrentSchemaVersion {
+		if schemaVersionInDB == stodb.CurrentSchemaVersion {
 			return nil
 		}
 
 		logex.Levels(logger).Info.Printf(
 			"schemaVersionInDb %d, CurrentSchemaVersion %d",
-			schemaVersionInDb,
+			schemaVersionInDB,
 			stodb.CurrentSchemaVersion)
 
-		schemaVersionAfterMigration := schemaVersionInDb + 1
+		schemaVersionAfterMigration := schemaVersionInDB + 1
 
 		logex.Levels(logger).Info.Printf(
 			"migrating from %d -> %d",
-			schemaVersionInDb,
+			schemaVersionInDB,
 			schemaVersionAfterMigration)
 
-		if err := migrate(schemaVersionInDb, tx); err != nil {
+		if err := migrate(schemaVersionInDB, tx); err != nil {
 			return err
 		}
 
@@ -88,18 +88,18 @@ func validateSchemaVersionAndMigrateIfNeededInternal(tx *bbolt.Tx, logger *log.L
 	}
 }
 
-func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
+func migrate(schemaVersionInDB uint32, tx *bbolt.Tx) error {
 	migrator, found := map[uint32]func(tx *bbolt.Tx) error{
 		2: from2to3,
 		3: from3to4,
 		4: from4to5,
 		5: from5to6,
-	}[schemaVersionInDb]
+	}[schemaVersionInDB]
 	if !found {
 		return fmt.Errorf(
 			"schema migration %d -> %d not supported",
-			schemaVersionInDb,
-			schemaVersionInDb+1)
+			schemaVersionInDB,
+			schemaVersionInDB+1)
 	}
 
 	return migrator(tx)
@@ -111,7 +111,7 @@ func migrate(schemaVersionInDb uint32, tx *bbolt.Tx) error {
 // - volume.Zone
 // - replicationPolicy.Zones = 1
 func from2to3(tx *bbolt.Tx) error {
-	if err := stodb.CollectionRepository.Each(func(record interface{}) error {
+	if err := stodb.CollectionRepository.Each(func(record any) error {
 		coll := record.(*stotypes.Collection)
 		coll.ReplicationPolicy = "default"
 		return stodb.CollectionRepository.Update(coll, tx)
@@ -128,7 +128,7 @@ func from2to3(tx *bbolt.Tx) error {
 		return err
 	}
 
-	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
+	if err := stodb.VolumeRepository.Each(func(record any) error {
 		vol := record.(*stotypes.Volume)
 		vol.Zone = "Default"
 		return stodb.VolumeRepository.Update(vol, tx)
@@ -136,7 +136,7 @@ func from2to3(tx *bbolt.Tx) error {
 		return err
 	}
 
-	if err := stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+	if err := stodb.ReplicationPolicyRepository.Each(func(record any) error {
 		vol := record.(*stotypes.ReplicationPolicy)
 		vol.MinZones = 1
 		return stodb.ReplicationPolicyRepository.Update(vol, tx)
@@ -162,7 +162,7 @@ func from4to5(tx *bbolt.Tx) error {
 		return err
 	}
 
-	if err := stodb.CollectionRepository.Each(func(record interface{}) error {
+	if err := stodb.CollectionRepository.Each(func(record any) error {
 		coll := record.(*stotypes.Collection)
 
 		move := func(from string, to string) {
@@ -193,7 +193,7 @@ func from4to5(tx *bbolt.Tx) error {
 		return err
 	}
 
-	return stodb.DirectoryRepository.Each(func(record interface{}) error {
+	return stodb.DirectoryRepository.Each(func(record any) error {
 		dir := record.(*stotypes.Directory)
 
 		move := func(from string, to string) {
@@ -245,7 +245,7 @@ func from4to5(tx *bbolt.Tx) error {
 func from5to6(tx *bbolt.Tx) error {
 	now := time.Now()
 
-	return stodb.DirectoryRepository.Each(func(record interface{}) error {
+	return stodb.DirectoryRepository.Each(func(record any) error {
 		dir := record.(*stotypes.Directory)
 		dir.Created = now
 		return stodb.DirectoryRepository.Update(dir, tx)

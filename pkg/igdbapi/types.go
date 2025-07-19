@@ -30,7 +30,7 @@ type Game struct {
 	Name             string    `json:"name"`
 	Summary          string    `json:"summary"`
 	FirstReleaseDate *UnixTime `json:"first_release_date"`
-	Url              string    `json:"url"`
+	URL              string    `json:"url"`
 	/* present, but not using / vetted these yet
 	AggregatedRating      int    `json:"aggregated_rating"`
 	AggregatedRatingCount int    `json:"aggregated_rating_count"`
@@ -63,7 +63,7 @@ type Game struct {
 
 type Website struct { // NOTE: more fields available
 	Category int    `json:"category"`
-	Url      string `json:"url"`
+	URL      string `json:"url"`
 }
 
 type UnixTime time.Time

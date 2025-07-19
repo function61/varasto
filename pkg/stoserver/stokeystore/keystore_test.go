@@ -18,7 +18,7 @@ func TestEncryptAndDecryptKek(t *testing.T) {
 	})
 	assert.Assert(t, err == nil)
 
-	assert.EqualString(t, kenv.KeyId, "dummyKeyId")
+	assert.EqualString(t, kenv.KeyID, "dummyKeyId")
 	assert.Assert(t, len(kenv.Slots) == 2)
 	assert.EqualString(t, kenv.Slots[0].KekFingerprint, "SHA256:NAgdE9bxrBpJu0S2ehoWW+IE/t+w0pIJ6HvRrgkwuOI")
 	assert.EqualString(t, kenv.Slots[1].KekFingerprint, "SHA256:LU4ylKik0FBhdx1CUYDJcBpwRGwm85cF+Xz/VesODkA")
@@ -47,7 +47,7 @@ func TestEncryptEmptyKeyIdOrNoPublicKeys(t *testing.T) {
 	ks := keyStoreWith(testPrivateKey1)
 
 	_, err := ks.EncryptDek("", []byte("my secret message"), nil)
-	assert.EqualString(t, err.Error(), "empty dekId")
+	assert.EqualString(t, err.Error(), "empty dekID")
 
 	_, err = ks.EncryptDek("foo", []byte("my secret message"), []string{})
 	assert.EqualString(t, err.Error(), "no kekPubKeyFingerprints given")

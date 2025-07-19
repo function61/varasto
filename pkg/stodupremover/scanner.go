@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 )
 
-func scan(removeDuplicates bool, acceptOutdatedDb bool) error {
-	db, err := loadDatabase(acceptOutdatedDb)
+func scan(removeDuplicates bool, acceptOutdatedDB bool) error {
+	db, err := loadDatabase(acceptOutdatedDB)
 	if err != nil {
 		return err
 	}

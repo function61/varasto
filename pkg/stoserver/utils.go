@@ -37,7 +37,7 @@ func authenticate(serverConfig *ServerConfig, w http.ResponseWriter, r *http.Req
 	return false
 }
 
-func outJson(w http.ResponseWriter, out interface{}) error {
+func outJSON(w http.ResponseWriter, out any) error {
 	w.Header().Set("Content-Type", "application/json")
 
 	encoder := json.NewEncoder(w)
@@ -45,7 +45,7 @@ func outJson(w http.ResponseWriter, out interface{}) error {
 	return encoder.Encode(out)
 }
 
-func collectionHasChangesetId(id string, coll *stotypes.Collection) bool {
+func collectionHasChangesetID(id string, coll *stotypes.Collection) bool {
 	for _, changeset := range coll.Changesets {
 		if changeset.ID == id {
 			return true

@@ -6,8 +6,8 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
 import {
-	NodeInstallTlsCert,
 	NodeChangeSmartBackend,
+	NodeInstallTLSCert,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getNodes } from 'generated/stoserver/stoservertypes_endpoints';
 import { Node } from 'generated/stoserver/stoservertypes_types';
@@ -72,7 +72,7 @@ export default class NodesPage extends React.Component<{}, NodesPageState> {
 							</td>
 							<td>
 								<Dropdown>
-									<CommandLink command={NodeInstallTlsCert(node.Id)} />
+									<CommandLink command={NodeInstallTLSCert(node.Id)} />
 									<CommandLink command={NodeChangeSmartBackend(node.Id)} />
 								</Dropdown>
 							</td>

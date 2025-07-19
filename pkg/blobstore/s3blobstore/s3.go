@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -43,7 +42,7 @@ func New(opts string, logger *log.Logger) (*s3blobstore, error) {
 		return nil, fmt.Errorf("prefix needs to end in '/'; got '%s'", conf.Prefix)
 	}
 
-	config := aws.NewConfig().WithRegion(conf.RegionId).WithCredentials(credentials.NewStaticCredentials(conf.AccessKeyId, conf.AccessKeySecret, ""))
+	config := aws.NewConfig().WithRegion(conf.RegionID).WithCredentials(credentials.NewStaticCredentials(conf.AccessKeyID, conf.AccessKeySecret, ""))
 	if conf.Endpoint != "" {
 		config = config.WithEndpoint(conf.Endpoint)
 	}
@@ -67,10 +66,10 @@ func New(opts string, logger *log.Logger) (*s3blobstore, error) {
 	}, nil
 }
 
-func (g *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
-	res, err := g.bucket.S3.GetObjectWithContext(ctx, &s3.GetObjectInput{
-		Bucket: g.bucket.Name,
-		Key:    g.blobNamer.Ref(ref),
+func (s *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
+	res, err := s.bucket.S3.GetObjectWithContext(ctx, &s3.GetObjectInput{
+		Bucket: s.bucket.Name,
+		Key:    s.blobNamer.Ref(ref),
 	})
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok && err.Code() == s3.ErrCodeNoSuchKey {
@@ -83,17 +82,17 @@ func (g *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 	return res.Body, nil
 }
 
-func (g *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
+func (s *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	// since S3 internally requires retry support, it requires a io.ReadSeeker and thus
 	// we're forced to buffer
-	buf, err := ioutil.ReadAll(content)
+	buf, err := io.ReadAll(content)
 	if err != nil {
 		return err
 	}
 
-	if _, err := g.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
-		Bucket: g.bucket.Name,
-		Key:    g.blobNamer.Ref(ref),
+	if _, err := s.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
+		Bucket: s.bucket.Name,
+		Key:    s.blobNamer.Ref(ref),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
 		return fmt.Errorf("s3 PutObject: %v", err)
@@ -117,8 +116,8 @@ func (s *s3BlobNamer) Ref(ref stotypes.BlobRef) *string {
 type Config struct {
 	Bucket          string
 	Prefix          string
-	RegionId        string
-	AccessKeyId     string
+	RegionID        string
+	AccessKeyID     string
 	AccessKeySecret string
 	Endpoint        string
 }
@@ -127,9 +126,9 @@ func (c *Config) Serialize() string {
 	return strings.Join([]string{
 		c.Bucket,
 		c.Prefix,
-		c.AccessKeyId,
+		c.AccessKeyID,
 		c.AccessKeySecret,
-		c.RegionId,
+		c.RegionID,
 		c.Endpoint,
 	}, ":")
 }
@@ -155,9 +154,9 @@ func deserializeConfig(serialized string) (*Config, error) {
 	return &Config{
 		Bucket:          match[0],
 		Prefix:          match[1],
-		AccessKeyId:     match[2],
+		AccessKeyID:     match[2],
 		AccessKeySecret: match[3],
-		RegionId:        match[4],
+		RegionID:        match[4],
 		Endpoint:        endpoint,
 	}, nil
 }

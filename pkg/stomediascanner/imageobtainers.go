@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"path/filepath"
 
 	"github.com/function61/gokit/mime"
@@ -18,7 +17,7 @@ import (
 
 type downloadFileFromVarastoDetails struct {
 	file         stotypes.File
-	collectionId string
+	collectionID string
 	client       *stoclient.Client
 }
 
@@ -32,14 +31,14 @@ func alreadyAnImageObtainer(ctx context.Context, varastoFile downloadFileFromVar
 
 	if err := varastoFile.client.DownloadOneFile(
 		ctx,
-		varastoFile.collectionId,
+		varastoFile.collectionID,
 		varastoFile.file,
 		data,
 	); err != nil {
 		return nil, err
 	}
 
-	return ioutil.NopCloser(data), nil
+	return io.NopCloser(data), nil
 }
 
 func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails) (io.ReadCloser, error) {
@@ -47,7 +46,7 @@ func cbzObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 
 	if err := varastoFile.client.DownloadOneFile(
 		ctx,
-		varastoFile.collectionId,
+		varastoFile.collectionID,
 		varastoFile.file,
 		data,
 	); err != nil {
@@ -79,7 +78,7 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 
 	if err := varastoFile.client.DownloadOneFile(
 		ctx,
-		varastoFile.collectionId,
+		varastoFile.collectionID,
 		varastoFile.file,
 		data,
 	); err != nil {
@@ -102,7 +101,7 @@ func cbrObtainer(ctx context.Context, varastoFile downloadFileFromVarastoDetails
 		return nil, err
 	}
 
-	return ioutil.NopCloser(archive), nil
+	return io.NopCloser(archive), nil
 }
 
 func assertFilenameIsImage(filename string) error {

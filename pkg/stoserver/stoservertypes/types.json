@@ -24,7 +24,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups", "produces": {"_": "list", "of": {"_": "UbackupStoredBackup"}}, "name": "getUbackupStoredBackups" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/ubackup/storedbackups/dl?id={id}", "name": "downloadUbackupStoredBackup" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/volumemounts", "produces": {"_": "list", "of": {"_": "VolumeMount"}}, "name": "getVolumeMounts" },
-		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getApiKeys" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/api_keys", "produces": {"_": "list", "of": {"_": "ApiKey"}}, "name": "getAPIKeys" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/scheduler/jobs", "produces": {"_": "list", "of": {"_": "SchedulerJob"}}, "name": "getSchedulerJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/integrityverificationjobs", "produces": {"_": "list", "of": {"_": "IntegrityVerificationJob"}}, "name": "getIntegrityVerificationJobs" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/generate_ids", "produces": {"_": "GeneratedIds"}, "name": "generateIds", "description": "Ask server for assistance in generating identifiers" },

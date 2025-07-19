@@ -48,14 +48,14 @@ func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		return nil, errors.New("unable to resolve mount for path")
 	}
 
-	snapshotId := randomSnapId()
+	snapshotID := randomSnapID()
 
 	//nolint:gosec // ok
 	lvcreateOutput, err := exec.Command(
 		"lvcreate",
 		"--snapshot",
 		"--size", l.snapshotSize,
-		"--name", snapshotId,
+		"--name", snapshotID,
 		mountOfOrigin.Device).CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -76,7 +76,7 @@ func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			lvsOutput)
 	}
 
-	snapshotDevicePath := devicePathFromLvsOutput(snapshotId, lvsOutput)
+	snapshotDevicePath := devicePathFromLvsOutput(snapshotID, lvsOutput)
 	if snapshotDevicePath == "" {
 		return nil, errors.New("failed to resolve snapshot path from lvs output")
 	}
@@ -88,14 +88,14 @@ func (l *lvmSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			return
 		}
 
-		l.log.Info.Printf("cleaning up snapshot %s", snapshotId)
+		l.log.Info.Printf("cleaning up snapshot %s", snapshotID)
 
 		if err := deleteLvmSnapshot(snapshotDevicePath); err != nil {
 			l.log.Error.Printf("deleteLvmSnapshot: %v", err)
 		}
 	}()
 
-	snapshotMountPath := filepath.Join("/mnt", snapshotId)
+	snapshotMountPath := filepath.Join("/mnt", snapshotID)
 
 	if err := os.MkdirAll(snapshotMountPath, 0700); err != nil {
 		return nil, fmt.Errorf(

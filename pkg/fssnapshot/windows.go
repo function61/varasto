@@ -48,8 +48,8 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			createSnapshotOutput)
 	}
 
-	snapshotId := findSnapshotIdFromCreateOutput(string(createSnapshotOutput))
-	if snapshotId == "" {
+	snapshotID := findSnapshotIDFromCreateOutput(string(createSnapshotOutput))
+	if snapshotID == "" {
 		return nil, fmt.Errorf("unable to find snapshot ID from create output")
 	}
 
@@ -58,9 +58,9 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			return
 		}
 
-		w.log.Info.Printf("cleaning snapshot %s", snapshotId)
+		w.log.Info.Printf("cleaning snapshot %s", snapshotID)
 
-		if err := deleteSnapshot(snapshotId); err != nil {
+		if err := deleteSnapshot(snapshotID); err != nil {
 			w.log.Error.Printf("cleaning up snapshot: %v", err)
 		}
 	}()
@@ -70,7 +70,7 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		"vssadmin",
 		"list",
 		"shadows",
-		"/Shadow="+snapshotId).CombinedOutput()
+		"/Shadow="+snapshotID).CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to list snapshot details: %s, output: %s",
@@ -78,12 +78,12 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 			getSnapshotDetailsOutput)
 	}
 
-	snapshotDeviceId := findSnapshotDeviceFromDetailsOutput(string(getSnapshotDetailsOutput))
-	if snapshotDeviceId == "" {
+	snapshotDeviceID := findSnapshotDeviceFromDetailsOutput(string(getSnapshotDetailsOutput))
+	if snapshotDeviceID == "" {
 		return nil, fmt.Errorf("unable to find device ID from list output")
 	}
 
-	snapshotRootMountPath := driveLetter + ":/snapshots/" + randomSnapId()
+	snapshotRootMountPath := driveLetter + ":/snapshots/" + randomSnapID()
 
 	if err := os.MkdirAll(filepath.Dir(snapshotRootMountPath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to make parent dir for snapshot mount: %s", err.Error())
@@ -101,7 +101,7 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 		"mklink",
 		"/D",
 		windowsPath(snapshotRootMountPath),
-		windowsPath(snapshotDeviceId+"/"))
+		windowsPath(snapshotDeviceID+"/"))
 	mklinkOutput, err := mklinkCmd.CombinedOutput()
 	if err != nil {
 		return nil, fmt.Errorf(
@@ -113,7 +113,7 @@ func (w *windowsSnapshotter) Snapshot(path string) (*Snapshot, error) {
 	completedSuccesfully = true // cancel cleanups
 
 	return &Snapshot{
-		ID:                    snapshotId,
+		ID:                    snapshotID,
 		OriginPath:            path,
 		OriginInSnapshotPath:  originPathInSnapshot(path, driveLetter+":/", snapshotRootMountPath),
 		SnapshotRootMountPath: snapshotRootMountPath,
@@ -132,14 +132,14 @@ func (w *windowsSnapshotter) Release(snap Snapshot) error {
 	return nil
 }
 
-func deleteSnapshot(shadowId string) error {
+func deleteSnapshot(shadowID string) error {
 	//nolint:gosec // ok
 	removeSnapshotCmd := exec.Command(
 		"vssadmin",
 		"delete",
 		"shadows",
 		"/Quiet",
-		"/Shadow="+shadowId)
+		"/Shadow="+shadowID)
 
 	removeSnapshotOutput, err := removeSnapshotCmd.CombinedOutput()
 	if err != nil {
@@ -173,10 +173,10 @@ func findSnapshotDeviceFromDetailsOutput(output string) string {
 	return match[1]
 }
 
-var findSnapshotIdFromCreateOutputRe = regexp.MustCompile(`ShadowID = "([^ "]+)"`)
+var findSnapshotIDFromCreateOutputRe = regexp.MustCompile(`ShadowID = "([^ "]+)"`)
 
-func findSnapshotIdFromCreateOutput(output string) string {
-	match := findSnapshotIdFromCreateOutputRe.FindStringSubmatch(output)
+func findSnapshotIDFromCreateOutput(output string) string {
+	match := findSnapshotIDFromCreateOutputRe.FindStringSubmatch(output)
 	if match == nil {
 		return ""
 	}

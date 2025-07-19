@@ -23,14 +23,14 @@ import (
 )
 
 const (
-	oauth2OutOfBandRedirectUrlForOfflineApps = "urn:ietf:wg:oauth:2.0:oob" // = user will manually enter code to application
+	oauth2OutOfBandRedirectURLForOfflineApps = "urn:ietf:wg:oauth:2.0:oob" // = user will manually enter code to application
 )
 
 type googledrive struct {
-	varastoDirectoryId string // ID of directory for storing Varasto blobs
+	varastoDirectoryID string // ID of directory for storing Varasto blobs
 	logl               *logex.Leveled
 	srv                *drive.Service
-	reqThrottle        chan interface{}
+	reqThrottle        chan any
 }
 
 func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
@@ -41,7 +41,7 @@ func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
 		return nil, err
 	}
 
-	client := Oauth2Config(opts.ClientId, opts.ClientSecret).Client(ctx, opts.Token)
+	client := Oauth2Config(opts.ClientID, opts.ClientSecret).Client(ctx, opts.Token)
 
 	gdrive, err := drive.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
@@ -49,7 +49,7 @@ func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
 	}
 
 	return &googledrive{
-		varastoDirectoryId: opts.VarastoDirectoryId,
+		varastoDirectoryID: opts.VarastoDirectoryID,
 		logl:               logex.Levels(logger),
 		srv:                gdrive,
 		// default quota seems to be "1 000 queries per 100 seconds per user", so that makes
@@ -59,7 +59,7 @@ func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
 }
 
 func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
-	fileId, err := g.resolveFileIdByRef(ctx, ref)
+	fileID, err := g.resolveFileIDByRef(ctx, ref)
 	if err != nil {
 		if err, ok := err.(*googleapi.Error); ok && err.Code == http.StatusNotFound {
 			return nil, os.ErrNotExist
@@ -69,7 +69,7 @@ func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 	}
 
 	<-g.reqThrottle
-	res, err := g.srv.Files.Get(fileId).Context(ctx).Download()
+	res, err := g.srv.Files.Get(fileID).Context(ctx).Download()
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	// we've to do this, because Google Drive wouldn't give us an error because it
 	// allows >1 files with same filename in same directory
-	_, err := g.resolveFileIdByRef(ctx, ref)
+	_, err := g.resolveFileIDByRef(ctx, ref)
 	if err == nil {
 		// would actually deserve WARN level error, but we don't have that log level
 		g.logl.Error.Printf("tried to store a blob that is already present: %s", ref.AsHex())
@@ -93,7 +93,7 @@ func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 	<-g.reqThrottle
 	if _, err := g.srv.Files.Create(&drive.File{
 		Name:     toGoogleDriveName(ref),
-		Parents:  []string{g.varastoDirectoryId},
+		Parents:  []string{g.varastoDirectoryID},
 		MimeType: "application/vnd.varasto.blob",
 	}).Media(content).Context(ctx).Do(); err != nil {
 		return fmt.Errorf("gdrive Create: %v", err)
@@ -106,12 +106,12 @@ func (g *googledrive) RoutingCost() int {
 	return 20
 }
 
-func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobRef) (string, error) {
+func (g *googledrive) resolveFileIDByRef(ctx context.Context, ref stotypes.BlobRef) (string, error) {
 	// https://twitter.com/joonas_fi/status/1108008997238595590
 	exactFilenameInExactFolderQuery := fmt.Sprintf(
 		"name = '%s' and '%s' in parents and trashed = false",
 		toGoogleDriveName(ref),
-		g.varastoDirectoryId)
+		g.varastoDirectoryID)
 
 	<-g.reqThrottle
 
@@ -123,7 +123,7 @@ func (g *googledrive) resolveFileIdByRef(ctx context.Context, ref stotypes.BlobR
 		Context(ctx).
 		Do()
 	if err != nil {
-		return "", fmt.Errorf("List call failed: %v", err)
+		return "", fmt.Errorf("op 'List' failed: %w", err)
 	}
 	if len(listFilesResponse.Files) == 0 {
 		return "", os.ErrNotExist
@@ -136,23 +136,23 @@ func toGoogleDriveName(ref stotypes.BlobRef) string {
 	return base64.RawURLEncoding.EncodeToString([]byte(ref))
 }
 
-func Oauth2Config(clientId string, clientSecret string) *oauth2.Config {
+func Oauth2Config(clientID string, clientSecret string) *oauth2.Config {
 	return &oauth2.Config{
-		ClientID:     clientId,
+		ClientID:     clientID,
 		ClientSecret: clientSecret,
 		Endpoint:     google.Endpoint,
-		RedirectURL:  oauth2OutOfBandRedirectUrlForOfflineApps,
+		RedirectURL:  oauth2OutOfBandRedirectURLForOfflineApps,
 		Scopes:       []string{drive.DriveScope},
 	}
 }
 
-func Oauth2AuthCodeUrl(conf *oauth2.Config) string {
+func Oauth2AuthCodeURL(conf *oauth2.Config) string {
 	return conf.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
 }
 
 type Config struct {
-	VarastoDirectoryId string        `json:"directory_id"`
-	ClientId           string        `json:"oauth2_client_id"`
+	VarastoDirectoryID string        `json:"directory_id"`
+	ClientID           string        `json:"oauth2_client_id"`
 	ClientSecret       string        `json:"oauth2_client_secret"`
 	Token              *oauth2.Token `json:"oauth2_token"`
 }
@@ -162,16 +162,16 @@ func (c *Config) Serialize() (string, error) {
 		return "", err
 	}
 
-	asJson, err := json.Marshal(&c)
+	asJSON, err := json.Marshal(&c)
 	if err != nil {
 		return "", err
 	}
 
-	return string(asJson), nil
+	return string(asJSON), nil
 }
 
 func (c *Config) validate() error {
-	if c.ClientId == "" || c.ClientSecret == "" || c.VarastoDirectoryId == "" || c.Token == nil {
+	if c.ClientID == "" || c.ClientSecret == "" || c.VarastoDirectoryID == "" || c.Token == nil {
 		return errors.New("none of the config fields can be empty")
 	}
 
@@ -192,8 +192,8 @@ func deserializeConfig(serialized string) (*Config, error) {
 }
 
 // https://github.com/golang/go/wiki/RateLimiting
-func mkBurstThrottle(burst int, dur time.Duration) chan interface{} {
-	ch := make(chan interface{}, burst)
+func mkBurstThrottle(burst int, dur time.Duration) chan any {
+	ch := make(chan any, burst)
 	go func() {
 		for range time.Tick(dur) {
 			for i := 0; i < burst; i++ {

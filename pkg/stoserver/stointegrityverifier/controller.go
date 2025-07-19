@@ -21,30 +21,30 @@ const errorReportMaxLength = 20 * 1024
 
 type Controller struct {
 	db                  *bbolt.DB
-	runningJobIds       map[string]context.CancelFunc
+	runningJobIDs       map[string]context.CancelFunc
 	diskAccess          *stodiskaccess.Controller
 	ivJobRepository     blorm.Repository
 	blobRepository      blorm.Repository
 	resume              chan string
 	stop                chan string
 	stopped             chan string
-	opListRunningJobIds chan chan []string
+	opListRunningJobIDs chan chan []string
 	logl                *logex.Leveled
 }
 
 // public API
 
-func (s *Controller) Resume(jobId string) {
-	s.resume <- jobId
+func (c *Controller) Resume(jobID string) {
+	c.resume <- jobID
 }
 
-func (s *Controller) Stop(jobId string) {
-	s.stop <- jobId
+func (c *Controller) Stop(jobID string) {
+	c.stop <- jobID
 }
 
-func (s *Controller) ListRunningJobs() []string {
+func (c *Controller) ListRunningJobs() []string {
 	op := make(chan []string, 1)
-	s.opListRunningJobIds <- op
+	c.opListRunningJobIDs <- op
 	return <-op
 }
 
@@ -61,12 +61,12 @@ func NewController(
 		db:                  db,
 		ivJobRepository:     ivJobRepository,
 		blobRepository:      blobRepository,
-		runningJobIds:       map[string]context.CancelFunc{},
+		runningJobIDs:       map[string]context.CancelFunc{},
 		diskAccess:          diskAccess,
 		resume:              make(chan string, 1),
 		stop:                make(chan string, 1),
 		stopped:             make(chan string, 1),
-		opListRunningJobIds: make(chan chan []string),
+		opListRunningJobIDs: make(chan chan []string),
 		logl:                logex.Levels(logger),
 	}
 
@@ -78,42 +78,42 @@ func NewController(
 }
 
 func (c *Controller) run(ctx context.Context) error {
-	handleStopped := func(jobId string) {
-		delete(c.runningJobIds, jobId)
+	handleStopped := func(jobID string) {
+		delete(c.runningJobIDs, jobID)
 	}
 
 	for {
 		select {
 		case <-ctx.Done():
 			// wait for all to stop
-			for len(c.runningJobIds) > 0 {
-				c.logl.Info.Printf("waiting %d job(s) to stop", len(c.runningJobIds))
+			for len(c.runningJobIDs) > 0 {
+				c.logl.Info.Printf("waiting %d job(s) to stop", len(c.runningJobIDs))
 
 				handleStopped(<-c.stopped)
 			}
 
 			return nil
-		case jobId := <-c.stop:
-			jobCancel, found := c.runningJobIds[jobId]
+		case jobID := <-c.stop:
+			jobCancel, found := c.runningJobIDs[jobID]
 			if !found {
-				c.logl.Error.Printf("did not find job %s", jobId)
+				c.logl.Error.Printf("did not find job %s", jobID)
 				continue
 			}
 
-			c.logl.Info.Printf("stopping job %s", jobId)
+			c.logl.Info.Printf("stopping job %s", jobID)
 			jobCancel()
-		case jobId := <-c.stopped:
-			handleStopped(jobId)
-		case jobId := <-c.resume:
-			c.logl.Info.Printf("resuming job %s", jobId)
+		case jobID := <-c.stopped:
+			handleStopped(jobID)
+		case jobID := <-c.resume:
+			c.logl.Info.Printf("resuming job %s", jobID)
 
-			if err := c.resumeJob(ctx, jobId); err != nil {
+			if err := c.resumeJob(ctx, jobID); err != nil {
 				c.logl.Error.Printf("resumeJob: %v", err)
 			}
-		case result := <-c.opListRunningJobIds:
+		case result := <-c.opListRunningJobIDs:
 			jobIds := []string{}
 
-			for id := range c.runningJobIds {
+			for id := range c.runningJobIDs {
 				jobIds = append(jobIds, id)
 			}
 
@@ -122,11 +122,11 @@ func (c *Controller) run(ctx context.Context) error {
 	}
 }
 
-func (s *Controller) resumeJob(ctx context.Context, jobId string) error {
-	if _, running := s.runningJobIds[jobId]; running {
+func (c *Controller) resumeJob(ctx context.Context, jobID string) error {
+	if _, running := c.runningJobIDs[jobID]; running {
 		return errors.New("job is already running")
 	}
-	job, err := s.loadJob(jobId)
+	job, err := c.loadJob(jobID)
 	if err != nil {
 		return err
 	}
@@ -136,23 +136,23 @@ func (s *Controller) resumeJob(ctx context.Context, jobId string) error {
 	// b) individual job cancel via public API Stop()
 	jobCtx, cancel := context.WithCancel(ctx)
 
-	s.runningJobIds[jobId] = cancel
+	c.runningJobIDs[jobID] = cancel
 
 	go func() {
 		defer cancel()
 
-		if err := s.resumeJobWorker(jobCtx, job); err != nil {
-			s.logl.Error.Printf("resumeJobWorker: %v", err)
+		if err := c.resumeJobWorker(jobCtx, job); err != nil {
+			c.logl.Error.Printf("resumeJobWorker: %v", err)
 		}
 
-		s.stopped <- jobId
+		c.stopped <- jobID
 	}()
 
 	return nil
 }
 
-func (s *Controller) nextBlobsForJob(lastCompletedBlobRef stotypes.BlobRef, limit int) ([]stotypes.Blob, error) {
-	tx, err := s.db.Begin(false)
+func (c *Controller) nextBlobsForJob(lastCompletedBlobRef stotypes.BlobRef, limit int) ([]stotypes.Blob, error) {
+	tx, err := c.db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
@@ -160,29 +160,29 @@ func (s *Controller) nextBlobsForJob(lastCompletedBlobRef stotypes.BlobRef, limi
 
 	blobs := []stotypes.Blob{}
 
-	return blobs, s.blobRepository.EachFrom([]byte(lastCompletedBlobRef), func(record interface{}) error {
+	return blobs, c.blobRepository.EachFrom([]byte(lastCompletedBlobRef), func(record any) error {
 		blobs = append(blobs, *record.(*stotypes.Blob))
 
 		if len(blobs) >= limit {
-			return blorm.StopIteration
+			return blorm.ErrStopIteration
 		}
 
 		return nil
 	}, tx)
 }
 
-func (s *Controller) resumeJobWorker(
+func (c *Controller) resumeJobWorker(
 	ctx context.Context,
 	job *stotypes.IntegrityVerificationJob,
 ) error {
 	lastStatusUpdate := time.Now()
 
-	updateJobStatusInDb := func() error {
-		return s.db.Update(func(tx *bbolt.Tx) error {
-			return s.ivJobRepository.Update(job, tx)
+	updateJobStatusInDB := func() error {
+		return c.db.Update(func(tx *bbolt.Tx) error {
+			return c.ivJobRepository.Update(job, tx)
 		})
 	}
-	defer func() { ignoreError(updateJobStatusInDb()) }() // to cover all following returns. ignores error
+	defer func() { ignoreError(updateJobStatusInDB()) }() // to cover all following returns. ignores error
 
 	// returns error if maximum errors detected and the job should stop
 	pushErr := func(reportLine string) error {
@@ -202,7 +202,7 @@ func (s *Controller) resumeJobWorker(
 	for {
 		// discover next batch
 		// FIXME: this always fetches the last blob of previous batch to the next batch
-		blobBatch, err := s.nextBlobsForJob(job.LastCompletedBlobRef, batchLimit)
+		blobBatch, err := c.nextBlobsForJob(job.LastCompletedBlobRef, batchLimit)
 		if err != nil {
 			return err
 		}
@@ -219,7 +219,7 @@ func (s *Controller) resumeJobWorker(
 			job.LastCompletedBlobRef = blob.Ref
 
 			if time.Since(lastStatusUpdate) >= 5*time.Second {
-				if err := updateJobStatusInDb(); err != nil {
+				if err := updateJobStatusInDB(); err != nil {
 					return err
 				}
 
@@ -232,12 +232,12 @@ func (s *Controller) resumeJobWorker(
 				}
 			}
 
-			blobExistsOnVolumeToVerify := sliceutil.ContainsInt(blob.Volumes, job.VolumeId)
+			blobExistsOnVolumeToVerify := sliceutil.ContainsInt(blob.Volumes, job.VolumeID)
 			if !blobExistsOnVolumeToVerify {
 				continue
 			}
 
-			bytesScanned, err := s.diskAccess.Scrub(blob.Ref, job.VolumeId)
+			bytesScanned, err := c.diskAccess.Scrub(blob.Ref, job.VolumeID)
 			if err != nil {
 				descr := fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
 				if err := pushErr(descr); err != nil {
@@ -262,20 +262,20 @@ func (s *Controller) resumeJobWorker(
 	job.Completed = time.Now()
 	job.Report += fmt.Sprintf("Completed with %d error(s)\n", job.ErrorsFound)
 
-	s.logl.Debug.Println("finished")
+	c.logl.Debug.Println("finished")
 
 	return nil
 }
 
-func (s *Controller) loadJob(jobId string) (*stotypes.IntegrityVerificationJob, error) {
-	tx, err := s.db.Begin(false)
+func (c *Controller) loadJob(jobID string) (*stotypes.IntegrityVerificationJob, error) {
+	tx, err := c.db.Begin(false)
 	if err != nil {
 		return nil, err
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	job := &stotypes.IntegrityVerificationJob{}
-	if err := s.ivJobRepository.OpenByPrimaryKey([]byte(jobId), job, tx); err != nil {
+	if err := c.ivJobRepository.OpenByPrimaryKey([]byte(jobID), job, tx); err != nil {
 		return nil, err
 	}
 

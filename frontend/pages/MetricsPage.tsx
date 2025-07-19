@@ -2,7 +2,7 @@ import { Result } from 'f61ui/component/result';
 import { WarningAlert } from 'f61ui/component/alerts';
 import { CommandInlineForm } from 'f61ui/component/CommandButton';
 import { CollapsePanel } from 'f61ui/component/bootstrap';
-import { ConfigSetGrafanaUrl } from 'generated/stoserver/stoservertypes_commands';
+import { ConfigSetGrafanaURL } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import { CfgGrafanaUrl, ConfigValue } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
@@ -65,7 +65,7 @@ export default class MetricsPage extends React.Component<{}, MetricsPageState> {
 			<CollapsePanel
 				heading="Grafana integration configuration"
 				openInitially={!grafanaUrl.Value}>
-				<CommandInlineForm command={ConfigSetGrafanaUrl(grafanaUrl.Value)} />
+				<CommandInlineForm command={ConfigSetGrafanaURL(grafanaUrl.Value)} />
 			</CollapsePanel>
 		);
 	}

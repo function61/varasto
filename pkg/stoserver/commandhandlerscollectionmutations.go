@@ -54,7 +54,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		for _, filePathToMove := range filesToMove {
 			fileToMove, found := filesInSource[filePathToMove]
 			if !found {
-				return fmt.Errorf("File to move not found: %s", filePathToMove)
+				return fmt.Errorf("file to move not found: %s", filePathToMove)
 			}
 
 			createToDestination = append(createToDestination, fileToMove)
@@ -73,9 +73,9 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 
 				// if destination collection doesn't have encryption key for this blob,
 				// copy it over
-				if stotypes.FindDekEnvelope(blob.EncryptionKeyId, collDst.EncryptionKeys) == nil {
+				if stotypes.FindDekEnvelope(blob.EncryptionKeyID, collDst.EncryptionKeys) == nil {
 					dekEnvelope, err := copyAndReEncryptDekFromAnotherCollection(
-						blob.EncryptionKeyId,
+						blob.EncryptionKeyID,
 						extractKekPubKeyFingerprints(collSrc),
 						tx,
 						c.conf.KeyStore)
@@ -89,7 +89,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		}
 
 		srcChangeset := stotypes.NewChangeset(
-			stoutils.NewCollectionChangesetId(),
+			stoutils.NewCollectionChangesetID(),
 			collSrc.Head,
 			ctx.Meta.Timestamp,
 			nil,
@@ -98,7 +98,7 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 
 		// duplicate filenames are asserted by appendAndValidateChangeset()
 		dstChangeset := stotypes.NewChangeset(
-			stoutils.NewCollectionChangesetId(),
+			stoutils.NewCollectionChangesetID(),
 			collDst.Head,
 			ctx.Meta.Timestamp,
 			createToDestination,
@@ -156,7 +156,7 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 		}
 
 		changeset := stotypes.NewChangeset(
-			stoutils.NewCollectionChangesetId(),
+			stoutils.NewCollectionChangesetID(),
 			coll.Head,
 			ctx.Meta.Timestamp,
 			nil,

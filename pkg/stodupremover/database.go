@@ -20,8 +20,8 @@ type database struct {
 	hashes map[string]string
 }
 
-func loadDatabase(acceptOldDb bool) (*database, error) {
-	dbLocation, err := resolveDbLocation()
+func loadDatabase(acceptOldDB bool) (*database, error) {
+	dbLocation, err := resolveDBLocation()
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func loadDatabase(acceptOldDb bool) (*database, error) {
 	}
 	defer f.Close()
 
-	if !acceptOldDb {
+	if !acceptOldDB {
 		stat, err := f.Stat()
 		if err != nil {
 			return nil, err
@@ -69,7 +69,7 @@ func loadDatabase(acceptOldDb bool) (*database, error) {
 }
 
 func refreshDatabase(ctx context.Context) error {
-	dbLocation, err := resolveDbLocation()
+	dbLocation, err := resolveDBLocation()
 	if err != nil {
 		return err
 	}
@@ -81,9 +81,9 @@ func refreshDatabase(ctx context.Context) error {
 
 	res, err := ezhttp.Get(
 		ctx,
-		conf.UrlBuilder().DatabaseExportSha256s(),
+		conf.URLBuilder().DatabaseExportSha256s(),
 		ezhttp.AuthBearer(conf.AuthToken),
-		ezhttp.Client(conf.HttpClient()))
+		ezhttp.Client(conf.HTTPClient()))
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func refreshDatabase(ctx context.Context) error {
 	})
 }
 
-func resolveDbLocation() (string, error) {
+func resolveDBLocation() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err

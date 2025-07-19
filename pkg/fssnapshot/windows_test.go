@@ -46,7 +46,7 @@ instance of __PARAMETERS
 `
 
 	assert.EqualString(t,
-		findSnapshotIdFromCreateOutput(exampleOutput),
+		findSnapshotIDFromCreateOutput(exampleOutput),
 		"{984628B9-4972-4AF3-8748-E9EC2C810DEC}")
 }
 

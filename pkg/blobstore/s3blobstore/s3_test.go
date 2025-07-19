@@ -12,17 +12,17 @@ func TestDeserializeConfig(t *testing.T) {
 	conf, err := deserializeConfig((&Config{
 		Bucket:          "varasto-test",
 		Prefix:          "/",
-		AccessKeyId:     "AKIAUZHTE3U35WCD5EHB",
+		AccessKeyID:     "AKIAUZHTE3U35WCD5EHB",
 		AccessKeySecret: "wXQJhB...",
-		RegionId:        "eu-central-1",
+		RegionID:        "eu-central-1",
 	}).Serialize())
 	assert.Assert(t, err == nil)
 
 	assert.EqualString(t, conf.Bucket, "varasto-test")
 	assert.EqualString(t, conf.Prefix, "/")
-	assert.EqualString(t, conf.AccessKeyId, "AKIAUZHTE3U35WCD5EHB")
+	assert.EqualString(t, conf.AccessKeyID, "AKIAUZHTE3U35WCD5EHB")
 	assert.EqualString(t, conf.AccessKeySecret, "wXQJhB...")
-	assert.EqualString(t, conf.RegionId, "eu-central-1")
+	assert.EqualString(t, conf.RegionID, "eu-central-1")
 	assert.EqualString(t, conf.Endpoint, "")
 }
 
@@ -31,18 +31,18 @@ func TestDeserializeConfigWithEndpoint(t *testing.T) {
 	conf, err := deserializeConfig((&Config{
 		Bucket:          "varasto-test",
 		Prefix:          "/",
-		AccessKeyId:     "AKIAUZHTE3U35WCD5EHB",
+		AccessKeyID:     "AKIAUZHTE3U35WCD5EHB",
 		AccessKeySecret: "wXQJhB...",
-		RegionId:        "eu-central-1",
+		RegionID:        "eu-central-1",
 		Endpoint:        "s3.us-east-1.amazonaws.com",
 	}).Serialize())
 	assert.Assert(t, err == nil)
 
 	assert.EqualString(t, conf.Bucket, "varasto-test")
 	assert.EqualString(t, conf.Prefix, "/")
-	assert.EqualString(t, conf.AccessKeyId, "AKIAUZHTE3U35WCD5EHB")
+	assert.EqualString(t, conf.AccessKeyID, "AKIAUZHTE3U35WCD5EHB")
 	assert.EqualString(t, conf.AccessKeySecret, "wXQJhB...")
-	assert.EqualString(t, conf.RegionId, "eu-central-1")
+	assert.EqualString(t, conf.RegionID, "eu-central-1")
 	assert.EqualString(t, conf.Endpoint, "s3.us-east-1.amazonaws.com")
 }
 

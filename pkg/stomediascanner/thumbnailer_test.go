@@ -41,7 +41,6 @@ func TestResizedDimensions300x533(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		tc := tc // pin
 		t.Run(tc.expected, func(t *testing.T) {
 			w, h := resizedDimensions(tc.width, tc.height, 300, 533)
 			result := fmt.Sprintf("%dx%d", w, h)

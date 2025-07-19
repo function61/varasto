@@ -4,9 +4,9 @@ import (
 	"fmt"
 )
 
-type ExternalIds struct {
-	Id     int64  `json:"id"`
-	ImdbId string `json:"imdb_id"`
+type ExternalIDs struct {
+	ID     int64  `json:"id"`
+	ImdbID string `json:"imdb_id"`
 }
 
 const (
@@ -15,7 +15,7 @@ const (
 )
 
 type MultiSearchResult struct { // disgusting tagged union, media_type tells us which fields we can expect to be set
-	Id           int64  `json:"id"`
+	ID           int64  `json:"id"`
 	MediaType    string `json:"media_type"`
 	Title        string `json:"title"`          // when movie
 	Name         string `json:"name"`           // when TV
@@ -24,8 +24,8 @@ type MultiSearchResult struct { // disgusting tagged union, media_type tells us 
 }
 
 type Movie struct {
-	Id             int64       `json:"id"`
-	ExternalIds    ExternalIds `json:"external_ids"`
+	ID             int64       `json:"id"`
+	ExternalIds    ExternalIDs `json:"external_ids"`
 	Title          string      `json:"title"`
 	OriginalTitle  string      `json:"original_title"`
 	Overview       string      `json:"overview"`
@@ -36,17 +36,17 @@ type Movie struct {
 }
 
 type Tv struct {
-	Id           int64       `json:"id"`
+	ID           int64       `json:"id"`
 	Name         string      `json:"name"`
 	Overview     string      `json:"overview"`
 	BackdropPath *ImageID    `json:"backdrop_path"`
 	PosterPath   *ImageID    `json:"poster_path"`
 	Homepage     string      `json:"homepage"`
-	ExternalIds  ExternalIds `json:"external_ids"`
+	ExternalIds  ExternalIDs `json:"external_ids"`
 }
 
 type Episode struct {
-	Id            uint64   `json:"id"`
+	ID            uint64   `json:"id"`
 	SeasonNumber  int      `json:"season_number"`
 	EpisodeNumber int      `json:"episode_number"`
 	Name          string   `json:"name"`
@@ -100,8 +100,8 @@ func (i ImageID) URL(size ImageSize) string {
 type ImageSize string
 
 const (
-	ImageSizeOriginal           ImageSize = "original"
-	ImageSizew138_and_h175_face ImageSize = "w138_and_h175_face"
+	ImageSizeOriginal        ImageSize = "original"
+	ImageSizeW138AndH175Face ImageSize = "w138_and_h175_face"
 )
 
 type Job string

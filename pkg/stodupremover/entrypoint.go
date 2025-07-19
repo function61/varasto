@@ -29,7 +29,7 @@ func Entrypoint() *cobra.Command {
 }
 
 func scanEntry() *cobra.Command {
-	acceptOutdatedDb := false
+	acceptOutdatedDB := false
 	removeDuplicates := false
 
 	cmd := &cobra.Command{
@@ -37,11 +37,11 @@ func scanEntry() *cobra.Command {
 		Short: `Scan current directory tree for items existing in Varasto`,
 		Args:  cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
-			osutil.ExitIfError(scan(removeDuplicates, acceptOutdatedDb))
+			osutil.ExitIfError(scan(removeDuplicates, acceptOutdatedDB))
 		},
 	}
 
-	cmd.Flags().BoolVarP(&acceptOutdatedDb, "accept-outdated-db", "a", acceptOutdatedDb, "Accept dangerously outdated DB")
+	cmd.Flags().BoolVarP(&acceptOutdatedDB, "accept-outdated-db", "a", acceptOutdatedDB, "Accept dangerously outdated DB")
 	cmd.Flags().BoolVarP(&removeDuplicates, "rm", "", removeDuplicates, "Actually remove duplicates, instead of only reporting")
 
 	return cmd

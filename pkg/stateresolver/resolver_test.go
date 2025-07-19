@@ -15,7 +15,7 @@ import (
 func TestComputeStateAt(t *testing.T) {
 	// new empty collection
 	coll := stotypes.Collection{
-		Head:       stotypes.NoParentId,
+		Head:       stotypes.NoParentID,
 		Changesets: []stotypes.CollectionChangeset{},
 	}
 
@@ -23,7 +23,7 @@ func TestComputeStateAt(t *testing.T) {
 	assert.EqualString(t, dumpState(coll, coll.Head), `
 `)
 
-	coll = pushChangeset(coll, stotypes.NoParentId, creates("a.txt", 11), creates("b.txt", 22))
+	coll = pushChangeset(coll, stotypes.NoParentID, creates("a.txt", 11), creates("b.txt", 22))
 
 	assert.Assert(t, len(coll.Changesets) == 1)
 	assert.EqualString(t, dumpState(coll, coll.Head), `a.txt (size 11)
@@ -54,10 +54,10 @@ c.txt (size 33)
 
 // test helpers
 
-func pushChangeset(coll stotypes.Collection, parentId string, mutations ...chMutFn) stotypes.Collection {
+func pushChangeset(coll stotypes.Collection, parentID string, mutations ...chMutFn) stotypes.Collection {
 	changeset := stotypes.NewChangeset(
-		stoutils.NewCollectionChangesetId(),
-		parentId,
+		stoutils.NewCollectionChangesetID(),
+		parentID,
 		time.Now(),
 		nil,
 		nil,
@@ -73,8 +73,8 @@ func pushChangeset(coll stotypes.Collection, parentId string, mutations ...chMut
 	return coll
 }
 
-func dumpState(coll stotypes.Collection, revId string) string {
-	state, err := ComputeStateAt(coll, revId)
+func dumpState(coll stotypes.Collection, revID string) string {
+	state, err := ComputeStateAt(coll, revID)
 	if err != nil {
 		panic(err)
 	}

@@ -16,8 +16,8 @@ func TestToGoogleDriveName(t *testing.T) {
 
 func TestSerializeAndDeserializeConfig(t *testing.T) {
 	serialized, err := (&Config{
-		VarastoDirectoryId: "dummyDirId",
-		ClientId:           "dummyClientId",
+		VarastoDirectoryID: "dummyDirId",
+		ClientID:           "dummyClientId",
 		ClientSecret:       "dummyClientSecret",
 		Token:              &oauth2.Token{},
 	}).Serialize()
@@ -28,11 +28,11 @@ func TestSerializeAndDeserializeConfig(t *testing.T) {
 	conf, err := deserializeConfig(serialized)
 	assert.Assert(t, err == nil)
 
-	assert.EqualString(t, conf.VarastoDirectoryId, "dummyDirId")
-	assert.EqualString(t, conf.ClientId, "dummyClientId")
+	assert.EqualString(t, conf.VarastoDirectoryID, "dummyDirId")
+	assert.EqualString(t, conf.ClientID, "dummyClientId")
 	assert.EqualString(t, conf.ClientSecret, "dummyClientSecret")
 
-	oauth2Conf := Oauth2Config(conf.ClientId, conf.ClientSecret)
+	oauth2Conf := Oauth2Config(conf.ClientID, conf.ClientSecret)
 
-	assert.EqualString(t, Oauth2AuthCodeUrl(oauth2Conf), "https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=dummyClientId&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&state=state-token")
+	assert.EqualString(t, Oauth2AuthCodeURL(oauth2Conf), "https://accounts.google.com/o/oauth2/auth?access_type=offline&client_id=dummyClientId&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&state=state-token")
 }

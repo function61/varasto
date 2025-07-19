@@ -12,7 +12,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/function61/gokit/hashverifyreader"
@@ -36,7 +35,7 @@ type Controller struct {
 }
 
 type volumeDescriptor struct {
-	VolumeId string `json:"volume_uuid"`
+	VolumeUUID string `json:"volume_uuid"`
 }
 
 func New(metadataStore MetadataStore) *Controller {
@@ -49,44 +48,44 @@ func New(metadataStore MetadataStore) *Controller {
 }
 
 // call only during server boot (this is not threadsafe)
-func (d *Controller) Mount(ctx context.Context, volumeId int, expectedVolumeUuid string, driver blobstore.Driver) error {
-	if err := d.Mountable(ctx, volumeId, expectedVolumeUuid, driver); err != nil {
+func (d *Controller) Mount(ctx context.Context, volumeID int, expectedVolumeUUID string, driver blobstore.Driver) error {
+	if err := d.Mountable(ctx, volumeID, expectedVolumeUUID, driver); err != nil {
 		return err
 	}
 
-	d.mountedDrivers[volumeId] = driver
-	d.routingCosts[volumeId] = driver.RoutingCost()
+	d.mountedDrivers[volumeID] = driver
+	d.routingCosts[volumeID] = driver.RoutingCost()
 
 	return nil
 }
 
 // mount command currently wants to check if volume would be mountable without actually mounting it
-func (d *Controller) Mountable(ctx context.Context, volumeId int, expectedVolumeUuid string, driver blobstore.Driver) error {
-	if _, exists := d.mountedDrivers[volumeId]; exists {
+func (d *Controller) Mountable(ctx context.Context, volumeID int, expectedVolumeUUID string, driver blobstore.Driver) error {
+	if _, exists := d.mountedDrivers[volumeID]; exists {
 		return errors.New("driver for volumeId already defined")
 	}
 
-	if err := d.verifyOnDiskVolumeUuid(ctx, driver, expectedVolumeUuid); err != nil {
+	if err := d.verifyOnDiskVolumeUUID(ctx, driver, expectedVolumeUUID); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (d *Controller) IsMounted(volumeId int) bool {
-	_, mounted := d.mountedDrivers[volumeId]
+func (d *Controller) IsMounted(volumeID int) bool {
+	_, mounted := d.mountedDrivers[volumeID]
 	return mounted
 }
 
 // in theory we wouldn't need to do this since we could do a Fetch()-followed by Store(),
 // but we can optimize by just transferring the raw on-disk format
-func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId int, ref stotypes.BlobRef) error {
-	fromDriver, err := d.driverFor(fromVolumeId)
+func (d *Controller) Replicate(ctx context.Context, fromVolumeID int, toVolumeID int, ref stotypes.BlobRef) error {
+	fromDriver, err := d.driverFor(fromVolumeID)
 	if err != nil {
 		return err
 	}
 
-	toDriver, err := d.driverFor(toVolumeId)
+	toDriver, err := d.driverFor(toVolumeID)
 	if err != nil {
 		return err
 	}
@@ -108,27 +107,27 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeId int, toVolumeId
 		return err
 	}
 
-	return d.metadataStore.WriteBlobReplicated(ref, toVolumeId)
+	return d.metadataStore.WriteBlobReplicated(ref, toVolumeID)
 }
 
 func (d *Controller) WriteBlob(
-	volumeId int,
-	collId string,
+	volumeID int,
+	collID string,
 	ref stotypes.BlobRef,
 	content io.Reader,
 	maybeCompressible bool,
 ) error {
 	return d.WriteBlobNoVerify(
-		volumeId,
-		collId,
+		volumeID,
+		collID,
 		ref,
 		stoutils.BlobHashVerifier(content, ref),
 		maybeCompressible)
 }
 
 func (d *Controller) WriteBlobNoVerify(
-	volumeId int,
-	collId string,
+	volumeID int,
+	collID string,
 	ref stotypes.BlobRef,
 	content io.Reader,
 	maybeCompressible bool,
@@ -137,7 +136,7 @@ func (d *Controller) WriteBlobNoVerify(
 	// should we have some kind of timeoutreader?
 	unlock, ok := d.writingBlobs.TryLock(ref.AsHex())
 	if !ok {
-		return fmt.Errorf("Another thread is currently writing blob[%s]", ref.AsHex())
+		return fmt.Errorf("another thread is currently writing blob[%s]", ref.AsHex())
 	}
 	defer unlock()
 
@@ -155,7 +154,7 @@ func (d *Controller) WriteBlobNoVerify(
 	// this is going to take relatively long time, so we can't keep
 	// a transaction open
 
-	driver, err := d.driverFor(volumeId)
+	driver, err := d.driverFor(volumeID)
 	if err != nil {
 		return err
 	}
@@ -163,7 +162,7 @@ func (d *Controller) WriteBlobNoVerify(
 	readCounter := writeCounter{}
 	contentCounted := readCounter.Tee(content)
 
-	encryptionKeyId, encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKeyForNewBlobs(collId)
+	encryptionKeyID, encryptionKey, err := d.metadataStore.QueryCollectionEncryptionKeyForNewBlobs(collID)
 	if err != nil {
 		return err
 	}
@@ -174,7 +173,7 @@ func (d *Controller) WriteBlobNoVerify(
 	}
 
 	if err := driver.RawStore(context.TODO(), ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
-		return fmt.Errorf("storing blob into volume %d failed: %v", volumeId, err)
+		return fmt.Errorf("storing blob into volume %d failed: %v", volumeID, err)
 	}
 
 	meta := &BlobMeta{
@@ -182,11 +181,11 @@ func (d *Controller) WriteBlobNoVerify(
 		RealSize:        int32(readCounter.BytesWritten()),
 		SizeOnDisk:      int32(len(blobEncrypted.CiphertextMaybeCompressed)),
 		IsCompressed:    blobEncrypted.Compressed,
-		EncryptionKeyId: encryptionKeyId,
+		EncryptionKeyID: encryptionKeyID,
 		ExpectedCrc32:   blobEncrypted.Crc32,
 	}
 
-	if err := d.metadataStore.WriteBlobCreated(meta, volumeId); err != nil {
+	if err := d.metadataStore.WriteBlobCreated(meta, volumeID); err != nil {
 		return fmt.Errorf("WriteBlob() DB write: %v", err)
 	}
 
@@ -195,8 +194,8 @@ func (d *Controller) WriteBlobNoVerify(
 
 // does decrypt(optional_decompress(blobOnDisk))
 // verifies blob integrity for you!
-func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEnvelope, volumeId int) (io.ReadCloser, error) {
-	driver, err := d.driverFor(volumeId)
+func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEnvelope, volumeID int) (io.ReadCloser, error) {
+	driver, err := d.driverFor(volumeID)
 	if err != nil {
 		return nil, err
 	}
@@ -242,36 +241,36 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEn
 // currently looks for the first ID mounted on this node, but in the future could use richer heuristics:
 // - is the HDD currently spinning
 // - best latency & bandwidth
-func (d *Controller) BestVolumeId(volumeIds []int) (int, error) {
+func (d *Controller) BestVolumeID(volumeIDs []int) (int, error) {
 	lowestCost := 99
-	lowestCostVolumeId := 0
+	lowestCostVolumeID := 0
 
-	for _, volumeId := range volumeIds {
-		if !d.IsMounted(volumeId) {
+	for _, volumeID := range volumeIDs {
+		if !d.IsMounted(volumeID) {
 			continue
 		}
 
-		cost := d.routingCosts[volumeId]
+		cost := d.routingCosts[volumeID]
 
 		if cost < lowestCost {
-			lowestCostVolumeId = volumeId
+			lowestCostVolumeID = volumeID
 			lowestCost = cost
 		}
 	}
 
-	if lowestCostVolumeId == 0 {
+	if lowestCostVolumeID == 0 {
 		return 0, stotypes.ErrBlobNotAccessibleOnThisNode
 	}
 
-	return lowestCostVolumeId, nil
+	return lowestCostVolumeID, nil
 }
 
 // runs a scrub for a blob in a given volume to detect errors
 // https://en.wikipedia.org/wiki/Data_scrubbing
 // we could actually just do a Fetch() but that would require access to the encryption keys.
 // this way we can verify on-disk integrity without encryption keys.
-func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
-	driver, err := d.driverFor(volumeId)
+func (d *Controller) Scrub(ref stotypes.BlobRef, volumeID int) (int64, error) {
+	driver, err := d.driverFor(volumeID)
 	if err != nil {
 		return 0, err
 	}
@@ -289,20 +288,20 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeId int) (int64, error) {
 
 	verifiedReader := hashverifyreader.New(body, crc32.NewIEEE(), expectedCrc32)
 
-	bytesRead, err := io.Copy(ioutil.Discard, verifiedReader)
+	bytesRead, err := io.Copy(io.Discard, verifiedReader)
 	return bytesRead, err
 }
 
 // initializes volume for Varasto use by writing a volume descriptor (see verifyOnDiskVolumeUuid() for rationale)
-func (d *Controller) Initialize(ctx context.Context, volumeUuid string, driver blobstore.Driver) error {
+func (d *Controller) Initialize(ctx context.Context, volumeUUID string, driver blobstore.Driver) error {
 	// this error is expected to happen before initialization
 	// (we check this so we know it's safe to initialize)
-	if err := d.verifyOnDiskVolumeUuid(ctx, driver, volumeUuid); err != ErrVolumeDescriptorNotFound {
+	if err := d.verifyOnDiskVolumeUUID(ctx, driver, volumeUUID); err != ErrVolumeDescriptorNotFound {
 		return fmt.Errorf("cannot initialize because verifyOnDiskVolumeUuid: %v", err)
 	}
 
 	volDescriptor := &bytes.Buffer{}
-	if err := jsonfile.Marshal(volDescriptor, &volumeDescriptor{volumeUuid}); err != nil {
+	if err := jsonfile.Marshal(volDescriptor, &volumeDescriptor{volumeUUID}); err != nil {
 		return err
 	}
 
@@ -312,7 +311,7 @@ func (d *Controller) Initialize(ctx context.Context, volumeUuid string, driver b
 // it's really dangerous to accidentally mount the wrong volume, so we'll keep a volume descriptor
 // file at sha256=0000.. that contains the volume UUID that we can validate at mount time.
 // will return ErrVolumeDescriptorNotFound if volume descriptor does not yet exist
-func (d *Controller) verifyOnDiskVolumeUuid(ctx context.Context, driver blobstore.Driver, expectedVolumeUuid string) error {
+func (d *Controller) verifyOnDiskVolumeUUID(ctx context.Context, driver blobstore.Driver, expectedVolumeUUID string) error {
 	body, err := driver.RawFetch(ctx, volumeDescriptorRef)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -328,17 +327,17 @@ func (d *Controller) verifyOnDiskVolumeUuid(ctx context.Context, driver blobstor
 		return err
 	}
 
-	if descriptor.VolumeId != expectedVolumeUuid {
-		return fmt.Errorf("unexpected volume UUID: %s", descriptor.VolumeId)
+	if descriptor.VolumeUUID != expectedVolumeUUID {
+		return fmt.Errorf("unexpected volume UUID: %s", descriptor.VolumeUUID)
 	}
 
 	return nil
 }
 
-func (d *Controller) driverFor(volumeId int) (blobstore.Driver, error) {
-	driver, found := d.mountedDrivers[volumeId]
+func (d *Controller) driverFor(volumeID int) (blobstore.Driver, error) {
+	driver, found := d.mountedDrivers[volumeID]
 	if !found {
-		return nil, fmt.Errorf("volume %d not found", volumeId)
+		return nil, fmt.Errorf("volume %d not found", volumeID)
 	}
 
 	return driver, nil
@@ -378,7 +377,7 @@ func encryptAndCompressBlob(
 	ref stotypes.BlobRef,
 	maybeCompressible bool,
 ) (*blobResult, error) {
-	content, err := ioutil.ReadAll(contentReader)
+	content, err := io.ReadAll(contentReader)
 	if err != nil {
 		return nil, err
 	}

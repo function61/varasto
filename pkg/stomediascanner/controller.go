@@ -41,7 +41,7 @@ func NewController(
 }
 
 func (c *Controller) TriggerScan(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
-	collectionId := mux.Vars(r)["id"]
+	collectionID := mux.Vars(r)["id"]
 	mode := r.URL.Query().Get("mode")
 
 	// a = "allow destructive changes"
@@ -49,7 +49,7 @@ func (c *Controller) TriggerScan(rctx *httpauth.RequestContext, w http.ResponseW
 
 	if err := collectionThumbnails(
 		r.Context(),
-		collectionId,
+		collectionID,
 		moveNamedThumbnails,
 		c.clientConf,
 		c.logl,

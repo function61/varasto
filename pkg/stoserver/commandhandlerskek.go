@@ -36,9 +36,9 @@ func (c *cHandlers) KekGenerateOrImport(cmd *stoservertypes.KekGenerateOrImport,
 	}
 
 	kek := stotypes.KeyEncryptionKey{
-		ID:          stoutils.NewKeyEncryptionKeyId(),
+		ID:          stoutils.NewKeyEncryptionKeyID(),
 		Kind:        "rsa",
-		Bits:        privateKey.PublicKey.Size() * 8,
+		Bits:        privateKey.Size() * 8,
 		Created:     ctx.Meta.Timestamp,
 		Label:       cmd.Label,
 		Fingerprint: fingerprint,

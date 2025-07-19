@@ -11,7 +11,7 @@ import {
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { Timestamp } from 'f61ui/component/timestamp';
-import { NodeSmartScan, VolumeSmartSetId } from 'generated/stoserver/stoservertypes_commands';
+import { NodeSmartScan, VolumeSmartSetID } from 'generated/stoserver/stoservertypes_commands';
 import { DocRef, Volume } from 'generated/stoserver/stoservertypes_types';
 import * as React from 'react';
 
@@ -134,7 +134,7 @@ export default class SmartView extends React.Component<SmartViewProps, {}> {
 								<td>
 									{vol.Smart.Id}{' '}
 									<CommandIcon
-										command={VolumeSmartSetId(vol.Id, vol.Smart.Id, {
+										command={VolumeSmartSetID(vol.Id, vol.Smart.Id, {
 											disambiguation: vol.Label,
 										})}
 									/>

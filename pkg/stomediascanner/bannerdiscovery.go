@@ -18,7 +18,7 @@ import (
 
 // uses various metadata databases to try to discover banner for the collection.
 // NOTE: nil error doesn't guarantee that banner URL will be returned
-func discoverBannerUrl(
+func discoverBannerURL(
 	ctx context.Context,
 	coll *stotypes.Collection,
 	conf *stoclient.ClientConfig,
@@ -29,13 +29,13 @@ func discoverBannerUrl(
 		return "", err
 	}
 
-	tmdbMovieId, isMovie := coll.Metadata[stoservertypes.MetadataTheMovieDbMovieId]
-	tmdbTvId, isTv := coll.Metadata[stoservertypes.MetadataTheMovieDbTvId]
-	tmdbTvEpisodeId, isTvEpisode := coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId]
-	igdbId, isGame := coll.Metadata[stoservertypes.MetadataIgdbGameId]
+	tmdbMovieID, isMovie := coll.Metadata[stoservertypes.MetadataTheMovieDbMovieId]
+	tmdbTvID, isTv := coll.Metadata[stoservertypes.MetadataTheMovieDbTvId]
+	tmdbTvEpisodeID, isTvEpisode := coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId]
+	igdbID, isGame := coll.Metadata[stoservertypes.MetadataIgdbGameId]
 
 	if isMovie && tmdb != nil {
-		info, err := tmdb.OpenMovie(ctx, tmdbMovieId)
+		info, err := tmdb.OpenMovie(ctx, tmdbMovieID)
 		if err != nil {
 			return "", err // TODO: don't error out
 		}
@@ -60,7 +60,7 @@ func discoverBannerUrl(
 		}
 
 		for _, episode := range episodes {
-			if strconv.Itoa(int(episode.Id)) == tmdbTvEpisodeId && episode.StillPath != nil {
+			if strconv.Itoa(int(episode.ID)) == tmdbTvEpisodeID && episode.StillPath != nil {
 				return episode.StillPath.URL(themoviedbapi.ImageSizeOriginal), nil
 			}
 		}
@@ -69,7 +69,7 @@ func discoverBannerUrl(
 	// episodes have both TV ID and episode ID set exclude episodes here as not to assign TV
 	// backdrop to an episode
 	if isTv && !isTvEpisode && tmdb != nil {
-		info, err := tmdb.OpenTv(ctx, tmdbTvId)
+		info, err := tmdb.OpenTv(ctx, tmdbTvID)
 		if err != nil {
 			return "", err
 		}
@@ -80,7 +80,7 @@ func discoverBannerUrl(
 	}
 
 	if isGame && igdb != nil {
-		screenshotUrls, err := igdb.GameScreenshotUrls(ctx, igdbId)
+		screenshotUrls, err := igdb.GameScreenshotUrls(ctx, igdbID)
 		if err != nil {
 			return "", err
 		}
@@ -91,7 +91,7 @@ func discoverBannerUrl(
 
 		// no screenshots - try to get a cover instead
 
-		coverUrls, err := igdb.GameCoverUrls(ctx, igdbId)
+		coverUrls, err := igdb.GameCoverURLs(ctx, igdbID)
 		if err != nil {
 			return "", err
 		}
@@ -128,7 +128,7 @@ func getCachedClients(
 	if clientCache.ttl.Before(time.Now()) {
 		logl.Debug.Println("refreshing API client cache")
 
-		theMovieDbApikey, err := fetchServerConfig(ctx, stoservertypes.CfgTheMovieDbApikey, conf)
+		theMovieDBApikey, err := fetchServerConfig(ctx, stoservertypes.CfgTheMovieDbApikey, conf)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -142,8 +142,8 @@ func getCachedClients(
 			ttl: time.Now().Add(15 * time.Second),
 		}
 
-		if theMovieDbApikey != "" {
-			clientCache.tmdb = themoviedbapi.New(theMovieDbApikey)
+		if theMovieDBApikey != "" {
+			clientCache.tmdb = themoviedbapi.New(theMovieDBApikey)
 		}
 
 		if igdbApikey != "" {

@@ -94,7 +94,7 @@
 		]
 	},
 	{
-		"command": "volume.SmartSetId",
+		"command": "volume.SmartSetID",
 		"chain": "public",
 		"ctor": ["Id", "SmartId"],
 		"crudNature": "update",
@@ -629,7 +629,7 @@
 		]
 	},
 	{
-		"command": "node.InstallTlsCert",
+		"command": "node.InstallTLSCert",
 		"chain": "public",
 		"ctor": ["Id"],
 		"crudNature": "update",
@@ -729,7 +729,7 @@
 		]
 	},
 	{
-		"command": "config.SetTheMovieDbApikey",
+		"command": "config.SetTheMovieDBApiKey",
 		"chain": "public",
 		"ctor": ["Apikey"],
 		"crudNature": "update",
@@ -751,7 +751,7 @@
 		]
 	},
 	{
-		"command": "config.SetNetworkShareBaseUrl",
+		"command": "config.SetNetworkShareBaseURL",
 		"chain": "public",
 		"ctor": ["Baseurl"],
 		"crudNature": "update",
@@ -761,7 +761,7 @@
 		]
 	},
 	{
-		"command": "config.SetGrafanaUrl",
+		"command": "config.SetGrafanaURL",
 		"chain": "public",
 		"ctor": ["Url"],
 		"crudNature": "update",

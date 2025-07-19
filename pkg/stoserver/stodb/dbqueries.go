@@ -40,10 +40,10 @@ func (d *dbQueries) ScheduledJob(id string) (*stotypes.ScheduledJob, error) {
 	return record, nil
 }
 
-func (d *dbQueries) CollectionsByDirectory(dirId string) ([]stotypes.Collection, error) {
+func (d *dbQueries) CollectionsByDirectory(dirID string) ([]stotypes.Collection, error) {
 	collections := []stotypes.Collection{}
 
-	return collections, CollectionsByDirectoryIndex.Query([]byte(dirId), StartFromFirst, func(id []byte) error {
+	return collections, CollectionsByDirectoryIndex.Query([]byte(dirID), StartFromFirst, func(id []byte) error {
 		coll, err := d.Collection(string(id))
 		if err != nil {
 			return err
@@ -81,7 +81,7 @@ func (d *dbQueries) SubDirectories(of string) ([]stotypes.Directory, error) {
 
 func (d *dbQueries) Volume(id int) (*stotypes.Volume, error) {
 	record := &stotypes.Volume{}
-	if err := VolumeRepository.OpenByPrimaryKey(volumeIntIdToBytes(id), record, d.tx); err != nil {
+	if err := VolumeRepository.OpenByPrimaryKey(volumeIntIDToBytes(id), record, d.tx); err != nil {
 		return nil, err
 	}
 

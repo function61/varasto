@@ -18,12 +18,12 @@ type BlobDiscoveredListener interface {
 	BlobDiscovered(blobDiscoveredAttrs)
 	// listener (like backgroundUploader) will inform its producer (blob discoverer) that
 	// uploads are erroring, to request that blob discovery should be stopped
-	CancelCh() chan interface{}
+	CancelCh() chan any
 }
 
 func NewBlobDiscoveredAttrs(
 	ref stotypes.BlobRef,
-	collectionId string,
+	collectionID string,
 	content []byte,
 	maybeCompressible bool,
 	filePath string,
@@ -31,7 +31,7 @@ func NewBlobDiscoveredAttrs(
 ) blobDiscoveredAttrs {
 	return blobDiscoveredAttrs{
 		ref:               ref,
-		collectionId:      collectionId,
+		collectionID:      collectionID,
 		content:           content,
 		maybeCompressible: maybeCompressible,
 		filePath:          filePath,
@@ -41,7 +41,7 @@ func NewBlobDiscoveredAttrs(
 
 type blobDiscoveredAttrs struct {
 	ref               stotypes.BlobRef
-	collectionId      string
+	collectionID      string
 	content           []byte
 	maybeCompressible bool
 	filePath          string
@@ -55,9 +55,9 @@ func NewBlobDiscoveredNoopListener() BlobDiscoveredListener {
 	return &blobDiscoveredNoopListener{}
 }
 
-func (n *blobDiscoveredNoopListener) BlobDiscovered(_ blobDiscoveredAttrs) {}
+func (b *blobDiscoveredNoopListener) BlobDiscovered(_ blobDiscoveredAttrs) {}
 
-func (b *blobDiscoveredNoopListener) CancelCh() chan interface{} {
+func (b *blobDiscoveredNoopListener) CancelCh() chan any {
 	return nil
 }
 
@@ -66,7 +66,7 @@ type backgroundUploader struct {
 	uploadJobs           chan blobDiscoveredAttrs
 	clientConfig         ClientConfig
 	uploadersDone        chan error
-	cancelCh             chan interface{}
+	cancelCh             chan any
 	uploadProgress       UploadProgressListener
 	blobAlreadyUploading *mutexmap.M // keyed by blob ref
 }
@@ -82,7 +82,7 @@ func NewBackgroundUploader(
 		uploadJobs:           make(chan blobDiscoveredAttrs),
 		uploadersDone:        make(chan error, n),
 		clientConfig:         clientConfig,
-		cancelCh:             make(chan interface{}),
+		cancelCh:             make(chan any),
 		uploadProgress:       uploadProgress,
 		blobAlreadyUploading: mutexmap.New(),
 	}
@@ -110,7 +110,7 @@ func (b *backgroundUploader) BlobDiscovered(attrs blobDiscoveredAttrs) {
 	b.uploadJobs <- attrs
 }
 
-func (b *backgroundUploader) CancelCh() chan interface{} {
+func (b *backgroundUploader) CancelCh() chan any {
 	return b.cancelCh
 }
 
@@ -212,7 +212,7 @@ func (b *backgroundUploader) uploadInternal(ctx context.Context, job blobDiscove
 		ctx,
 		job.ref,
 		bytes.NewBuffer(job.content),
-		job.collectionId,
+		job.collectionID,
 		job.maybeCompressible,
 		b.clientConfig,
 	); err != nil {
@@ -228,7 +228,7 @@ func UploadBlob(
 	ctx context.Context,
 	blobRef stotypes.BlobRef,
 	content io.Reader,
-	collectionId string,
+	collectionID string,
 	maybeCompressible bool,
 	clientConfig ClientConfig,
 ) error {
@@ -238,10 +238,10 @@ func UploadBlob(
 
 	if _, err := ezhttp.Post(
 		ctx,
-		clientConfig.UrlBuilder().UploadBlob(blobRef.AsHex(), collectionId, boolToStr(maybeCompressible)),
+		clientConfig.URLBuilder().UploadBlob(blobRef.AsHex(), collectionID, boolToStr(maybeCompressible)),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
 		ezhttp.SendBody(content, "application/octet-stream"),
-		ezhttp.Client(clientConfig.HttpClient()),
+		ezhttp.Client(clientConfig.HTTPClient()),
 	); err != nil {
 		return fmt.Errorf("UploadBlob %s: %v", blobRef.AsHex(), err)
 	}

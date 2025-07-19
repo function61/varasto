@@ -11,6 +11,7 @@ import (
 )
 
 func (h *handlers) CollectionChangefeed(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.CollectionChangefeedItem {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, errCode int) *[]stoservertypes.CollectionChangefeedItem { // shorthand
 		http.Error(w, err.Error(), errCode)
 		return nil

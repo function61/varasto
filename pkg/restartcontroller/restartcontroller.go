@@ -10,13 +10,13 @@ import (
 )
 
 type Controller struct {
-	restart chan interface{}
+	restart chan any
 	logl    *logex.Leveled
 }
 
 func New(logger *log.Logger) *Controller {
 	return &Controller{
-		restart: make(chan interface{}),
+		restart: make(chan any),
 		logl:    logex.Levels(logger),
 	}
 }

@@ -13,7 +13,7 @@ import (
 type fileMap map[string]stotypes.File
 
 type StateAt struct {
-	ChangesetId string
+	ChangesetID string
 	files       fileMap
 }
 
@@ -47,18 +47,18 @@ func ComputeStateAtHead(c stotypes.Collection) (*StateAt, error) {
 	return ComputeStateAt(c, c.Head)
 }
 
-func ComputeStateAt(c stotypes.Collection, changesetId string) (*StateAt, error) {
+func ComputeStateAt(c stotypes.Collection, changesetID string) (*StateAt, error) {
 	state := &StateAt{
-		ChangesetId: changesetId,
+		ChangesetID: changesetID,
 		files:       fileMap{},
 	}
 
 	// initial state is always empty
-	if changesetId == stotypes.NoParentId {
+	if changesetID == stotypes.NoParentID {
 		return state, nil
 	}
 
-	ch := findChangesetById(c, changesetId)
+	ch := findChangesetByID(c, changesetID)
 	if ch == nil {
 		return nil, errors.New("changeset not found")
 	}
@@ -69,8 +69,8 @@ func ComputeStateAt(c stotypes.Collection, changesetId string) (*StateAt, error)
 
 	// because this is a DAG, our only option is to traverse from newest to oldest
 	// direction. we'll have to do processing in reverse order though (oldest to newest)
-	for curr.Parent != stotypes.NoParentId {
-		parent := findChangesetById(c, curr.Parent)
+	for curr.Parent != stotypes.NoParentID {
+		parent := findChangesetByID(c, curr.Parent)
 		if parent == nil {
 			return nil, errors.New("parent not found")
 		}
@@ -99,7 +99,7 @@ func ComputeStateAt(c stotypes.Collection, changesetId string) (*StateAt, error)
 	return state, nil
 }
 
-func findChangesetById(c stotypes.Collection, id string) *stotypes.CollectionChangeset {
+func findChangesetByID(c stotypes.Collection, id string) *stotypes.CollectionChangeset {
 	for _, changeset := range c.Changesets {
 		if changeset.ID == id {
 			return &changeset

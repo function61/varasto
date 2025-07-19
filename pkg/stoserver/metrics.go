@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"sync"
@@ -95,12 +94,12 @@ func (m *metricsController) Task(conf *ServerConfig, db *bbolt.DB) func(context.
 	}
 }
 
-func (m *metricsController) MetricsHttpHandler() http.Handler {
+func (m *metricsController) MetricsHTTPHandler() http.Handler {
 	return promhttp.HandlerFor(m.registry, promhttp.HandlerOpts{})
 }
 
 // instruments a HTTP handler
-func (m *metricsController) WrapHttpServer(actual http.Handler) http.Handler {
+func (m *metricsController) WrapHTTPServer(actual http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		stats := httpsnoop.CaptureMetrics(actual, w, r)
 
@@ -115,18 +114,18 @@ func (m *metricsController) WrapHttpServer(actual http.Handler) http.Handler {
 // records metrics for the operations
 func (m *metricsController) WrapDriver(
 	origin blobstore.Driver,
-	volId int,
-	volUuid string,
+	volID int,
+	volUUID string,
 	volLabel string,
 ) blobstore.Driver {
-	volMetrics := m.createVolumeMetrics(volUuid, volLabel)
+	volMetrics := m.createVolumeMetrics(volUUID, volLabel)
 
-	m.volumes[volId] = volMetrics
+	m.volumes[volID] = volMetrics
 
 	return &proxyDriver{origin, volMetrics}
 }
 
-func (m *metricsController) createVolumeMetrics(volUuid string, volLabel string) *volumeMetrics {
+func (m *metricsController) createVolumeMetrics(volUUID string, volLabel string) *volumeMetrics {
 	// shorthand for new'ing and registering
 	counter := func(opts prometheus.CounterOpts) prometheus.Counter {
 		c := prometheus.NewCounter(opts)
@@ -135,7 +134,7 @@ func (m *metricsController) createVolumeMetrics(volUuid string, volLabel string)
 	}
 
 	volMetricLabels := prometheus.Labels{
-		"uuid":  volUuid,
+		"uuid":  volUUID,
 		"label": volLabel,
 	}
 
@@ -194,8 +193,8 @@ func (m *metricsController) collectMetrics(conf *ServerConfig, db *bbolt.DB) err
 
 	constMetrics := m.constMetricsCollector // shorthand
 
-	for volId, volMetrics := range m.volumes {
-		vol, err := stodb.Read(tx).Volume(volId)
+	for volID, volMetrics := range m.volumes {
+		vol, err := stodb.Read(tx).Volume(volID)
 		if err != nil {
 			return err
 		}
@@ -301,7 +300,7 @@ type readCounter struct {
 func newReadCounter(content io.Reader, stats func(int64, error)) io.ReadCloser {
 	rc, ok := content.(io.ReadCloser)
 	if !ok {
-		rc = ioutil.NopCloser(content)
+		rc = io.NopCloser(content)
 	}
 
 	return &readCounter{

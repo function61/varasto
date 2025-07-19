@@ -4,7 +4,6 @@ package childprocesscontroller
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -29,8 +28,8 @@ type Controller struct {
 	description   string
 	status        *Status
 	statusMu      sync.Mutex
-	start         chan interface{}
-	stop          chan interface{}
+	start         chan any
+	stop          chan any
 	exited        chan error
 	controlLogger *logex.Leveled
 	logger        *log.Logger // subprocess's stderr is logger.Println()'d here after per each line
@@ -46,8 +45,8 @@ func New(
 	proc := &Controller{
 		cmd:           cmd,
 		description:   description,
-		start:         make(chan interface{}),
-		stop:          make(chan interface{}),
+		start:         make(chan any),
+		stop:          make(chan any),
 		exited:        make(chan error, 1),
 		controlLogger: logex.Levels(controlLogger),
 		logger:        logger,
@@ -170,7 +169,7 @@ func (s *Controller) handler(ctx context.Context) error {
 
 		// TODO: what about stdout?
 
-		cmd.Stderr = logtee.NewLineSplitterTee(ioutil.Discard, func(line string) {
+		cmd.Stderr = logtee.NewLineSplitterTee(io.Discard, func(line string) {
 			s.logger.Println(line)
 		})
 

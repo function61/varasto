@@ -65,14 +65,6 @@ func mkFsSafe(input string) string {
 	return fsWindowsUnsafeRe.ReplaceAllString(input, "_")
 }
 
-func min(a, b int64) int64 {
-	if a < b {
-		return a
-	} else {
-		return b
-	}
-}
-
 func makeMountpointIfRequired(mountpoint string) error {
 	mountpointExists, err := fileexists.Exists(mountpoint)
 	if err != nil {
@@ -91,7 +83,7 @@ func createHeadState(coll *stotypes.Collection) *staticFile {
 	headStateJSON := &bytes.Buffer{}
 
 	if err := jsonfile.Marshal(headStateJSON, stoclient.BupManifest{
-		ChangesetId: func() string {
+		ChangesetID: func() string {
 			lastChangesetIdx := len(coll.Changesets) - 1
 			if lastChangesetIdx != -1 {
 				return coll.Changesets[lastChangesetIdx].ID

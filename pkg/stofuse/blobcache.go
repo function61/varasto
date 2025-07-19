@@ -2,7 +2,7 @@ package stofuse
 
 import (
 	"context"
-	"io/ioutil"
+	"io"
 	"sync"
 	"time"
 
@@ -36,7 +36,7 @@ func NewBlobCache(clientConfig stoclient.ClientConfig, logl *logex.Leveled) *Blo
 	}
 }
 
-func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef, collectionId string) (*BlobData, error) {
+func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef, collectionID string) (*BlobData, error) {
 	// protect from races ending up in multiple downloads for same blob. we must do this
 	// before cache check, because if another thread misses cache, it'll end up re-downloading
 	// after first thread fills cache and releases lock
@@ -55,14 +55,14 @@ func (b *BlobCache) Get(ctx context.Context, ref stotypes.BlobRef, collectionId 
 	blobContent, blobContentCloser, err := stoclient.DownloadChunk(
 		subCtx,
 		ref,
-		collectionId,
+		collectionID,
 		b.clientConfig)
 	if err != nil {
 		return nil, err
 	}
 	defer blobContentCloser()
 
-	buffered, err := ioutil.ReadAll(blobContent)
+	buffered, err := io.ReadAll(blobContent)
 	if err != nil {
 		return nil, err
 	}

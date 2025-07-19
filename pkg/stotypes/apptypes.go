@@ -9,7 +9,7 @@ import (
 const (
 	BlobSize   = 4 * mebibyte
 	mebibyte   = 1024 * 1024
-	NoParentId = ""
+	NoParentID = ""
 )
 
 type BlobRef []byte

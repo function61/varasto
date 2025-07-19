@@ -2,7 +2,6 @@ package stodb
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
@@ -69,16 +68,16 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 	}
 
 	newNode := &stotypes.Node{
-		ID:           stoutils.NewNodeId(),
+		ID:           stoutils.NewNodeID(),
 		Addr:         "https://" + hostname,
 		Name:         "Primary",
-		TlsCert:      string(certPem),
+		TLSCert:      string(certPem),
 		SmartBackend: smartBackend,
 	}
 
 	logl.Info.Printf("generated nodeId: %s", newNode.ID)
 
-	systemAuthToken := stoutils.NewApiKeySecret()
+	systemAuthToken := stoutils.NewAPIKeySecret()
 
 	rootDir := stotypes.NewDirectory(
 		"root",
@@ -92,7 +91,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 		DirectoryRepository.Update(rootDir, tx),
 		VolumeRepository.Update(&stotypes.Volume{
 			ID:         1,
-			UUID:       stoutils.NewVolumeUuid(),
+			UUID:       stoutils.NewVolumeUUID(),
 			Label:      "Default volume",
 			Technology: string(stoservertypes.VolumeTechnologyDiskHdd),
 			Quota:      1 * 1024 * 1024 * 1024,
@@ -105,7 +104,7 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 			MinZones:       1,
 		}, tx),
 		ClientRepository.Update(&stotypes.Client{
-			ID:        stoutils.NewClientId(),
+			ID:        stoutils.NewClientID(),
 			Created:   bootstrapTimestamp,
 			Name:      "System",
 			AuthToken: systemAuthToken,
@@ -113,8 +112,8 @@ func Bootstrap(db *bbolt.DB, logger *log.Logger) error {
 		ScheduledJobRepository.Update(scheduledJobSeedSmartPoller(), tx),
 		ScheduledJobRepository.Update(scheduledJobSeedMetadataBackup(), tx),
 		ScheduledJobRepository.Update(ScheduledJobSeedVersionUpdateCheck(), tx),
-		CfgNodeId.Set(newNode.ID, tx),
-		CfgNodeTlsCertKey.Set(string(privKeyPem), tx),
+		CfgNodeID.Set(newNode.ID, tx),
+		CfgNodeTLSCertKey.Set(string(privKeyPem), tx),
 	}
 
 	if err := allOk(results); err != nil {
@@ -147,7 +146,7 @@ func configureClientConfig(authToken string) error {
 		ServerAddr:                "https://localhost",
 		AuthToken:                 authToken,
 		FuseMountPath:             "/mnt/varasto/stofuse/varasto",
-		TlsInsecureSkipValidation: true, // localhost doesn't have MITM risk
+		TLSInsecureSkipValidation: true, // localhost doesn't have MITM risk
 	}
 
 	confPath, err := stoclient.ConfigFilePath()
@@ -205,7 +204,7 @@ func ignoreError(err error) {
 // if true, we are most probably running in Docker
 func maybeRunningInsideDocker() bool {
 	// https://stackoverflow.com/a/20012536
-	initCgroups, err := ioutil.ReadFile("/proc/1/cgroup")
+	initCgroups, err := os.ReadFile("/proc/1/cgroup")
 	if err != nil {
 		return false
 	}

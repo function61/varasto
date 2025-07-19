@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -53,7 +52,7 @@ type handlers struct {
 	logl         *logex.Leveled // for our logging
 }
 
-func defineRestApi(
+func defineRestAPI(
 	router *mux.Router,
 	conf *ServerConfig,
 	db *bbolt.DB,
@@ -73,12 +72,13 @@ func defineRestApi(
 }
 
 func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.DirectoryOutput {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, errCode int) *stoservertypes.DirectoryOutput { // shorthand
 		http.Error(w, err.Error(), errCode)
 		return nil
 	}
 
-	dirId := mux.Vars(r)["id"]
+	dirID := mux.Vars(r)["id"]
 
 	tx, err := h.db.Begin(false)
 	if err != nil {
@@ -86,7 +86,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	dir, err := stodb.Read(tx).Directory(dirId)
+	dir, err := stodb.Read(tx).Directory(dirID)
 	if err != nil {
 		return httpErr(err, http.StatusNotFound)
 	}
@@ -112,7 +112,7 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 			return httpErr(err, http.StatusInternalServerError)
 		}
 
-		collWithMeta := convertDbCollection(dbColl, nil, state)
+		collWithMeta := convertDBCollection(dbColl, nil, state)
 
 		collsWithMeta = append(collsWithMeta, *collWithMeta)
 	}
@@ -158,13 +158,14 @@ func (h *handlers) GetDirectory(rctx *httpauth.RequestContext, w http.ResponseWr
 }
 
 func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.CollectionOutput {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, code int) *stoservertypes.CollectionOutput {
 		http.Error(w, err.Error(), code)
 		return nil
 	}
 
-	collectionId := mux.Vars(r)["id"]
-	changesetId := mux.Vars(r)["rev"]
+	collectionID := mux.Vars(r)["id"]
+	changesetID := mux.Vars(r)["rev"]
 	pathBytes, err := base64.StdEncoding.DecodeString(mux.Vars(r)["path"])
 	if err != nil {
 		return httpErr(err, http.StatusBadRequest)
@@ -176,7 +177,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	coll, err := stodb.Read(tx).Collection(collectionId)
+	coll, err := stodb.Read(tx).Collection(collectionID)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			http.Error(w, "not found", http.StatusNotFound)
@@ -186,11 +187,11 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		}
 	}
 
-	if changesetId == stoservertypes.HeadRevisionId {
-		changesetId = coll.Head
+	if changesetID == stoservertypes.HeadRevisionId {
+		changesetID = coll.Head
 	}
 
-	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
+	state, err := stateresolver.ComputeStateAt(*coll, changesetID)
 	if err != nil {
 		return httpErr(err, http.StatusInternalServerError)
 	}
@@ -221,7 +222,7 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 		})
 	}
 
-	collApi := convertDbCollection(*coll, changesetsConverted, state)
+	collAPI := convertDBCollection(*coll, changesetsConverted, state)
 
 	return &stoservertypes.CollectionOutput{
 		TotalSize: int(totalSize), // FIXME
@@ -232,15 +233,15 @@ func (h *handlers) GetCollectiotAtRev(rctx *httpauth.RequestContext, w http.Resp
 			SubDirs:    peekResult.SubDirs,
 		},
 		FileCount:          len(allFilesInRevision),
-		ChangesetId:        changesetId,
-		CollectionWithMeta: *collApi,
+		ChangesetId:        changesetID,
+		CollectionWithMeta: *collAPI,
 	}
 }
 
 // TODO: URL parameter comes via a hack in frontend
 func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
-	collectionId := mux.Vars(r)["id"]
-	changesetId := mux.Vars(r)["rev"]
+	collectionID := mux.Vars(r)["id"]
+	changesetID := mux.Vars(r)["rev"]
 
 	fileKey := r.URL.Query().Get("file")
 
@@ -251,7 +252,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	coll, err := stodb.Read(tx).Collection(collectionId)
+	coll, err := stodb.Read(tx).Collection(collectionID)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			http.Error(w, "collection not found", http.StatusNotFound)
@@ -262,11 +263,11 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		}
 	}
 
-	if changesetId == stoservertypes.HeadRevisionId {
-		changesetId = coll.Head
+	if changesetID == stoservertypes.HeadRevisionId {
+		changesetID = coll.Head
 	}
 
-	state, err := stateresolver.ComputeStateAt(*coll, changesetId)
+	state, err := stateresolver.ComputeStateAt(*coll, changesetID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -279,12 +280,12 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		return
 	}
 
-	type RefAndVolumeId struct {
+	type refAndVolumeID struct {
 		Ref      stotypes.BlobRef
-		VolumeId int
+		VolumeID int
 	}
 
-	refAndVolumeIds := []RefAndVolumeId{}
+	refAndVolumeIDs := []refAndVolumeID{}
 	for _, refSerialized := range file.BlobRefs {
 		ref, err := stotypes.BlobRefFromHex(refSerialized)
 		if err != nil { // should not happen
@@ -303,15 +304,15 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 			}
 		}
 
-		volumeId, err := h.conf.DiskAccess.BestVolumeId(blob.Volumes)
+		volumeID, err := h.conf.DiskAccess.BestVolumeID(blob.Volumes)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		refAndVolumeIds = append(refAndVolumeIds, RefAndVolumeId{
+		refAndVolumeIDs = append(refAndVolumeIDs, refAndVolumeID{
 			Ref:      *ref,
-			VolumeId: volumeId,
+			VolumeID: volumeID,
 		})
 	}
 
@@ -325,8 +326,8 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	w.Header().Set("Content-Length", strconv.Itoa(int(file.Size)))
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, path.Base(fileKey)))
 
-	sendBlob := func(refAndVolumeId RefAndVolumeId) error {
-		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeId.Ref, coll.EncryptionKeys, refAndVolumeId.VolumeId)
+	sendBlob := func(refAndVolumeID refAndVolumeID) error {
+		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeID.Ref, coll.EncryptionKeys, refAndVolumeID.VolumeID)
 		if err != nil {
 			return err
 		}
@@ -336,8 +337,8 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 		return err
 	}
 
-	for _, refAndVolumeId := range refAndVolumeIds {
-		panicIfError(sendBlob(refAndVolumeId))
+	for _, refAndVolumeID := range refAndVolumeIDs {
+		panicIfError(sendBlob(refAndVolumeID))
 	}
 }
 
@@ -423,7 +424,7 @@ func (h *handlers) getVolumesInternal(
 		}
 
 		smartAttrs := stoservertypes.VolumeSmartAttrs{
-			Id:           dbObject.SmartId,
+			Id:           dbObject.SmartID,
 			LatestReport: latestReport,
 		}
 
@@ -495,6 +496,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 }
 
 func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.BlobMetadata {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, errCode int) *stoservertypes.BlobMetadata { // shorthand
 		http.Error(w, err.Error(), errCode)
 		return nil
@@ -531,7 +533,7 @@ func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.Respons
 	}
 }
 
-func toDbFiles(files []stoservertypes.File) []stotypes.File {
+func toDBFiles(files []stoservertypes.File) []stotypes.File {
 	ret := []stotypes.File{}
 
 	for _, file := range files {
@@ -556,8 +558,8 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 			changeset.ID,
 			changeset.Parent,
 			changeset.Created,
-			toDbFiles(changeset.FilesCreated),
-			toDbFiles(changeset.FilesUpdated),
+			toDBFiles(changeset.FilesCreated),
+			toDBFiles(changeset.FilesUpdated),
 			changeset.FilesDeleted),
 		h.db,
 		h.conf)
@@ -566,7 +568,7 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 	if coll != nil {
 		h.logl.Debug.Printf("committed %s to coll %s", changeset.ID, coll.ID)
 
-		ignoreError(outJson(w, coll))
+		ignoreError(outJSON(w, coll))
 	}
 }
 
@@ -574,11 +576,12 @@ func (h *handlers) CommitChangeset(rctx *httpauth.RequestContext, changeset stos
 // output automatically)
 func commitChangesetInternal(
 	w http.ResponseWriter,
-	collectionId string,
+	collectionID string,
 	changeset stotypes.CollectionChangeset,
 	db *bbolt.DB,
 	serverConf *ServerConfig,
 ) *stotypes.Collection {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(errStr string, errCode int) *stotypes.Collection { // shorthand
 		http.Error(w, errStr, errCode)
 		return nil
@@ -594,16 +597,16 @@ func commitChangesetInternal(
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	coll, err := stodb.Read(tx).Collection(collectionId)
+	coll, err := stodb.Read(tx).Collection(collectionID)
 	if err != nil {
 		return httpErr(err.Error(), http.StatusNotFound)
 	}
 
-	if collectionHasChangesetId(changeset.ID, coll) {
+	if collectionHasChangesetID(changeset.ID, coll) {
 		return httpErr("changeset ID already in collection", http.StatusBadRequest)
 	}
 
-	if changeset.Parent != stotypes.NoParentId && !collectionHasChangesetId(changeset.Parent, coll) {
+	if changeset.Parent != stotypes.NoParentID && !collectionHasChangesetID(changeset.Parent, coll) {
 		return httpErr("parent changeset not found", http.StatusBadRequest)
 	}
 
@@ -641,9 +644,9 @@ func commitChangesetInternal(
 
 			// blob got deduplicated from somewhere, and thus it uses a DEK that our collection
 			// currently doesn't have a copy of?
-			if stotypes.FindDekEnvelope(blob.EncryptionKeyId, coll.EncryptionKeys) == nil {
+			if stotypes.FindDekEnvelope(blob.EncryptionKeyID, coll.EncryptionKeys) == nil {
 				env, err := copyAndReEncryptDekFromAnotherCollection(
-					blob.EncryptionKeyId,
+					blob.EncryptionKeyID,
 					extractKekPubKeyFingerprints(coll),
 					tx,
 					serverConf.KeyStore)
@@ -739,7 +742,7 @@ func (h *handlers) GetReplicationPoliciesForDirectories(
 	defer rollback()
 
 	// might not deserve an index?
-	if err := stodb.DirectoryRepository.Each(func(record interface{}) error {
+	if err := stodb.DirectoryRepository.Each(func(record any) error {
 		dir := record.(*stotypes.Directory)
 
 		if dir.ReplicationPolicy == "" {
@@ -782,11 +785,10 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 		return dbJobs, nil
 	}
 
-	jobInSchedulerById := map[string]*scheduler.JobSpec{}
+	jobInSchedulerByID := map[string]*scheduler.JobSpec{}
 
 	for _, jobInScheduler := range h.conf.Scheduler.Snapshot() {
-		jobInScheduler := jobInScheduler // pin
-		jobInSchedulerById[jobInScheduler.Id] = &jobInScheduler
+		jobInSchedulerByID[jobInScheduler.ID] = &jobInScheduler
 	}
 
 	dbJobs, err := fetchJobs()
@@ -816,7 +818,7 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 		}
 
 		running := false
-		fromScheduler := jobInSchedulerById[dbJob.ID]
+		fromScheduler := jobInSchedulerByID[dbJob.ID]
 		if fromScheduler != nil {
 			running = fromScheduler.Running
 		}
@@ -848,9 +850,9 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 
 func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationStatus {
 	statuses := []stoservertypes.ReplicationStatus{}
-	for volId, controller := range h.conf.ReplicationControllers {
+	for volID, controller := range h.conf.ReplicationControllers {
 		statuses = append(statuses, stoservertypes.ReplicationStatus{
-			VolumeId: volId,
+			VolumeId: volID,
 			Progress: controller.Progress(),
 		})
 	}
@@ -884,6 +886,7 @@ func (h *handlers) GetKeyEncryptionKeys(rctx *httpauth.RequestContext, w http.Re
 }
 
 func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.Node {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, errCode int) *[]stoservertypes.Node { // shorthand
 		http.Error(w, err.Error(), errCode)
 		return nil
@@ -903,7 +906,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	}
 
 	for _, dbObject := range dbObjects {
-		cert, err := cryptoutil.ParsePemX509Certificate([]byte(dbObject.TlsCert))
+		cert, err := cryptoutil.ParsePemX509Certificate([]byte(dbObject.TLSCert))
 		if err != nil {
 			return httpErr(err, http.StatusInternalServerError)
 		}
@@ -929,7 +932,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	return &ret
 }
 
-func (h *handlers) GetApiKeys(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ApiKey {
+func (h *handlers) GetAPIKeys(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ApiKey {
 	ret := []stoservertypes.ApiKey{}
 
 	tx, err := h.db.Begin(false)
@@ -962,17 +965,15 @@ func (h *handlers) DatabaseExportSha256s(rctx *httpauth.RequestContext, w http.R
 		fmt.Fprintf(w, "%s %s\n", file.Sha256, file.Path)
 	}
 
-	panicIfError(stodb.CollectionRepository.Each(func(record interface{}) error {
+	panicIfError(stodb.CollectionRepository.Each(func(record any) error {
 		coll := record.(*stotypes.Collection)
 
 		for _, changeset := range coll.Changesets {
 			for _, file := range changeset.FilesCreated {
-				file := file // pin
 				processFile(&file)
 			}
 
 			for _, file := range changeset.FilesUpdated {
-				file := file // pin
 				processFile(&file)
 			}
 		}
@@ -1001,7 +1002,7 @@ func (h *handlers) GetLogs(rctx *httpauth.RequestContext, w http.ResponseWriter,
 }
 
 func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.File {
-	collectionId := mux.Vars(r)["id"]
+	collectionID := mux.Vars(r)["id"]
 	mtimeUnixMillis, err := strconv.ParseInt(r.URL.Query().Get("mtime"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -1013,7 +1014,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 	// TODO: reuse the logic found in the client package?
 	wholeFileHash := sha256.New()
 
-	volumeId, err := h.whichInitialVolumeToWriteCollectionBlobsTo(collectionId)
+	volumeID, err := h.whichInitialVolumeToWriteCollectionBlobsTo(collectionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
@@ -1029,7 +1030,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 	}
 
 	for {
-		chunk, errRead := ioutil.ReadAll(io.LimitReader(r.Body, stotypes.BlobSize))
+		chunk, errRead := io.ReadAll(io.LimitReader(r.Body, stotypes.BlobSize))
 		if errRead != nil {
 			http.Error(w, errRead.Error(), http.StatusBadRequest)
 			return nil
@@ -1064,8 +1065,8 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 		if !blobExists {
 			// do not verify sha256, as we just calculated it (turns out it's really expensive)
 			if err := h.conf.DiskAccess.WriteBlobNoVerify(
-				volumeId,
-				collectionId,
+				volumeID,
+				collectionID,
 				*blobRef,
 				bytes.NewBuffer(chunk),
 				stoutils.IsMaybeCompressible(file.Path),
@@ -1110,7 +1111,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 			Running:              sliceutil.ContainsString(runningIds, dbObject.ID),
 			Created:              dbObject.Started,
 			Completed:            completedPtr,
-			VolumeId:             dbObject.VolumeId,
+			VolumeId:             dbObject.VolumeID,
 			LastCompletedBlobRef: dbObject.LastCompletedBlobRef.AsHex(),
 			BytesScanned:         int(dbObject.BytesScanned),
 			ErrorsFound:          dbObject.ErrorsFound,
@@ -1138,6 +1139,7 @@ func (h *handlers) GetHealth(rctx *httpauth.RequestContext, w http.ResponseWrite
 }
 
 func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ConfigValue {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, errCode int) *stoservertypes.ConfigValue { // shorthand
 		http.Error(w, err.Error(), errCode)
 		return nil
@@ -1154,17 +1156,17 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 	var val string
 	switch key {
 	case stoservertypes.CfgFuseServerBaseUrl:
-		val, err = stodb.CfgFuseServerBaseUrl.GetOptional(tx)
+		val, err = stodb.CfgFuseServerBaseURL.GetOptional(tx)
 	case stoservertypes.CfgTheMovieDbApikey:
-		val, err = stodb.CfgTheMovieDbApikey.GetOptional(tx)
+		val, err = stodb.CfgTheMovieDBApikey.GetOptional(tx)
 	case stoservertypes.CfgIgdbApikey:
-		val, err = stodb.CfgIgdbApikey.GetOptional(tx)
+		val, err = stodb.CfgIgdbAPIkey.GetOptional(tx)
 	case stoservertypes.CfgNetworkShareBaseUrl:
-		val, err = stodb.CfgNetworkShareBaseUrl.GetOptional(tx)
+		val, err = stodb.CfgNetworkShareBaseURL.GetOptional(tx)
 	case stoservertypes.CfgUbackupConfig:
 		val, err = stodb.CfgUbackupConfig.GetOptional(tx)
 	case stoservertypes.CfgGrafanaUrl:
-		val, err = stodb.CfgGrafanaUrl.GetOptional(tx)
+		val, err = stodb.CfgGrafanaURL.GetOptional(tx)
 	case stoservertypes.CfgMediascannerState:
 		val, err = stodb.CfgMediascannerState.GetOptional(tx)
 	default:
@@ -1181,7 +1183,7 @@ func (h *handlers) GetConfig(rctx *httpauth.RequestContext, w http.ResponseWrite
 }
 
 func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ServerInfo {
-	dbFileInfo, err := os.Stat(h.conf.File.DbLocation)
+	dbFileInfo, err := os.Stat(h.conf.File.DBLocation)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return nil
@@ -1211,7 +1213,7 @@ func (h *handlers) DownloadUbackupStoredBackup(rctx *httpauth.RequestContext, w 
 		return
 	}
 
-	conf, err := ubConfigFromDb(h.db)
+	conf, err := ubConfigFromDB(h.db)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -1226,7 +1228,7 @@ func (h *handlers) DownloadUbackupStoredBackup(rctx *httpauth.RequestContext, w 
 }
 
 func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.UbackupStoredBackup {
-	conf, err := ubConfigFromDb(h.db)
+	conf, err := ubConfigFromDB(h.db)
 	if _, is := err.(*stodb.ConfigRequiredError); is {
 		return &[]stoservertypes.UbackupStoredBackup{}
 	} else if err != nil {
@@ -1248,7 +1250,7 @@ func (h *handlers) GetUbackupStoredBackups(rctx *httpauth.RequestContext, w http
 
 // returns 404 if blob not found
 func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
-	collId := r.URL.Query().Get("collId")
+	collID := r.URL.Query().Get("collId")
 
 	var coll *stotypes.Collection
 
@@ -1274,7 +1276,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 			}
 		}
 
-		coll, err = stodb.Read(tx).Collection(collId)
+		coll, err = stodb.Read(tx).Collection(collID)
 		if err != nil {
 			// cannot be bothered with a blorm.ErrNotFound check here, since that shouldn't happen
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -1289,13 +1291,13 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 		return // error was handled in getBlobMetadata()
 	}
 
-	bestVolumeId, err := h.conf.DiskAccess.BestVolumeId(blobMetadata.Volumes)
+	bestVolumeID, err := h.conf.DiskAccess.BestVolumeID(blobMetadata.Volumes)
 	if err != nil {
 		http.Error(w, stotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	file, err := h.conf.DiskAccess.Fetch(*blobRef, coll.EncryptionKeys, bestVolumeId)
+	file, err := h.conf.DiskAccess.Fetch(*blobRef, coll.EncryptionKeys, bestVolumeID)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// should not happen, because metadata said that we should have this blob
@@ -1317,7 +1319,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
 	// we need a hint from the client of what the collection is, so we can resolve a
 	// volume onto which the blob should be stored
-	collectionId := r.URL.Query().Get("collection")
+	collectionID := r.URL.Query().Get("collection")
 
 	// optimization to skip opportunistic compression if the client knows for sure the
 	// content is not well compressible (video/audio/etc.)
@@ -1337,15 +1339,15 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 		return
 	}
 
-	volumeId, err := h.whichInitialVolumeToWriteCollectionBlobsTo(collectionId)
+	volumeID, err := h.whichInitialVolumeToWriteCollectionBlobsTo(collectionID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := h.conf.DiskAccess.WriteBlob(
-		volumeId,
-		collectionId,
+		volumeID,
+		collectionID,
 		*blobRef,
 		r.Body,
 		maybeCompressible,
@@ -1374,10 +1376,11 @@ func (h *handlers) GetCollection(rctx *httpauth.RequestContext, w http.ResponseW
 		return
 	}
 
-	ignoreError(outJson(w, coll))
+	ignoreError(outJSON(w, coll))
 }
 
 func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.ReconciliationReport {
+	//nolint:unparam // false positive for this pattern
 	httpErr := func(err error, errCode int) *stoservertypes.ReconciliationReport { // shorthand
 		http.Error(w, err.Error(), errCode)
 		return nil
@@ -1391,7 +1394,9 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 
 	nonCompliantItems := []stoservertypes.ReconcilableItem{}
 
-	max := 100
+	const (
+		maxItems = 100
+	)
 
 	totalItems := 0
 
@@ -1400,34 +1405,34 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 		totalItems = len(report.CollectionsWithNonCompliantPolicy)
 
 		for idx, ctr := range report.CollectionsWithNonCompliantPolicy {
-			if idx+1 >= max {
+			if idx+1 >= maxItems {
 				break
 			}
 
-			coll, err := stodb.Read(tx).Collection(ctr.collectionId)
+			coll, err := stodb.Read(tx).Collection(ctr.collectionID)
 			if err != nil {
 				return httpErr(err, http.StatusNotFound)
 			}
 
 			path := []string{coll.Name}
 
-			dirId := coll.Directory
-			for dirId != "" {
-				dir, err := stodb.Read(tx).Directory(dirId)
+			dirID := coll.Directory
+			for dirID != "" {
+				dir, err := stodb.Read(tx).Directory(dirID)
 				if err != nil {
 					return httpErr(err, http.StatusNotFound)
 				}
 
 				path = append([]string{dir.Name}, path...)
 
-				dirId = dir.Parent
+				dirID = dir.Parent
 			}
 
 			replicaStatuses := []stoservertypes.ReconcilableItemReplicaStatus{}
 
-			for volId, blobCount := range ctr.presence {
+			for volID, blobCount := range ctr.presence {
 				replicaStatuses = append(replicaStatuses, stoservertypes.ReconcilableItemReplicaStatus{
-					Volume:    volId,
+					Volume:    volID,
 					BlobCount: blobCount,
 				})
 			}
@@ -1435,7 +1440,7 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 			sort.Slice(replicaStatuses, func(i, j int) bool { return replicaStatuses[i].Volume < replicaStatuses[j].Volume })
 
 			nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
-				CollectionId:        ctr.collectionId,
+				CollectionId:        ctr.collectionID,
 				Description:         strings.Join(path, " » "),
 				TotalBlobs:          ctr.blobCount,
 				DesiredReplicaCount: ctr.desiredReplicas,
@@ -1454,14 +1459,14 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 
 func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *stoservertypes.GeneratedIds {
 	return &stoservertypes.GeneratedIds{
-		Changeset: stoutils.NewCollectionChangesetId(),
+		Changeset: stoutils.NewCollectionChangesetID(),
 	}
 }
 
-func (h *handlers) whichInitialVolumeToWriteCollectionBlobsTo(collectionId string) (int, error) {
-	var volumeId int
-	return volumeId, h.db.View(func(tx *bbolt.Tx) error {
-		coll, err := stodb.Read(tx).Collection(collectionId)
+func (h *handlers) whichInitialVolumeToWriteCollectionBlobsTo(collectionID string) (int, error) {
+	var volumeID int
+	return volumeID, h.db.View(func(tx *bbolt.Tx) error {
+		coll, err := stodb.Read(tx).Collection(collectionID)
 		if err != nil {
 			return err
 		}
@@ -1472,7 +1477,7 @@ func (h *handlers) whichInitialVolumeToWriteCollectionBlobsTo(collectionId strin
 		}
 
 		// save the blob first on the best volume (the one which is mounted and various other heuristics)
-		volumeId, err = h.conf.DiskAccess.BestVolumeId(replicationPolicy.DesiredVolumes)
+		volumeID, err = h.conf.DiskAccess.BestVolumeID(replicationPolicy.DesiredVolumes)
 		return err
 	})
 }
@@ -1544,7 +1549,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 	smarts := []stohealth.HealthChecker{}
 	replicationQueues := []stohealth.HealthChecker{}
 
-	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
+	if err := stodb.VolumeRepository.Each(func(record any) error {
 		vol := record.(*stotypes.Volume)
 
 		if vol.BlobSizeTotal > vol.Quota {
@@ -1561,7 +1566,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 
 		// even if we have report but SMART has been disabled afterwards, we shouldn't
 		// use the report anymore b/c most likely it's outdated
-		if vol.SmartReport == "" || vol.SmartId == "" {
+		if vol.SmartReport == "" || vol.SmartID == "" {
 			return nil
 		}
 
@@ -1604,7 +1609,7 @@ func getHealthCheckerGraph(db *bbolt.DB, conf *ServerConfig) (stohealth.HealthCh
 		healthRunningLatestVersion(tx),
 		healthNoFailedMounts(conf.FailedMountNames),
 		serverCertHealth(
-			conf.TlsCertificate.cert.NotAfter,
+			conf.TLSCertificate.cert.NotAfter,
 			time.Now()),
 		quotaHealth(volumesOverQuota),
 		healthNoReconciliationConflicts(),
