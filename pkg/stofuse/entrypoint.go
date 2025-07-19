@@ -4,7 +4,6 @@ package stofuse
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -117,7 +116,7 @@ func serve(ctx context.Context, rpcAddr string, unmountFirst bool, logger *log.L
 func registerStdinCloseAsCancellationSignal(cancel context.CancelFunc, logger *log.Logger) {
 	go func() {
 		// wait for stdin EOF (or otherwise broken pipe)
-		_, _ = io.Copy(ioutil.Discard, os.Stdin)
+		_, _ = io.Copy(io.Discard, os.Stdin)
 
 		logex.Levels(logger).Error.Println(
 			"parent process died (detected by closed stdin) - stopping")

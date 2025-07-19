@@ -25,7 +25,7 @@ import (
 
 func collectionThumbnails(
 	ctx context.Context,
-	collectionId string,
+	collectionID string,
 	moveNamedThumbnails bool,
 	conf *stoclient.ClientConfig,
 	logl *logex.Leveled,
@@ -33,7 +33,7 @@ func collectionThumbnails(
 	for {
 		more, err := collectionThumbnailsOneBatch(
 			ctx,
-			collectionId,
+			collectionID,
 			moveNamedThumbnails,
 			conf,
 			logl,
@@ -52,7 +52,7 @@ func collectionThumbnails(
 // more batches
 func collectionThumbnailsOneBatch(
 	ctx context.Context,
-	collectionId string,
+	collectionID string,
 	moveNamedThumbnails bool,
 	conf *stoclient.ClientConfig,
 	logl *logex.Leveled,
@@ -67,7 +67,7 @@ func collectionThumbnailsOneBatch(
 		*conf,
 		stoclient.NewNullUploadProgressListener())
 
-	coll, err := client.FetchCollectionMetadata(ctx, collectionId)
+	coll, err := client.FetchCollectionMetadata(ctx, collectionID)
 	if err != nil {
 		return more, err
 	}
@@ -86,14 +86,14 @@ func collectionThumbnailsOneBatch(
 	_, hasBanner := collFiles[stoservertypes.BannerPath]
 
 	if !hasBanner {
-		bannerUrl, err := discoverBannerUrl(ctx, coll, conf, logl)
+		bannerURL, err := discoverBannerURL(ctx, coll, conf, logl)
 		if err != nil {
 			// not worth stopping mediascanner for
 			logl.Error.Printf("discoverBannerUrl: %v", err)
 		}
 
-		if bannerUrl != "" {
-			bannerImage, err := downloadImage(ctx, bannerUrl)
+		if bannerURL != "" {
+			bannerImage, err := downloadImage(ctx, bannerURL)
 			if err != nil {
 				logl.Error.Printf("downloadImage: %v", err)
 			} else {
@@ -108,7 +108,7 @@ func collectionThumbnailsOneBatch(
 					0,
 					fileModifiedTime, // created
 					fileModifiedTime, // modified
-					collectionId,
+					collectionID,
 					blobUploader,
 				)
 				if err != nil {
@@ -220,7 +220,7 @@ func collectionThumbnailsOneBatch(
 
 		if err := makeThumbForFile(ctx, downloadFileFromVarastoDetails{
 			file:         file,
-			collectionId: collectionId,
+			collectionID: collectionID,
 			client:       client,
 		}, imgObtainer, thumbOutput); err != nil {
 			logl.Error.Printf("makeThumbForFile %s: %v", file.Path, err)
@@ -234,7 +234,7 @@ func collectionThumbnailsOneBatch(
 			0,
 			fileModifiedTime, // created
 			fileModifiedTime, // modified
-			collectionId,
+			collectionID,
 			blobUploader,
 		)
 		if err != nil {
@@ -254,7 +254,7 @@ func collectionThumbnailsOneBatch(
 	}
 
 	changeset := stotypes.NewChangeset(
-		stoutils.NewCollectionChangesetId(),
+		stoutils.NewCollectionChangesetID(),
 		coll.Head,
 		time.Now(),
 		createdFiles,
@@ -263,7 +263,7 @@ func collectionThumbnailsOneBatch(
 
 	_, err = client.Commit(
 		ctx,
-		collectionId,
+		collectionID,
 		changeset)
 
 	return more, err
@@ -321,7 +321,7 @@ func resizedDimensionsInternal(width, height, targetw, targeth float64) (int, in
 	ratiow := targetw / width
 	ratioh := targeth / height
 
-	return int(width * math.Min(ratiow, ratioh)), int(height * math.Min(ratiow, ratioh))
+	return int(width * min(ratiow, ratioh)), int(height * math.Min(ratiow, ratioh))
 }
 
 func thumbnailable(filePath string) imageObtainer {
@@ -337,10 +337,10 @@ func thumbnailable(filePath string) imageObtainer {
 	}
 }
 
-func downloadImage(ctx context.Context, imageUrl string) (io.ReadCloser, error) {
-	resp, err := ezhttp.Get(ctx, imageUrl)
+func downloadImage(ctx context.Context, imageURL string) (io.ReadCloser, error) {
+	resp, err := ezhttp.Get(ctx, imageURL)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", imageUrl, err)
+		return nil, fmt.Errorf("%s: %w", imageURL, err)
 	}
 
 	typ := resp.Header.Get("Content-Type")

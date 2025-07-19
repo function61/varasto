@@ -47,7 +47,7 @@ func NewJob(spec JobSpec, run JobFn, now time.Time) (*Job, error) {
 }
 
 type JobSpec struct {
-	Id          string
+	ID          string
 	Description string
 	NextRun     time.Time
 	Running     bool
@@ -92,8 +92,8 @@ func New(
 	return c
 }
 
-func (s *Controller) Trigger(jobId string) {
-	s.triggerRequest <- jobId
+func (s *Controller) Trigger(jobID string) {
+	s.triggerRequest <- jobID
 }
 
 // gets an atomic snapshot of scheduler's internal state
@@ -161,9 +161,9 @@ func (s *Controller) run(ctx context.Context, jobs []*Job) error {
 			snapshotReq.result <- makeSnapshot()
 		case jobResult := <-s.jobFinished:
 			recordJobFinished(jobResult)
-		case jobId := <-s.triggerRequest:
+		case jobID := <-s.triggerRequest:
 			for _, job := range jobs {
-				if job.Spec.Id == jobId {
+				if job.Spec.ID == jobID {
 					s.startJob(ctx, job)
 					break
 				}

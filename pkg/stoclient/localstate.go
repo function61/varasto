@@ -15,7 +15,7 @@ const (
 )
 
 type BupManifest struct {
-	ChangesetId string              `json:"changeset_id"`
+	ChangesetID string              `json:"changeset_id"`
 	Collection  stotypes.Collection `json:"collection"` // snapshot at time of server fetch
 }
 

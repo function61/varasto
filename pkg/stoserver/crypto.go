@@ -27,7 +27,7 @@ func loadAndFillKeyStore(tx *bbolt.Tx) (*stokeystore.Store, error) {
 }
 
 func copyAndReEncryptDekFromAnotherCollection(
-	dekId string,
+	dekID string,
 	kekPubKeyFingerprints []string,
 	tx *bbolt.Tx,
 	ks *stokeystore.Store,
@@ -36,13 +36,13 @@ func copyAndReEncryptDekFromAnotherCollection(
 
 	// search for source collections having this encryption key to see if we
 	// can decrypt the DEK to inject it into another collection
-	if err := stodb.CollectionsByDataEncryptionKeyIndex.Query([]byte(dekId), stodb.StartFromFirst, func(collId []byte) error {
+	if err := stodb.CollectionsByDataEncryptionKeyIndex.Query([]byte(dekID), stodb.StartFromFirst, func(collId []byte) error {
 		sourceColl, err := stodb.Read(tx).Collection(string(collId))
 		if err != nil {
 			return err
 		}
 
-		dekEnvelope := stotypes.FindDekEnvelope(dekId, sourceColl.EncryptionKeys)
+		dekEnvelope := stotypes.FindDekEnvelope(dekID, sourceColl.EncryptionKeys)
 		if dekEnvelope == nil {
 			return fmt.Errorf("(should not happen) encryption key envelope not found coll: %s", collId)
 		}
@@ -54,7 +54,7 @@ func copyAndReEncryptDekFromAnotherCollection(
 			return err
 		}
 
-		newEnvelope, err = ks.EncryptDek(dekId, dek, kekPubKeyFingerprints)
+		newEnvelope, err = ks.EncryptDek(dekID, dek, kekPubKeyFingerprints)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func copyAndReEncryptDekFromAnotherCollection(
 	}
 
 	if newEnvelope == nil {
-		return nil, fmt.Errorf("no decryptable envelope found for DEK %s", dekId)
+		return nil, fmt.Errorf("no decryptable envelope found for DEK %s", dekID)
 	}
 
 	return newEnvelope, nil

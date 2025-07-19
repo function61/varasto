@@ -1,7 +1,7 @@
 package smart
 
-type SmartCtlJsonReport struct {
-	JsonFormatVersion  []int `json:"json_format_version"`
+type SmartCtlJSONReport struct {
+	JSONFormatVersion  []int `json:"json_format_version"`
 	AtaSmartAttributes struct {
 		Revision int                 `json:"revision"`
 		Table    []AtaSmartAttribute `json:"table"`
@@ -19,7 +19,7 @@ type SmartCtlJsonReport struct {
 }
 
 type AtaSmartAttribute struct {
-	Id     int    `json:"id"`
+	ID     int    `json:"id"`
 	Name   string `json:"name"`
 	Value  int    `json:"value"`
 	Worst  int    `json:"worst"`
@@ -30,7 +30,7 @@ type AtaSmartAttribute struct {
 	} `json:"raw"`
 }
 
-func (s *SmartCtlJsonReport) FindSmartAttributeByName(name string) *AtaSmartAttribute {
+func (s *SmartCtlJSONReport) FindSmartAttributeByName(name string) *AtaSmartAttribute {
 	for _, item := range s.AtaSmartAttributes.Table {
 		if item.Name == name {
 			return &item

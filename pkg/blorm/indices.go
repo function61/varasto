@@ -33,7 +33,7 @@ var (
 
 type Index interface {
 	// only for our internal use
-	extractIndexRefs(record interface{}) []qualifiedIndexRef
+	extractIndexRefs(record any) []qualifiedIndexRef
 }
 
 // fully qualified index reference, including the index name
@@ -84,13 +84,13 @@ func mkIndexRef(indexName []byte, partition []byte, sortKey []byte, value []byte
 	return qualifiedIndexRef{indexName, partition, sortKey, value}
 }
 
-type setIndexApi interface {
+type setIndexAPI interface {
 	// return StopIteration if you want to stop mid-iteration (nil error will be returned by Query() )
 	Query(start []byte, fn func(sortKey []byte) error, tx *bbolt.Tx) error
 	Index
 }
 
-type byValueIndexApi interface {
+type byValueIndexAPI interface {
 	// return StopIteration if you want to stop mid-iteration (nil error will be returned by Query() )
 	Query(partition []byte, start []byte, fn func(sortKey []byte) error, tx *bbolt.Tx) error
 	Index
@@ -99,10 +99,10 @@ type byValueIndexApi interface {
 type setIndex struct {
 	repo            *SimpleRepository
 	indexName       []byte // looks like <repoBucketName>:<indexName>
-	memberEvaluator func(record interface{}) bool
+	memberEvaluator func(record any) bool
 }
 
-func (s *setIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
+func (s *setIndex) extractIndexRefs(record any) []qualifiedIndexRef {
 	if s.memberEvaluator(record) {
 		return []qualifiedIndexRef{
 			mkIndexRef(s.indexName, []byte(" "), s.repo.idExtractor(record), nil),
@@ -117,7 +117,7 @@ func (s *setIndex) Query(start []byte, fn func(sortKey []byte) error, tx *bbolt.
 	return indexQueryShared(s.indexName, []byte(" "), start, ignoreVal(fn), tx)
 }
 
-func NewSetIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}) bool) setIndexApi {
+func NewSetIndex(name string, repo *SimpleRepository, memberEvaluator func(record any) bool) setIndexAPI {
 	idx := &setIndex{repo, mkIndexName(name, repo), memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)
@@ -128,10 +128,10 @@ func NewSetIndex(name string, repo *SimpleRepository, memberEvaluator func(recor
 type byValueIndex struct {
 	repo            *SimpleRepository
 	indexName       []byte // looks like <repoBucketName>:<indexName>
-	memberEvaluator func(record interface{}, push func(partition []byte))
+	memberEvaluator func(record any, push func(partition []byte))
 }
 
-func (b *byValueIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
+func (b *byValueIndex) extractIndexRefs(record any) []qualifiedIndexRef {
 	qualifiedRefs := []qualifiedIndexRef{}
 	b.memberEvaluator(record, func(partition []byte) {
 		if len(partition) == 0 {
@@ -191,7 +191,7 @@ func indexQueryShared(
 
 	for ; sortKey != nil; sortKey, value = idx.Next() {
 		if err := fn(makeCopy(sortKey), makeCopy(value)); err != nil {
-			if err == StopIteration {
+			if err == ErrStopIteration {
 				return nil
 			} else {
 				return err
@@ -202,7 +202,7 @@ func indexQueryShared(
 	return nil
 }
 
-func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}, push func(partition []byte))) byValueIndexApi {
+func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(record any, push func(partition []byte))) byValueIndexAPI {
 	idx := &byValueIndex{repo, mkIndexName(name, repo), memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)
@@ -212,7 +212,6 @@ func NewValueIndex(name string, repo *SimpleRepository, memberEvaluator func(rec
 
 func indexRefExistsIn(ir qualifiedIndexRef, coll []qualifiedIndexRef) bool {
 	for _, other := range coll {
-		other := other // pin
 		if ir.Equals(&other) {
 			return true
 		}
@@ -228,7 +227,7 @@ func makeCopy(from []byte) []byte {
 	return copied
 }
 
-type rangeIndexApi interface {
+type rangeIndexAPI interface {
 	Index
 	Query(start []byte, fn func(sortKey []byte, value []byte) error, tx *bbolt.Tx) error
 }
@@ -236,14 +235,14 @@ type rangeIndexApi interface {
 type rangeIndex struct {
 	repo            *SimpleRepository
 	indexName       []byte
-	memberEvaluator func(record interface{}, index func(sortKey []byte))
+	memberEvaluator func(record any, index func(sortKey []byte))
 }
 
 func (r *rangeIndex) Query(start []byte, fn func(sortKey []byte, value []byte) error, tx *bbolt.Tx) error {
 	return indexQueryShared(r.indexName, nil, start, fn, tx)
 }
 
-func (r *rangeIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
+func (r *rangeIndex) extractIndexRefs(record any) []qualifiedIndexRef {
 	refs := []qualifiedIndexRef{}
 
 	r.memberEvaluator(record, func(sortKey []byte) {
@@ -254,7 +253,7 @@ func (r *rangeIndex) extractIndexRefs(record interface{}) []qualifiedIndexRef {
 	return refs
 }
 
-func NewRangeIndex(name string, repo *SimpleRepository, memberEvaluator func(record interface{}, index func(sortKey []byte))) rangeIndexApi {
+func NewRangeIndex(name string, repo *SimpleRepository, memberEvaluator func(record any, index func(sortKey []byte))) rangeIndexAPI {
 	idx := &rangeIndex{repo, mkIndexName(name, repo), memberEvaluator}
 
 	repo.indices = append(repo.indices, idx)

@@ -67,7 +67,7 @@ func fuseServe(
 
 	srv := NewFsServer(conf.Client(), conf.FuseMountPath, logl)
 
-	byIdDir := NewByIdDir(srv)
+	byIDDir := NewByIDDir(srv)
 
 	go func() {
 		for {
@@ -75,7 +75,7 @@ func fuseServe(
 			case <-ctx.Done():
 				break
 			case <-sigs.unmountAll:
-				byIdDir.ForgetDirs()
+				byIDDir.ForgetDirs()
 			}
 		}
 	}()
@@ -109,8 +109,8 @@ func fuseServe(
 		newStoEntry(fuse.Dirent{
 			Name:  "id",
 			Type:  fuse.DT_Dir,
-			Inode: byIdDir.inode,
-		}, byIdDir),
+			Inode: byIDDir.inode,
+		}, byIDDir),
 		newStoEntry(fuse.Dirent{
 			Name:  "dir",
 			Type:  fuse.DT_Dir,

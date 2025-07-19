@@ -2,7 +2,6 @@ package stodupremover
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -17,7 +16,7 @@ func removeEmptyDirs(path string, dry bool) error {
 		}
 
 		if info.IsDir() {
-			files, err := ioutil.ReadDir(path)
+			files, err := os.ReadDir(path)
 			if err != nil {
 				return err
 			}
@@ -30,6 +29,7 @@ func removeEmptyDirs(path string, dry bool) error {
 
 					// TODO: not sure if Walk() will be ok with removing currently walking item?
 					if err := os.Remove(path); err != nil {
+						//nolint:staticcheck // capitalization in error message ok here
 						return fmt.Errorf("Rmdir: %v", err)
 					}
 				}

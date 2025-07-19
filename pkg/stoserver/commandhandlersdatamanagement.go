@@ -25,7 +25,7 @@ type ReconciliationCompletionReport struct {
 }
 
 type collectionToReconcile struct {
-	collectionId      string
+	collectionID      string
 	blobCount         int
 	desiredReplicas   int
 	problemRedundancy bool
@@ -57,15 +57,15 @@ func (c *cHandlers) VolumeDecommission(cmd *stoservertypes.VolumeDecommission, c
 
 		if vol.BlobCount != 0 {
 			return fmt.Errorf(
-				"Refusing to decommission non-empty volume (has %d blobs) for your safety. Mark data lost first!",
+				"refusing to decommission non-empty volume (has %d blobs) for your safety. Mark data lost first",
 				vol.BlobCount)
 		}
 
-		if vol.SmartId != "" {
+		if vol.SmartID != "" {
 			return errors.New("volume still has SMART polling enabled")
 		}
 
-		if err := stodb.VolumeMountRepository.Each(func(record interface{}) error {
+		if err := stodb.VolumeMountRepository.Each(func(record any) error {
 			mount := record.(*stotypes.VolumeMount)
 
 			if mount.Volume == vol.ID {
@@ -77,12 +77,12 @@ func (c *cHandlers) VolumeDecommission(cmd *stoservertypes.VolumeDecommission, c
 			return err
 		}
 
-		if err := stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+		if err := stodb.ReplicationPolicyRepository.Each(func(record any) error {
 			policy := record.(*stotypes.ReplicationPolicy)
 
 			if sliceutil.ContainsInt(policy.DesiredVolumes, vol.ID) {
 				return fmt.Errorf(
-					"Policy '%s' still wants to write data to the volume you're trying to decommission",
+					"policy '%s' still wants to write data to the volume you're trying to decommission",
 					policy.Name)
 			}
 
@@ -114,7 +114,7 @@ func (c *cHandlers) VolumeRemoveQueuedReplications(cmd *stoservertypes.VolumeRem
 		// no other danger but the controller reads a batch of work (blob refs) into memory,
 		// so it could operate on canceled work for a while if we let this happen
 		return fmt.Errorf(
-			"Volume %d has replication controller running. Please stop it first, e.g. by unmounting the volume.",
+			"volume %d has replication controller running. Please stop it first, e.g. by unmounting the volume",
 			from)
 	}
 
@@ -122,7 +122,7 @@ func (c *cHandlers) VolumeRemoveQueuedReplications(cmd *stoservertypes.VolumeRem
 	removed := 0
 
 	if err := c.db.Update(func(tx *bbolt.Tx) error {
-		return stodb.BlobRepository.Each(func(record interface{}) error {
+		return stodb.BlobRepository.Each(func(record any) error {
 			blob := record.(*stotypes.Blob)
 
 			totalBlobs++
@@ -145,7 +145,7 @@ func (c *cHandlers) VolumeRemoveQueuedReplications(cmd *stoservertypes.VolumeRem
 
 	if removed == 0 {
 		return fmt.Errorf(
-			"Volume %d (with %d blobs) didn't have any queued replications",
+			"volume %d (with %d blobs) didn't have any queued replications",
 			from,
 			totalBlobs)
 	}
@@ -177,7 +177,7 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 			return err
 		}
 
-		return stodb.BlobRepository.Each(func(record interface{}) error {
+		return stodb.BlobRepository.Each(func(record any) error {
 			blob := record.(*stotypes.Blob)
 
 			writtenAndPendingVolumes := func() int {
@@ -209,10 +209,10 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 }
 
 func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.DatabaseReconcileReplicationPolicy, ctx *command.Ctx) error {
-	collIds := *cmd.Collections
+	collIDs := *cmd.Collections
 
 	if err := c.db.Update(func(tx *bbolt.Tx) error {
-		volumeById, err := buildVolumeByIdLookup(tx)
+		volumeByID, err := buildVolumeByIDLookup(tx)
 		if err != nil {
 			return err
 		}
@@ -222,8 +222,8 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 			return err
 		}
 
-		for _, collId := range collIds {
-			coll, err := stodb.Read(tx).Collection(collId)
+		for _, collID := range collIDs {
+			coll, err := stodb.Read(tx).Collection(collID)
 			if err != nil {
 				return err
 			}
@@ -239,7 +239,7 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 					return err
 				}
 
-				problemRedundancy, problemZoning := blobProblems(blob, policy, volumeById)
+				problemRedundancy, problemZoning := blobProblems(blob, policy, volumeByID)
 
 				if !problemRedundancy && !problemZoning {
 					return nil // nothing to fix
@@ -275,7 +275,7 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 
 	removed := []collectionToReconcile{}
 	for _, item := range latestReconciliationReport.CollectionsWithNonCompliantPolicy {
-		if !sliceutil.ContainsString(collIds, item.collectionId) {
+		if !sliceutil.ContainsString(collIDs, item.collectionID) {
 			removed = append(removed, item)
 		}
 	}
@@ -292,7 +292,7 @@ func (c *cHandlers) ReplicationpolicyCreate(cmd *stoservertypes.Replicationpolic
 		}
 
 		return stodb.ReplicationPolicyRepository.Update(&stotypes.ReplicationPolicy{
-			ID:             stoutils.NewReplicationPolicyId(),
+			ID:             stoutils.NewReplicationPolicyID(),
 			Name:           cmd.Name,
 			DesiredVolumes: []int{},
 			MinZones:       cmd.MinZones,
@@ -368,18 +368,18 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	logl := logex.Levels(logex.Prefix("reconciliation", c.logger))
 
 	// load all policies into memory for quick access
-	policyById := map[string]*stotypes.ReplicationPolicy{}
+	policyByID := map[string]*stotypes.ReplicationPolicy{}
 
-	if err := stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+	if err := stodb.ReplicationPolicyRepository.Each(func(record any) error {
 		policy := record.(*stotypes.ReplicationPolicy)
-		policyById[policy.ID] = policy
+		policyByID[policy.ID] = policy
 		return nil
 	}, tx); err != nil {
 		return err
 	}
 
 	// load all volumes into memory for quick access
-	volumeById, err := buildVolumeByIdLookup(tx)
+	volumeByID, err := buildVolumeByIDLookup(tx)
 	if err != nil {
 		return err
 	}
@@ -391,7 +391,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	visitCollection := func(coll *stotypes.Collection, effectiveReplPolicyId string) error {
 		report.TotalCollections++
 
-		policy := policyById[effectiveReplPolicyId]
+		policy := policyByID[effectiveReplPolicyId]
 		if policy == nil { // should not happen
 			return fmt.Errorf("policy not found: %s", effectiveReplPolicyId)
 		}
@@ -411,7 +411,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			fixedReplPolicies++
 		}
 
-		collReport, err := reconciliationReportForCollection(coll, policy, volumeById, tx)
+		collReport, err := reconciliationReportForCollection(coll, policy, volumeByID, tx)
 		if err != nil {
 			return err
 		}
@@ -435,7 +435,6 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		}
 
 		for _, coll := range colls {
-			coll := coll // pin
 			if err := visitCollection(&coll, effectiveReplPolicyId); err != nil {
 				return err
 			}
@@ -460,11 +459,11 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 func reconciliationReportForCollection(
 	coll *stotypes.Collection,
 	policy *stotypes.ReplicationPolicy,
-	volumeById map[int]*stotypes.Volume,
+	volumeByID map[int]*stotypes.Volume,
 	tx *bbolt.Tx,
 ) (*collectionToReconcile, error) {
 	collReport := &collectionToReconcile{
-		collectionId:    coll.ID,
+		collectionID:    coll.ID,
 		desiredReplicas: len(policy.DesiredVolumes),
 		presence:        map[int]int{},
 		blobCount:       0,
@@ -478,7 +477,7 @@ func reconciliationReportForCollection(
 			return err
 		}
 
-		problemRedundancy, problemZoning := blobProblems(blob, policy, volumeById)
+		problemRedundancy, problemZoning := blobProblems(blob, policy, volumeByID)
 
 		for _, vol := range append(blob.Volumes, blob.VolumesPendingReplication...) {
 			// zero value (when not found from map) conveniently works out for us
@@ -515,11 +514,11 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 
 	knownEncryptionKeys := map[string]bool{}
 
-	if err := stodb.CollectionRepository.Each(func(record interface{}) error {
+	if err := stodb.CollectionRepository.Each(func(record any) error {
 		coll := record.(*stotypes.Collection)
 
 		for _, encryptionKey := range coll.EncryptionKeys {
-			knownEncryptionKeys[encryptionKey.KeyId] = true
+			knownEncryptionKeys[encryptionKey.KeyID] = true
 		}
 
 		return nil
@@ -527,7 +526,7 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 		return err
 	}
 
-	if err := stodb.BlobRepository.Each(func(record interface{}) error {
+	if err := stodb.BlobRepository.Each(func(record any) error {
 		blob := record.(*stotypes.Blob)
 
 		blobCount++
@@ -541,11 +540,11 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 			logl.Error.Printf("Blob[%s] without Crc32", blob.Ref.AsHex())
 		}
 
-		if _, known := knownEncryptionKeys[blob.EncryptionKeyId]; !known {
+		if _, known := knownEncryptionKeys[blob.EncryptionKeyID]; !known {
 			logl.Error.Printf(
 				"Blob[%s] refers to unknown EncryptionKeyId[%s]",
 				blob.Ref.AsHex(),
-				blob.EncryptionKeyId)
+				blob.EncryptionKeyID)
 		}
 
 		return nil
@@ -593,12 +592,12 @@ func eachBlobOfCollection(coll *stotypes.Collection, visit func(ref stotypes.Blo
 
 func iterateDirectoriesRecursively(
 	dir *stotypes.Directory,
-	effectiveReplPolicyId string,
+	effectiveReplPolicyID string,
 	tx *bbolt.Tx,
 	visitor func(dir *stotypes.Directory, colls []stotypes.Collection, numSubdirs int, effectiveReplPolicyId string) error,
 ) error {
 	if dir.ReplicationPolicy != "" {
-		effectiveReplPolicyId = dir.ReplicationPolicy
+		effectiveReplPolicyID = dir.ReplicationPolicy
 	}
 
 	colls, err := stodb.Read(tx).CollectionsByDirectory(dir.ID)
@@ -611,16 +610,14 @@ func iterateDirectoriesRecursively(
 		return err
 	}
 
-	if err := visitor(dir, colls, len(subDirs), effectiveReplPolicyId); err != nil {
+	if err := visitor(dir, colls, len(subDirs), effectiveReplPolicyID); err != nil {
 		return err
 	}
 
 	for _, subDir := range subDirs {
-		subDir := subDir // pin
-
 		if err := iterateDirectoriesRecursively(
 			&subDir,
-			effectiveReplPolicyId,
+			effectiveReplPolicyID,
 			tx,
 			visitor,
 		); err != nil {
@@ -631,13 +628,13 @@ func iterateDirectoriesRecursively(
 	return nil
 }
 
-func noReplicationPolicyPlacesNewDataToVolume(volId int, tx *bbolt.Tx) error {
-	return stodb.ReplicationPolicyRepository.Each(func(record interface{}) error {
+func noReplicationPolicyPlacesNewDataToVolume(volID int, tx *bbolt.Tx) error {
+	return stodb.ReplicationPolicyRepository.Each(func(record any) error {
 		policy := record.(*stotypes.ReplicationPolicy)
 
-		if sliceutil.ContainsInt(policy.DesiredVolumes, volId) {
+		if sliceutil.ContainsInt(policy.DesiredVolumes, volID) {
 			return fmt.Errorf(
-				"Replication policy '%s' sends new data to your volume",
+				"replication policy '%s' sends new data to your volume",
 				policy.Name)
 		}
 
@@ -649,13 +646,13 @@ func noReplicationPolicyPlacesNewDataToVolume(volId int, tx *bbolt.Tx) error {
 func blobProblems(
 	blob *stotypes.Blob,
 	policy *stotypes.ReplicationPolicy,
-	volumeById map[int]*stotypes.Volume,
+	volumeByID map[int]*stotypes.Volume,
 ) (bool, bool) {
 	volsAndPendings := append([]int{}, blob.Volumes...)
 	volsAndPendings = append(volsAndPendings, blob.VolumesPendingReplication...)
 	uniqueZones := map[string]bool{}
 	for _, vol := range volsAndPendings {
-		uniqueZones[volumeById[vol].Zone] = true
+		uniqueZones[volumeByID[vol].Zone] = true
 	}
 
 	problemRedundancy := len(volsAndPendings) < policy.ReplicaCount()
@@ -664,16 +661,16 @@ func blobProblems(
 	return problemRedundancy, problemZoning
 }
 
-func buildVolumeByIdLookup(tx *bbolt.Tx) (map[int]*stotypes.Volume, error) {
-	volumeById := map[int]*stotypes.Volume{}
+func buildVolumeByIDLookup(tx *bbolt.Tx) (map[int]*stotypes.Volume, error) {
+	volumeByID := map[int]*stotypes.Volume{}
 
-	if err := stodb.VolumeRepository.Each(func(record interface{}) error {
+	if err := stodb.VolumeRepository.Each(func(record any) error {
 		vol := record.(*stotypes.Volume)
-		volumeById[vol.ID] = vol
+		volumeByID[vol.ID] = vol
 		return nil
 	}, tx); err != nil {
 		return nil, err
 	}
 
-	return volumeById, nil
+	return volumeByID, nil
 }

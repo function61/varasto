@@ -51,7 +51,7 @@ func (k *Store) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
 	k.decryptedDekCacheMu.Lock()
 	defer k.decryptedDekCacheMu.Unlock() // lifetime pretty aggressive..
 
-	if cached, found := k.decryptedDekCache.Get(kenv.KeyId); found {
+	if cached, found := k.decryptedDekCache.Get(kenv.KeyID); found {
 		return cached.([]byte), nil
 	}
 
@@ -64,18 +64,18 @@ func (k *Store) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
 				return nil, err
 			}
 
-			k.decryptedDekCache.Add(kenv.KeyId, key)
+			k.decryptedDekCache.Add(kenv.KeyID, key)
 
 			return key, nil
 		}
 	}
 
-	return nil, fmt.Errorf("don't have any private key to slots of DEK %s", kenv.KeyId)
+	return nil, fmt.Errorf("don't have any private key to slots of DEK %s", kenv.KeyID)
 }
 
-func (k *Store) EncryptDek(dekId string, dek []byte, kekPubKeyFingerprints []string) (*stotypes.KeyEnvelope, error) {
-	if dekId == "" {
-		return nil, errors.New("empty dekId")
+func (k *Store) EncryptDek(dekID string, dek []byte, kekPubKeyFingerprints []string) (*stotypes.KeyEnvelope, error) {
+	if dekID == "" {
+		return nil, errors.New("empty dekID")
 	}
 
 	if len(kekPubKeyFingerprints) == 0 {
@@ -104,7 +104,7 @@ func (k *Store) EncryptDek(dekId string, dek []byte, kekPubKeyFingerprints []str
 	}
 
 	return &stotypes.KeyEnvelope{
-		KeyId: dekId,
+		KeyID: dekID,
 		Slots: slots,
 	}, nil
 }

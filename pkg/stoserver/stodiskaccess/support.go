@@ -11,7 +11,7 @@ type BlobMeta struct {
 	RealSize        int32
 	SizeOnDisk      int32 // after optional compression
 	IsCompressed    bool
-	EncryptionKeyId string
+	EncryptionKeyID string
 	EncryptionKey   []byte // this is set when read from QueryBlobMetadata(), but not when given to WriteBlobCreated()
 	ExpectedCrc32   []byte
 }
@@ -21,9 +21,9 @@ type MetadataStore interface {
 	QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEnvelope) (*BlobMeta, error)
 	QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error)
 	QueryBlobExists(ref stotypes.BlobRef) (bool, error)
-	QueryCollectionEncryptionKeyForNewBlobs(collId string) (string, []byte, error)
-	WriteBlobCreated(meta *BlobMeta, volumeId int) error
-	WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error
+	QueryCollectionEncryptionKeyForNewBlobs(collID string) (string, []byte, error)
+	WriteBlobCreated(meta *BlobMeta, volumeID int) error
+	WriteBlobReplicated(ref stotypes.BlobRef, volumeID int) error
 }
 
 type readCloseWrapper struct {

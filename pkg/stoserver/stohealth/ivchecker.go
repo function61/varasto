@@ -30,7 +30,7 @@ func (h *lastIvJob) CheckHealth() (*stoservertypes.Health, error) {
 
 	newest := time.Time{}
 
-	if err := stodb.IntegrityVerificationJobRepository.Each(func(record interface{}) error {
+	if err := stodb.IntegrityVerificationJobRepository.Each(func(record any) error {
 		job := record.(*stotypes.IntegrityVerificationJob)
 
 		if job.Completed.After(newest) {

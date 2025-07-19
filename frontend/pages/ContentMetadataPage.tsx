@@ -4,8 +4,8 @@ import { CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import {
-	ConfigSetTheMovieDbApikey,
 	ConfigSetIgdbApikey,
+	ConfigSetTheMovieDBApiKey,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import {
@@ -101,7 +101,7 @@ export default class ContentMetadataPage extends React.Component<{}, ContentMeta
 				<div className="form-group">
 					<label className="col-sm-2 control-label">
 						API key &nbsp;
-						<CommandIcon command={ConfigSetTheMovieDbApikey(apikey.Value)} />
+						<CommandIcon command={ConfigSetTheMovieDBApiKey(apikey.Value)} />
 					</label>
 					<div className="col-sm-10">
 						{apikey.Value !== '' ? (

@@ -227,7 +227,7 @@ func (d *CollectionDirNode) Create(ctx context.Context, req *fuse.CreateRequest,
 		}
 
 		// so we'll load newest state from server
-		collectionByIdQuerySingleton.forgetCollection(ctx, d.collection.ID)
+		collectionByIDQuerySingleton.forgetCollection(ctx, d.collection.ID)
 
 		return nil, nil, fuse.EIO
 	}
@@ -360,10 +360,10 @@ func NewCollectionDirNodeFile(
 	name string,
 	inode uint64,
 	file stotypes.File,
-	collectionId string,
+	collectionID string,
 	srv *FsServer,
 ) *CollectionDirNodeFile {
-	return &CollectionDirNodeFile{inode, file, name, collectionId, srv}
+	return &CollectionDirNodeFile{inode, file, name, collectionID, srv}
 }
 
 var _ interface {
@@ -375,7 +375,7 @@ type CollectionDirNodeFile struct {
 	inode        uint64
 	file         stotypes.File
 	name         string
-	collectionId string
+	collectionID string
 	srv          *FsServer
 }
 
@@ -400,7 +400,7 @@ func (f CollectionDirNodeFile) Read(ctx context.Context, req *fuse.ReadRequest, 
 			return err
 		}
 
-		bd, err := f.srv.blobCache.Get(ctx, *blobRef, f.collectionId)
+		bd, err := f.srv.blobCache.Get(ctx, *blobRef, f.collectionID)
 		if err != nil {
 			return err
 		}

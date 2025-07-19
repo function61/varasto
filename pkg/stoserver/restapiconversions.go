@@ -33,14 +33,14 @@ func convertDir(dir stotypes.Directory) stoservertypes.Directory {
 	}
 }
 
-func convertDbCollection(
+func convertDBCollection(
 	coll stotypes.Collection,
 	changesets []stoservertypes.ChangesetSubset,
 	state *stateresolver.StateAt,
 ) *stoservertypes.CollectionSubsetWithMeta {
-	encryptionKeyIds := []string{}
+	encryptionKeyIDs := []string{}
 	for _, encryptionKey := range coll.EncryptionKeys {
-		encryptionKeyIds = append(encryptionKeyIds, encryptionKey.KeyId)
+		encryptionKeyIDs = append(encryptionKeyIDs, encryptionKey.KeyID)
 	}
 
 	var rating *int
@@ -57,7 +57,7 @@ func convertDbCollection(
 		Description:       coll.Description,
 		ReplicationPolicy: coll.ReplicationPolicy,
 		Sensitivity:       coll.Sensitivity,
-		EncryptionKeyIds:  encryptionKeyIds,
+		EncryptionKeyIds:  encryptionKeyIDs,
 		Metadata:          metadataMapToKvList(coll.Metadata),
 		Tags:              coll.Tags,
 		Rating:            rating,
@@ -120,17 +120,17 @@ func newDirectoryAndMeta(dir stoservertypes.Directory, tx *bbolt.Tx) (*stoserver
 	var metaCollection *stoservertypes.CollectionSubsetWithMeta
 
 	if dir.MetaCollectionId != "" {
-		metaCollectionDb, err := stodb.Read(tx).Collection(dir.MetaCollectionId)
+		metaCollectionDB, err := stodb.Read(tx).Collection(dir.MetaCollectionId)
 		if err != nil {
 			return nil, err
 		}
 
-		state, err := stateresolver.ComputeStateAtHead(*metaCollectionDb)
+		state, err := stateresolver.ComputeStateAtHead(*metaCollectionDB)
 		if err != nil {
 			return nil, err
 		}
 
-		metaCollection = convertDbCollection(*metaCollectionDb, []stoservertypes.ChangesetSubset{}, state)
+		metaCollection = convertDBCollection(*metaCollectionDB, []stoservertypes.ChangesetSubset{}, state)
 	}
 
 	return &stoservertypes.DirectoryAndMeta{

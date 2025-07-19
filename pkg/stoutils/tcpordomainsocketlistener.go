@@ -9,7 +9,7 @@ import (
 	"github.com/function61/gokit/logex"
 )
 
-func CreateTcpOrDomainSocketListener(addr string, logl *logex.Leveled) (net.Listener, error) {
+func CreateTCPOrDomainSocketListener(addr string, logl *logex.Leveled) (net.Listener, error) {
 	domainSocketPath := ParseDomainSocketPath(addr)
 
 	if domainSocketPath != "" {
@@ -36,9 +36,9 @@ func createDomainSocketListener(domainSocketPath string, logl *logex.Leveled) (n
 	return net.Listen("unix", domainSocketPath)
 }
 
-func ParseDomainSocketPath(baseUrl string) string {
-	if strings.HasPrefix(baseUrl, "domainsocket://") {
-		return baseUrl[len("domainsocket://"):]
+func ParseDomainSocketPath(baseURL string) string {
+	if strings.HasPrefix(baseURL, "domainsocket://") {
+		return baseURL[len("domainsocket://"):]
 	} else {
 		return ""
 	}

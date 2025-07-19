@@ -10,12 +10,12 @@ import (
 
 type SimpleRepository struct {
 	bucketName  []byte
-	alloc       func() interface{}
-	idExtractor func(record interface{}) []byte
+	alloc       func() any
+	idExtractor func(record any) []byte
 	indices     []Index
 }
 
-func NewSimpleRepo(bucketName string, allocator func() interface{}, idExtractor func(interface{}) []byte) *SimpleRepository {
+func NewSimpleRepo(bucketName string, allocator func() any, idExtractor func(any) []byte) *SimpleRepository {
 	return &SimpleRepository{
 		bucketName:  []byte(bucketName),
 		alloc:       allocator,
@@ -29,11 +29,11 @@ func (r *SimpleRepository) Bootstrap(tx *bbolt.Tx) error {
 	return err
 }
 
-func (r *SimpleRepository) Alloc() interface{} {
+func (r *SimpleRepository) Alloc() any {
 	return r.alloc()
 }
 
-func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *bbolt.Tx) error {
+func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record any, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -51,7 +51,7 @@ func (r *SimpleRepository) OpenByPrimaryKey(id []byte, record interface{}, tx *b
 	return nil
 }
 
-func (r *SimpleRepository) Update(record interface{}, tx *bbolt.Tx) error {
+func (r *SimpleRepository) Update(record any, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -85,7 +85,7 @@ func (r *SimpleRepository) Update(record interface{}, tx *bbolt.Tx) error {
 	return bucket.Put(id, data)
 }
 
-func (r *SimpleRepository) Delete(record interface{}, tx *bbolt.Tx) error {
+func (r *SimpleRepository) Delete(record any, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -107,11 +107,11 @@ func (r *SimpleRepository) Delete(record interface{}, tx *bbolt.Tx) error {
 	return bucket.Delete(id)
 }
 
-func (r *SimpleRepository) Each(fn func(record interface{}) error, tx *bbolt.Tx) error {
+func (r *SimpleRepository) Each(fn func(record any) error, tx *bbolt.Tx) error {
 	return r.EachFrom([]byte(""), fn, tx)
 }
 
-func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) error, tx *bbolt.Tx) error {
+func (r *SimpleRepository) EachFrom(from []byte, fn func(record any) error, tx *bbolt.Tx) error {
 	bucket := tx.Bucket(r.bucketName)
 	if bucket == nil {
 		return ErrBucketNotFound
@@ -126,7 +126,7 @@ func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) err
 		}
 
 		if err := fn(record); err != nil {
-			if err == StopIteration {
+			if err == ErrStopIteration {
 				return nil // not an error, so don't give one out
 			}
 
@@ -137,7 +137,7 @@ func (r *SimpleRepository) EachFrom(from []byte, fn func(record interface{}) err
 	return nil
 }
 
-func (r *SimpleRepository) indexRefsForRecord(record interface{}) []qualifiedIndexRef {
+func (r *SimpleRepository) indexRefsForRecord(record any) []qualifiedIndexRef {
 	refs := []qualifiedIndexRef{}
 
 	for _, repoIndex := range r.indices {

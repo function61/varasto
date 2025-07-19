@@ -1,8 +1,8 @@
 package stotypes
 
-func FindDekEnvelope(keyId string, kenvs []KeyEnvelope) *KeyEnvelope {
+func FindDekEnvelope(keyID string, kenvs []KeyEnvelope) *KeyEnvelope {
 	for _, kenv := range kenvs {
-		if kenv.KeyId == keyId {
+		if kenv.KeyID == keyID {
 			return &kenv
 		}
 	}

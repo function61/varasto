@@ -19,7 +19,6 @@ func TestCustomMonthlyPattern(t *testing.T) {
 	}
 
 	for _, tc := range tcs {
-		tc := tc // pin
 		t.Run(tc.input, func(t *testing.T) {
 			assert.EqualString(t, phoneCallPattern(tc.input), tc.expect)
 		})

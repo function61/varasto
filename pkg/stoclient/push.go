@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -63,7 +62,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 		return nil, fmt.Errorf("ComputeStateAtHead: %w", err)
 	}
 
-	collectionId := wd.manifest.Collection.ID
+	collectionID := wd.manifest.Collection.ID
 
 	// deleted during directory scan. what's left over is what are missing w.r.t. parent state
 	filesMissing := parentState.Files()
@@ -101,7 +100,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 				maybeChanged := !before.Modified.Equal(fileInfo.ModTime())
 
 				if definitelyChanged || maybeChanged {
-					fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
+					fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionID, bdl)
 					if err != nil {
 						return fmt.Errorf("scanFileAndDiscoverBlobs: %w", err)
 					}
@@ -113,7 +112,7 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 					}
 				}
 			} else {
-				fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionId, bdl)
+				fil, err := scanFileAndDiscoverBlobs(ctx, wd.Join(relativePath), relativePath, fileInfo, collectionID, bdl)
 				if err != nil {
 					return fmt.Errorf("scanFileAndDiscoverBlobs: %w", err)
 				}
@@ -135,8 +134,8 @@ func computeChangeset(ctx context.Context, wd *workdirLocation, bdl BlobDiscover
 	sort.Strings(deleted)
 
 	ch := stotypes.NewChangeset(
-		stoutils.NewCollectionChangesetId(),
-		wd.manifest.ChangesetId, // parent
+		stoutils.NewCollectionChangesetID(),
+		wd.manifest.ChangesetID, // parent
 		time.Now(),
 		created,
 		updated,
@@ -153,9 +152,9 @@ func blobExists(blobRef stotypes.BlobRef, clientConfig ClientConfig) (bool, erro
 	// do a HEAD request to see if the blob exists
 	resp, err := ezhttp.Get(
 		ctx,
-		clientConfig.UrlBuilder().GetBlobMetadata(blobRef.AsHex()),
+		clientConfig.URLBuilder().GetBlobMetadata(blobRef.AsHex()),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
-		ezhttp.Client(clientConfig.HttpClient()))
+		ezhttp.Client(clientConfig.HTTPClient()))
 
 	if err != nil && resp != nil && resp.StatusCode == http.StatusNotFound {
 		return false, nil
@@ -173,7 +172,7 @@ func scanFileAndDiscoverBlobs(
 	absolutePath string,
 	relativePath string,
 	fileInfo os.FileInfo,
-	collectionId string,
+	collectionID string,
 	bdl BlobDiscoveredListener,
 ) (*stotypes.File, error) {
 	file, err := os.Open(absolutePath)
@@ -197,7 +196,7 @@ func scanFileAndDiscoverBlobs(
 		fileInfo.Size(),
 		maybeCreationTime,
 		fileInfo.ModTime(),
-		collectionId,
+		collectionID,
 		bdl)
 }
 
@@ -211,7 +210,7 @@ func ScanAndDiscoverBlobs(
 	totalSize int64,
 	creationTime time.Time,
 	modifiedTime time.Time,
-	collectionId string,
+	collectionID string,
 	bdl BlobDiscoveredListener,
 ) (*stotypes.File, error) {
 	bfile := &stotypes.File{
@@ -236,7 +235,7 @@ func ScanAndDiscoverBlobs(
 		default:
 		}
 
-		chunk, errRead := ioutil.ReadAll(io.LimitReader(file, stotypes.BlobSize))
+		chunk, errRead := io.ReadAll(io.LimitReader(file, stotypes.BlobSize))
 		if errRead != nil {
 			return nil, errRead
 		}
@@ -263,7 +262,7 @@ func ScanAndDiscoverBlobs(
 
 		bdl.BlobDiscovered(NewBlobDiscoveredAttrs(
 			*blobRef,
-			collectionId,
+			collectionID,
 			chunk,
 			stoutils.IsMaybeCompressible(relativePath),
 			bfile.Path,
@@ -277,7 +276,7 @@ func ScanAndDiscoverBlobs(
 
 func (c *Client) Commit(
 	ctx context.Context,
-	collectionId string,
+	collectionID string,
 	changeset stotypes.CollectionChangeset,
 ) (*stotypes.Collection, error) {
 	ctx, cancel := context.WithTimeout(ctx, 60*3*time.Second)
@@ -286,11 +285,11 @@ func (c *Client) Commit(
 	updatedCollection := &stotypes.Collection{}
 	if _, err := ezhttp.Post(
 		ctx,
-		c.conf.UrlBuilder().CommitChangeset(collectionId),
+		c.conf.URLBuilder().CommitChangeset(collectionID),
 		ezhttp.AuthBearer(c.conf.AuthToken),
 		ezhttp.SendJson(&changeset),
 		ezhttp.RespondsJson(&updatedCollection, false),
-		ezhttp.Client(c.conf.HttpClient()),
+		ezhttp.Client(c.conf.HTTPClient()),
 	); err != nil {
 		return nil, fmt.Errorf("CommitChangeset: %v", err)
 	}
@@ -298,7 +297,7 @@ func (c *Client) Commit(
 	return updatedCollection, nil
 }
 
-func pushOne(ctx context.Context, collectionId string, path string) error {
+func pushOne(ctx context.Context, collectionID string, path string) error {
 	clientConfig, err := ReadConfig()
 	if err != nil {
 		return err
@@ -306,7 +305,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 
 	client := clientConfig.Client()
 
-	coll, err := client.FetchCollectionMetadata(ctx, collectionId)
+	coll, err := client.FetchCollectionMetadata(ctx, collectionID)
 	if err != nil {
 		return err
 	}
@@ -327,9 +326,9 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 		ctx,
 		BackgroundUploaderConcurrency,
 		*clientConfig,
-		textUiUploadProgressOutputIfInTerminal())
+		textUIUploadProgressOutputIfInTerminal())
 
-	file, err := scanFileAndDiscoverBlobs(ctx, absolutePath, path, fileInfo, collectionId, buploader)
+	file, err := scanFileAndDiscoverBlobs(ctx, absolutePath, path, fileInfo, collectionID, buploader)
 	if err != nil {
 		return err
 	}
@@ -339,7 +338,7 @@ func pushOne(ctx context.Context, collectionId string, path string) error {
 	}
 
 	changeset := stotypes.NewChangeset(
-		stoutils.NewCollectionChangesetId(),
+		stoutils.NewCollectionChangesetID(),
 		coll.Head,
 		time.Now(),
 		[]stotypes.File{*file},
@@ -355,7 +354,7 @@ func push(ctx context.Context, wd *workdirLocation) error {
 		ctx,
 		BackgroundUploaderConcurrency,
 		wd.clientConfig,
-		textUiUploadProgressOutputIfInTerminal())
+		textUIUploadProgressOutputIfInTerminal())
 
 	ch, err := computeChangeset(ctx, wd, buploader)
 	if err != nil {
@@ -376,7 +375,7 @@ func push(ctx context.Context, wd *workdirLocation) error {
 		return err
 	}
 
-	wd.manifest.ChangesetId = updatedCollection.Head
+	wd.manifest.ChangesetID = updatedCollection.Head
 	wd.manifest.Collection = *updatedCollection
 
 	return wd.SaveToDisk()

@@ -16,10 +16,10 @@ func discoverChanges(
 	changefeedItems := []stoservertypes.CollectionChangefeedItem{}
 	if _, err := ezhttp.Get(
 		ctx,
-		conf.UrlBuilder().CollectionChangefeed(after),
+		conf.URLBuilder().CollectionChangefeed(after),
 		ezhttp.RespondsJson(&changefeedItems, false),
 		ezhttp.AuthBearer(conf.AuthToken),
-		ezhttp.Client(conf.HttpClient()),
+		ezhttp.Client(conf.HTTPClient()),
 	); err != nil {
 		return nil, err
 	}
@@ -41,10 +41,10 @@ func fetchServerConfig(ctx context.Context, confKey string, conf *stoclient.Clie
 	configValue := stoservertypes.ConfigValue{}
 	if _, err := ezhttp.Get(
 		ctx,
-		conf.UrlBuilder().GetConfig(confKey),
+		conf.URLBuilder().GetConfig(confKey),
 		ezhttp.RespondsJson(&configValue, false),
 		ezhttp.AuthBearer(conf.AuthToken),
-		ezhttp.Client(conf.HttpClient()),
+		ezhttp.Client(conf.HTTPClient()),
 	); err != nil {
 		return "", err
 	}

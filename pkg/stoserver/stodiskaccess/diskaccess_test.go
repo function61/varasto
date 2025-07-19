@@ -6,7 +6,6 @@ import (
 	"crypto/md5" //nolint:gosec // not used in cryptographic context
 	"encoding/hex"
 	"io"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -22,24 +21,24 @@ var (
 	rootEncryptionKeyB    = []byte{0x82, 0x56, 0x65, 0x57, 0x2b, 0xdf, 0x5e, 0xdd, 0x1e, 0xe9, 0xcd, 0xca, 0xba, 0xe3, 0x98, 0x2d, 0xf9, 0x07, 0xa2, 0x72, 0xb1, 0x7d, 0xc6, 0xa6, 0x08, 0x96, 0x07, 0x8f, 0xdd, 0x33, 0x40, 0xbe}
 )
 
-type testDbAccess struct {
+type testDBAccess struct {
 	rootEncryptionKey []byte
 	metaStore         map[string]*BlobMeta
 }
 
-func (t *testDbAccess) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
+func (t *testDBAccess) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
 	_, exists := t.metaStore[ref.AsHex()]
 	return exists, nil
 }
 
-func (t *testDbAccess) QueryCollectionEncryptionKeyForNewBlobs(collId string) (string, []byte, error) {
+func (t *testDBAccess) QueryCollectionEncryptionKeyForNewBlobs(collID string) (string, []byte, error) {
 	// for ease of testing, we'll derive each blob's encryption key by xor'ing root
 	// encryption key and blob's sha256. this would not be kosher for production!
-	collIdHashed := sha256.Sum256([]byte(collId))
-	return collId, xorSlices(collIdHashed[:], t.rootEncryptionKey), nil
+	collIDHashed := sha256.Sum256([]byte(collID))
+	return collID, xorSlices(collIDHashed[:], t.rootEncryptionKey), nil
 }
 
-func (t *testDbAccess) QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error) {
+func (t *testDBAccess) QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error) {
 	if meta, found := t.metaStore[ref.AsHex()]; found {
 		return meta.ExpectedCrc32, nil
 	}
@@ -47,7 +46,7 @@ func (t *testDbAccess) QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error) {
 	return nil, os.ErrNotExist
 }
 
-func (t *testDbAccess) QueryBlobMetadata(ref stotypes.BlobRef, kenvs []stotypes.KeyEnvelope) (*BlobMeta, error) {
+func (t *testDBAccess) QueryBlobMetadata(ref stotypes.BlobRef, kenvs []stotypes.KeyEnvelope) (*BlobMeta, error) {
 	if meta, found := t.metaStore[ref.AsHex()]; found {
 		return meta, nil
 	}
@@ -55,14 +54,14 @@ func (t *testDbAccess) QueryBlobMetadata(ref stotypes.BlobRef, kenvs []stotypes.
 	return nil, os.ErrNotExist
 }
 
-func (t *testDbAccess) WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error {
+func (t *testDBAccess) WriteBlobReplicated(ref stotypes.BlobRef, volumeID int) error {
 	return nil
 }
 
-func (t *testDbAccess) WriteBlobCreated(meta *BlobMeta, size int) error {
+func (t *testDBAccess) WriteBlobCreated(meta *BlobMeta, size int) error {
 	// QueryCollectionEncryptionKeyForNewBlobs() returns collection id as encryption key id,
 	// so here we can re-compute our testing encryption key by using EncryptionKeyId as collId
-	_, encryptionKey, err := t.QueryCollectionEncryptionKeyForNewBlobs(meta.EncryptionKeyId)
+	_, encryptionKey, err := t.QueryCollectionEncryptionKeyForNewBlobs(meta.EncryptionKeyID)
 	if err != nil {
 		return err
 	}
@@ -77,7 +76,7 @@ func (t *testDbAccess) WriteBlobCreated(meta *BlobMeta, size int) error {
 
 type testData struct {
 	blobStorage  *testingBlobStorage
-	testDbAccess *testDbAccess
+	testDBAccess *testDBAccess
 	diskAccess   *Controller
 }
 
@@ -88,7 +87,7 @@ func setupDefault() *testData {
 func setup(encKey []byte) *testData {
 	blobStorage := createVolume("2v2IQMfhcpc", 10)
 
-	tda := &testDbAccess{
+	tda := &testDBAccess{
 		encKey,
 		map[string]*BlobMeta{}}
 
@@ -139,7 +138,7 @@ func TestWriteAndRead(t *testing.T) {
 	assert.Assert(t, err == nil)
 	defer contentReader.Close()
 
-	content, err := ioutil.ReadAll(contentReader)
+	content, err := io.ReadAll(contentReader)
 	assert.Assert(t, err == nil)
 
 	assert.EqualString(t, string(content), "The quick brown fox jumps over the lazy dog")
@@ -195,7 +194,7 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 
 	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(text), maybeCompressible) == nil)
 
-	meta, err := test.testDbAccess.QueryBlobMetadata(*ref, nil)
+	meta, err := test.testDBAccess.QueryBlobMetadata(*ref, nil)
 	assert.Assert(t, err == nil)
 
 	// this does not compress well
@@ -207,7 +206,7 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 
 	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref2, strings.NewReader(text4x), maybeCompressible) == nil)
 
-	meta, err = test.testDbAccess.QueryBlobMetadata(*ref2, nil)
+	meta, err = test.testDBAccess.QueryBlobMetadata(*ref2, nil)
 	assert.Assert(t, err == nil)
 
 	if maybeCompressible {
@@ -225,7 +224,7 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 	defer reader.Close()
 
 	// test decompression
-	content, err := ioutil.ReadAll(reader)
+	content, err := io.ReadAll(reader)
 	assert.Assert(t, err == nil)
 
 	assert.EqualString(t, string(content), text4x)
@@ -242,17 +241,17 @@ func TestRoutingCost(t *testing.T) {
 	panicIfError(mount(2, createVolume("6P5rgMCeGsA", 30), test.diskAccess))
 	panicIfError(mount(3, createVolume("xGili5d64vw", 20), test.diskAccess))
 
-	bestVolumeId := func(volumeIds []int) int {
-		best, err := test.diskAccess.BestVolumeId(volumeIds)
+	bestVolumeID := func(volumeIds []int) int {
+		best, err := test.diskAccess.BestVolumeID(volumeIds)
 		panicIfError(err)
 		return best
 	}
 
-	assert.Assert(t, bestVolumeId([]int{1, 2, 3}) == 1)
-	assert.Assert(t, bestVolumeId([]int{1, 2}) == 1)
-	assert.Assert(t, bestVolumeId([]int{1, 3}) == 1)
-	assert.Assert(t, bestVolumeId([]int{2, 3}) == 3)
-	assert.Assert(t, bestVolumeId([]int{3, 1}) == 1)
+	assert.Assert(t, bestVolumeID([]int{1, 2, 3}) == 1)
+	assert.Assert(t, bestVolumeID([]int{1, 2}) == 1)
+	assert.Assert(t, bestVolumeID([]int{1, 3}) == 1)
+	assert.Assert(t, bestVolumeID([]int{2, 3}) == 3)
+	assert.Assert(t, bestVolumeID([]int{3, 1}) == 1)
 }
 
 func TestReplication(t *testing.T) {
@@ -379,7 +378,7 @@ type testingBlobStorage struct {
 }
 
 func mount(
-	volId int,
+	volID int,
 	tbs *testingBlobStorage,
 	dam *Controller,
 ) error {
@@ -389,7 +388,7 @@ func mount(
 		return err
 	}
 
-	if err := dam.Mount(ctx, volId, tbs.uuid, tbs); err != nil {
+	if err := dam.Mount(ctx, volID, tbs.uuid, tbs); err != nil {
 		return err
 	}
 
@@ -414,11 +413,11 @@ func (t *testingBlobStorage) RawFetch(_ context.Context, ref stotypes.BlobRef) (
 		return nil, os.ErrNotExist
 	}
 
-	return ioutil.NopCloser(bytes.NewReader(buf)), nil
+	return io.NopCloser(bytes.NewReader(buf)), nil
 }
 
 func (t *testingBlobStorage) RawStore(_ context.Context, ref stotypes.BlobRef, content io.Reader) error {
-	buf, err := ioutil.ReadAll(content)
+	buf, err := io.ReadAll(content)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ type Node struct {
 	ID           string
 	Addr         string
 	Name         string
-	TlsCert      string
+	TLSCert      string `msgpack:"TlsCert"`
 	SmartBackend stoservertypes.SmartBackend
 }
 
@@ -40,7 +40,7 @@ type Volume struct {
 	Notes              string
 	SerialNumber       string
 	Technology         string
-	SmartId            string
+	SmartID            string `msgpack:"SmartId"`
 	SmartReport        string
 	Zone               string
 	Enclosure          string
@@ -131,7 +131,7 @@ func (f *File) CopyEverythingExceptPath(other File) {
 
 type Blob struct {
 	Ref                       BlobRef
-	EncryptionKeyId           string
+	EncryptionKeyID           string `msgpack:"EncryptionKeyId"`
 	Volumes                   []int
 	VolumesPendingReplication []int
 	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
@@ -145,7 +145,7 @@ type IntegrityVerificationJob struct {
 	ID                   string
 	Started              time.Time
 	Completed            time.Time
-	VolumeId             int
+	VolumeID             int `msgpack:"VolumeId"`
 	LastCompletedBlobRef BlobRef
 	BytesScanned         uint64
 	ErrorsFound          int
@@ -222,6 +222,6 @@ type KeySlot struct {
 }
 
 type KeyEnvelope struct {
-	KeyId string    `json:"key_id"`
+	KeyID string    `msgpack:"KeyId" json:"key_id"`
 	Slots []KeySlot `json:"slots"`
 }

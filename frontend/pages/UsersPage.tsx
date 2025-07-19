@@ -12,7 +12,7 @@ import {
 	ApikeyRemove,
 	KekGenerateOrImport,
 } from 'generated/stoserver/stoservertypes_commands';
-import { getApiKeys, getKeyEncryptionKeys } from 'generated/stoserver/stoservertypes_endpoints';
+import { getAPIKeys, getKeyEncryptionKeys } from 'generated/stoserver/stoservertypes_endpoints';
 import { ApiKey, DocRef, KeyEncryptionKey } from 'generated/stoserver/stoservertypes_types';
 import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
@@ -158,7 +158,7 @@ export default class UsersPage extends React.Component<{}, UsersPageState> {
 	}
 
 	private fetchData() {
-		this.state.apiKeys.load(() => getApiKeys());
+		this.state.apiKeys.load(() => getAPIKeys());
 		this.state.keyEncryptionKeys.load(() => getKeyEncryptionKeys());
 	}
 }

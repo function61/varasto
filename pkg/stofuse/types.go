@@ -9,12 +9,12 @@ import (
 )
 
 type sigFabric struct {
-	unmountAll chan interface{}
+	unmountAll chan any
 }
 
 func newSigs() *sigFabric {
 	return &sigFabric{
-		unmountAll: make(chan interface{}),
+		unmountAll: make(chan any),
 	}
 }
 

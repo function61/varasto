@@ -12,60 +12,60 @@ import (
 // re-export so not all stodb-importing packages have to import blorm
 var (
 	StartFromFirst = blorm.StartFromFirst
-	StopIteration  = blorm.StopIteration
+	StopIteration  = blorm.ErrStopIteration
 )
 
 var BlobRepository = register("Blob", blorm.NewSimpleRepo(
 	"blobs",
-	func() interface{} { return &stotypes.Blob{} },
-	func(record interface{}) []byte { return record.(*stotypes.Blob).Ref }))
+	func() any { return &stotypes.Blob{} },
+	func(record any) []byte { return record.(*stotypes.Blob).Ref }))
 
-var BlobsPendingReplicationByVolumeIndex = blorm.NewValueIndex("repl_pend", BlobRepository, func(record interface{}, index func(val []byte)) {
+var BlobsPendingReplicationByVolumeIndex = blorm.NewValueIndex("repl_pend", BlobRepository, func(record any, index func(val []byte)) {
 	blob := record.(*stotypes.Blob)
 
-	for _, volId := range blob.VolumesPendingReplication {
-		index([]byte(fmt.Sprintf("%d", volId)))
+	for _, volID := range blob.VolumesPendingReplication {
+		index([]byte(fmt.Sprintf("%d", volID)))
 	}
 })
 
 var NodeRepository = register("Node", blorm.NewSimpleRepo(
 	"nodes",
-	func() interface{} { return &stotypes.Node{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Node).ID) }))
+	func() any { return &stotypes.Node{} },
+	func(record any) []byte { return []byte(record.(*stotypes.Node).ID) }))
 
 var ClientRepository = register("Client", blorm.NewSimpleRepo(
 	"clients",
-	func() interface{} { return &stotypes.Client{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Client).ID) }))
+	func() any { return &stotypes.Client{} },
+	func(record any) []byte { return []byte(record.(*stotypes.Client).ID) }))
 
 var KeyEncryptionKeyRepository = register("KeyEncryptionKey", blorm.NewSimpleRepo(
 	"keyencryptionkeys",
-	func() interface{} { return &stotypes.KeyEncryptionKey{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.KeyEncryptionKey).ID) }))
+	func() any { return &stotypes.KeyEncryptionKey{} },
+	func(record any) []byte { return []byte(record.(*stotypes.KeyEncryptionKey).ID) }))
 
 var ReplicationPolicyRepository = register("ReplicationPolicy", blorm.NewSimpleRepo(
 	"replicationpolicies",
-	func() interface{} { return &stotypes.ReplicationPolicy{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.ReplicationPolicy).ID) }))
+	func() any { return &stotypes.ReplicationPolicy{} },
+	func(record any) []byte { return []byte(record.(*stotypes.ReplicationPolicy).ID) }))
 
 var VolumeRepository = register("Volume", blorm.NewSimpleRepo(
 	"volumes",
-	func() interface{} { return &stotypes.Volume{} },
-	func(record interface{}) []byte {
-		return volumeIntIdToBytes(record.(*stotypes.Volume).ID)
+	func() any { return &stotypes.Volume{} },
+	func(record any) []byte {
+		return volumeIntIDToBytes(record.(*stotypes.Volume).ID)
 	}))
 
 var VolumeMountRepository = register("VolumeMount", blorm.NewSimpleRepo(
 	"volumemounts",
-	func() interface{} { return &stotypes.VolumeMount{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.VolumeMount).ID) }))
+	func() any { return &stotypes.VolumeMount{} },
+	func(record any) []byte { return []byte(record.(*stotypes.VolumeMount).ID) }))
 
 var DirectoryRepository = register("Directory", blorm.NewSimpleRepo(
 	"directories",
-	func() interface{} { return &stotypes.Directory{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Directory).ID) }))
+	func() any { return &stotypes.Directory{} },
+	func(record any) []byte { return []byte(record.(*stotypes.Directory).ID) }))
 
-var SubdirectoriesIndex = blorm.NewValueIndex("parent", DirectoryRepository, func(record interface{}, index func(val []byte)) {
+var SubdirectoriesIndex = blorm.NewValueIndex("parent", DirectoryRepository, func(record any, index func(val []byte)) {
 	dir := record.(*stotypes.Directory)
 
 	if dir.Parent != "" {
@@ -75,24 +75,24 @@ var SubdirectoriesIndex = blorm.NewValueIndex("parent", DirectoryRepository, fun
 
 var CollectionRepository = register("Collection", blorm.NewSimpleRepo(
 	"collections",
-	func() interface{} { return &stotypes.Collection{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Collection).ID) }))
+	func() any { return &stotypes.Collection{} },
+	func(record any) []byte { return []byte(record.(*stotypes.Collection).ID) }))
 
-var CollectionsByDataEncryptionKeyIndex = blorm.NewValueIndex("dek", CollectionRepository, func(record interface{}, index func(val []byte)) {
+var CollectionsByDataEncryptionKeyIndex = blorm.NewValueIndex("dek", CollectionRepository, func(record any, index func(val []byte)) {
 	coll := record.(*stotypes.Collection)
 
 	for _, dekEnvelopes := range coll.EncryptionKeys {
-		index([]byte(dekEnvelopes.KeyId))
+		index([]byte(dekEnvelopes.KeyID))
 	}
 })
 
-var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRepository, func(record interface{}, index func(val []byte)) {
+var CollectionsByDirectoryIndex = blorm.NewValueIndex("directory", CollectionRepository, func(record any, index func(val []byte)) {
 	coll := record.(*stotypes.Collection)
 
 	index([]byte(coll.Directory))
 })
 
-var CollectionsGlobalVersionIndex = blorm.NewRangeIndex("globalversion", CollectionRepository, func(record interface{}, index func(sortKey []byte)) {
+var CollectionsGlobalVersionIndex = blorm.NewRangeIndex("globalversion", CollectionRepository, func(record any, index func(sortKey []byte)) {
 	coll := record.(*stotypes.Collection)
 
 	globalVersion := make([]byte, 8)
@@ -103,22 +103,22 @@ var CollectionsGlobalVersionIndex = blorm.NewRangeIndex("globalversion", Collect
 
 var IntegrityVerificationJobRepository = register("IntegrityVerificationJob", blorm.NewSimpleRepo(
 	"ivjobs",
-	func() interface{} { return &stotypes.IntegrityVerificationJob{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.IntegrityVerificationJob).ID) }))
+	func() any { return &stotypes.IntegrityVerificationJob{} },
+	func(record any) []byte { return []byte(record.(*stotypes.IntegrityVerificationJob).ID) }))
 
 var ScheduledJobRepository = register("ScheduledJob", blorm.NewSimpleRepo(
 	"scheduledjobs",
-	func() interface{} { return &stotypes.ScheduledJob{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.ScheduledJob).ID) }))
+	func() any { return &stotypes.ScheduledJob{} },
+	func(record any) []byte { return []byte(record.(*stotypes.ScheduledJob).ID) }))
 
 var configRepository = register("Config", blorm.NewSimpleRepo(
 	"config",
-	func() interface{} { return &stotypes.Config{} },
-	func(record interface{}) []byte { return []byte(record.(*stotypes.Config).Key) }))
+	func() any { return &stotypes.Config{} },
+	func(record any) []byte { return []byte(record.(*stotypes.Config).Key) }))
 
 // helpers
 
-func volumeIntIdToBytes(id int) []byte {
+func volumeIntIDToBytes(id int) []byte {
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint32(b, uint32(id))
 	return b
@@ -126,57 +126,57 @@ func volumeIntIdToBytes(id int) []byte {
 
 // appenders. Go surely would need some generic love..
 
-func ClientAppender(slice *[]stotypes.Client) func(record interface{}) error {
-	return func(record interface{}) error {
+func ClientAppender(slice *[]stotypes.Client) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.Client))
 		return nil
 	}
 }
 
-func NodeAppender(slice *[]stotypes.Node) func(record interface{}) error {
-	return func(record interface{}) error {
+func NodeAppender(slice *[]stotypes.Node) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.Node))
 		return nil
 	}
 }
 
-func ReplicationPolicyAppender(slice *[]stotypes.ReplicationPolicy) func(record interface{}) error {
-	return func(record interface{}) error {
+func ReplicationPolicyAppender(slice *[]stotypes.ReplicationPolicy) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.ReplicationPolicy))
 		return nil
 	}
 }
 
-func VolumeAppender(slice *[]stotypes.Volume) func(record interface{}) error {
-	return func(record interface{}) error {
+func VolumeAppender(slice *[]stotypes.Volume) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.Volume))
 		return nil
 	}
 }
 
-func VolumeMountAppender(slice *[]stotypes.VolumeMount) func(record interface{}) error {
-	return func(record interface{}) error {
+func VolumeMountAppender(slice *[]stotypes.VolumeMount) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.VolumeMount))
 		return nil
 	}
 }
 
-func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob) func(record interface{}) error {
-	return func(record interface{}) error {
+func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.IntegrityVerificationJob))
 		return nil
 	}
 }
 
-func ScheduledJobAppender(slice *[]stotypes.ScheduledJob) func(record interface{}) error {
-	return func(record interface{}) error {
+func ScheduledJobAppender(slice *[]stotypes.ScheduledJob) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.ScheduledJob))
 		return nil
 	}
 }
 
-func KeyEncryptionKeyAppender(slice *[]stotypes.KeyEncryptionKey) func(record interface{}) error {
-	return func(record interface{}) error {
+func KeyEncryptionKeyAppender(slice *[]stotypes.KeyEncryptionKey) func(record any) error {
+	return func(record any) error {
 		*slice = append(*slice, *record.(*stotypes.KeyEncryptionKey))
 		return nil
 	}

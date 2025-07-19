@@ -20,12 +20,12 @@ func Export(tx *bbolt.Tx, output io.Writer) error {
 	outputBuffered := bufio.NewWriterSize(output, 1024*100)
 	defer outputBuffered.Flush()
 
-	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
+	nodeID, err := stodb.CfgNodeID.GetRequired(tx)
 	if err != nil {
 		return err
 	}
 
-	backupHeader := backupHeaderJson{NodeId: nodeId, SchemaVersion: stodb.CurrentSchemaVersion}
+	backupHeader := backupHeaderJSON{NodeID: nodeID, SchemaVersion: stodb.CurrentSchemaVersion}
 
 	if _, err := outputBuffered.Write([]byte(makeBackupHeader(backupHeader) + "\n")); err != nil {
 		return err
@@ -39,7 +39,7 @@ func Export(tx *bbolt.Tx, output io.Writer) error {
 			return err
 		}
 
-		if err := repo.Each(func(record interface{}) error {
+		if err := repo.Each(func(record any) error {
 			if err := jsonEncoderOutput.Encode(record); err != nil {
 				return err
 			}
@@ -129,14 +129,14 @@ func Import(content io.Reader, dbLocation string) error {
 		ignoreError(openTx.Rollback())
 	}()
 
-	if err := importDbInternal(content, withTx); err != nil {
+	if err := importDBInternal(content, withTx); err != nil {
 		return err
 	}
 
 	return commitOpenTx()
 }
 
-func importDbInternal(content io.Reader, withTx func(fn func(tx *bbolt.Tx) error) error) error {
+func importDBInternal(content io.Reader, withTx func(fn func(tx *bbolt.Tx) error) error) error {
 	scanner := bufio.NewScanner(content)
 
 	// by default craps out on lines > 64k. set max line to many megabytes
@@ -198,30 +198,30 @@ func importDbInternal(content io.Reader, withTx func(fn func(tx *bbolt.Tx) error
 	return nil
 }
 
-func makeBackupHeader(details backupHeaderJson) string {
-	detailsJson, err := json.Marshal(&details)
+func makeBackupHeader(details backupHeaderJSON) string {
+	detailsJSON, err := json.Marshal(&details)
 	if err != nil {
 		panic(err)
 	}
 
-	return "# Varasto-DB-snapshot" + string(detailsJson)
+	return "# Varasto-DB-snapshot" + string(detailsJSON)
 }
 
-type backupHeaderJson struct {
-	NodeId        string `json:"node_id"`
+type backupHeaderJSON struct {
+	NodeID        string `json:"node_id"`
 	SchemaVersion int    `json:"schema_version"`
 }
 
 var backupHeaderRe = regexp.MustCompile(`# Varasto-DB-snapshot(\{.+)`)
 
 // returns nodeId
-func parseBackupHeader(backupHeader string) (*backupHeaderJson, error) {
+func parseBackupHeader(backupHeader string) (*backupHeaderJSON, error) {
 	matches := backupHeaderRe.FindStringSubmatch(backupHeader)
 	if matches == nil {
 		return nil, errors.New("failed to recognize backup header. did you remember to decrypt the backup file?")
 	}
 
-	details := &backupHeaderJson{}
+	details := &backupHeaderJSON{}
 	if err := json.Unmarshal([]byte(matches[1]), details); err != nil {
 		return nil, err
 	}

@@ -3,7 +3,6 @@ package stoclient
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	"github.com/function61/gokit/osutil"
@@ -49,7 +48,7 @@ one() {
 		return err
 	}
 
-	dentries, err := ioutil.ReadDir(".")
+	dentries, err := os.ReadDir(".")
 	if err != nil {
 		return err
 	}

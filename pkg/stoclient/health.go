@@ -33,7 +33,7 @@ func health(ctx context.Context) error {
 	}
 
 	healthRoot := stoservertypes.Health{}
-	if _, err := ezhttp.Get(ctx, clientConfig.UrlBuilder().GetHealth(), ezhttp.RespondsJson(&healthRoot, true)); err != nil {
+	if _, err := ezhttp.Get(ctx, clientConfig.URLBuilder().GetHealth(), ezhttp.RespondsJson(&healthRoot, true)); err != nil {
 		return err
 	}
 

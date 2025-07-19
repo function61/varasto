@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error {
+func adopt(ctx context.Context, fullPath string, parentDirectoryID string) error {
 	// cloneCollectionExistingDir() also checks for this, but we must do this before asking
 	// server to create a collection because we don't want it to be created and error when
 	// we begin cloning
@@ -26,15 +26,15 @@ func adopt(ctx context.Context, fullPath string, parentDirectoryId string) error
 	}
 
 	// TODO: maybe the struct ctor should be codegen'd?
-	collectionId, err := clientConfig.CommandClient().ExecExpectingCreatedRecordId(ctx, &stoservertypes.CollectionCreate{
-		ParentDir: parentDirectoryId,
+	collectionID, err := clientConfig.CommandClient().ExecExpectingCreatedRecordId(ctx, &stoservertypes.CollectionCreate{
+		ParentDir: parentDirectoryID,
 		Name:      filepath.Base(fullPath),
 	})
 	if err != nil {
 		return err
 	}
 
-	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
+	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionID)
 	if err != nil {
 		return err
 	}

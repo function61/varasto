@@ -20,8 +20,8 @@ func New(apiKey string) *Client {
 	}
 }
 
-func (c *Client) OpenMovieByImdbId(ctx context.Context, imdbId string) (*Movie, error) {
-	id, err := c.findMovieByImdbId(ctx, imdbId)
+func (c *Client) OpenMovieByImdbID(ctx context.Context, imdbID string) (*Movie, error) {
+	id, err := c.findMovieByImdbID(ctx, imdbID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,8 +44,8 @@ func (c *Client) OpenMovie(ctx context.Context, id string) (*Movie, error) {
 	return res, nil
 }
 
-func (c *Client) OpenTvByImdbId(ctx context.Context, imdbId string) (*Tv, error) {
-	id, err := c.findTvByImdbId(ctx, imdbId)
+func (c *Client) OpenTvByImdbID(ctx context.Context, imdbID string) (*Tv, error) {
+	id, err := c.findTvByImdbID(ctx, imdbID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func (c *Client) OpenTv(ctx context.Context, id string) (*Tv, error) {
 }
 
 // doesn't support returning external IDs, but the "get one episode" does.
-func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId string) ([]Episode, error) {
+func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvID string) ([]Episode, error) {
 	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
@@ -79,7 +79,7 @@ func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId s
 
 	if _, err := ezhttp.Get(
 		ctx,
-		endpointV3("/tv/"+tvId+"/season/"+strconv.Itoa(seasonNumber)+"?api_key="+c.apiKey),
+		endpointV3("/tv/"+tvID+"/season/"+strconv.Itoa(seasonNumber)+"?api_key="+c.apiKey),
 		ezhttp.RespondsJson(&res, true)); err != nil {
 		return nil, err
 	}
@@ -87,20 +87,20 @@ func (c *Client) GetSeasonEpisodes(ctx context.Context, seasonNumber int, tvId s
 	return res.Episodes, nil
 }
 
-func (c *Client) GetEpisodeExternalIds(
+func (c *Client) GetEpisodeExternalIDs(
 	ctx context.Context,
-	tvId string,
+	tvID string,
 	seasonNumber int,
 	episodeNumber int,
-) (*ExternalIds, error) {
+) (*ExternalIDs, error) {
 	ctx, cancel := context.WithTimeout(ctx, ezhttp.DefaultTimeout10s)
 	defer cancel()
 
-	res := &ExternalIds{}
+	res := &ExternalIDs{}
 
 	if _, err := ezhttp.Get(
 		ctx,
-		endpointV3("/tv/"+tvId+"/season/"+strconv.Itoa(seasonNumber)+"/episode/"+strconv.Itoa(episodeNumber)+"/external_ids?api_key="+c.apiKey),
+		endpointV3("/tv/"+tvID+"/season/"+strconv.Itoa(seasonNumber)+"/episode/"+strconv.Itoa(episodeNumber)+"/external_ids?api_key="+c.apiKey),
 		ezhttp.RespondsJson(&res, true)); err != nil {
 		return nil, fmt.Errorf("GetEpisodeExternalIds: %w", err)
 	}
@@ -139,21 +139,21 @@ func (c *Client) TVCredits(ctx context.Context, id string, season int, episode i
 	return credits, err
 }
 
-func (c *Client) findMovieByImdbId(ctx context.Context, imdbId string) (string, error) {
-	return c.findMovieOrTvByImdbId(ctx, imdbId, true)
+func (c *Client) findMovieByImdbID(ctx context.Context, imdbID string) (string, error) {
+	return c.findMovieOrTvByImdbID(ctx, imdbID, true)
 }
 
-func (c *Client) findTvByImdbId(ctx context.Context, imdbId string) (string, error) {
-	return c.findMovieOrTvByImdbId(ctx, imdbId, false)
+func (c *Client) findTvByImdbID(ctx context.Context, imdbID string) (string, error) {
+	return c.findMovieOrTvByImdbID(ctx, imdbID, false)
 }
 
-func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expectMovie bool) (string, error) {
+func (c *Client) findMovieOrTvByImdbID(ctx context.Context, imdbID string, expectMovie bool) (string, error) {
 	res := struct {
 		MovieResults []struct {
-			Id int64 `json:"id"`
+			ID int64 `json:"id"`
 		} `json:"movie_results"`
 		TvResults []struct {
-			Id int64 `json:"id"`
+			ID int64 `json:"id"`
 		} `json:"tv_results"`
 	}{}
 
@@ -162,7 +162,7 @@ func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expec
 
 	if _, err := ezhttp.Get(
 		ctx,
-		endpointV3("/find/"+imdbId+"?external_source=imdb_id&api_key="+c.apiKey),
+		endpointV3("/find/"+imdbID+"?external_source=imdb_id&api_key="+c.apiKey),
 		ezhttp.RespondsJson(&res, true)); err != nil {
 		return "", err
 	}
@@ -176,7 +176,7 @@ func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expec
 				len(res.MovieResults))
 		}
 
-		return strconv.Itoa(int(res.MovieResults[0].Id)), nil
+		return strconv.Itoa(int(res.MovieResults[0].ID)), nil
 	} else {
 		if len(res.TvResults) != 1 {
 			return "", fmt.Errorf(
@@ -184,7 +184,7 @@ func (c *Client) findMovieOrTvByImdbId(ctx context.Context, imdbId string, expec
 				len(res.TvResults))
 		}
 
-		return strconv.Itoa(int(res.TvResults[0].Id)), nil
+		return strconv.Itoa(int(res.TvResults[0].ID)), nil
 	}
 }
 

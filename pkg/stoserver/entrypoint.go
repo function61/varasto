@@ -57,7 +57,7 @@ func Entrypoint() *cobra.Command {
 			scf, err := readServerConfigFile()
 			osutil.ExitIfError(err)
 
-			osutil.ExitIfError(stodbimportexport.Import(os.Stdin, scf.DbLocation))
+			osutil.ExitIfError(stodbimportexport.Import(os.Stdin, scf.DBLocation))
 		},
 	})
 

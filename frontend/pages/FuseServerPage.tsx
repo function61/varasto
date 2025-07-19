@@ -4,7 +4,7 @@ import { Panel } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import {
 	ConfigSetFuseServerBaseurl,
-	ConfigSetNetworkShareBaseUrl,
+	ConfigSetNetworkShareBaseURL,
 	FuseUnmountAll,
 } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
@@ -78,7 +78,7 @@ export default class FuseServerPage extends React.Component<{}, FuseServerPageSt
 						<label className="col-sm-2 control-label">
 							Network share base URL &nbsp;
 							<CommandIcon
-								command={ConfigSetNetworkShareBaseUrl(networkShareBaseUrl.Value)}
+								command={ConfigSetNetworkShareBaseURL(networkShareBaseUrl.Value)}
 							/>
 						</label>
 						<div className="col-sm-10">

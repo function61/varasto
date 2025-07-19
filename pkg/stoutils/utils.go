@@ -17,31 +17,31 @@ func BlobHashVerifier(reader io.Reader, br stotypes.BlobRef) io.Reader {
 }
 
 // there's gonna be lots of these
-var NewCollectionId = longId
-var NewDirectoryId = longId
+var NewCollectionID = longID
+var NewDirectoryID = longID
 
 // there's going to be comparatively few of these
 // (changeset IDs are unique within a collection)
-var NewCollectionChangesetId = shortId
-var NewVolumeMountId = shortId
-var NewVolumeUuid = longId
-var NewNodeId = shortId
-var NewClientId = shortId
-var NewIntegrityVerificationJobId = shortId
-var NewReplicationPolicyId = shortId
-var NewEncryptionKeyId = longId
-var NewKeyEncryptionKeyId = shortId
-var NewApiKeySecret = cryptoLongId
+var NewCollectionChangesetID = shortID
+var NewVolumeMountID = shortID
+var NewVolumeUUID = longID
+var NewNodeID = shortID
+var NewClientID = shortID
+var NewIntegrityVerificationJobID = shortID
+var NewReplicationPolicyID = shortID
+var NewEncryptionKeyID = longID
+var NewKeyEncryptionKeyID = shortID
+var NewAPIKeySecret = cryptoLongID
 
-func shortId() string {
+func shortID() string {
 	return cryptorandombytes.Base64UrlWithoutLeadingDash(3)
 }
 
-func longId() string {
+func longID() string {
 	return cryptorandombytes.Base64UrlWithoutLeadingDash(8)
 }
 
-func cryptoLongId() string {
+func cryptoLongID() string {
 	return cryptorandombytes.Base64UrlWithoutLeadingDash(32)
 }
 

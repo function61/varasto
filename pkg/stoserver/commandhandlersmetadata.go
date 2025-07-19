@@ -43,7 +43,7 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 	var info *themoviedbapi.Movie
 
 	// check if tmdb reference
-	typ, tmdbId, err := decodeTmdbRef(cmd.ForeignKey)
+	typ, tmdbID, err := decodeTmdbRef(cmd.ForeignKey)
 	if err != nil {
 		return err
 	}
@@ -54,12 +54,12 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 			return fmt.Errorf("trying to pull movie metadata but given tmdb type: %s", typ)
 		}
 
-		info, err = tmdb.OpenMovie(ctx.Ctx, tmdbId)
+		info, err = tmdb.OpenMovie(ctx.Ctx, tmdbID)
 		if err != nil {
 			return err
 		}
 	} else { // not TMDb ID => IMDb ID then
-		info, err = tmdb.OpenMovieByImdbId(ctx.Ctx, cmd.ForeignKey)
+		info, err = tmdb.OpenMovieByImdbID(ctx.Ctx, cmd.ForeignKey)
 		if err != nil {
 			return err
 		}
@@ -77,9 +77,9 @@ func (c *cHandlers) CollectionPullTmdbMetadata(cmd *stoservertypes.CollectionPul
 			}
 		}
 
-		collection.Metadata[stoservertypes.MetadataTheMovieDbMovieId] = strconv.Itoa(int(info.Id))
-		if info.ExternalIds.ImdbId != "" {
-			collection.Metadata[stoservertypes.MetadataImdbId] = info.ExternalIds.ImdbId
+		collection.Metadata[stoservertypes.MetadataTheMovieDbMovieId] = strconv.Itoa(int(info.ID))
+		if info.ExternalIds.ImdbID != "" {
+			collection.Metadata[stoservertypes.MetadataImdbId] = info.ExternalIds.ImdbID
 		}
 		if info.Overview != "" {
 			collection.Metadata[stoservertypes.MetadataOverview] = info.Overview
@@ -108,7 +108,7 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 	}
 
 	// check if tmdb reference
-	typ, tmdbId, err := decodeTmdbRef(cmd.ForeignKey)
+	typ, tmdbID, err := decodeTmdbRef(cmd.ForeignKey)
 	if err != nil {
 		return err
 	}
@@ -121,12 +121,12 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 			return fmt.Errorf("trying to pull TV show metadata but got type: %s", typ)
 		}
 
-		tv, err = tmdb.OpenTv(ctx.Ctx, tmdbId)
+		tv, err = tmdb.OpenTv(ctx.Ctx, tmdbID)
 		if err != nil {
 			return err
 		}
 	} else { // not TMDb ID => IMDb ID then
-		tv, err = tmdb.OpenTvByImdbId(ctx.Ctx, cmd.ForeignKey)
+		tv, err = tmdb.OpenTvByImdbID(ctx.Ctx, cmd.ForeignKey)
 		if err != nil {
 			return err
 		}
@@ -143,7 +143,7 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 			return err
 		}
 
-		metaColl.Metadata[stoservertypes.MetadataTheMovieDbTvId] = fmt.Sprintf("%d", tv.Id)
+		metaColl.Metadata[stoservertypes.MetadataTheMovieDbTvId] = fmt.Sprintf("%d", tv.ID)
 
 		if tv.Overview != "" {
 			metaColl.Metadata[stoservertypes.MetadataOverview] = tv.Overview
@@ -153,8 +153,8 @@ func (c *cHandlers) DirectoryPullTmdbMetadata(cmd *stoservertypes.DirectoryPullT
 			metaColl.Metadata[stoservertypes.MetadataHomepage] = tv.Homepage
 		}
 
-		if tv.ExternalIds.ImdbId != "" {
-			metaColl.Metadata[stoservertypes.MetadataImdbId] = tv.ExternalIds.ImdbId
+		if tv.ExternalIds.ImdbID != "" {
+			metaColl.Metadata[stoservertypes.MetadataImdbId] = tv.ExternalIds.ImdbID
 		}
 
 		metaColl.BumpGlobalVersion()
@@ -170,14 +170,14 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 		return err
 	}
 
-	collIds := *cmd.Collections
+	collIDs := *cmd.Collections
 
-	if len(collIds) == 0 {
+	if len(collIDs) == 0 {
 		return nil // no-op
 	}
 
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		firstColl, err := stodb.Read(tx).Collection(collIds[0])
+		firstColl, err := stodb.Read(tx).Collection(collIDs[0])
 		if err != nil {
 			return err
 		}
@@ -192,7 +192,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 			return err
 		}
 
-		tmdbTvId := ""
+		tmdbTvID := ""
 		for _, parentDir := range append(parentDirs, *firstCollDirectory) {
 			if parentDir.MetaCollection != "" {
 				metaColl, err := stodb.Read(tx).Collection(parentDir.MetaCollection)
@@ -200,14 +200,14 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 					return err
 				}
 
-				tmdbTvId = metaColl.Metadata[stoservertypes.MetadataTheMovieDbTvId]
-				if tmdbTvId != "" {
+				tmdbTvID = metaColl.Metadata[stoservertypes.MetadataTheMovieDbTvId]
+				if tmdbTvID != "" {
 					break
 				}
 			}
 
 		}
-		if tmdbTvId == "" {
+		if tmdbTvID == "" {
 			return fmt.Errorf("could not resolve %s for collection", stoservertypes.MetadataTheMovieDbTvId)
 		}
 
@@ -230,8 +230,8 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 			return nil
 		}
 
-		for _, collId := range collIds {
-			coll, err := stodb.Read(tx).Collection(collId)
+		for _, collID := range collIDs {
+			coll, err := stodb.Read(tx).Collection(collID)
 			if err != nil {
 				return err
 			}
@@ -258,7 +258,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 		}
 
 		for _, seasonNumber := range uniqueSeasonNumbers {
-			episodes, err := tmdb.GetSeasonEpisodes(ctx.Ctx, seasonNumber, tmdbTvId)
+			episodes, err := tmdb.GetSeasonEpisodes(ctx.Ctx, seasonNumber, tmdbTvID)
 			if err != nil {
 				return err
 			}
@@ -276,25 +276,25 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 
 				coll := pair.coll
 
-				if _, hasImdbId := coll.Metadata[stoservertypes.MetadataImdbId]; !hasImdbId {
+				if _, hasImdbID := coll.Metadata[stoservertypes.MetadataImdbId]; !hasImdbID {
 					// unfortunately the batch GetSeasonEpisodes() can not be made to return
 					// per-episode IMDB IDs in a single call
-					externalIds, err := tmdb.GetEpisodeExternalIds(
+					externalIds, err := tmdb.GetEpisodeExternalIDs(
 						ctx.Ctx,
-						tmdbTvId,
+						tmdbTvID,
 						ep.SeasonNumber,
 						ep.EpisodeNumber)
 					if err != nil {
 						return err
 					}
 
-					if externalIds.ImdbId != "" {
-						coll.Metadata[stoservertypes.MetadataImdbId] = externalIds.ImdbId
+					if externalIds.ImdbID != "" {
+						coll.Metadata[stoservertypes.MetadataImdbId] = externalIds.ImdbID
 					}
 				}
 
-				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = tmdbTvId
-				coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.Id)
+				coll.Metadata[stoservertypes.MetadataTheMovieDbTvId] = tmdbTvID
+				coll.Metadata[stoservertypes.MetadataTheMovieDbTvEpisodeId] = fmt.Sprintf("%d", ep.ID)
 
 				if ep.Name != "" {
 					coll.Metadata[stoservertypes.MetadataTitle] = ep.Name
@@ -324,19 +324,19 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 		return err
 	}
 
-	igdbId := cmd.ForeignKey
+	igdbID := cmd.ForeignKey
 
-	gameDetails, err := igdb.GameById(ctx.Ctx, igdbId)
+	gameDetails, err := igdb.GameByID(ctx.Ctx, igdbID)
 	if err != nil {
 		return err
 	}
 
-	youtubeVideoIds, err := igdb.GameYoutubeVideoIds(ctx.Ctx, igdbId)
+	youtubeVideoIds, err := igdb.GameYoutubeVideoIDs(ctx.Ctx, igdbID)
 	if err != nil {
 		return err
 	}
 
-	externalIds, err := igdb.ExternalIdsByGameId(ctx.Ctx, igdbId)
+	externalIds, err := igdb.ExternalIDsByGameID(ctx.Ctx, igdbID)
 	if err != nil {
 		return err
 	}
@@ -367,8 +367,8 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 			coll.Metadata[stoservertypes.MetadataHomepage] = *externalIds.Official
 		}
 
-		if externalIds.SteamId != nil {
-			coll.Metadata[stoservertypes.MetadataSteamAppId] = *externalIds.SteamId
+		if externalIds.SteamID != nil {
+			coll.Metadata[stoservertypes.MetadataSteamAppId] = *externalIds.SteamID
 		}
 
 		if externalIds.GogSlug != nil {
@@ -383,12 +383,12 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 			coll.Metadata[stoservertypes.MetadataWikipediaSlug] = *externalIds.EnglishWikipediaSlug
 		}
 
-		if externalIds.GooglePlayAppId != nil {
-			coll.Metadata[stoservertypes.MetadataGooglePlayApp] = *externalIds.GooglePlayAppId
+		if externalIds.GooglePlayAppID != nil {
+			coll.Metadata[stoservertypes.MetadataGooglePlayApp] = *externalIds.GooglePlayAppID
 		}
 
-		if externalIds.AppleAppStoreAppId != nil {
-			coll.Metadata[stoservertypes.MetadataAppleAppStoreApp] = *externalIds.AppleAppStoreAppId
+		if externalIds.AppleAppStoreAppID != nil {
+			coll.Metadata[stoservertypes.MetadataAppleAppStoreApp] = *externalIds.AppleAppStoreAppID
 		}
 
 		if len(youtubeVideoIds) > 0 {
@@ -405,24 +405,24 @@ func (c *cHandlers) CollectionPullIgdbMetadata(cmd *stoservertypes.CollectionPul
 	})
 }
 
-func (c *cHandlers) ConfigSetTheMovieDbApikey(cmd *stoservertypes.ConfigSetTheMovieDbApikey, ctx *command.Ctx) error {
+func (c *cHandlers) ConfigSetTheMovieDBApiKey(cmd *stoservertypes.ConfigSetTheMovieDBApiKey, ctx *command.Ctx) error {
 	if cmd.Validation && cmd.Apikey != "" {
-		if _, err := themoviedbapi.New(cmd.Apikey).OpenMovieByImdbId(ctx.Ctx, "tt1226229"); err != nil { // one of my fav movies, way underrated :)
+		if _, err := themoviedbapi.New(cmd.Apikey).OpenMovieByImdbID(ctx.Ctx, "tt1226229"); err != nil { // one of my fav movies, way underrated :)
 			return fmt.Errorf("failed validating API key: %w", err)
 		}
 	}
 
-	return c.setConfigValue(stodb.CfgTheMovieDbApikey, cmd.Apikey)
+	return c.setConfigValue(stodb.CfgTheMovieDBApikey, cmd.Apikey)
 }
 
 func (c *cHandlers) ConfigSetIgdbApikey(cmd *stoservertypes.ConfigSetIgdbApikey, ctx *command.Ctx) error {
 	if cmd.Validation && cmd.Apikey != "" {
-		if _, err := igdbapi.New(cmd.Apikey).GameById(ctx.Ctx, "20025"); err != nil {
+		if _, err := igdbapi.New(cmd.Apikey).GameByID(ctx.Ctx, "20025"); err != nil {
 			return fmt.Errorf("failed validating API key: %w", err)
 		}
 	}
 
-	return c.setConfigValue(stodb.CfgIgdbApikey, cmd.Apikey)
+	return c.setConfigValue(stodb.CfgIgdbAPIkey, cmd.Apikey)
 }
 
 func themoviedbapiClient(db *bbolt.DB) (*themoviedbapi.Client, error) {
@@ -432,7 +432,7 @@ func themoviedbapiClient(db *bbolt.DB) (*themoviedbapi.Client, error) {
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	apikey, err := stodb.CfgTheMovieDbApikey.GetRequired(tx)
+	apikey, err := stodb.CfgTheMovieDBApikey.GetRequired(tx)
 	if err != nil {
 		return nil, err
 	}
@@ -471,7 +471,7 @@ func igdbClient(db *bbolt.DB) (*igdbapi.Client, error) {
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	apikey, err := stodb.CfgIgdbApikey.GetRequired(tx)
+	apikey, err := stodb.CfgIgdbAPIkey.GetRequired(tx)
 	if err != nil {
 		return nil, err
 	}

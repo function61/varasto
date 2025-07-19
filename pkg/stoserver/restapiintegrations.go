@@ -104,7 +104,7 @@ func (h *handlers) searchTmdbInternal(
 			}
 
 			transformed = append(transformed, stoservertypes.TmdbSearchResult{
-				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.Id)),
+				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.ID)),
 				Title:       result.Title,
 				ReleaseYear: releaseYear,
 			})
@@ -121,7 +121,7 @@ func (h *handlers) searchTmdbInternal(
 			}
 
 			transformed = append(transformed, stoservertypes.TmdbSearchResult{
-				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.Id)),
+				Id:          encodeTmdbRef(result.MediaType, fmt.Sprintf("%d", result.ID)),
 				Title:       result.Name,
 				ReleaseYear: releaseYear,
 			})
@@ -143,17 +143,17 @@ func (h *handlers) IgdbIntegrationRedir(rctx *httpauth.RequestContext, w http.Re
 		return
 	}
 
-	game, err := igdb.GameById(r.Context(), mux.Vars(r)["id"])
+	game, err := igdb.GameByID(r.Context(), mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if game.Url == "" {
+	if game.URL == "" {
 		http.Error(w, "game found but its URL not", http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, game.Url, http.StatusFound)
+	http.Redirect(w, r, game.URL, http.StatusFound)
 }
 
 func (h *handlers) TmdbCredits(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.TmdbCredit {
@@ -197,7 +197,7 @@ func (h *handlers) TmdbCredits(rctx *httpauth.RequestContext, w http.ResponseWri
 				if cast.ProfilePath == nil {
 					return nil
 				} else {
-					return gokitbp.Pointer(cast.ProfilePath.URL(themoviedbapi.ImageSizew138_and_h175_face))
+					return gokitbp.Pointer(cast.ProfilePath.URL(themoviedbapi.ImageSizeW138AndH175Face))
 				}
 			}(),
 		}

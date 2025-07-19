@@ -12,8 +12,8 @@ type Client struct {
 	urls *stofusetypes.RestClientUrlBuilder
 }
 
-func New(baseUrl string) *Client {
-	return &Client{stofusetypes.NewRestClientUrlBuilder(baseUrl)}
+func New(baseURL string) *Client {
+	return &Client{stofusetypes.NewRestClientUrlBuilder(baseURL)}
 }
 
 func (c *Client) UnmountAll(ctx context.Context) error {

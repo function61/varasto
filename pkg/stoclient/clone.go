@@ -19,8 +19,8 @@ import (
 
 func clone(
 	ctx context.Context,
-	collectionId string,
-	revisionId string,
+	collectionID string,
+	revisionID string,
 	parentDir string,
 	dirName string,
 ) error {
@@ -29,7 +29,7 @@ func clone(
 		return err
 	}
 
-	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionId)
+	collection, err := clientConfig.Client().FetchCollectionMetadata(ctx, collectionID)
 	if err != nil {
 		return err
 	}
@@ -38,27 +38,27 @@ func clone(
 		dirName = collection.Name
 	}
 
-	return cloneCollection(ctx, filepath.Join(parentDir, dirName), revisionId, collection)
+	return cloneCollection(ctx, filepath.Join(parentDir, dirName), revisionID, collection)
 }
 
 func cloneCollectionExistingDir(
 	ctx context.Context,
 	path string,
-	revisionId string,
+	revisionID string,
 	collection *stotypes.Collection,
 ) error {
 	if err := assertStatefileNotExists(path); err != nil {
 		return err
 	}
 
-	if revisionId == "" {
-		revisionId = collection.Head
+	if revisionID == "" {
+		revisionID = collection.Head
 	}
 
 	if err := (&workdirLocation{
 		path: path,
 		manifest: &BupManifest{
-			ChangesetId: revisionId,
+			ChangesetID: revisionID,
 			Collection:  *collection,
 		},
 	}).SaveToDisk(); err != nil {
@@ -72,7 +72,7 @@ func cloneCollectionExistingDir(
 		return err
 	}
 
-	state, err := stateresolver.ComputeStateAt(*collection, wd.manifest.ChangesetId)
+	state, err := stateresolver.ComputeStateAt(*collection, wd.manifest.ChangesetID)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func cloneCollectionExistingDir(
 func cloneCollection(
 	ctx context.Context,
 	path string,
-	revisionId string,
+	revisionID string,
 	collection *stotypes.Collection,
 ) error {
 	// init this in "hack mode" (i.e. statefile not being read to memory). as soon as we
@@ -105,19 +105,19 @@ func cloneCollection(
 	}
 
 	if dirAlreadyExists {
-		return errors.New("dir-to-clone-to already exists!")
+		return errors.New("dir-to-clone-to already exists")
 	}
 
 	if err := os.Mkdir(halfBakedWd.Join("/"), 0700); err != nil {
 		return err
 	}
 
-	return cloneCollectionExistingDir(ctx, path, revisionId, collection)
+	return cloneCollectionExistingDir(ctx, path, revisionID, collection)
 }
 
 func (c *Client) DownloadOneFile(
 	ctx context.Context,
-	collectionId string,
+	collectionID string,
 	file stotypes.File,
 	destination io.Writer,
 ) error {
@@ -129,7 +129,7 @@ func (c *Client) DownloadOneFile(
 
 		childCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 
-		verifiedBody, closeBody, err := DownloadChunk(childCtx, *blobRef, collectionId, c.conf)
+		verifiedBody, closeBody, err := DownloadChunk(childCtx, *blobRef, collectionID, c.conf)
 		if err != nil {
 			cancel()
 			return err
@@ -192,10 +192,10 @@ func (c *Client) FetchCollectionMetadata(
 	collection := &stotypes.Collection{}
 	if _, err := ezhttp.Get(
 		ctx,
-		c.conf.UrlBuilder().GetCollection(id),
+		c.conf.URLBuilder().GetCollection(id),
 		ezhttp.AuthBearer(c.conf.AuthToken),
 		ezhttp.RespondsJson(collection, false),
-		ezhttp.Client(c.conf.HttpClient()),
+		ezhttp.Client(c.conf.HTTPClient()),
 	); err != nil {
 		return nil, fmt.Errorf("FetchCollectionMetadata(%s): %w", id, translate404ToFSErrNotExist(err))
 	}
@@ -204,12 +204,12 @@ func (c *Client) FetchCollectionMetadata(
 }
 
 // verifies chunk integrity on-the-fly
-func DownloadChunk(ctx context.Context, ref stotypes.BlobRef, collectionId string, clientConfig ClientConfig) (io.Reader, func(), error) {
+func DownloadChunk(ctx context.Context, ref stotypes.BlobRef, collectionID string, clientConfig ClientConfig) (io.Reader, func(), error) {
 	chunkDataRes, err := ezhttp.Get(
 		ctx,
-		clientConfig.UrlBuilder().DownloadBlob(ref.AsHex(), collectionId),
+		clientConfig.URLBuilder().DownloadBlob(ref.AsHex(), collectionID),
 		ezhttp.AuthBearer(clientConfig.AuthToken),
-		ezhttp.Client(clientConfig.HttpClient()))
+		ezhttp.Client(clientConfig.HTTPClient()))
 	if err != nil {
 		return nil, func() {}, err
 	}

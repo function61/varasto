@@ -43,7 +43,7 @@ type cHandlers struct {
 
 func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
-		max := 0
+		maxVolID := 0
 
 		allVolumes := []stotypes.Volume{}
 		if err := stodb.VolumeRepository.Each(stodb.VolumeAppender(&allVolumes), tx); err != nil {
@@ -51,14 +51,14 @@ func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.
 		}
 
 		for _, vol := range allVolumes {
-			if vol.ID > max {
-				max = vol.ID
+			if vol.ID > maxVolID {
+				maxVolID = vol.ID
 			}
 		}
 
 		return stodb.VolumeRepository.Update(&stotypes.Volume{
-			ID:         max + 1,
-			UUID:       stoutils.NewVolumeUuid(),
+			ID:         maxVolID + 1,
+			UUID:       stoutils.NewVolumeUUID(),
 			Label:      cmd.Name,
 			Technology: string(stoservertypes.VolumeTechnologyDiskHdd),
 			Quota:      mebibytesToBytes(cmd.Quota),
@@ -170,7 +170,7 @@ func (c *cHandlers) VolumeSetTopology(cmd *stoservertypes.VolumeSetTopology, ctx
 		}
 
 		if cmd.Slot == 0 && cmd.Enclosure != "" {
-			return errors.New("Slot cannot be 0 when enclosure is defined")
+			return errors.New("'Slot' cannot be 0 when enclosure is defined")
 		}
 
 		vol.Enclosure = cmd.Enclosure
@@ -244,10 +244,10 @@ func (c *cHandlers) VolumeMountGoogleDrive(cmd *stoservertypes.VolumeMountGoogle
 	oauth2Config := googledriveblobstore.Oauth2Config(cmd.ClientId, cmd.ClientSecret)
 
 	if cmd.AuthCode == "" {
-		authCodeUrl := googledriveblobstore.Oauth2AuthCodeUrl(oauth2Config)
+		authCodeURL := googledriveblobstore.Oauth2AuthCodeURL(oauth2Config)
 
 		// this is very much a hack
-		ctx.CreatedRecordId(authCodeUrl)
+		ctx.CreatedRecordId(authCodeURL)
 		return nil
 	}
 
@@ -257,8 +257,8 @@ func (c *cHandlers) VolumeMountGoogleDrive(cmd *stoservertypes.VolumeMountGoogle
 	}
 
 	configSerialized, err := (&googledriveblobstore.Config{
-		VarastoDirectoryId: cmd.FolderId,
-		ClientId:           cmd.ClientId,
+		VarastoDirectoryID: cmd.FolderId,
+		ClientID:           cmd.ClientId,
 		ClientSecret:       cmd.ClientSecret,
 		Token:              oauth2Token,
 	}).Serialize()
@@ -286,16 +286,16 @@ func (c *cHandlers) VolumeMountS3(cmd *stoservertypes.VolumeMountS3, ctx *comman
 		(&s3blobstore.Config{
 			Bucket:          cmd.Bucket,
 			Prefix:          cmd.PathPrefix,
-			AccessKeyId:     cmd.AccessKeyId,
+			AccessKeyID:     cmd.AccessKeyId,
 			AccessKeySecret: cmd.AccessKeySecret,
-			RegionId:        cmd.RegionId,
+			RegionID:        cmd.RegionId,
 			Endpoint:        cmd.Endpoint,
 		}).Serialize(),
 		ctx)
 }
 
 func (c *cHandlers) mountVolume(
-	volId int,
+	volID int,
 	driverKind stoservertypes.VolumeDriverKind,
 	driverOpts string,
 	ctx *command.Ctx,
@@ -305,15 +305,15 @@ func (c *cHandlers) mountVolume(
 	}
 
 	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
-		vol, err := stodb.Read(tx).Volume(volId)
+		vol, err := stodb.Read(tx).Volume(volID)
 		if err != nil {
 			return err
 		}
 
 		mountSpec := &stotypes.VolumeMount{
-			ID:         stoutils.NewVolumeMountId(),
+			ID:         stoutils.NewVolumeMountID(),
 			Volume:     vol.ID,
-			Node:       c.conf.SelfNodeId,
+			Node:       c.conf.SelfNodeID,
 			Driver:     driverKind,
 			DriverOpts: driverOpts,
 		}
@@ -391,7 +391,7 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 			return fmt.Errorf("from == to (%d)", from.ID)
 		}
 
-		return stodb.BlobRepository.Each(func(record interface{}) error {
+		return stodb.BlobRepository.Each(func(record any) error {
 			blob := record.(*stotypes.Blob)
 
 			if !sliceutil.ContainsInt(blob.Volumes, from.ID) { // doesn't fit our criteria
@@ -410,13 +410,13 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 }
 
 func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegrity, ctx *command.Ctx) error {
-	jobId := stoutils.NewIntegrityVerificationJobId()
+	jobID := stoutils.NewIntegrityVerificationJobID()
 
 	if err := c.db.Update(func(tx *bbolt.Tx) error {
 		job := &stotypes.IntegrityVerificationJob{
-			ID:       jobId,
+			ID:       jobID,
 			Started:  ctx.Meta.Timestamp,
-			VolumeId: cmd.Id,
+			VolumeID: cmd.Id,
 		}
 
 		return stodb.IntegrityVerificationJobRepository.Update(job, tx)
@@ -425,7 +425,7 @@ func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegr
 	}
 
 	if cmd.Start {
-		c.ivController.Resume(jobId)
+		c.ivController.Resume(jobID)
 	}
 
 	return nil
@@ -439,7 +439,7 @@ func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *co
 
 		return stodb.DirectoryRepository.Update(
 			stotypes.NewDirectory(
-				stoutils.NewDirectoryId(),
+				stoutils.NewDirectoryID(),
 				cmd.Parent,
 				cmd.Name,
 				string(stoservertypes.DirectoryTypeGeneric)),
@@ -476,11 +476,11 @@ func (c *cHandlers) DirectoryDelete(cmd *stoservertypes.DirectoryDelete, ctx *co
 		}
 
 		if len(collections) > 0 {
-			return fmt.Errorf("Cannot delete directory because it has %d collection(s)", len(collections))
+			return fmt.Errorf("cannot delete directory because it has %d collection(s)", len(collections))
 		}
 
 		if len(subDirs) > 0 {
-			return fmt.Errorf("Cannot delete directory because it has %d directory(s)", len(subDirs))
+			return fmt.Errorf("cannot delete directory because it has %d directory(s)", len(subDirs))
 		}
 
 		return stodb.DirectoryRepository.Delete(dir, tx)
@@ -596,11 +596,11 @@ func (c *cHandlers) CollectionCreate(cmd *stoservertypes.CollectionCreate, ctx *
 // caller is responsible for saving
 func createCollection(
 	name string,
-	parentDirId string,
+	parentDirID string,
 	keyStore *stokeystore.Store,
 	tx *bbolt.Tx,
 ) (*stotypes.Collection, error) {
-	parentDir, err := stodb.Read(tx).Directory(parentDirId)
+	parentDir, err := stodb.Read(tx).Directory(parentDirID)
 	if err != nil {
 		if err == blorm.ErrNotFound {
 			return nil, errors.New("parent directory not found")
@@ -651,18 +651,18 @@ func createCollection(
 
 	// pack encryption key in an envelope protected with public key crypto,
 	// so Varasto can store data without being able to access it itself
-	dekEnvelopes, err := keyStore.EncryptDek(stoutils.NewEncryptionKeyId(), dek[:], kekPubKeyFingerprints)
+	dekEnvelopes, err := keyStore.EncryptDek(stoutils.NewEncryptionKeyID(), dek[:], kekPubKeyFingerprints)
 	if err != nil {
 		return nil, err
 	}
 
 	collection := &stotypes.Collection{
-		ID:                stoutils.NewCollectionId(),
+		ID:                stoutils.NewCollectionID(),
 		Created:           time.Now(),
 		Directory:         parentDir.ID,
 		Name:              name,
 		ReplicationPolicy: replicationPolicy.ID,
-		Head:              stotypes.NoParentId,
+		Head:              stotypes.NoParentID,
 		EncryptionKeys:    []stotypes.KeyEnvelope{*dekEnvelopes},
 		Changesets:        []stotypes.CollectionChangeset{},
 		Metadata:          map[string]string{},
@@ -697,8 +697,8 @@ func (c *cHandlers) CollectionChangeSensitivity(cmd *stoservertypes.CollectionCh
 }
 
 func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *command.Ctx) error {
-	collIds := *cmd.Collections
-	if len(collIds) == 0 {
+	collIDs := *cmd.Collections
+	if len(collIDs) == 0 {
 		return nil // no-op
 	}
 
@@ -708,8 +708,8 @@ func (c *cHandlers) CollectionMove(cmd *stoservertypes.CollectionMove, ctx *comm
 			return err
 		}
 
-		for _, collId := range collIds {
-			coll, err := stodb.Read(tx).Collection(collId)
+		for _, collID := range collIDs {
+			coll, err := stodb.Read(tx).Collection(collID)
 			if err != nil {
 				return err
 			}
@@ -761,7 +761,7 @@ func (c *cHandlers) CollectionRename(cmd *stoservertypes.CollectionRename, ctx *
 
 func (c *cHandlers) CollectionRate(cmd *stoservertypes.CollectionRate, ctx *command.Ctx) error {
 	if cmd.Rating < 1 || cmd.Rating > 5 {
-		return fmt.Errorf("Rating must be 1-5; got: %d", cmd.Rating)
+		return fmt.Errorf("'Rating' must be 1-5; got: %d", cmd.Rating)
 	}
 
 	return c.db.Update(func(tx *bbolt.Tx) error {
@@ -823,12 +823,12 @@ func (c *cHandlers) FuseUnmountAll(cmd *stoservertypes.FuseUnmountAll, ctx *comm
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	baseUrl, err := stodb.CfgFuseServerBaseUrl.GetRequired(tx)
+	baseURL, err := stodb.CfgFuseServerBaseURL.GetRequired(tx)
 	if err != nil {
 		return err
 	}
 
-	vstofuse := stofuseclient.New(baseUrl)
+	vstofuse := stofuseclient.New(baseURL)
 
 	return vstofuse.UnmountAll(ctx.Ctx)
 }
@@ -851,10 +851,10 @@ func (c *cHandlers) CollectionDelete(cmd *stoservertypes.CollectionDelete, ctx *
 func (c *cHandlers) ApikeyCreate(cmd *stoservertypes.ApikeyCreate, ctx *command.Ctx) error {
 	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		return stodb.ClientRepository.Update(&stotypes.Client{
-			ID:        stoutils.NewClientId(),
+			ID:        stoutils.NewClientID(),
 			Created:   ctx.Meta.Timestamp,
 			Name:      cmd.Name,
-			AuthToken: stoutils.NewApiKeySecret(),
+			AuthToken: stoutils.NewAPIKeySecret(),
 		}, tx)
 	}))
 }
@@ -883,20 +883,20 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		desiredVolumes := []int{}
 
-		for _, desiredVolumeId := range []int{cmd.Volume1, cmd.Volume2, cmd.Volume3, cmd.Volume4} {
-			if desiredVolumeId == 0 { // null value for int
+		for _, desiredVolumeID := range []int{cmd.Volume1, cmd.Volume2, cmd.Volume3, cmd.Volume4} {
+			if desiredVolumeID == 0 { // null value for int
 				continue
 			}
 
 			// verify that each volume exists
-			if _, err := stodb.Read(tx).Volume(desiredVolumeId); err != nil {
-				return fmt.Errorf("desiredVolume %d: %v", desiredVolumeId, err)
+			if _, err := stodb.Read(tx).Volume(desiredVolumeID); err != nil {
+				return fmt.Errorf("desiredVolume %d: %v", desiredVolumeID, err)
 			}
 
-			if sliceutil.ContainsInt(desiredVolumes, desiredVolumeId) {
-				return fmt.Errorf("volume %d specified twice", desiredVolumeId)
+			if sliceutil.ContainsInt(desiredVolumes, desiredVolumeID) {
+				return fmt.Errorf("volume %d specified twice", desiredVolumeID)
 			} else {
-				desiredVolumes = append(desiredVolumes, desiredVolumeId)
+				desiredVolumes = append(desiredVolumes, desiredVolumeID)
 			}
 		}
 
@@ -912,19 +912,19 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 }
 
 func (c *cHandlers) ConfigSetFuseServerBaseurl(cmd *stoservertypes.ConfigSetFuseServerBaseurl, ctx *command.Ctx) error {
-	return c.setConfigValue(stodb.CfgFuseServerBaseUrl, cmd.Baseurl)
+	return c.setConfigValue(stodb.CfgFuseServerBaseURL, cmd.Baseurl)
 }
 
-func (c *cHandlers) ConfigSetGrafanaUrl(cmd *stoservertypes.ConfigSetGrafanaUrl, ctx *command.Ctx) error {
-	return c.setConfigValue(stodb.CfgGrafanaUrl, cmd.Url)
+func (c *cHandlers) ConfigSetGrafanaURL(cmd *stoservertypes.ConfigSetGrafanaURL, ctx *command.Ctx) error {
+	return c.setConfigValue(stodb.CfgGrafanaURL, cmd.Url)
 }
 
 func (c *cHandlers) ConfigSetMediascannerState(cmd *stoservertypes.ConfigSetMediascannerState, ctx *command.Ctx) error {
 	return c.setConfigValue(stodb.CfgMediascannerState, cmd.State)
 }
 
-func (c *cHandlers) ConfigSetNetworkShareBaseUrl(cmd *stoservertypes.ConfigSetNetworkShareBaseUrl, ctx *command.Ctx) error {
-	return c.setConfigValue(stodb.CfgNetworkShareBaseUrl, cmd.Baseurl)
+func (c *cHandlers) ConfigSetNetworkShareBaseURL(cmd *stoservertypes.ConfigSetNetworkShareBaseURL, ctx *command.Ctx) error {
+	return c.setConfigValue(stodb.CfgNetworkShareBaseURL, cmd.Baseurl)
 }
 
 func (c *cHandlers) setConfigValue(config *stodb.ConfigAccessor, newValue string) error {
@@ -933,14 +933,14 @@ func (c *cHandlers) setConfigValue(config *stodb.ConfigAccessor, newValue string
 	})
 }
 
-func (c *cHandlers) VolumeSmartSetId(cmd *stoservertypes.VolumeSmartSetId, ctx *command.Ctx) error {
+func (c *cHandlers) VolumeSmartSetID(cmd *stoservertypes.VolumeSmartSetID, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		vol, err := stodb.Read(tx).Volume(cmd.Id)
 		if err != nil {
 			return err
 		}
 
-		vol.SmartId = cmd.SmartId
+		vol.SmartID = cmd.SmartId
 
 		return stodb.VolumeRepository.Update(vol, tx)
 	})
@@ -957,23 +957,23 @@ func (c *cHandlers) getSubsystem(id stoservertypes.SubsystemId) *subsystem {
 	}
 }
 
-func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, ctx *command.Ctx) error {
+func (c *cHandlers) NodeInstallTLSCert(cmd *stoservertypes.NodeInstallTLSCert, ctx *command.Ctx) error {
 	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		node, err := stodb.Read(tx).Node(cmd.Id)
 		if err != nil {
 			return err
 		}
 
-		node.TlsCert = cmd.TlsCertificate
+		node.TLSCert = cmd.TlsCertificate
 
 		// changing private key? (does not necessarily change when cert is renewed)
 		if cmd.TlsCertificatePrivateKey != "" {
-			if err := stodb.CfgNodeTlsCertKey.Set(cmd.TlsCertificatePrivateKey, tx); err != nil {
+			if err := stodb.CfgNodeTLSCertKey.Set(cmd.TlsCertificatePrivateKey, tx); err != nil {
 				return err
 			}
 		}
 
-		privKeyPem, err := stodb.CfgNodeTlsCertKey.GetRequired(tx)
+		privKeyPem, err := stodb.CfgNodeTLSCertKey.GetRequired(tx)
 		if err != nil {
 			return err
 		}
@@ -981,7 +981,7 @@ func (c *cHandlers) NodeInstallTlsCert(cmd *stoservertypes.NodeInstallTlsCert, c
 		// validate that cert & private key:
 		//   1) parse
 		//   2) match each other
-		if _, err := tls.X509KeyPair([]byte(node.TlsCert), []byte(privKeyPem)); err != nil {
+		if _, err := tls.X509KeyPair([]byte(node.TLSCert), []byte(privKeyPem)); err != nil {
 			return err
 		}
 
@@ -1004,8 +1004,8 @@ func (c *cHandlers) NodeChangeSmartBackend(cmd *stoservertypes.NodeChangeSmartBa
 
 func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *command.Ctx) error {
 	type smartCapableVolume struct {
-		volId   int
-		smartId string
+		volID   int
+		smartID string
 		report  *stoservertypes.SmartReport
 	}
 
@@ -1013,17 +1013,17 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 
 	// list volumes that are capable of their SMART scan (for example cloud volumes obviously are not)
 	if err := c.db.View(func(tx *bbolt.Tx) error {
-		return stodb.VolumeRepository.Each(func(record interface{}) error {
+		return stodb.VolumeRepository.Each(func(record any) error {
 			vol := record.(*stotypes.Volume)
 
 			// skip volume if SMART collection is not enabled for it (OR it's not mounted)
-			if vol.SmartId == "" || !c.conf.DiskAccess.IsMounted(vol.ID) {
+			if vol.SmartID == "" || !c.conf.DiskAccess.IsMounted(vol.ID) {
 				return nil
 			}
 
 			scans = append(scans, &smartCapableVolume{
-				volId:   vol.ID,
-				smartId: vol.SmartId,
+				volID:   vol.ID,
+				smartID: vol.SmartID,
 			})
 
 			return nil
@@ -1038,9 +1038,9 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 	}
 
 	for _, scan := range scans {
-		report, err := smart.Scan(scan.smartId, smartBackend)
+		report, err := smart.Scan(scan.smartID, smartBackend)
 		if err != nil {
-			return fmt.Errorf("vol %d (%s) SMART: %v", scan.volId, scan.smartId, err)
+			return fmt.Errorf("vol %d (%s) SMART: %v", scan.volID, scan.smartID, err)
 		}
 
 		var temp *int
@@ -1075,18 +1075,18 @@ func (c *cHandlers) NodeSmartScan(cmd *stoservertypes.NodeSmartScan, ctx *comman
 
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		for _, scan := range scans {
-			vol, err := stodb.Read(tx).Volume(scan.volId)
+			vol, err := stodb.Read(tx).Volume(scan.volID)
 			if err != nil {
 				return err
 			}
 
 			// update back into db
-			smartReportJson, err := json.Marshal(scan.report)
+			smartReportJSON, err := json.Marshal(scan.report)
 			if err != nil {
 				return err
 			}
 
-			vol.SmartReport = string(smartReportJson)
+			vol.SmartReport = string(smartReportJSON)
 
 			if err := stodb.VolumeRepository.Update(vol, tx); err != nil {
 				return err
@@ -1155,13 +1155,13 @@ func validateSensitivity(in int) error {
 // - is created as a sibling with non-unique name
 // - is renamed to non-unique name
 // - once unique-within-siblings item is moved into a directory where name already exists
-func validateUniqueNameWithinSiblings(dirId string, name string, tx *bbolt.Tx) error {
-	siblingDirectories, err := stodb.Read(tx).SubDirectories(dirId)
+func validateUniqueNameWithinSiblings(dirID string, name string, tx *bbolt.Tx) error {
+	siblingDirectories, err := stodb.Read(tx).SubDirectories(dirID)
 	if err != nil {
 		return err
 	}
 
-	siblingCollections, err := stodb.Read(tx).CollectionsByDirectory(dirId)
+	siblingCollections, err := stodb.Read(tx).CollectionsByDirectory(dirID)
 	if err != nil {
 		return err
 	}

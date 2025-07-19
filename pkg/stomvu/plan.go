@@ -4,7 +4,6 @@ package stomvu
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -60,7 +59,7 @@ func ComputePlan(dir string, targetFn func(string) string) (*Plan, error) {
 		Dunno:            []string{},
 	}
 
-	dentries, err := ioutil.ReadDir(dir)
+	dentries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err
 	}

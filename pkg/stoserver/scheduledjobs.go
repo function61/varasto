@@ -17,7 +17,7 @@ import (
 )
 
 // current middlewares has this empty too
-const FIXMEsystemUserId = ""
+const FIXMEsystemUserID = ""
 
 type smartPollerScheduledJob struct {
 	commandPlumbing *scheduledJobCommandPlumbing
@@ -123,13 +123,13 @@ func setupScheduledJobs(
 func handleSnapshot(db *bbolt.DB, snapshot []scheduler.JobSpec) error {
 	return db.Update(func(tx *bbolt.Tx) error {
 		for _, job := range snapshot {
-			dbJob, err := stodb.Read(tx).ScheduledJob(job.Id)
+			dbJob, err := stodb.Read(tx).ScheduledJob(job.ID)
 			if err != nil {
 				return err
 			}
 
 			dbJob.NextRun = job.NextRun
-			dbJob.LastRun = convertLastRunToDb(job.LastRun)
+			dbJob.LastRun = convertLastRunToDB(job.LastRun)
 
 			if err := stodb.ScheduledJobRepository.Update(dbJob, tx); err != nil {
 				return err
@@ -151,14 +151,14 @@ func dbJobToJobSpec(dbJob stotypes.ScheduledJob) scheduler.JobSpec {
 	}
 
 	return scheduler.JobSpec{
-		Id:          dbJob.ID,
+		ID:          dbJob.ID,
 		Description: dbJob.Description,
 		Schedule:    dbJob.Schedule,
 		LastRun:     lastRun,
 	}
 }
 
-func convertLastRunToDb(lastRun *scheduler.JobLastRun) *stotypes.ScheduledJobLastRun {
+func convertLastRunToDB(lastRun *scheduler.JobLastRun) *stotypes.ScheduledJobLastRun {
 	if lastRun == nil {
 		return nil
 	}
@@ -184,7 +184,7 @@ func commandInvokerJobFn(
 	return func(ctx context.Context, logger *log.Logger) error {
 		cmdCtx := command.NewCtx(
 			ctx,
-			ehevent.Meta(time.Now(), FIXMEsystemUserId),
+			ehevent.Meta(time.Now(), FIXMEsystemUserID),
 			"",
 			"")
 

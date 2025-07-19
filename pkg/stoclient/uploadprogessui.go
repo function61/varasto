@@ -28,17 +28,17 @@ type UploadProgressListener interface {
 	Close()
 }
 
-type uploadProgressTextUi struct {
+type uploadProgressTextUI struct {
 	progress chan fileProgressEvent
-	stop     chan interface{}
-	stopped  chan interface{}
+	stop     chan any
+	stopped  chan any
 }
 
-func newUploadProgressTextUi() *uploadProgressTextUi {
-	p := &uploadProgressTextUi{
+func newUploadProgressTextUI() *uploadProgressTextUI {
+	p := &uploadProgressTextUI{
 		progress: make(chan fileProgressEvent),
-		stop:     make(chan interface{}),
-		stopped:  make(chan interface{}),
+		stop:     make(chan any),
+		stopped:  make(chan any),
 	}
 
 	go func() {
@@ -50,11 +50,11 @@ func newUploadProgressTextUi() *uploadProgressTextUi {
 	return p
 }
 
-func (p *uploadProgressTextUi) ReportUploadProgress(e fileProgressEvent) {
+func (p *uploadProgressTextUI) ReportUploadProgress(e fileProgressEvent) {
 	p.progress <- e
 }
 
-func (p *uploadProgressTextUi) Close() {
+func (p *uploadProgressTextUI) Close() {
 	close(p.stop)
 
 	<-p.stopped
@@ -68,7 +68,7 @@ type fileUploadStatus struct {
 }
 
 // runs in separate goroutine
-func (p *uploadProgressTextUi) run() error {
+func (p *uploadProgressTextUI) run() error {
 	defer func() { close(p.stopped) }()
 
 	// while using termbox, ctrl+c doesn't work as a SIGINT anymore:
@@ -162,7 +162,7 @@ func (p *uploadProgressTextUi) run() error {
 	}
 }
 
-func (p *uploadProgressTextUi) drawLinesToTerminal(lines []string) {
+func (p *uploadProgressTextUI) drawLinesToTerminal(lines []string) {
 	for j, line := range lines {
 		lineAsRunes := []rune(line)
 
@@ -177,24 +177,24 @@ func speedMbps(measurements []fileProgressEvent) string {
 		return "0 Mbps"
 	}
 
-	minTs := measurements[0].started
-	maxTs := measurements[0].completed
+	minTS := measurements[0].started
+	maxTS := measurements[0].completed
 
 	totalBytes := int64(0)
 
 	for _, measurement := range measurements {
-		if measurement.started.Before(minTs) {
-			minTs = measurement.started
+		if measurement.started.Before(minTS) {
+			minTS = measurement.started
 		}
-		if measurement.completed.After(maxTs) {
-			maxTs = measurement.completed
+		if measurement.completed.After(maxTS) {
+			maxTS = measurement.completed
 		}
 
 		totalBytes += measurement.bytesUploadedInBlob
 	}
 
 	// duration in which totalBytes was transferred
-	duration := maxTs.Sub(minTs)
+	duration := maxTS.Sub(minTS)
 
 	return fmt.Sprintf("%.2f Mbps", float64(totalBytes)/1024.0/1024.0*8.0/float64(duration/time.Second))
 }
@@ -209,9 +209,9 @@ func NewNullUploadProgressListener() UploadProgressListener {
 	return &x
 }
 
-func textUiUploadProgressOutputIfInTerminal() UploadProgressListener {
+func textUIUploadProgressOutputIfInTerminal() UploadProgressListener {
 	if isatty.IsTerminal(os.Stdout.Fd()) {
-		return newUploadProgressTextUi()
+		return newUploadProgressTextUI()
 	} else {
 		return NewNullUploadProgressListener()
 	}

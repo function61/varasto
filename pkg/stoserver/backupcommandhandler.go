@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	varastoUbackupServiceId = "varasto"
+	varastoUbackupServiceID = "varasto"
 )
 
 var (
@@ -58,7 +58,7 @@ func (c *cHandlers) DatabaseBackupConfigure(cmd *stoservertypes.DatabaseBackupCo
 }
 
 func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *command.Ctx) error {
-	conf, err := ubConfigFromDb(c.db)
+	conf, err := ubConfigFromDB(c.db)
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 	defer unlock()
 
 	backup := ubtypes.BackupForTarget(ubtypes.BackupTarget{
-		ServiceName: varastoUbackupServiceId,
+		ServiceName: varastoUbackupServiceID,
 		TaskId:      fmt.Sprintf("%d", os.Getpid()),
 		Snapshotter: ubtypes.CustomStream(func(snapshotSink io.Writer) error {
 			tx, err := c.db.Begin(false)
@@ -86,7 +86,7 @@ func (c *cHandlers) DatabaseBackup(cmd *stoservertypes.DatabaseBackup, ctx *comm
 	return ubbackup.BackupAndStore(ctx.Ctx, backup, *conf, logex.Prefix("µbackup", c.logger))
 }
 
-func ubConfigFromDb(db *bbolt.DB) (*ubconfig.Config, error) {
+func ubConfigFromDB(db *bbolt.DB) (*ubconfig.Config, error) {
 	tx, err := db.Begin(false)
 	if err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ func listUbackupStoredBackups(
 		return nil, err
 	}
 
-	backups, err := storage.List(varastoUbackupServiceId)
+	backups, err := storage.List(varastoUbackupServiceID)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func listUbackupStoredBackups(
 }
 
 func downloadBackup(
-	backupId string,
+	backupID string,
 	output io.Writer,
 	conf ubconfig.Config,
 	logger *log.Logger,
@@ -168,7 +168,7 @@ func downloadBackup(
 		return err
 	}
 
-	backupReader, err := storage.Get(backupId)
+	backupReader, err := storage.Get(backupID)
 	if err != nil {
 		return err
 	}

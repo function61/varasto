@@ -23,8 +23,8 @@ func ReadSchemaVersion(tx *bbolt.Tx) (uint32, error) {
 		return 0, blorm.ErrBucketNotFound
 	}
 
-	schemaVersionInDb := binary.LittleEndian.Uint32(metaBucket.Get(schemaVersionKey))
-	return schemaVersionInDb, nil
+	schemaVersionInDB := binary.LittleEndian.Uint32(metaBucket.Get(schemaVersionKey))
+	return schemaVersionInDB, nil
 }
 
 func WriteSchemaVersion(version uint32, tx *bbolt.Tx) error {
@@ -33,10 +33,10 @@ func WriteSchemaVersion(version uint32, tx *bbolt.Tx) error {
 		return err
 	}
 
-	schemaVersionInDb := make([]byte, 4)
-	binary.LittleEndian.PutUint32(schemaVersionInDb, version)
+	schemaVersionInDB := make([]byte, 4)
+	binary.LittleEndian.PutUint32(schemaVersionInDB, version)
 
-	return metaBucket.Put(schemaVersionKey, schemaVersionInDb)
+	return metaBucket.Put(schemaVersionKey, schemaVersionInDB)
 }
 
 func writeSchemaVersionCurrent(tx *bbolt.Tx) error {

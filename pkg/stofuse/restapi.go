@@ -30,7 +30,7 @@ func rpcStart(addr string, sigs *sigFabric, tasks *taskrunner.Runner) error {
 
 	stofusetypes.RegisterRoutes(han, createDummyMiddlewares(), muxregistrator.New(router))
 
-	listener, err := stoutils.CreateTcpOrDomainSocketListener(addr, logex.Levels(logex.Discard))
+	listener, err := stoutils.CreateTCPOrDomainSocketListener(addr, logex.Levels(logex.Discard))
 	if err != nil {
 		return err
 	}

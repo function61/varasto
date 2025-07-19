@@ -53,7 +53,7 @@ var (
 )
 
 type ServerConfigFile struct {
-	DbLocation                   string `json:"db_location"`
+	DBLocation                   string `json:"db_location"`
 	DisableReplicationController bool   `json:"disable_replication_controller"`
 	DisableMediaScanner          bool   `json:"disable_media_scanner"`
 }
@@ -76,7 +76,7 @@ func runServer(
 		return err // has enough context
 	}
 
-	db, err := stodb.Open(scf.DbLocation)
+	db, err := stodb.Open(scf.DBLocation)
 	if err != nil {
 		return err
 	}
@@ -163,7 +163,7 @@ func runServer(
 		logex.Prefix("integrityctrl", logger),
 		func(run func(context.Context) error) { tasks.Start("integrityctrl", run) })
 
-	defineRestApi(
+	defineRestAPI(
 		router,
 		serverConfig,
 		db,
@@ -222,17 +222,17 @@ func runServer(
 
 	router.Handle(
 		"/metrics",
-		serverConfig.Metrics.MetricsHttpHandler())
+		serverConfig.Metrics.MetricsHTTPHandler())
 
 	defineUI(router)
 
 	srv := &http.Server{
 		Addr:              "0.0.0.0:443", // 0.0.0.0 = listen on all interfaces
-		Handler:           serverConfig.Metrics.WrapHttpServer(router),
+		Handler:           serverConfig.Metrics.WrapHTTPServer(router),
 		ReadHeaderTimeout: gokitbp.DefaultReadHeaderTimeout,
 		TLSConfig: &tls.Config{
 			MinVersion:   tls.VersionTLS12, // require TLS 1.2 minimum
-			Certificates: []tls.Certificate{serverConfig.TlsCertificate.keypair},
+			Certificates: []tls.Certificate{serverConfig.TLSCertificate.keypair},
 		},
 	}
 
@@ -263,7 +263,7 @@ func runServer(
 
 	logl.Info.Printf(
 		"node %s (ver. %s) started",
-		serverConfig.SelfNodeId,
+		serverConfig.SelfNodeID,
 		dynversion.Version)
 
 	// got cleanly until here. any of the tasks can error however, and that error
@@ -308,7 +308,7 @@ type subsystem struct {
 
 type ServerConfig struct {
 	File                   ServerConfigFile
-	SelfNodeId             string
+	SelfNodeID             string
 	SelfNodeSmartBackend   stoservertypes.SmartBackend
 	ClusterWideMounts      map[int]stotypes.VolumeMount
 	DiskAccess             *stodiskaccess.Controller // only for mounts on self node
@@ -318,7 +318,7 @@ type ServerConfig struct {
 	Scheduler              *scheduler.Controller
 	MediaScanner           *subsystem
 	FuseProjector          *subsystem
-	TlsCertificate         wrappedKeypair
+	TLSCertificate         wrappedKeypair
 	KeyStore               *stokeystore.Store
 	FailedMountNames       []string
 	Metrics                *metricsController
@@ -341,12 +341,12 @@ func readConfigFromDatabase(
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	nodeId, err := stodb.CfgNodeId.GetRequired(tx)
+	nodeID, err := stodb.CfgNodeID.GetRequired(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	selfNode, err := stodb.Read(tx).Node(nodeId)
+	selfNode, err := stodb.Read(tx).Node(nodeID)
 	if err != nil {
 		return nil, err
 	}
@@ -409,19 +409,19 @@ func readConfigFromDatabase(
 		}
 	}
 
-	tlsCertKey, err := stodb.CfgNodeTlsCertKey.GetRequired(tx)
+	tlsCertKey, err := stodb.CfgNodeTLSCertKey.GetRequired(tx)
 	if err != nil {
 		return nil, err
 	}
 
-	wrappedKeypair, err := mkWrappedKeypair([]byte(selfNode.TlsCert), []byte(tlsCertKey))
+	wrappedKeypair, err := mkWrappedKeypair([]byte(selfNode.TLSCert), []byte(tlsCertKey))
 	if err != nil {
 		return nil, err
 	}
 
 	return &ServerConfig{
 		File:                   *scf,
-		SelfNodeId:             selfNode.ID,
+		SelfNodeID:             selfNode.ID,
 		SelfNodeSmartBackend:   selfNode.SmartBackend,
 		ClusterWideMounts:      clusterWideMountsMapped,
 		DiskAccess:             dam,
@@ -429,7 +429,7 @@ func readConfigFromDatabase(
 		LogTail:                logTail,
 		KeyStore:               keyStore,
 		ReplicationControllers: map[int]*storeplication.Controller{},
-		TlsCertificate:         *wrappedKeypair,
+		TLSCertificate:         *wrappedKeypair,
 		FailedMountNames:       failedMountNames,
 		Metrics:                metrics,
 	}, nil
@@ -525,7 +525,7 @@ func (d *dbbma) QueryCollectionEncryptionKeyForNewBlobs(coll string) (string, []
 		return "", nil, err
 	}
 
-	return kenv.KeyId, dek, nil
+	return kenv.KeyID, dek, nil
 }
 
 func (d *dbbma) QueryBlobCrc32(ref stotypes.BlobRef) ([]byte, error) {
@@ -566,7 +566,7 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 	// we are given a list of key envelopes. the first one is for new blobs written to this
 	// collection, and the following are for when blobs get deduplicated into this collection -
 	// source collection's key envelopes are copied into target collection's key envelopes
-	kenv := stotypes.FindDekEnvelope(blob.EncryptionKeyId, encryptionKeys)
+	kenv := stotypes.FindDekEnvelope(blob.EncryptionKeyID, encryptionKeys)
 	if kenv == nil {
 		return nil, fmt.Errorf("(should not happen) encryption key envelope not found for: %s", ref.AsHex())
 	}
@@ -586,7 +586,7 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 	}, nil
 }
 
-func (d *dbbma) WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error {
+func (d *dbbma) WriteBlobReplicated(ref stotypes.BlobRef, volumeID int) error {
 	tx, err := d.db.Begin(true)
 	if err != nil {
 		return err
@@ -599,14 +599,14 @@ func (d *dbbma) WriteBlobReplicated(ref stotypes.BlobRef, volumeId int) error {
 	}
 
 	// saves Blob and Volume
-	if err := d.writeBlobReplicatedInternal(blobToUpdate, volumeId, int64(blobToUpdate.SizeOnDisk), tx); err != nil {
+	if err := d.writeBlobReplicatedInternal(blobToUpdate, volumeID, int64(blobToUpdate.SizeOnDisk), tx); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) error {
+func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeID int) error {
 	tx, err := d.db.Begin(true)
 	if err != nil {
 		return err
@@ -617,7 +617,7 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 		Ref:             meta.Ref,
 		Volumes:         []int{}, // writeBlobReplicatedInternal() adds this
 		Referenced:      false,   // this will be set to true on commit
-		EncryptionKeyId: meta.EncryptionKeyId,
+		EncryptionKeyID: meta.EncryptionKeyID,
 		IsCompressed:    meta.IsCompressed,
 		Size:            meta.RealSize,
 		SizeOnDisk:      meta.SizeOnDisk,
@@ -625,33 +625,33 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeId int) err
 	}
 
 	// writes Volumes & VolumesPendingReplication
-	if err := d.writeBlobReplicatedInternal(newBlob, volumeId, int64(meta.SizeOnDisk), tx); err != nil {
+	if err := d.writeBlobReplicatedInternal(newBlob, volumeID, int64(meta.SizeOnDisk), tx); err != nil {
 		return err
 	}
 
 	return tx.Commit()
 }
 
-func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeId int, size int64, tx *bbolt.Tx) error {
-	if sliceutil.ContainsInt(blob.Volumes, volumeId) {
+func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeID int, size int64, tx *bbolt.Tx) error {
+	if sliceutil.ContainsInt(blob.Volumes, volumeID) {
 		return fmt.Errorf(
 			"race condition: someone already replicated %s to %d",
 			blob.Ref.AsHex(),
-			volumeId)
+			volumeID)
 	}
 
-	blob.Volumes = append(blob.Volumes, volumeId)
+	blob.Volumes = append(blob.Volumes, volumeID)
 
 	// remove succesfully replicated volume from pending list
 	blob.VolumesPendingReplication = sliceutil.FilterInt(blob.VolumesPendingReplication, func(volId int) bool {
-		return volId != volumeId
+		return volId != volumeID
 	})
 
 	if err := stodb.BlobRepository.Update(blob, tx); err != nil {
 		return err
 	}
 
-	volume, err := stodb.Read(tx).Volume(volumeId)
+	volume, err := stodb.Read(tx).Volume(volumeID)
 	if err != nil {
 		return err
 	}
