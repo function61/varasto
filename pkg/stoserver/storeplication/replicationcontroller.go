@@ -7,12 +7,12 @@ import (
 	"encoding/binary"
 	"fmt"
 	"log"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -210,7 +210,7 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 			return err
 		}
 
-		if !sliceutil.ContainsInt(blob.VolumesPendingReplication, c.toVolumeID) {
+		if !slices.Contains(blob.VolumesPendingReplication, c.toVolumeID) {
 			return fmt.Errorf(
 				"blob %s volume %d not pending replication (but found from index query)",
 				ref.AsHex(),

@@ -7,10 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/stoserver/stodiskaccess"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -232,7 +232,7 @@ func (c *Controller) resumeJobWorker(
 				}
 			}
 
-			blobExistsOnVolumeToVerify := sliceutil.ContainsInt(blob.Volumes, job.VolumeID)
+			blobExistsOnVolumeToVerify := slices.Contains(blob.Volumes, job.VolumeID)
 			if !blobExistsOnVolumeToVerify {
 				continue
 			}
