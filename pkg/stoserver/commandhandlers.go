@@ -29,7 +29,6 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
-	"github.com/gorilla/mux"
 	"github.com/samber/lo"
 	"go.etcd.io/bbolt"
 )
@@ -1110,13 +1109,13 @@ func (c *cHandlers) confreload(err error) error {
 }
 
 func registerCommandEndpoints(
-	router *mux.Router,
+	router *http.ServeMux,
 	eventLog eventlog.Log,
 	invoker command.Invoker,
 	mwares httpauth.MiddlewareChainMap,
 ) {
-	router.HandleFunc("/command/{commandName}", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		commandName := mux.Vars(r)["commandName"]
+	router.HandleFunc("POST /command/{commandName}", func(w http.ResponseWriter, r *http.Request) {
+		commandName := r.PathValue("commandName")
 
 		httpErr := httpcommand.Serve(
 			w,
@@ -1137,7 +1136,7 @@ func registerCommandEndpoints(
 			// no-op => ok
 			_, _ = w.Write([]byte(`{}`))
 		}
-	})).Methods(http.MethodPost)
+	})
 }
 
 func mebibytesToBytes(mebibytes int) int64 {

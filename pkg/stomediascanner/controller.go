@@ -9,10 +9,8 @@ import (
 
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stomediascanner/stomediascantypes"
-	"github.com/gorilla/mux"
 )
 
 type Controller struct {
@@ -21,7 +19,7 @@ type Controller struct {
 }
 
 func NewController(
-	router *mux.Router,
+	router *http.ServeMux,
 	mwares httpauth.MiddlewareChainMap,
 	logger *log.Logger,
 ) (*Controller, error) {
@@ -35,13 +33,15 @@ func NewController(
 		logl:       logex.Levels(logger),
 	}
 
-	stomediascantypes.RegisterRoutes(c, mwares, muxregistrator.New(router))
+	stomediascantypes.RegisterRoutes(c, mwares, func(method, path string, fn http.HandlerFunc) {
+		router.HandleFunc(method+" "+path, fn)
+	})
 
 	return c, nil
 }
 
 func (c *Controller) TriggerScan(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) {
-	collectionID := mux.Vars(r)["id"]
+	collectionID := r.PathValue("id")
 	mode := r.URL.Query().Get("mode")
 
 	// a = "allow destructive changes"
