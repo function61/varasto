@@ -3,13 +3,13 @@ package stoserver
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/ezhttp"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/igdbapi"
 	"github.com/function61/varasto/pkg/seasonepisodedetector"
 	"github.com/function61/varasto/pkg/stomediascanner/stomediascantypes"
@@ -252,7 +252,7 @@ func (c *cHandlers) CollectionRefreshMetadataAutomatically(cmd *stoservertypes.C
 				return err // should not happen
 			}
 
-			if !sliceutil.ContainsInt(uniqueSeasonNumbers, seasonNumber) {
+			if !slices.Contains(uniqueSeasonNumbers, seasonNumber) {
 				uniqueSeasonNumbers = append(uniqueSeasonNumbers, seasonNumber)
 			}
 		}

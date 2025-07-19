@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"slices"
 	"sync"
 	"time"
 
@@ -21,7 +22,6 @@ import (
 	"github.com/function61/gokit/httputils"
 	"github.com/function61/gokit/jsonfile"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/gokit/taskrunner"
 	"github.com/function61/pi-security-module/pkg/f61ui"
 	"github.com/function61/varasto/pkg/blobstore"
@@ -45,6 +45,7 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/public"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 	"go.etcd.io/bbolt"
 )
 
@@ -633,7 +634,7 @@ func (d *dbbma) WriteBlobCreated(meta *stodiskaccess.BlobMeta, volumeID int) err
 }
 
 func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeID int, size int64, tx *bbolt.Tx) error {
-	if sliceutil.ContainsInt(blob.Volumes, volumeID) {
+	if slices.Contains(blob.Volumes, volumeID) {
 		return fmt.Errorf(
 			"race condition: someone already replicated %s to %d",
 			blob.Ref.AsHex(),
@@ -643,8 +644,8 @@ func (d *dbbma) writeBlobReplicatedInternal(blob *stotypes.Blob, volumeID int, s
 	blob.Volumes = append(blob.Volumes, volumeID)
 
 	// remove succesfully replicated volume from pending list
-	blob.VolumesPendingReplication = sliceutil.FilterInt(blob.VolumesPendingReplication, func(volId int) bool {
-		return volId != volumeID
+	blob.VolumesPendingReplication = lo.Filter(blob.VolumesPendingReplication, func(volID int, _ int) bool {
+		return volID != volumeID
 	})
 
 	if err := stodb.BlobRepository.Update(blob, tx); err != nil {

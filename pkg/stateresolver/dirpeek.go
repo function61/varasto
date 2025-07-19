@@ -2,9 +2,9 @@ package stateresolver
 
 import (
 	"path"
+	"slices"
 	"strings"
 
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
@@ -50,7 +50,7 @@ func DirPeek(files []stotypes.File, dirToPeek string) *DirPeekResult {
 
 			subDir := strings.Join(components[0:levelOfSubDirToPeek+2], "/")
 
-			if !sliceutil.ContainsString(res.SubDirs, subDir) {
+			if !slices.Contains(res.SubDirs, subDir) {
 				res.SubDirs = append(res.SubDirs, subDir)
 			}
 		}

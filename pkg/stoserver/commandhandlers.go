@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"slices"
 	"sort"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 	"github.com/function61/eventkit/httpcommand"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/blobstore/googledriveblobstore"
 	"github.com/function61/varasto/pkg/blobstore/s3blobstore"
 	"github.com/function61/varasto/pkg/blorm"
@@ -30,6 +30,7 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/gorilla/mux"
+	"github.com/samber/lo"
 	"go.etcd.io/bbolt"
 )
 
@@ -394,11 +395,11 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 		return stodb.BlobRepository.Each(func(record any) error {
 			blob := record.(*stotypes.Blob)
 
-			if !sliceutil.ContainsInt(blob.Volumes, from.ID) { // doesn't fit our criteria
+			if !slices.Contains(blob.Volumes, from.ID) { // doesn't fit our criteria
 				return nil
 			}
 
-			if sliceutil.ContainsInt(blob.Volumes, to.ID) { // is already in target volume
+			if slices.Contains(blob.Volumes, to.ID) { // is already in target volume
 				return nil
 			}
 
@@ -787,7 +788,7 @@ func (c *cHandlers) CollectionTag(cmd *stoservertypes.CollectionTag, ctx *comman
 			return err
 		}
 
-		if sliceutil.ContainsString(coll.Tags, cmd.Tag) {
+		if slices.Contains(coll.Tags, cmd.Tag) {
 			return fmt.Errorf("already tagged: %s", cmd.Tag)
 		}
 
@@ -806,11 +807,11 @@ func (c *cHandlers) CollectionUntag(cmd *stoservertypes.CollectionUntag, ctx *co
 			return err
 		}
 
-		if !sliceutil.ContainsString(coll.Tags, cmd.Tag) {
+		if !slices.Contains(coll.Tags, cmd.Tag) {
 			return fmt.Errorf("not tagged: %s", cmd.Tag)
 		}
 
-		coll.Tags = sliceutil.FilterString(coll.Tags, func(tag string) bool { return tag != cmd.Tag })
+		coll.Tags = lo.Filter(coll.Tags, func(tag string, _ int) bool { return tag != cmd.Tag })
 
 		return stodb.CollectionRepository.Update(coll, tx)
 	})
@@ -893,7 +894,7 @@ func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.Re
 				return fmt.Errorf("desiredVolume %d: %v", desiredVolumeID, err)
 			}
 
-			if sliceutil.ContainsInt(desiredVolumes, desiredVolumeID) {
+			if slices.Contains(desiredVolumes, desiredVolumeID) {
 				return fmt.Errorf("volume %d specified twice", desiredVolumeID)
 			} else {
 				desiredVolumes = append(desiredVolumes, desiredVolumeID)

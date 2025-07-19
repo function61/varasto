@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"sync/atomic"
 
 	"github.com/function61/gokit/mime"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
 )
@@ -59,7 +59,7 @@ func missingFromLeftHandSide(lhs []int, rhs []int) []int {
 	missing := []int{}
 
 	for _, item := range rhs {
-		if !sliceutil.ContainsInt(lhs, item) {
+		if !slices.Contains(lhs, item) {
 			missing = append(missing, item)
 		}
 	}

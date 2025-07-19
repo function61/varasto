@@ -3,16 +3,17 @@ package stoserver
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
+	"github.com/samber/lo"
 	"go.etcd.io/bbolt"
 )
 
@@ -80,7 +81,7 @@ func (c *cHandlers) VolumeDecommission(cmd *stoservertypes.VolumeDecommission, c
 		if err := stodb.ReplicationPolicyRepository.Each(func(record any) error {
 			policy := record.(*stotypes.ReplicationPolicy)
 
-			if sliceutil.ContainsInt(policy.DesiredVolumes, vol.ID) {
+			if slices.Contains(policy.DesiredVolumes, vol.ID) {
 				return fmt.Errorf(
 					"policy '%s' still wants to write data to the volume you're trying to decommission",
 					policy.Name)
@@ -127,13 +128,13 @@ func (c *cHandlers) VolumeRemoveQueuedReplications(cmd *stoservertypes.VolumeRem
 
 			totalBlobs++
 
-			if !sliceutil.ContainsInt(blob.VolumesPendingReplication, from) {
+			if !slices.Contains(blob.VolumesPendingReplication, from) {
 				return nil
 			}
 
 			removed++
 
-			blob.VolumesPendingReplication = sliceutil.FilterInt(blob.VolumesPendingReplication, func(vol int) bool {
+			blob.VolumesPendingReplication = lo.Filter(blob.VolumesPendingReplication, func(vol int, _ int) bool {
 				return vol != from
 			})
 
@@ -186,12 +187,12 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 
 			volumesBefore := writtenAndPendingVolumes()
 
-			blob.Volumes = sliceutil.FilterInt(blob.Volumes, func(volId int) bool {
-				return volId != volToPurge.ID
+			blob.Volumes = lo.Filter(blob.Volumes, func(volID int, _ int) bool {
+				return volID != volToPurge.ID
 			})
 
-			blob.VolumesPendingReplication = sliceutil.FilterInt(blob.VolumesPendingReplication, func(volId int) bool {
-				return volId != volToPurge.ID
+			blob.VolumesPendingReplication = lo.Filter(blob.VolumesPendingReplication, func(volID int, _ int) bool {
+				return volID != volToPurge.ID
 			})
 
 			// optimization to not save unchanged
@@ -248,7 +249,7 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 				volsAndPendings := append([]int{}, blob.Volumes...)
 				volsAndPendings = append(volsAndPendings, blob.VolumesPendingReplication...)
 
-				if sliceutil.ContainsInt(volsAndPendings, targetVol.ID) {
+				if slices.Contains(volsAndPendings, targetVol.ID) {
 					return nil // blob already exists (or does soon) in this volume
 				}
 
@@ -275,7 +276,7 @@ func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.Datab
 
 	removed := []collectionToReconcile{}
 	for _, item := range latestReconciliationReport.CollectionsWithNonCompliantPolicy {
-		if !sliceutil.ContainsString(collIDs, item.collectionID) {
+		if !slices.Contains(collIDs, item.collectionID) {
 			removed = append(removed, item)
 		}
 	}
@@ -632,7 +633,7 @@ func noReplicationPolicyPlacesNewDataToVolume(volID int, tx *bbolt.Tx) error {
 	return stodb.ReplicationPolicyRepository.Each(func(record any) error {
 		policy := record.(*stotypes.ReplicationPolicy)
 
-		if sliceutil.ContainsInt(policy.DesiredVolumes, volID) {
+		if slices.Contains(policy.DesiredVolumes, volID) {
 			return fmt.Errorf(
 				"replication policy '%s' sends new data to your volume",
 				policy.Name)

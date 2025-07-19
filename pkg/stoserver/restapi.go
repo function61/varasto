@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -26,7 +27,6 @@ import (
 	"github.com/function61/gokit/dynversion"
 	"github.com/function61/gokit/httpauth"
 	"github.com/function61/gokit/logex"
-	"github.com/function61/gokit/sliceutil"
 	"github.com/function61/pi-security-module/pkg/httpserver/muxregistrator"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/duration"
@@ -1108,7 +1108,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 
 		ret = append(ret, stoservertypes.IntegrityVerificationJob{
 			Id:                   dbObject.ID,
-			Running:              sliceutil.ContainsString(runningIds, dbObject.ID),
+			Running:              slices.Contains(runningIds, dbObject.ID),
 			Created:              dbObject.Started,
 			Completed:            completedPtr,
 			VolumeId:             dbObject.VolumeID,
