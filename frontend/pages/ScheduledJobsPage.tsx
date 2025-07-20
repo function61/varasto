@@ -1,14 +1,14 @@
-import { Result } from 'f61ui/component/result';
 import {
+	CollapsePanel,
 	DangerLabel,
-	tableClassStripedHover,
 	Glyphicon,
 	Panel,
-	CollapsePanel,
 	SuccessLabel,
+	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
+import { Result } from 'f61ui/component/result';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { formatDistance2 } from 'f61ui/utils';
 import {

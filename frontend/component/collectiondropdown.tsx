@@ -1,4 +1,4 @@
-import { tmdbMovieAutocomplete, igdbAutocomplete } from 'component/autocompletes';
+import { igdbAutocomplete, tmdbMovieAutocomplete } from 'component/autocompletes';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import {
@@ -6,11 +6,11 @@ import {
 	CollectionChangeSensitivity,
 	CollectionDelete,
 	CollectionMove,
-	CollectionTriggerMediaScan,
-	CollectionPullTmdbMetadata,
 	CollectionPullIgdbMetadata,
+	CollectionPullTmdbMetadata,
 	CollectionRename,
 	CollectionTag,
+	CollectionTriggerMediaScan,
 } from 'generated/stoserver/stoservertypes_commands';
 import { CollectionSubset } from 'generated/stoserver/stoservertypes_types';
 import * as React from 'react';

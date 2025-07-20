@@ -1,6 +1,7 @@
 import { boot, makeRouter } from 'f61ui/appcontroller';
 import { DangerAlert } from 'f61ui/component/alerts';
 import { GlobalConfig } from 'f61ui/globalconfig';
+import * as r from 'generated/frontend_uiroutes';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import BrowsePage from 'pages/BrowsePage';
 import CollectionPage, { viewTypeFromString } from 'pages/CollectionPage';
@@ -10,17 +11,16 @@ import FuseServerPage from 'pages/FuseServerPage';
 import GettingStartedPage from 'pages/GettingStartedPage';
 import LogsPage from 'pages/LogsPage';
 import MetadataBackupPage from 'pages/MetadataBackupPage';
-import NodesPage from 'pages/NodesPage';
 import MetricsPage from 'pages/MetricsPage';
+import NodesPage from 'pages/NodesPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
-import ScheduledJobsPage from 'pages/ScheduledJobsPage';
 import RootRedirectPage from 'pages/RootRedirectPage';
+import ScheduledJobsPage from 'pages/ScheduledJobsPage';
 import ServerInfoPage from 'pages/ServerInfoPage';
 import SubsystemsPage from 'pages/SubsystemsPage';
 import UsersPage from 'pages/UsersPage';
 import VolumesAndMountsPage from 'pages/VolumesAndMountsPage';
 import * as React from 'react';
-import * as r from 'generated/frontend_uiroutes';
 
 class Handlers implements r.RouteHandlers {
 	root() {

@@ -1,25 +1,25 @@
+import { WarningAlert } from 'f61ui/component/alerts';
 import {
 	DangerLabel,
 	Glyphicon,
 	Panel,
 	SuccessLabel,
-	Well,
 	tableClassStripedHoverBordered,
+	Well,
 } from 'f61ui/component/bootstrap';
-import { WarningAlert } from 'f61ui/component/alerts';
 import { CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
+import { VolumeChangeZone, VolumeSetTopology } from 'generated/stoserver/stoservertypes_commands';
 import { Volume, VolumeMount } from 'generated/stoserver/stoservertypes_types';
-import { VolumeSetTopology, VolumeChangeZone } from 'generated/stoserver/stoservertypes_commands';
 import * as React from 'react';
 
 interface Enclosure {
 	name: string;
-	bays: {
+	bays: Array<{
 		slot: number;
 		volume: Volume | null;
-	}[];
+	}>;
 }
 
 interface TopologyAndZonesViewProps {

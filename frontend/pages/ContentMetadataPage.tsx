@@ -1,7 +1,7 @@
-import { Result } from 'f61ui/component/result';
-import { Panel, CollapsePanel } from 'f61ui/component/bootstrap';
+import { CollapsePanel, Panel } from 'f61ui/component/bootstrap';
 import { CommandIcon } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
+import { Result } from 'f61ui/component/result';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import {
 	ConfigSetIgdbApikey,
@@ -9,8 +9,8 @@ import {
 } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import {
-	CfgTheMovieDbApikey,
 	CfgIgdbApikey,
+	CfgTheMovieDbApikey,
 	ConfigValue,
 } from 'generated/stoserver/stoservertypes_types';
 import { AdminLayout } from 'layout/AdminLayout';

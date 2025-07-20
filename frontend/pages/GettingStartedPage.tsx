@@ -1,8 +1,17 @@
 import { DocLink } from 'component/doclink';
-import { WarningAlert, InfoAlert } from 'f61ui/component/alerts';
+import { InfoAlert, WarningAlert } from 'f61ui/component/alerts';
 import { DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
 import { unrecognizedValue } from 'f61ui/utils';
+import {
+	browseUrl,
+	downloadClientAppUrl,
+	gettingStartedUrl,
+	mountsUrl,
+	replicationPoliciesUrl,
+	usersUrl,
+	volumesUrl,
+} from 'generated/frontend_uiroutes';
 import {
 	CollectionCreate,
 	KekGenerateOrImport,
@@ -15,15 +24,6 @@ import {
 import { DocRef, RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { HelpLayout } from 'layout/HelpLayout';
 import * as React from 'react';
-import {
-	browseUrl,
-	downloadClientAppUrl,
-	gettingStartedUrl,
-	replicationPoliciesUrl,
-	usersUrl,
-	volumesUrl,
-	mountsUrl,
-} from 'generated/frontend_uiroutes';
 
 interface SmallWellProps {
 	children: React.ReactNode;
@@ -176,8 +176,8 @@ export default class GettingStartedPage extends React.Component<
 
 				<ul>
 					<li>
-						Access controls (user accounts, authentication) are missing => do not expose
-						Varasto server to public internet.
+						Access controls (user accounts, authentication) are missing =&gt; do not
+						expose Varasto server to public internet.
 					</li>
 					<li>
 						While deletes are supported, <b>file history deletion</b> is not yet

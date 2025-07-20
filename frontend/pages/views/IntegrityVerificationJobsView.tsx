@@ -5,8 +5,8 @@ import {
 	DefaultLabel,
 	Glyphicon,
 	SuccessLabel,
-	WarningLabel,
 	tableClassStripedHover,
+	WarningLabel,
 } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { CommandLink } from 'f61ui/component/CommandButton';

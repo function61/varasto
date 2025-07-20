@@ -1,13 +1,13 @@
 import { getCurrentLocation } from 'f61ui/browserutils';
+import { GlyphiconIcon } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink } from 'f61ui/component/navigation';
-import { GlyphiconIcon } from 'f61ui/component/bootstrap';
 import { globalConfig } from 'f61ui/globalconfig';
 import { DefaultLayout } from 'f61ui/layout/defaultlayout';
+import { browseUrl, gettingStartedUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
-import { browseUrl, gettingStartedUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
 
 interface AppDefaultLayoutProps {
 	title: string;

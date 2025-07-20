@@ -1,33 +1,33 @@
+import { CollectionTagView } from 'component/tags';
 import { DefaultLabel, Panel } from 'f61ui/component/bootstrap';
 import { globalConfig } from 'f61ui/globalconfig';
-import { CollectionTagView } from 'component/tags';
+import { collectionUrl } from 'generated/frontend_uiroutes';
 import {
+	downloadFileUrl,
+	igdbIntegrationRedirUrl,
+} from 'generated/stoserver/stoservertypes_endpoints';
+import {
+	BannerPath,
+	CollectionSubsetWithMeta,
+	MetadataAppleAppStoreApp,
+	MetadataGogSlug,
+	MetadataGooglePlayApp,
 	MetadataHomepage,
+	MetadataIgdbGameId,
 	MetadataImdbId,
 	MetadataKv,
 	MetadataOverview,
+	MetadataRedditSlug,
 	MetadataReleaseDate,
+	MetadataSteamAppId,
 	MetadataTheMovieDbMovieId,
 	MetadataTheMovieDbTvId,
-	MetadataIgdbGameId,
-	MetadataGooglePlayApp,
-	MetadataAppleAppStoreApp,
-	MetadataSteamAppId,
-	MetadataGogSlug,
-	MetadataYoutubeId,
-	MetadataRedditSlug,
 	MetadataTitle,
-	MetadataWikipediaSlug,
-	BannerPath,
-	CollectionSubsetWithMeta,
 	MetadataVideoRevenueDollars,
 	MetadataVideoRuntimeMins,
+	MetadataWikipediaSlug,
+	MetadataYoutubeId,
 } from 'generated/stoserver/stoservertypes_types';
-import { collectionUrl } from 'generated/frontend_uiroutes';
-import {
-	igdbIntegrationRedirUrl,
-	downloadFileUrl,
-} from 'generated/stoserver/stoservertypes_endpoints';
 import * as React from 'react';
 interface MetadataKeyValue {
 	[key: string]: string;
@@ -131,7 +131,7 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 	}
 
 	private externalLinks(metadata: MetadataKeyValue): React.ReactNode {
-		const links: [string, string, string | undefined][] = [
+		const links: Array<[string, string, string | undefined]> = [
 			['IMDB', 'https://www.imdb.com/title/{key}/', metadata[MetadataImdbId]],
 			['TMDb', 'https://www.themoviedb.org/movie/{key}', metadata[MetadataTheMovieDbMovieId]],
 			['TMDb', 'https://www.themoviedb.org/tv/{key}', metadata[MetadataTheMovieDbTvId]],

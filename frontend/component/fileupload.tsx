@@ -4,7 +4,7 @@ import { Glyphicon, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { Loading } from 'f61ui/component/loading';
 import { httpMustBeOk, makeQueryParams } from 'f61ui/httputil';
 import { dateObjToDateTime } from 'f61ui/types';
-import { unrecognizedValue, shouldAlwaysSucceed } from 'f61ui/utils';
+import { shouldAlwaysSucceed, unrecognizedValue } from 'f61ui/utils';
 import {
 	commitChangeset,
 	generateIds,

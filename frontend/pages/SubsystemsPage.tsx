@@ -1,21 +1,21 @@
-import { RefreshButton } from 'component/refreshbutton';
-import { Result } from 'f61ui/component/result';
 import { DocLink } from 'component/doclink';
+import { RefreshButton } from 'component/refreshbutton';
 import {
+	CollapsePanel,
 	DangerLabel,
 	Panel,
-	CollapsePanel,
 	SuccessLabel,
-	WarningLabel,
 	tableClassStripedHover,
+	WarningLabel,
 } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
-import { fuseServerUrl } from 'generated/frontend_uiroutes';
 import { Dropdown } from 'f61ui/component/dropdown';
+import { Result } from 'f61ui/component/result';
 import { Timestamp } from 'f61ui/component/timestamp';
+import { fuseServerUrl } from 'generated/frontend_uiroutes';
 import { SubsystemStart, SubsystemStop } from 'generated/stoserver/stoservertypes_commands';
 import { getSubsystemStatuses } from 'generated/stoserver/stoservertypes_endpoints';
-import { SubsystemStatus, DocRef } from 'generated/stoserver/stoservertypes_types';
+import { DocRef, SubsystemStatus } from 'generated/stoserver/stoservertypes_types';
 import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
 

@@ -1,34 +1,35 @@
-import { tmdbMovieAutocomplete } from 'component/autocompletes';
 import { AssetImg } from 'component/assetimg';
+import { tmdbMovieAutocomplete } from 'component/autocompletes';
 import { collectionDropdown } from 'component/collectiondropdown';
-import { relativeDateFormat, shouldAlwaysSucceed } from 'f61ui/utils';
 import { filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { FileUploadArea } from 'component/fileupload';
-import { metadataKvsToKv, MetadataPanel, imageNotAvailable } from 'component/metadata';
+import { imageNotAvailable, metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'f61ui/component/result';
+import { RatingEditor } from 'component/rating';
 import { SensitivityHeadsUp } from 'component/sensitivity';
 import { CollectionTagEditor } from 'component/tags';
-import { RatingEditor } from 'component/rating';
-import { Pager, PagerData } from 'f61ui/component/pager';
 import { InfoAlert } from 'f61ui/component/alerts';
 import {
-	DefaultLabel,
-	tableClassStripedHover,
 	AnchorButton,
+	DefaultLabel,
 	Glyphicon,
-	Panel,
 	GridRowMaker,
+	Panel,
+	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandInlineForm } from 'f61ui/component/CommandButton';
 import { Info } from 'f61ui/component/info';
+import { Pager, PagerData } from 'f61ui/component/pager';
+import { Result } from 'f61ui/component/result';
 import { Timestamp } from 'f61ui/component/timestamp';
+import { relativeDateFormat, shouldAlwaysSucceed } from 'f61ui/utils';
+import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 import {
-	CollectionMoveFilesIntoAnotherCollection,
 	CollectionDeleteFiles,
+	CollectionMoveFilesIntoAnotherCollection,
 	CollectionPullTmdbMetadata,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
@@ -41,19 +42,18 @@ import {
 	CfgNetworkShareBaseUrl,
 	ChangesetSubset,
 	CollectionOutput,
+	CollectionSubset,
 	ConfigValue,
 	DirectoryAndMeta,
 	DirectoryOutput,
-	HeadRevisionId,
 	DirectoryType,
 	File as File2, // conflicts with HTML's "File" interface
+	HeadRevisionId,
 	MetadataImdbId,
 	RootPathDotBase64FIXME,
-	CollectionSubset,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseUrl, collectionUrl } from 'generated/frontend_uiroutes';
 
 enum ViewType {
 	Auto = 'auto', // not broadcasted in URL
@@ -567,17 +567,13 @@ export default class CollectionPage extends React.Component<
 			subDir?: string;
 		}
 
-		collOutput.SelectedPathContents.SubDirs.map(
-			(subDir): FileOrSubdir => {
-				return { subDir };
-			},
-		)
+		collOutput.SelectedPathContents.SubDirs.map((subDir): FileOrSubdir => {
+			return { subDir };
+		})
 			.concat(
-				collOutput.SelectedPathContents.Files.map(
-					(file): FileOrSubdir => {
-						return { file };
-					},
-				),
+				collOutput.SelectedPathContents.Files.map((file): FileOrSubdir => {
+					return { file };
+				}),
 			)
 			.filter(pagerData.idxFilter())
 			.forEach((fos) => {

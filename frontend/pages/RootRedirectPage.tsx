@@ -1,9 +1,9 @@
 import { navigateTo } from 'f61ui/browserutils';
-import * as React from 'react';
-import * as r from 'generated/frontend_uiroutes';
 import { Result } from 'f61ui/component/result';
-import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
+import * as r from 'generated/frontend_uiroutes';
 import { getKeyEncryptionKeys } from 'generated/stoserver/stoservertypes_endpoints';
+import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
+import * as React from 'react';
 
 interface RootRedirectPageState {
 	setupCheck: Result<void>;
