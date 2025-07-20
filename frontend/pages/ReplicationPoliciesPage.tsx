@@ -1,40 +1,40 @@
-import { DocLink } from 'component/doclink';
 import { volumeAutocomplete } from 'component/autocompletes';
+import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'f61ui/component/result';
-import { Info } from 'f61ui/component/info';
 import {
-	SuccessLabel,
-	WarningLabel,
 	DangerLabel,
 	DefaultLabel,
 	Panel,
+	SuccessLabel,
 	tableClassStripedHover,
+	WarningLabel,
 } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
+import { Info } from 'f61ui/component/info';
+import { Result } from 'f61ui/component/result';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	DatabaseDiscoverReconcilableReplicationPolicies,
 	DatabaseReconcileReplicationPolicy,
-	ReplicationpolicyCreate,
-	ReplicationpolicyRename,
 	ReplicationpolicyChangeDesiredVolumes,
 	ReplicationpolicyChangeMinZones,
+	ReplicationpolicyCreate,
+	ReplicationpolicyRename,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
 	getReconcilableItems,
 	getReplicationPolicies,
-	getVolumes,
 	getReplicationPoliciesForDirectories,
+	getVolumes,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import {
+	DocRef,
 	ReconciliationReport,
 	ReplicationPolicy,
-	DocRef,
 	ReplicationPolicyForDirectory,
-	Volume,
 	RootFolderId,
+	Volume,
 } from 'generated/stoserver/stoservertypes_types';
 import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';

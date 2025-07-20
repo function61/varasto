@@ -1,6 +1,6 @@
 import { Glyphicon } from 'f61ui/component/bootstrap';
-import { Result } from 'f61ui/component/result';
 import { CommandExecutor } from 'f61ui/component/commandpagelet';
+import { Result } from 'f61ui/component/result';
 import { CollectionRate } from 'generated/stoserver/stoservertypes_commands';
 import * as React from 'react';
 

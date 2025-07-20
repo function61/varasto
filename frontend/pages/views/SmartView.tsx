@@ -2,10 +2,10 @@ import { DocLink } from 'component/doclink';
 import { thousandSeparate } from 'component/numberformatter';
 import { InfoAlert } from 'f61ui/component/alerts';
 import {
-	DangerLabel,
-	SuccessLabel,
-	DefaultLabel,
 	CollapsePanel,
+	DangerLabel,
+	DefaultLabel,
+	SuccessLabel,
 	tableClassStripedHover,
 } from 'f61ui/component/bootstrap';
 import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';

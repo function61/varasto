@@ -1,10 +1,10 @@
 import { getCurrentLocation } from 'f61ui/browserutils';
-import { Panel, GlyphiconIcon } from 'f61ui/component/bootstrap';
+import { GlyphiconIcon, Panel } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink, renderNavLink } from 'f61ui/component/navigation';
+import * as r from 'generated/frontend_uiroutes';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import * as r from 'generated/frontend_uiroutes';
 
 interface HelpLayoutProps {
 	title: string;

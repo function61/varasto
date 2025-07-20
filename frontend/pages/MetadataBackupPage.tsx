@@ -1,6 +1,5 @@
 import { DocLink } from 'component/doclink';
 import { RefreshButton } from 'component/refreshbutton';
-import { Result } from 'f61ui/component/result';
 import { TabController } from 'component/tabcontroller';
 import { Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
@@ -8,8 +7,10 @@ import { CommandButton, CommandIcon } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { MonospaceContent } from 'f61ui/component/monospacecontent';
+import { Result } from 'f61ui/component/result';
 import { SecretReveal } from 'f61ui/component/secretreveal';
 import { Timestamp } from 'f61ui/component/timestamp';
+import { metadataBackupUrl } from 'generated/frontend_uiroutes';
 import {
 	DatabaseBackup,
 	DatabaseBackupConfigure,
@@ -27,7 +28,6 @@ import {
 } from 'generated/stoserver/stoservertypes_types';
 import { AdminLayout } from 'layout/AdminLayout';
 import * as React from 'react';
-import { metadataBackupUrl } from 'generated/frontend_uiroutes';
 
 interface MetadataBackupPageProps {
 	view: string;

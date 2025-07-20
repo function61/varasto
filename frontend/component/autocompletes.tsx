@@ -1,10 +1,10 @@
 import { SearchBox } from 'component/autocomplete';
 import { CustomFieldInputFactory } from 'f61ui/commandtypes';
 import {
-	searchTmdbMovies,
-	searchTmdbTv,
 	searchIgdb,
 	searchReplicationPolicies,
+	searchTmdbMovies,
+	searchTmdbTv,
 	searchVolumes,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import * as React from 'react';

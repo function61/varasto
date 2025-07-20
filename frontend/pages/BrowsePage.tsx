@@ -1,10 +1,9 @@
-import { collectionDropdown } from 'component/collectiondropdown';
-import { Timestamp } from 'f61ui/component/timestamp';
-import { DocLink } from 'component/doclink';
 import { replicationPolicyAutocomplete, tmdbTvAutocomplete } from 'component/autocompletes';
-import { metadataKvsToKv, imageNotAvailable, MetadataPanel } from 'component/metadata';
+import { collectionDropdown } from 'component/collectiondropdown';
+import { DocLink } from 'component/doclink';
+import { imageNotAvailable, metadataKvsToKv, MetadataPanel } from 'component/metadata';
 import { thousandSeparate } from 'component/numberformatter';
-import { Result } from 'f61ui/component/result';
+import { RatingViewer } from 'component/rating';
 import {
 	createSensitivityAuthorizer,
 	Sensitivity,
@@ -13,23 +12,25 @@ import {
 } from 'component/sensitivity';
 import { TabController } from 'component/tabcontroller';
 import { CollectionTagView } from 'component/tags';
-import { RatingViewer } from 'component/rating';
-import { tableClassStripedHover, DefaultLabel, Glyphicon, Panel } from 'f61ui/component/bootstrap';
+import { DefaultLabel, Glyphicon, Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { ClipboardButton } from 'f61ui/component/clipboardbutton';
 import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
+import { Result } from 'f61ui/component/result';
+import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
+import { browseUrl, collectionUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
 import {
 	CollectionCreate,
 	CollectionMove,
 	CollectionRefreshMetadataAutomatically,
-	DirectoryChangeDescription,
-	DirectoryChangeSensitivity,
 	CollectionTriggerMediaScan,
+	DirectoryChangeDescription,
+	DirectoryChangeReplicationPolicy,
+	DirectoryChangeSensitivity,
 	DirectoryCreate,
 	DirectoryDelete,
-	DirectoryChangeReplicationPolicy,
 	DirectoryMove,
 	DirectoryPullTmdbMetadata,
 	DirectoryRename,
@@ -39,15 +40,14 @@ import { getDirectory } from 'generated/stoserver/stoservertypes_endpoints';
 import {
 	CollectionSubset,
 	CollectionSubsetWithMeta,
+	DirectoryAndMeta,
 	DirectoryOutput,
 	DirectoryType,
 	DocRef,
-	DirectoryAndMeta,
 	MetadataImdbId,
 } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { browseUrl, collectionUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
 
 interface BrowsePageProps {
 	directoryId: string;

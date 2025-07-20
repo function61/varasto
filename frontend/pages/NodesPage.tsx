@@ -1,9 +1,9 @@
-import { Result } from 'f61ui/component/result';
 import { WarningAlert } from 'f61ui/component/alerts';
+import { CollapsePanel, Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { CommandLink } from 'f61ui/component/CommandButton';
-import { tableClassStripedHover, CollapsePanel, Panel } from 'f61ui/component/bootstrap';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
+import { Result } from 'f61ui/component/result';
 import { Timestamp } from 'f61ui/component/timestamp';
 import {
 	NodeChangeSmartBackend,

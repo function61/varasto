@@ -1,6 +1,6 @@
 import { DocLink } from 'component/doclink';
 import { DangerAlert, InfoAlert } from 'f61ui/component/alerts';
-import { Glyphicon, tableClassStripedHover, Panel } from 'f61ui/component/bootstrap';
+import { Glyphicon, Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { Info } from 'f61ui/component/info';
 import { DocRef } from 'generated/stoserver/stoservertypes_types';
 import { isDevVersion, version } from 'generated/version';

@@ -1,13 +1,13 @@
-import { Result } from 'f61ui/component/result';
 import { WarningAlert } from 'f61ui/component/alerts';
-import { CommandInlineForm } from 'f61ui/component/CommandButton';
 import { CollapsePanel } from 'f61ui/component/bootstrap';
+import { CommandInlineForm } from 'f61ui/component/CommandButton';
+import { Result } from 'f61ui/component/result';
+import { serverInfoUrl } from 'generated/frontend_uiroutes';
 import { ConfigSetGrafanaURL } from 'generated/stoserver/stoservertypes_commands';
 import { getConfig } from 'generated/stoserver/stoservertypes_endpoints';
 import { CfgGrafanaUrl, ConfigValue } from 'generated/stoserver/stoservertypes_types';
 import { AppDefaultLayout } from 'layout/appdefaultlayout';
 import * as React from 'react';
-import { serverInfoUrl } from 'generated/frontend_uiroutes';
 
 interface MetricsPageState {
 	grafanaUrl: Result<ConfigValue>;

@@ -1,42 +1,42 @@
-import { CommandLink } from 'f61ui/component/CommandButton';
-import { Dropdown } from 'f61ui/component/dropdown';
-import { Result } from 'f61ui/component/result';
-import { Info } from 'f61ui/component/info';
-import { NodeCheckForUpdates } from 'generated/stoserver/stoservertypes_commands';
+import { DocUrlLatest } from 'component/doclink';
 import {
 	changeSensitivity,
 	getMaxSensitivityFromLocalStorage,
 	Sensitivity,
 	sensitivityLabel,
 } from 'component/sensitivity';
-import { DocUrlLatest } from 'component/doclink';
-import {
-	nodesUrl,
-	volumesSmartUrl,
-	volumesReplicationUrl,
-	replicationPoliciesUrl,
-	subsystemsUrl,
-	volumesIntegrityUrl,
-	scheduledJobsUrl,
-	volumesUrl,
-	mountsUrl,
-} from 'generated/frontend_uiroutes';
 import {
 	DangerLabel,
 	Glyphicon,
 	Panel,
 	SuccessLabel,
-	WarningLabel,
 	tableClassStripedHover,
+	WarningLabel,
 } from 'f61ui/component/bootstrap';
 import { bytesToHumanReadable } from 'f61ui/component/bytesformatter';
+import { CommandLink } from 'f61ui/component/CommandButton';
+import { Dropdown } from 'f61ui/component/dropdown';
+import { Info } from 'f61ui/component/info';
+import { Result } from 'f61ui/component/result';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { unrecognizedValue } from 'f61ui/utils';
+import {
+	mountsUrl,
+	nodesUrl,
+	replicationPoliciesUrl,
+	scheduledJobsUrl,
+	subsystemsUrl,
+	volumesIntegrityUrl,
+	volumesReplicationUrl,
+	volumesSmartUrl,
+	volumesUrl,
+} from 'generated/frontend_uiroutes';
+import { NodeCheckForUpdates } from 'generated/stoserver/stoservertypes_commands';
 import { getHealth, getServerInfo } from 'generated/stoserver/stoservertypes_endpoints';
 import {
+	DocRef,
 	Health,
 	HealthKind,
-	DocRef,
 	HealthStatus,
 	ServerInfo,
 } from 'generated/stoserver/stoservertypes_types';
