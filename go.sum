@@ -152,6 +152,10 @@ github.com/function61/eventkit v0.0.0-20200602131610-b5adb775209f h1:YPotnYs5+f3
 github.com/function61/eventkit v0.0.0-20200602131610-b5adb775209f/go.mod h1:z5gdLYZscHZGd7umwT3l5ouQ5M+Lee4MGOm6wediMEc=
 github.com/function61/eventkit v0.0.0-20250719192337-a9607058d1b6 h1:HrleOUfM7FZONedpvjzNwfCH3uRzsdq4pEQ6Fe1l1sM=
 github.com/function61/eventkit v0.0.0-20250719192337-a9607058d1b6/go.mod h1:z5gdLYZscHZGd7umwT3l5ouQ5M+Lee4MGOm6wediMEc=
+github.com/function61/eventkit v0.0.0-20250721093333-f69822cbb25d h1:BTMrBGZ+SiD+ZfoyA78IJAboJdgdnA8sJN04VwxYf7E=
+github.com/function61/eventkit v0.0.0-20250721093333-f69822cbb25d/go.mod h1:z5gdLYZscHZGd7umwT3l5ouQ5M+Lee4MGOm6wediMEc=
+github.com/function61/eventkit v0.0.0-20251012075837-897bd5183914 h1:kazSviOnDLywyIImaVX+B0pxUSQuY0WnOeBzWvDPcpM=
+github.com/function61/eventkit v0.0.0-20251012075837-897bd5183914/go.mod h1:z5gdLYZscHZGd7umwT3l5ouQ5M+Lee4MGOm6wediMEc=
 github.com/function61/gokit v0.0.0-20200226141201-fe205250686d/go.mod h1:jAkW2pwxa4N3qxEUDA3zDhfiJInBfF4BjsbkWAU13aU=
 github.com/function61/gokit v0.0.0-20200229115114-3eca8c87d0cc/go.mod h1:jAkW2pwxa4N3qxEUDA3zDhfiJInBfF4BjsbkWAU13aU=
 github.com/function61/gokit v0.0.0-20200307135016-6dd948616ce0/go.mod h1:f6JhYQwMbwfAX472K/2A46CKet7BrpugMzuCobtqPQo=

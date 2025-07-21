@@ -10,7 +10,7 @@ require (
 	github.com/djherbis/times v1.1.0
 	github.com/felixge/httpsnoop v1.0.1
 	github.com/function61/eventhorizon v0.2.1-0.20200227140656-f89fe5d462ca
-	github.com/function61/eventkit v0.0.0-20250719192337-a9607058d1b6
+	github.com/function61/eventkit v0.0.0-20251012075837-897bd5183914
 	github.com/function61/gokit v0.0.0-20200908095654-561fcb44f8ea
 	github.com/function61/ubackup v0.0.0-20200625081923-f624fa1cb786
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da

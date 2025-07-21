@@ -8,7 +8,7 @@
 			"source": "https://github.com/function61/f61ui.git",
 			"kind": "git",
 			"destination": "frontend/f61ui",
-			"revision": "dab10d8"
+			"revision": "f17a26fb32e928ce4beed29738077e492a4f53ac"
 		}
 	],
 	"builders": [
@@ -29,7 +29,7 @@
 		},
 		{
 			"name": "frontend",
-			"uses": "docker://fn61/buildkit-js:20200323_0913_131f6b10",
+			"uses": "docker://fn61/buildkit-js:20250526_1017_f3fc4679",
 			"mount_destination": "/workspace",
 			"commands": {
 				"prepare": ["bin/build-frontend.sh"],
