@@ -1,6 +1,7 @@
 import { DangerAlert } from 'f61ui/component/alerts';
 import { Loading } from 'f61ui/component/loading';
 import {
+	asError,
 	coerceToStructuredErrorResponse,
 	formatStructuredErrorResponse,
 	handleKnownGlobalErrors,
@@ -132,7 +133,7 @@ export class SearchBox<T> extends React.Component<SearchBoxProps<T>, SearchBoxSt
 
 			this.setState({ items: searchResult.map(this.props.itemToAutocompleteItem) });
 		} catch (err) {
-			const ser = coerceToStructuredErrorResponse(err);
+			const ser = coerceToStructuredErrorResponse(asError(err));
 			if (handleKnownGlobalErrors(ser)) {
 				return;
 			}
