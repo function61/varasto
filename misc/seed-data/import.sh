@@ -5,7 +5,8 @@
 cp misc/seed-data/varasto.db /tmp/varasto.db
 
 # and client config (needed for server subsystems as well)
-cp misc/seed-data/varastoclient-config.json /root/
+mkdir -p /root/.config/varasto/
+cp misc/seed-data/client-config.json /root/.config/varasto/
 
 # and also with sample data
 tar -C /mnt -xf "misc/seed-data/blob-volumes.tar"

@@ -20,6 +20,12 @@
 			"dev_pro_tips": [
 				"to mess with FUSE, 'apt install fuse', add to Docker: --privileged --cap-add SYS_ADMIN --cap-add MKNOD --device /dev/fuse"
 			],
+			"dev_shell_commands": [
+				{
+					"command": "misc/seed-data/import.sh",
+					"important": true
+				},
+			],
 			"dev_http_ingress": "443",
 			"commands": {
 				"prepare": ["bash","-c","exec go generate ./bin"],
