@@ -1463,6 +1463,77 @@ func (h *handlers) GenerateIds(rctx *httpauth.RequestContext, w http.ResponseWri
 	}
 }
 
+func (h *handlers) Search(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.SearchResult {
+	//nolint:unparam // false positive for this pattern
+	withErr := func(err error) *[]stoservertypes.SearchResult {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		return withErr(err)
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	results := []stoservertypes.SearchResult{}
+
+	queryLowercased := strings.ToLower(r.URL.Query().Get("q"))
+
+	if queryLowercased == "" {
+		return &results
+	}
+
+	if err := stodb.DirectoryRepository.Each(func(record any) error {
+		dir := record.(*stotypes.Directory)
+
+		queryMatches := strings.Contains(strings.ToLower(dir.Name), queryLowercased)
+		if queryMatches {
+			results = append(results, stoservertypes.SearchResult{
+				BreadcrumbItems: []string{},
+				Directory: &stoservertypes.DirectoryOutput{
+					// Collections:    []stoservertypes.CollectionSubsetWithMeta{},
+					Directory: stoservertypes.DirectoryAndMeta{
+						Directory: convertDir(*dir),
+						// MetaCollection: &stoservertypes.CollectionSubsetWithMeta{},
+					},
+					// Parents:        []stoservertypes.DirectoryAndMeta{},
+					// SubDirectories: []stoservertypes.DirectoryAndMeta{},
+				},
+			})
+		}
+
+		return nil
+	}, tx); err != nil {
+		return withErr(err)
+	}
+
+	if err := stodb.CollectionRepository.Each(func(record any) error {
+		coll := record.(*stotypes.Collection)
+
+		queryMatches := strings.Contains(strings.ToLower(coll.Name), queryLowercased)
+		if queryMatches {
+
+			collState, err := stateresolver.ComputeStateAtHead(*coll)
+			if err != nil {
+				return err
+			}
+			converted := convertDBCollection(*coll, nil, collState)
+
+			results = append(results, stoservertypes.SearchResult{
+				BreadcrumbItems: []string{},
+				Collection:      &converted.Collection,
+			})
+		}
+
+		return nil
+	}, tx); err != nil {
+		return withErr(err)
+	}
+
+	return &results
+}
+
 func (h *handlers) whichInitialVolumeToWriteCollectionBlobsTo(collectionID string) (int, error) {
 	var volumeID int
 	return volumeID, h.db.View(func(tx *bbolt.Tx) error {

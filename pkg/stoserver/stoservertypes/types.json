@@ -31,6 +31,7 @@
 		{ "chain": "public", "method": "GET", "path": "/api_v2/health", "produces": {"_": "Health"}, "name": "getHealth" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/config/{id}", "produces": {"_": "ConfigValue"}, "name": "getConfig" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/logs", "produces": {"_": "list", "of": {"_": "string"}}, "name": "getLogs" },
+		{ "chain": "public", "method": "GET", "path": "/api_v2/search?q={query}", "produces": {"_": "list", "of": {"_": "SearchResult"}}, "name": "search" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/movies?q={query}", "produces": {"_": "list", "of": {"_": "TmdbSearchResult"}}, "name": "searchTmdbMovies" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/tv?q={query}", "produces": {"_": "list", "of": {"_": "TmdbSearchResult"}}, "name": "searchTmdbTv" },
 		{ "chain": "public", "method": "GET", "path": "/api_v2/external/tmdb/credits?collection={collection}", "produces": {"_": "list", "of": {"_": "TmdbCredit"}}, "name": "tmdbCredits" },
@@ -454,6 +455,14 @@
 				"HeapBytes": {"_": "integer"},
 				"ServerOs": {"_": "string"},
 				"ServerArch": {"_": "string"}
+			}}
+		},
+		{
+			"name": "SearchResult",
+			"type": {"_": "object", "fields": {
+				"BreadcrumbItems": {"_": "list", "of": {"_": "string"}},
+				"Directory": {"_": "DirectoryOutput", "nullable": true},
+				"Collection": {"_": "CollectionSubset", "nullable": true}
 			}}
 		},
 		{

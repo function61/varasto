@@ -11,6 +11,13 @@
 		]
 	},
 	{
+		"id": "search",
+		"path": "/search",
+		"query_params": [
+			{"key": "q", "type": {"_": "string"}}
+		]
+	},
+	{
 		"id": "collection",
 		"path": "/coll/{id}",
 		"query_params": [

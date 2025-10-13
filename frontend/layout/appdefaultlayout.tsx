@@ -4,7 +4,12 @@ import { Breadcrumb } from 'f61ui/component/breadcrumbtrail';
 import { NavLink } from 'f61ui/component/navigation';
 import { globalConfig } from 'f61ui/globalconfig';
 import { DefaultLayout } from 'f61ui/layout/defaultlayout';
-import { browseUrl, gettingStartedUrl, serverInfoUrl } from 'generated/frontend_uiroutes';
+import {
+	browseUrl,
+	gettingStartedUrl,
+	searchUrl,
+	serverInfoUrl,
+} from 'generated/frontend_uiroutes';
 import { RootFolderId } from 'generated/stoserver/stoservertypes_types';
 import { version } from 'generated/version';
 import * as React from 'react';
@@ -32,6 +37,7 @@ export class AppDefaultLayout extends React.Component<AppDefaultLayoutProps, {}>
 
 		const navLinks: NavLink[] = [
 			mkLink('Browse', 'folder-open', browseUrl({ dir: RootFolderId })),
+			mkLink('Search', 'search', searchUrl({ q: '' })),
 			mkLink('Help', 'book', gettingStartedUrl({ section: 'welcome' })),
 			mkLink('Admin', 'cog', serverInfoUrl()),
 		];
