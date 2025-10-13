@@ -16,6 +16,7 @@ import NodesPage from 'pages/NodesPage';
 import ReplicationPoliciesPage from 'pages/ReplicationPoliciesPage';
 import RootRedirectPage from 'pages/RootRedirectPage';
 import ScheduledJobsPage from 'pages/ScheduledJobsPage';
+import SearchPage from 'pages/SearchPage';
 import ServerInfoPage from 'pages/ServerInfoPage';
 import SubsystemsPage from 'pages/SubsystemsPage';
 import UsersPage from 'pages/UsersPage';
@@ -62,6 +63,10 @@ class Handlers implements r.RouteHandlers {
 
 	users() {
 		return <UsersPage />;
+	}
+
+	search(opts: r.SearchOpts) {
+		return <SearchPage query={opts.q} />;
 	}
 
 	serverInfo() {
