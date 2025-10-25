@@ -28,6 +28,7 @@ Start Varasto
 		--privileged \
 		--device /dev/fuse \
 		-p 443:443 \
+		--stop-timeout 30s \
 		fn61/varasto
 	```
 
@@ -43,6 +44,7 @@ Start Varasto
 	  varasto:
 	    image: fn61/varasto
 	    restart: always          # restart on crashes
+	    stop_grace_period: 30s   # graceful stop needs to stop ongoing file transfers etc.
 	    cap_add:
 	    - SYS_ADMIN              # for FUSE support. these are not required if you have "privileged: true"
 	    - MKNOD                  # (but are IF you remove privileged because you don't need SMART support)
@@ -59,7 +61,7 @@ Start Varasto
 	      source: /mnt/varasto
 	      target: /mnt/varasto
 	      bind:
-	        propagation: shared  # For sub-mounts (FUSE) to be visible to the host
+	        propagation: shared  # For mount updates, sub-mounts (FUSE) to be visible to the host
 	    - type: bind
 	      source: /dev           # SMART support requires access to raw disks
 	      target: /dev
