@@ -25,6 +25,10 @@
 					"command": "misc/seed-data/import.sh",
 					"important": true
 				},
+				{
+					"command": "rel/sto_linux-amd64 server",
+					"important": true
+				}
 			],
 			"dev_http_ingress": "443",
 			"commands": {
@@ -37,6 +41,16 @@
 			"name": "frontend",
 			"uses": "docker://fn61/buildkit-js:20250526_1017_f3fc4679",
 			"mount_destination": "/workspace",
+			"dev_shell_commands": [
+				{
+					"command": "(cd frontend/ && tslint.sh --fix)",
+					"important": true
+				},
+				{
+					"command": "bin/build-frontend.sh",
+					"important": true
+				}
+			],
 			"commands": {
 				"prepare": ["bin/build-frontend.sh"],
 				"dev": ["bash"]
