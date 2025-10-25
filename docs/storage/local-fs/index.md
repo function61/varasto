@@ -57,6 +57,107 @@ Now we are ready to mount that directory as volume in Varasto! From Varasto choo
 That's it! Now that the volume is mounted, Varasto can write files there.
 
 
+Adding new disk to Varasto
+--------------------------
+
+These instructions are for Linux. You can do the same on easily Windows, but you'll have to improvise.
+
+NOTE: Many of the commands might need `$ sudo` prefix.
+
+
+### Partition your drive
+
+If your drive isn't already partitioned (or you want to inspect the partition table):
+
+```bash
+$ fdisk /dev/sdn
+```
+
+(FIXME: you probably need to use gdisk, since fdisk by default tried to give me partition with 2 TB size for a 16+ TB disk:
+https://www.cyberciti.biz/tips/fdisk-unable-to-create-partition-greater-2tb.html )
+
+While you could in theory use the full block device without partitioning if all you need
+is a single partition, it might be a good idea to partition anyway to have less exotic setup.
+Recovery situations are always easier the more standard your setup is.
+
+
+### Format the partition for ext4
+
+```bash
+$ mkfs.ext4 -L wernstrom -m 1 /dev/sdn1
+```
+
+The `-m` sets [reserved blocks](https://wiki.archlinux.org/index.php/Ext4#Reserved_blocks)
+to `1 %` instead of the default (5 %). The default would leave quite a lot of space
+unusable for larger drives.
+
+TODO: openable why-section
+
+Reserved blocks mechanism doesn't benefit Varasto-managed partitions because
+the mechanism is designed for quite different use case.
+
+
+### Make a mount point for the drive
+
+Linux needs an empty directory as a placeholder for a mount point.
+
+```bash
+$ mkdir /mnt/varasto/wernstrom
+```
+
+
+### Add volume to fstab for automatic mounting on reboots
+
+```bash
+$ vim /etc/fstab
+```
+
+Let's assume you already have a volume named `amy`. You're now adding `wernstrom`. The
+lines now look like this:
+
+```
+LABEL=amy            /mnt/varasto/amy        ext4 defaults,nofail,noatime  0  1
+LABEL=wernstrom      /mnt/varasto/wernstrom  ext4 defaults,nofail,noatime  0  1
+```
+
+### Mount the new partition
+
+Currently, your block device partition is not mounted:
+
+```bash
+$ lsblk
+sdn                   8:208  0  10,9T  0 disk
+└─sdn1                8:209  0  10,9T  0 part
+```
+
+You can either restart your system to see that the auto-mounting (`/etc/fstab`) works, or
+you can trigger a command to mount all the `fstab-mentioned` partitions now:
+
+
+```bash
+$ mount --all
+$ lsblk
+sdn                   8:208  0  10,9T  0 disk
+└─sdn1                8:209  0  10,9T  0 part /mnt/varasto/wernstrom
+```
+
+Decide quota for Varasto
+------------------------
+
+Varasto allows you to manage quota for each volume. Find out how much space your partition has:
+
+```bash
+$ df --block-size=1 /mnt/varasto/wernstrom
+Filesystem          1B-blocks          Used      Available Use% Mounted on
+/dev/sdn1      11904442871808  128673338328 11775769533480   1% /mnt/varasto/wernstrom
+```
+
+The output is in bytes. In Varasto you enter quota in MiB.
+
+My volume after formatting has 10.71... TiB free, so I will round that down a bit and use
+11010048 MiB (10.5 TiB = 11010048 / 1024 / 1024) as my quota. I can increase the quota later.
+
+
 Do I need a dedicated partition for Varasto volume?
 ---------------------------------------------------
 

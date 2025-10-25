@@ -78,8 +78,15 @@ This one depends on how you installed Varasto:
 	docker pull fn61/varasto
 	```
 
-	Now start the new version of Varasto using the same command as in the
-	[original installation instructions](../linux-docker.md).
+
+	Start Varasto:
+
+	```console
+	docker-compose up -d
+	```
+
+	((Now start the new version of Varasto using the same command as in the
+			[original installation instructions](../linux-docker.md).))
 
 === "Manual installation"
 	Updating means replacing the `sto` binary with newer versions.
