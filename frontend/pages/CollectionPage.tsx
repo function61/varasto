@@ -428,7 +428,7 @@ export default class CollectionPage extends React.Component<
 							href={collectionUrl({
 								id: this.props.id,
 								rev: this.props.rev,
-								path: btoa(subDir),
+								path: stringToUTF8Base64(subDir),
 								view: viewTypeToString(this.props.view),
 							})}>
 							{filenameFromPath(subDir)}/
@@ -535,7 +535,7 @@ export default class CollectionPage extends React.Component<
 						href={collectionUrl({
 							id: this.props.id,
 							rev: this.props.rev,
-							path: btoa(subDir),
+							path: stringToUTF8Base64(subDir),
 						})}>
 						<img src={imageNotAvailable()} />
 					</a>
@@ -619,7 +619,7 @@ export default class CollectionPage extends React.Component<
 				url: collectionUrl({
 					id: this.props.id,
 					rev: this.props.rev,
-					path: btoa(pd),
+					path: stringToUTF8Base64(pd),
 					view: viewTypeToString(this.props.view),
 				}),
 			};
@@ -809,4 +809,10 @@ export function viewTypeFromString(str: string | undefined): ViewType {
 		default:
 			throw new Error(`unrecognized value: ${str}`);
 	}
+}
+
+function stringToUTF8Base64(input: string): string {
+	// can't use `btoa()` as-is because it only works with ASCII 🤯
+	const utf8Bytes = new TextEncoder().encode(input);
+	return btoa(String.fromCharCode(...utf8Bytes));
 }
