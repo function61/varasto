@@ -39,7 +39,7 @@
 		},
 		{
 			"name": "frontend",
-			"uses": "docker://fn61/buildkit-js:20250526_1017_f3fc4679",
+			"uses": "docker://fn61/buildkit-js:20251108_2134_569c7f67",
 			"mount_destination": "/workspace",
 			"dev_shell_commands": [
 				{
