@@ -36,6 +36,8 @@ func (s *StateAt) FileList() []stotypes.File {
 		files = append(files, file)
 	}
 
+	// since these represent files over multiple directories, the only sorting strategy that makes sense is by path
+	// (to make files in same directory be closer to each other)
 	sort.Slice(files, func(i, j int) bool {
 		return files[i].Path < files[j].Path
 	})

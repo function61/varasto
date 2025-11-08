@@ -150,7 +150,7 @@ func collectionThumbnailsOneBatch(
 				deletedFiles = append(deletedFiles, thumb.Path)
 
 				// move into thumb path, assume it has sensible dimensions (suitable as a thumbnail)
-				thumbPath := collectionThumbPath(file)
+				thumbPath := CollectionThumbPath(file)
 
 				// there already exists thumbnail? delete it (by updating)
 				if toReplace, thumbExists := collFiles[thumbPath]; thumbExists {
@@ -171,7 +171,7 @@ func collectionThumbnailsOneBatch(
 	}
 
 	alreadyThumbnailed := func(file stotypes.File) bool {
-		thumbPath := collectionThumbPath(file)
+		thumbPath := CollectionThumbPath(file)
 
 		// since thumbPath is based on file content, "foo.jpg" and "foo (Copy).jpg" have
 		// same thumb path (if they have same content)
@@ -229,7 +229,7 @@ func collectionThumbnailsOneBatch(
 
 		createdThumbnail, err := stoclient.ScanAndDiscoverBlobs(
 			ctx,
-			collectionThumbPath(file),
+			CollectionThumbPath(file),
 			thumbOutput,
 			0,
 			fileModifiedTime, // created
@@ -269,7 +269,7 @@ func collectionThumbnailsOneBatch(
 	return more, err
 }
 
-func collectionThumbPath(f stotypes.File) string {
+func CollectionThumbPath(f stotypes.File) string {
 	return ".sto/thumb/" + f.Sha256[0:10] + ".jpg"
 }
 

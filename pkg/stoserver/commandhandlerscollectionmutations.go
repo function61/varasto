@@ -8,6 +8,7 @@ import (
 
 	"github.com/function61/eventkit/command"
 	"github.com/function61/varasto/pkg/stateresolver"
+	"github.com/function61/varasto/pkg/stomediascanner"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -16,14 +17,16 @@ import (
 )
 
 func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes.CollectionMoveFilesIntoAnotherCollection, ctx *command.Ctx) error {
-	filesToMove := *cmd.Files
-
-	if len(filesToMove) == 0 {
+	if len(*cmd.Files) == 0 {
 		return nil // no-op
 	}
 
-	if err := noDuplicates(filesToMove); err != nil {
+	if err := noDuplicates(*cmd.Files); err != nil {
 		return err
+	}
+
+	if cmd.Source == cmd.Destination {
+		return errors.New("source and destination cannot be same")
 	}
 
 	return c.db.Update(func(tx *bbolt.Tx) error {
@@ -51,7 +54,12 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 
 		filesInSource := sourceState.Files()
 
-		for _, filePathToMove := range filesToMove {
+		relatedFiles := discoverRelatedFilePaths(*cmd.Files, filesInSource)
+
+		// now includes thumbnails and such
+		filesAndRelatedFilesToMove := append(*cmd.Files, relatedFiles...)
+
+		for _, filePathToMove := range filesAndRelatedFilesToMove {
 			fileToMove, found := filesInSource[filePathToMove]
 			if !found {
 				return fmt.Errorf("file to move not found: %s", filePathToMove)
@@ -149,7 +157,12 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 
 		existingFiles := stateForValidation.Files()
 
-		for _, fileToDelete := range filesToDelete {
+		// delete related thumbnails etc. as well
+		allFilesToDelete := []string{}
+		allFilesToDelete = append(allFilesToDelete, filesToDelete...)
+		allFilesToDelete = append(allFilesToDelete, discoverRelatedFilePaths(filesToDelete, existingFiles)...)
+
+		for _, fileToDelete := range allFilesToDelete {
 			if _, has := existingFiles[fileToDelete]; !has {
 				return fmt.Errorf("file to delete does not exist: %s", fileToDelete)
 			}
@@ -161,7 +174,7 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 			ctx.Meta.Timestamp,
 			nil,
 			nil,
-			filesToDelete)
+			allFilesToDelete)
 
 		if err := appendAndValidateChangeset(changeset, coll); err != nil {
 			return err
@@ -227,4 +240,23 @@ func noDuplicates(items []string) error {
 	}
 
 	return nil
+}
+
+// related files = thumbnails and metadata content belonging to a primary file
+func discoverRelatedFilePaths(filesForToDiscover []string, collectionAllFiles map[string]stotypes.File) []string {
+	relatedFiles := []string{}
+
+	for _, item := range filesForToDiscover {
+		file, found := collectionAllFiles[item]
+		if !found { // should not happen, but let's ignore here since this error is caught in later code
+			continue
+		}
+
+		thumbPath := stomediascanner.CollectionThumbPath(file)
+		if _, haveThumb := collectionAllFiles[thumbPath]; haveThumb {
+			relatedFiles = append(relatedFiles, thumbPath)
+		}
+	}
+
+	return relatedFiles
 }
