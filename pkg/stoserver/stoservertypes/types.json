@@ -90,6 +90,7 @@
 			"type": "string",
 			"stringMembers": [
 				"generic",
+				"albums",
 				"movies",
 				"series",
 				"games",

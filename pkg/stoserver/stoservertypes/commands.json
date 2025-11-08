@@ -316,7 +316,7 @@
 		"title": "Set directory type",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true },
-			{ "key": "Type", "type": "DirectoryType", "help": "Available values: generic,movies,series,games,podcasts" }
+			{ "key": "Type", "type": "DirectoryType", "help": "Available values: generic,albums,movies,series,games,podcasts" }
 		]
 	},
 	{
