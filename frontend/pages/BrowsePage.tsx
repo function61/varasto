@@ -540,6 +540,7 @@ function helpByDirectoryType(type: DirectoryType): HelpForDirType | null {
 			return { doc: DocRef.DocsContentGamesIndexMd, title: 'Guide: storing games' };
 		case DirectoryType.Generic: // have doc, but let's not pollute every directory
 		case DirectoryType.Podcasts:
+		case DirectoryType.Albums:
 			return null;
 		default:
 			throw unrecognizedValue(type);
@@ -558,6 +559,8 @@ function directoryTypeToEmoji(type: DirectoryType): string {
 			return '🎙️';
 		case DirectoryType.Games:
 			return '🎮';
+		case DirectoryType.Albums:
+			return '🏞️';
 		default:
 			throw unrecognizedValue(type);
 	}
