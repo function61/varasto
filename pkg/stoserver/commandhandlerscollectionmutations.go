@@ -153,7 +153,12 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 
 		existingFiles := stateForValidation.Files()
 
-		for _, fileToDelete := range filesToDelete {
+		// delete related thumbnails etc. as well
+		allFilesToDelete := []string{}
+		allFilesToDelete = append(allFilesToDelete, filesToDelete...)
+		allFilesToDelete = append(allFilesToDelete, discoverRelatedFilePaths(filesToDelete, existingFiles)...)
+
+		for _, fileToDelete := range allFilesToDelete {
 			if _, has := existingFiles[fileToDelete]; !has {
 				return fmt.Errorf("file to delete does not exist: %s", fileToDelete)
 			}
@@ -165,7 +170,7 @@ func (c *cHandlers) CollectionDeleteFiles(cmd *stoservertypes.CollectionDeleteFi
 			ctx.Meta.Timestamp,
 			nil,
 			nil,
-			filesToDelete)
+			allFilesToDelete)
 
 		if err := appendAndValidateChangeset(changeset, coll); err != nil {
 			return err
