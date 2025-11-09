@@ -1,3 +1,4 @@
+import { Sensitivity } from 'component/sensitivity';
 import { Glyphicon, Panel, tableClassStripedHover } from 'f61ui/component/bootstrap';
 import { Result } from 'f61ui/component/result';
 import { browseUrl, collectionUrl, searchUrl } from 'generated/frontend_uiroutes';
@@ -42,6 +43,21 @@ export default class SearchPage extends React.Component<SearchPageProps, SearchP
 	private renderData() {
 		const [results, loadingOrError] = this.state.results.unwrap();
 
+		const resultsFiltered = (results || []).filter((result) => {
+			if (result.Collection && result.Collection.Sensitivity !== Sensitivity.FamilyFriendly) {
+				return false;
+			}
+
+			if (
+				result.Directory &&
+				result.Directory.Directory.Directory.Sensitivity !== Sensitivity.FamilyFriendly
+			) {
+				return false;
+			}
+
+			return true;
+		});
+
 		return (
 			<div>
 				<form action={searchUrl({ q: '' })} method="get">
@@ -71,7 +87,7 @@ export default class SearchPage extends React.Component<SearchPageProps, SearchP
 						</tr>
 					</thead>
 					<tbody>
-						{(results || []).map((result: SearchResult) => {
+						{resultsFiltered.map((result: SearchResult) => {
 							const kindIndicator = ((): [string, JSX.Element, JSX.Element] => {
 								if (result.Collection) {
 									return [
