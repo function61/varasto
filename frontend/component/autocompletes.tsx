@@ -1,6 +1,7 @@
 import { SearchBox } from 'component/autocomplete';
 import { CustomFieldInputFactory } from 'f61ui/commandtypes';
 import {
+	searchCollections,
 	searchIgdb,
 	searchReplicationPolicies,
 	searchTmdbMovies,
@@ -8,6 +9,29 @@ import {
 	searchVolumes,
 } from 'generated/stoserver/stoservertypes_endpoints';
 import * as React from 'react';
+
+export const collectionAutocomplete: CustomFieldInputFactory<string> = (
+	field,
+	_,
+	update,
+	autoFocus,
+) => {
+	return (
+		<SearchBox
+			allowEmptySearch={false}
+			autoFocus={autoFocus}
+			placeholder={field.Placeholder}
+			searchTerm={field.DefaultValueString}
+			dataSource={searchCollections}
+			onSelect={(item) => {
+				update(item.key);
+			}}
+			itemToAutocompleteItem={(item) => {
+				return { label: item.Name, key: item.ID };
+			}}
+		/>
+	);
+};
 
 export const replicationPolicyAutocomplete: CustomFieldInputFactory<string> = (
 	field,

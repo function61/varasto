@@ -1534,6 +1534,45 @@ func (h *handlers) Search(rctx *httpauth.RequestContext, w http.ResponseWriter, 
 	return &results
 }
 
+func (h *handlers) SearchCollections(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.CollectionSearchResult {
+	//nolint:unparam // false positive for this pattern
+	withErr := func(err error) *[]stoservertypes.CollectionSearchResult {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
+	queryLowercased := strings.ToLower(r.URL.Query().Get("q"))
+
+	results := []stoservertypes.CollectionSearchResult{}
+
+	if queryLowercased == "" {
+		return &results
+	}
+
+	tx, err := h.db.Begin(false)
+	if err != nil {
+		return withErr(err)
+	}
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	if err := stodb.CollectionRepository.Each(func(record any) error {
+		coll := record.(*stotypes.Collection)
+
+		if queryMatches := strings.Contains(strings.ToLower(coll.Name), queryLowercased); queryMatches {
+			results = append(results, stoservertypes.CollectionSearchResult{
+				ID:   coll.ID,
+				Name: coll.Name,
+			})
+		}
+
+		return nil
+	}, tx); err != nil {
+		return withErr(err)
+	}
+
+	return &results
+}
+
 func (h *handlers) whichInitialVolumeToWriteCollectionBlobsTo(collectionID string) (int, error) {
 	var volumeID int
 	return volumeID, h.db.View(func(tx *bbolt.Tx) error {

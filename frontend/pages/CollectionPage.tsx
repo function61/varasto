@@ -1,5 +1,5 @@
 import { AssetImg } from 'component/assetimg';
-import { tmdbMovieAutocomplete } from 'component/autocompletes';
+import { collectionAutocomplete, tmdbMovieAutocomplete } from 'component/autocompletes';
 import { collectionDropdown } from 'component/collectiondropdown';
 import { filetypeForFile, iconForFiletype } from 'component/filetypes';
 import { FileUploadArea } from 'component/fileupload';
@@ -492,6 +492,9 @@ export default class CollectionPage extends React.Component<
 								command={CollectionMoveFilesIntoAnotherCollection(
 									coll.Id,
 									this.state.selectedFileHashes,
+									{
+										Destination: collectionAutocomplete,
+									},
 								)}
 							/>
 						</span>
