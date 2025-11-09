@@ -186,6 +186,23 @@ export default class CollectionPage extends React.Component<
 
 		const haveAnyThumbnails = eligibleForThumbnail.length > 0;
 
+		// content should be displayed on a chronological timeline. photos and videos are usually well-sorted by filename BUT
+		// only within photos and videos themselves, NOT combined. e.g.:
+		// - IMG_01.jpg
+		// - IMG_04.jpg
+		// - VID_02.mp4
+		// - VID_03.mp4
+		// i.e. the above set of files is sorted by filename but not chronologically. the chronological order would be (1, 2, 3, 4)
+		const shouldSortByTimeCreated = dirInheritedType === DirectoryType.Albums;
+
+		const filesSorted = collOutput.SelectedPathContents.Files.sort((a, b) => {
+			if (shouldSortByTimeCreated) {
+				return a.Created < b.Created ? -1 : 1;
+			} else {
+				return a.Path < b.Path ? -1 : 1;
+			}
+		});
+
 		return (
 			<div>
 				<SensitivityHeadsUp />
@@ -199,8 +216,8 @@ export default class CollectionPage extends React.Component<
 
 						{(this.props.view === ViewType.Auto && haveAnyThumbnails) ||
 						this.props.view === ViewType.Thumb
-							? this.thumbnailView(collOutput)
-							: this.listView(collOutput, dirInheritedType)}
+							? this.thumbnailView(collOutput, filesSorted)
+							: this.listView(collOutput, filesSorted)}
 					</div>
 					<div className="col-md-4">
 						{dirInheritedType === DirectoryType.Series &&
@@ -337,25 +354,8 @@ export default class CollectionPage extends React.Component<
 		);
 	}
 
-	private listView(collOutput: CollectionOutput, dirInheritedType: DirectoryType): JSX.Element {
+	private listView(collOutput: CollectionOutput, filesSorted: File2[]): JSX.Element {
 		const coll = collOutput.CollectionWithMeta.Collection; // shorthand
-
-		// content should be displayed on a chronological timeline. photos and videos are usually well-sorted by filename BUT
-		// only within photos and videos themselves, NOT combined. e.g.:
-		// - IMG_01.jpg
-		// - IMG_04.jpg
-		// - VID_02.mp4
-		// - VID_03.mp4
-		// i.e. the above set of files is sorted by filename but not chronologically. the chronological order would be (1, 2, 3, 4)
-		const shouldSortByTimeCreated = dirInheritedType === DirectoryType.Albums;
-
-		const filesSorted = collOutput.SelectedPathContents.Files.sort((a, b) => {
-			if (shouldSortByTimeCreated) {
-				return a.Created < b.Created ? -1 : 1;
-			} else {
-				return a.Path < b.Path ? -1 : 1;
-			}
-		});
 
 		const fileCheckedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 			const shiftPressed = e.nativeEvent instanceof MouseEvent && e.nativeEvent.shiftKey;
@@ -509,7 +509,7 @@ export default class CollectionPage extends React.Component<
 		);
 	}
 
-	private thumbnailView(collOutput: CollectionOutput): JSX.Element {
+	private thumbnailView(collOutput: CollectionOutput, filesSorted: File2[]): JSX.Element {
 		const coll = collOutput.CollectionWithMeta.Collection; // shorthand
 
 		const fileToThumbnail = (file: File2) => {
@@ -588,7 +588,7 @@ export default class CollectionPage extends React.Component<
 			return { subDir };
 		})
 			.concat(
-				collOutput.SelectedPathContents.Files.map((file): FileOrSubdir => {
+				filesSorted.map((file): FileOrSubdir => {
 					return { file };
 				}),
 			)
