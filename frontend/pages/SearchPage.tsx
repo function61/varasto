@@ -82,7 +82,7 @@ export default class SearchPage extends React.Component<SearchPageProps, SearchP
 				<table className={tableClassStripedHover}>
 					<thead>
 						<tr>
-							<th>Kind</th>
+							<th></th>
 							<th>Result</th>
 						</tr>
 					</thead>
