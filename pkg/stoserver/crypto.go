@@ -11,7 +11,7 @@ import (
 
 func loadAndFillKeyStore(tx *bbolt.Tx) (*stokeystore.Store, error) {
 	keks := []stotypes.KeyEncryptionKey{}
-	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
+	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.Appender(&keks), tx); err != nil {
 		return nil, err
 	}
 

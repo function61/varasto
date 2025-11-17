@@ -18,7 +18,7 @@ func healthForScheduledJobs(tx *bbolt.Tx) stohealth.HealthChecker {
 	jobsHealth := []stohealth.HealthChecker{}
 
 	jobs := []stotypes.ScheduledJob{}
-	if err := stodb.ScheduledJobRepository.Each(stodb.ScheduledJobAppender(&jobs), tx); err != nil {
+	if err := stodb.ScheduledJobRepository.Each(stodb.Appender(&jobs), tx); err != nil {
 		panic(err)
 	}
 

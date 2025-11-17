@@ -46,7 +46,7 @@ func (c *cHandlers) VolumeCreate(cmd *stoservertypes.VolumeCreate, ctx *command.
 		maxVolID := 0
 
 		allVolumes := []stotypes.Volume{}
-		if err := stodb.VolumeRepository.Each(stodb.VolumeAppender(&allVolumes), tx); err != nil {
+		if err := stodb.VolumeRepository.Each(stodb.Appender(&allVolumes), tx); err != nil {
 			return err
 		}
 
@@ -319,7 +319,7 @@ func (c *cHandlers) mountVolume(
 		}
 
 		allMounts := []stotypes.VolumeMount{}
-		if err := stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&allMounts), tx); err != nil {
+		if err := stodb.VolumeMountRepository.Each(stodb.Appender(&allMounts), tx); err != nil {
 			return err
 		}
 
@@ -636,7 +636,7 @@ func createCollection(
 	kekPubKeyFingerprints := []string{}
 
 	keks := []stotypes.KeyEncryptionKey{}
-	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&keks), tx); err != nil {
+	if err := stodb.KeyEncryptionKeyRepository.Each(stodb.Appender(&keks), tx); err != nil {
 		return nil, err
 	}
 

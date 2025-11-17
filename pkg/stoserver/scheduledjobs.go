@@ -75,7 +75,7 @@ func setupScheduledJobs(
 	dbJobs := []stotypes.ScheduledJob{}
 	jobs := []*scheduler.Job{}
 
-	if err := stodb.ScheduledJobRepository.Each(stodb.ScheduledJobAppender(&dbJobs), tx); err != nil {
+	if err := stodb.ScheduledJobRepository.Each(stodb.Appender(&dbJobs), tx); err != nil {
 		return nil, err
 	}
 

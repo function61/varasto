@@ -221,7 +221,7 @@ func (m *metricsController) collectMetrics(conf *ServerConfig, db *bbolt.DB) err
 	}
 
 	jobs := []stotypes.ScheduledJob{}
-	if err := stodb.ScheduledJobRepository.Each(stodb.ScheduledJobAppender(&jobs), tx); err != nil {
+	if err := stodb.ScheduledJobRepository.Each(stodb.Appender(&jobs), tx); err != nil {
 		return err
 	}
 

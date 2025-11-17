@@ -124,60 +124,10 @@ func volumeIntIDToBytes(id int) []byte {
 	return b
 }
 
-// appenders. Go surely would need some generic love..
-
-func ClientAppender(slice *[]stotypes.Client) func(record any) error {
+// helper for using `Each()` to append concrete types from the repo to a slice
+func Appender[T any](slice *[]T) func(record any) error {
 	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.Client))
-		return nil
-	}
-}
-
-func NodeAppender(slice *[]stotypes.Node) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.Node))
-		return nil
-	}
-}
-
-func ReplicationPolicyAppender(slice *[]stotypes.ReplicationPolicy) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.ReplicationPolicy))
-		return nil
-	}
-}
-
-func VolumeAppender(slice *[]stotypes.Volume) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.Volume))
-		return nil
-	}
-}
-
-func VolumeMountAppender(slice *[]stotypes.VolumeMount) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.VolumeMount))
-		return nil
-	}
-}
-
-func IntegrityVerificationJobAppender(slice *[]stotypes.IntegrityVerificationJob) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.IntegrityVerificationJob))
-		return nil
-	}
-}
-
-func ScheduledJobAppender(slice *[]stotypes.ScheduledJob) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.ScheduledJob))
-		return nil
-	}
-}
-
-func KeyEncryptionKeyAppender(slice *[]stotypes.KeyEncryptionKey) func(record any) error {
-	return func(record any) error {
-		*slice = append(*slice, *record.(*stotypes.KeyEncryptionKey))
+		*slice = append(*slice, *record.(*T))
 		return nil
 	}
 }

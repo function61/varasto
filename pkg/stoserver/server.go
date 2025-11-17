@@ -352,7 +352,7 @@ func readConfigFromDatabase(
 	}
 
 	clusterWideMounts := []stotypes.VolumeMount{}
-	if err := stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&clusterWideMounts), tx); err != nil {
+	if err := stodb.VolumeMountRepository.Each(stodb.Appender(&clusterWideMounts), tx); err != nil {
 		return nil, err
 	}
 
@@ -362,7 +362,7 @@ func readConfigFromDatabase(
 	}
 
 	clients := []stotypes.Client{}
-	if err := stodb.ClientRepository.Each(stodb.ClientAppender(&clients), tx); err != nil {
+	if err := stodb.ClientRepository.Each(stodb.Appender(&clients), tx); err != nil {
 		return nil, err
 	}
 

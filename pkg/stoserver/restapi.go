@@ -401,7 +401,7 @@ func (h *handlers) getVolumesInternal(
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.Volume{}
-	panicIfError(stodb.VolumeRepository.Each(stodb.VolumeAppender(&dbObjects), tx))
+	panicIfError(stodb.VolumeRepository.Each(stodb.Appender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		if !filter(dbObject) {
@@ -479,7 +479,7 @@ func (h *handlers) GetVolumeMounts(rctx *httpauth.RequestContext, w http.Respons
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.VolumeMount{}
-	panicIfError(stodb.VolumeMountRepository.Each(stodb.VolumeMountAppender(&dbObjects), tx))
+	panicIfError(stodb.VolumeMountRepository.Each(stodb.Appender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, stoservertypes.VolumeMount{
@@ -709,7 +709,7 @@ func (h *handlers) getReplicationPoliciesInternal(
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.ReplicationPolicy{}
-	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.ReplicationPolicyAppender(&dbObjects), tx))
+	panicIfError(stodb.ReplicationPolicyRepository.Each(stodb.Appender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		if !filter(dbObject) {
@@ -778,7 +778,7 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 
 		dbJobs := []stotypes.ScheduledJob{}
 
-		if err := stodb.ScheduledJobRepository.Each(stodb.ScheduledJobAppender(&dbJobs), tx); err != nil {
+		if err := stodb.ScheduledJobRepository.Each(stodb.Appender(&dbJobs), tx); err != nil {
 			return nil, err
 		}
 
@@ -868,7 +868,7 @@ func (h *handlers) GetKeyEncryptionKeys(rctx *httpauth.RequestContext, w http.Re
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.KeyEncryptionKey{}
-	panicIfError(stodb.KeyEncryptionKeyRepository.Each(stodb.KeyEncryptionKeyAppender(&dbObjects), tx))
+	panicIfError(stodb.KeyEncryptionKeyRepository.Each(stodb.Appender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, stoservertypes.KeyEncryptionKey{
@@ -901,7 +901,7 @@ func (h *handlers) GetNodes(rctx *httpauth.RequestContext, w http.ResponseWriter
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.Node{}
-	if err := stodb.NodeRepository.Each(stodb.NodeAppender(&dbObjects), tx); err != nil {
+	if err := stodb.NodeRepository.Each(stodb.Appender(&dbObjects), tx); err != nil {
 		return httpErr(err, http.StatusInternalServerError)
 	}
 
@@ -940,7 +940,7 @@ func (h *handlers) GetAPIKeys(rctx *httpauth.RequestContext, w http.ResponseWrit
 	defer func() { ignoreError(tx.Rollback()) }()
 
 	dbObjects := []stotypes.Client{}
-	panicIfError(stodb.ClientRepository.Each(stodb.ClientAppender(&dbObjects), tx))
+	panicIfError(stodb.ClientRepository.Each(stodb.Appender(&dbObjects), tx))
 
 	for _, dbObject := range dbObjects {
 		ret = append(ret, stoservertypes.ApiKey{
@@ -1092,7 +1092,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 	defer rollback()
 
 	dbObjects := []stotypes.IntegrityVerificationJob{}
-	panicIfError(stodb.IntegrityVerificationJobRepository.Each(stodb.IntegrityVerificationJobAppender(&dbObjects), tx))
+	panicIfError(stodb.IntegrityVerificationJobRepository.Each(stodb.Appender(&dbObjects), tx))
 
 	sort.Slice(dbObjects, func(i, j int) bool { return !dbObjects[i].Started.Before(dbObjects[j].Started) })
 
