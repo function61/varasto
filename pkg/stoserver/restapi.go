@@ -1189,12 +1189,27 @@ func (h *handlers) GetServerInfo(rctx *httpauth.RequestContext, w http.ResponseW
 		return nil
 	}
 
+	systemInstalled, err := func() (time.Time, error) {
+		tx, err := h.db.Begin(false)
+		if err != nil {
+			return time.Time{}, err
+		}
+		defer func() { ignoreError(tx.Rollback()) }()
+
+		return systemInstalledTimestamp(tx)
+	}()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil
+	}
+
 	ms := &runtime.MemStats{}
 	runtime.ReadMemStats(ms)
 
 	return &stoservertypes.ServerInfo{
 		AppVersion:   dynversion.Version,
 		StartedAt:    appuptime.Started(),
+		InstalledAt:  systemInstalled,
 		DatabaseSize: int(dbFileInfo.Size()),
 		CpuCount:     runtime.NumCPU(),
 		ProcessId:    fmt.Sprintf("%d", os.Getpid()),

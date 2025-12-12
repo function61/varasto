@@ -108,6 +108,7 @@ export default class ServerInfoPage extends React.Component<{}, ServerInfoPageSt
 			? [
 					{ h: 'Varasto version', t: serverInfo.AppVersion },
 					{ h: 'Varasto uptime', t: <Timestamp ts={serverInfo.StartedAt} /> },
+					{ h: 'Varasto installed', t: <Timestamp ts={serverInfo.InstalledAt} /> },
 					{ h: 'Database size', t: bytesToHumanReadable(serverInfo.DatabaseSize) },
 					{ h: 'Go version', t: serverInfo.GoVersion },
 					{

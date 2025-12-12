@@ -8,8 +8,11 @@ import (
 	"regexp"
 	"slices"
 	"sync/atomic"
+	"time"
 
 	"github.com/function61/gokit/mime"
+	"github.com/function61/varasto/pkg/stoserver/stodb"
+	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"go.etcd.io/bbolt"
 )
@@ -112,4 +115,12 @@ func readTx(db *bbolt.DB) (*bbolt.Tx, func(), error) {
 	return tx, func() {
 		ignoreError(tx.Rollback())
 	}, nil
+}
+
+func systemInstalledTimestamp(tx *bbolt.Tx) (time.Time, error) {
+	rootDir := stotypes.Directory{}
+	if err := stodb.DirectoryRepository.OpenByPrimaryKey([]byte(stoservertypes.RootFolderId), &rootDir, tx); err != nil {
+		return time.Time{}, err
+	}
+	return rootDir.Created, nil
 }
