@@ -67,6 +67,7 @@ func (b *dirAdapter) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 	defer b.cacheMu.Unlock()
 
 	if err := b.computeCache(ctx); err != nil {
+		b.srv.logl.Error.Printf("dirAdapter.ReadDirAll: %v", err)
 		return nil, fuse.ENOENT
 	}
 
@@ -90,6 +91,7 @@ func (b *dirAdapter) computeCache(ctx context.Context) error {
 	if _, err := ezhttp.Get(
 		ctx,
 		conf.URLBuilder().GetDirectory(b.dirID),
+		ezhttp.AuthBearer(conf.AuthToken),
 		ezhttp.RespondsJson(dirOutput, false),
 		ezhttp.Client(conf.HTTPClient()),
 	); err != nil {
