@@ -94,6 +94,7 @@ func (s *Controller) setStatus(st *Status) {
 	s.status = st
 }
 
+// returns nil if context canceled
 func (s *Controller) handler(ctx context.Context) error {
 	var cmd *exec.Cmd
 	var cmdStdinSentinel io.Closer
@@ -233,7 +234,12 @@ func (s *Controller) handler(ctx context.Context) error {
 					err,
 					dur)
 
-				time.Sleep(dur)
+				select {
+				case <-time.After(dur):
+					// no-op
+				case <-ctx.Done(): // aborted
+					return nil
+				}
 
 				startChildProcess()
 			} else {
