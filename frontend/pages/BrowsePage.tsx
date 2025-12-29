@@ -421,7 +421,7 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 				<table className={tableClassStripedHover}>
 					<tbody>
 						<tr>
-							<th>Id</th>
+							<th>ID</th>
 							<td>
 								{dir.Id}
 								<span className="margin-left">

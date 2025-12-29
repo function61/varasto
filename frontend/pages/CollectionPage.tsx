@@ -213,6 +213,7 @@ export default class CollectionPage extends React.Component<
 						<MetadataPanel
 							collWithMeta={collOutput.CollectionWithMeta}
 							showDetails={true}
+							skipRenderingIfNoMetadata={true}
 						/>
 
 						{(this.props.view === ViewType.Auto && haveAnyThumbnails) ||
@@ -234,7 +235,7 @@ export default class CollectionPage extends React.Component<
 							<table className={tableClassStripedHover}>
 								<tbody>
 									<tr>
-										<th>Id</th>
+										<th>ID</th>
 										<td>
 											{coll.Id}
 

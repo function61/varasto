@@ -34,8 +34,12 @@ interface MetadataKeyValue {
 }
 
 interface MetadataPanelProps {
-	showTitle?: boolean; // shows title and publication date
-	showDetails?: boolean; // shows summary, publication date and external links
+	/** shows title and publication date */
+	showTitle?: boolean;
+	/** shows summary, publication date and external links */
+	showDetails?: boolean;
+	/** if panel would be mostly without content, don't show it */
+	skipRenderingIfNoMetadata?: boolean;
 	imageLinksToCollection?: boolean;
 	collWithMeta: CollectionSubsetWithMeta;
 }
@@ -48,7 +52,8 @@ export class MetadataPanel extends React.Component<MetadataPanelProps, {}> {
 
 		const metadata = metadataKvsToKv(coll.Metadata);
 
-		if (Object.keys(metadata).length === 0) {
+		const noMetadata = Object.keys(metadata).length === 0;
+		if (noMetadata && this.props.skipRenderingIfNoMetadata) {
 			return null;
 		}
 
