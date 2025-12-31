@@ -204,6 +204,8 @@ export default class CollectionPage extends React.Component<
 			}
 		});
 
+		const pathForUploadedFiles = this.props.pathBase64 ? atob(this.props.pathBase64) : '';
+
 		return (
 			<div>
 				<SensitivityHeadsUp />
@@ -333,6 +335,7 @@ export default class CollectionPage extends React.Component<
 								</div>
 							}>
 							<FileUploadArea
+								pathForUploadedFiles={pathForUploadedFiles}
 								collectionId={this.props.id}
 								collectionRevision={coll.Head}
 							/>

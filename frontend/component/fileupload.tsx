@@ -30,6 +30,8 @@ interface UploadProgress {
 interface FileUploadAreaProps {
 	collectionId: string;
 	collectionRevision: string;
+	/** `` if should upload files to root. `documentation/topic` (without trailing slash) if to nested subdir  */
+	pathForUploadedFiles: string;
 }
 
 interface FileUploadAreaState {
@@ -150,11 +152,14 @@ export class FileUploadArea extends React.Component<FileUploadAreaProps, FileUpl
 	}
 
 	private async uploadOneFile(file: File): Promise<File2> {
+		const pathPrefix =
+			this.props.pathForUploadedFiles.length > 0 ? this.props.pathForUploadedFiles + '/' : '';
+		const fileBasename = file.name; // spec says: "without path information"
+
 		const uploadEndpoint = makeQueryParams(uploadFileUrl(this.props.collectionId), {
 			mtime: file.lastModified.toString(),
-			filename: file.name, // spec says: "without path information"
+			filename: pathPrefix + fileBasename,
 		});
-
 		// TODO: upload progress
 		//       fetch() doesn't provide an API for it so it was not easy :(
 
