@@ -2,19 +2,13 @@ name: Build
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
+  reusable-build:
+    # this basically just runs `$ bob build` (for details see https://github.com/function61/turbobob)
+    uses: function61/turbobob-action/.github/workflows/build.yml@main
+    secrets:
+      DOCKER_CREDS: ${{ secrets.DOCKER_CREDS }}
 
-    - uses: docker/setup-buildx-action@v1
-
-    - name: Build
-      run: |
-        curl --fail --location --silent --output bob https://function61.com/go/turbobob-latest-stable-linux-amd64 && chmod +x bob
-        ./bob build in-ci-autodetect-settings
-      env:
-        DOCKER_CREDS: ${{ secrets.DOCKER_CREDS }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        EVENTHORIZON: ${{ secrets.EVENTHORIZON }}
