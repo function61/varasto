@@ -481,7 +481,8 @@
 		"fields": [
 			{ "key": "Source", "hideIfDefaultValue": true },
 			{ "key": "Files", "type": "StringList", "hideIfDefaultValue": true },
-			{ "key": "Destination", "title": "Destination collection", "placeholder": "(search)", "type": "custom/string" }
+			{ "key": "Destination", "title": "Destination collection", "placeholder": "(search)", "type": "custom/string", "optional": true },
+			{ "key": "NameNewCollection", "title": "Name of new collection", "placeholder": "(create new collection)", "optional": true, "help": "If defined, new collection is created (as sibling of source collection). In this case leave destination unset." }
 		]
 	},
 	{

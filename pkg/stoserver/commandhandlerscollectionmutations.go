@@ -25,23 +25,28 @@ func (c *cHandlers) CollectionMoveFilesIntoAnotherCollection(cmd *stoservertypes
 		return err
 	}
 
-	if cmd.Source == cmd.Destination {
-		return errors.New("source and destination cannot be same")
-	}
-
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		collSrc, err := stodb.Read(tx).Collection(cmd.Source)
 		if err != nil {
 			return err
 		}
 
-		collDst, err := stodb.Read(tx).Collection(cmd.Destination)
+		collDst, err := func() (*stotypes.Collection, error) {
+			if nameNewCollection := cmd.NameNewCollection; nameNewCollection != "" {
+				if cmd.Destination != "" {
+					return nil, errors.New("in the case of making a new collection the destination must be empty")
+				}
+				return createCollection(nameNewCollection, collSrc.Directory, c.conf.KeyStore, tx)
+			} else {
+				if cmd.Destination == "" || cmd.Source == cmd.Destination {
+					return nil, errors.New("source and destination cannot be same")
+				}
+
+				return stodb.Read(tx).Collection(cmd.Destination)
+			}
+		}()
 		if err != nil {
 			return err
-		}
-
-		if cmd.Source == cmd.Destination {
-			return errors.New("source and destination cannot be same")
 		}
 
 		sourceState, err := stateresolver.ComputeStateAtHead(*collSrc)
