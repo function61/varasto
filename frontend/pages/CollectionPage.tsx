@@ -224,7 +224,7 @@ export default class CollectionPage extends React.Component<
 							: this.listView(collOutput, filesSorted)}
 					</div>
 					<div className="col-md-4">
-						{dirInheritedType === DirectoryType.Series &&
+						{dirInheritedType !== DirectoryType.Generic &&
 							this.nextPreviousButtons(collOutput, directoryOutput)}
 
 						<Panel
