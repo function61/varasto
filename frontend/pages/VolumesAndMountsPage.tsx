@@ -273,6 +273,10 @@ export default class VolumesAndMountsPage extends React.Component<
 	private renderServiceView() {
 		const [volumes, loadingOrError] = this.state.volumes.unwrap();
 
+		const volumesWithoutCloud = (volumes || []).filter(
+			(v) => v.Technology !== VolumeTechnology.Cloud,
+		);
+
 		return (
 			<table className={tableClassStripedHover}>
 				<thead>
@@ -285,7 +289,7 @@ export default class VolumesAndMountsPage extends React.Component<
 					</tr>
 				</thead>
 				<tbody>
-					{(volumes || []).map((vol) => {
+					{volumesWithoutCloud.map((vol) => {
 						const manufactured = vol.Manufactured;
 						const warrantyEnds = vol.WarrantyEnds;
 
