@@ -355,7 +355,11 @@ export default class BrowsePage extends React.Component<BrowsePageProps, BrowseP
 							{this.state.selectedCollIds.length === 0 && (
 								<div>
 									<span className="margin-right">
-										<CommandButton command={DirectoryCreate(dir.Id)} />
+										<CommandButton
+											command={DirectoryCreate(dir.Id, {
+												redirect: (id) => browseUrl({ dir: id }),
+											})}
+										/>
 									</span>
 									<span className="margin-right">
 										<CommandButton

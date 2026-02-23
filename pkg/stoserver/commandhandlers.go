@@ -437,13 +437,15 @@ func (c *cHandlers) DirectoryCreate(cmd *stoservertypes.DirectoryCreate, ctx *co
 			return err
 		}
 
-		return stodb.DirectoryRepository.Update(
-			stotypes.NewDirectory(
-				stoutils.NewDirectoryID(),
-				cmd.Parent,
-				cmd.Name,
-				string(stoservertypes.DirectoryTypeGeneric)),
-			tx)
+		dir := stotypes.NewDirectory(
+			stoutils.NewDirectoryID(),
+			cmd.Parent,
+			cmd.Name,
+			string(stoservertypes.DirectoryTypeGeneric))
+
+		ctx.CreatedRecordId(dir.ID)
+
+		return stodb.DirectoryRepository.Update(dir, tx)
 	})
 }
 
