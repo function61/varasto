@@ -28,7 +28,7 @@ func (c *Client) GameByID(ctx context.Context, id string) (*Game, error) {
 	res := []Game{}
 	if _, err := ezhttp.Post(
 		ctx,
-		endpointV3("/games"),
+		endpointV4("/games"),
 		ezhttp.Header("Accept", "application/json"),
 		ezhttp.Header("user-key", c.apiKey),
 		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
@@ -50,7 +50,7 @@ func (c *Client) SearchGames(ctx context.Context, name string) ([]Game, error) {
 	searchResults := []Game{}
 	if _, err := ezhttp.Post(
 		ctx,
-		endpointV3("/games"),
+		endpointV4("/games"),
 		ezhttp.Header("Accept", "application/json"),
 		ezhttp.Header("user-key", c.apiKey),
 		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
@@ -72,7 +72,7 @@ func (c *Client) GameYoutubeVideoIDs(ctx context.Context, id string) ([]string, 
 
 	if _, err := ezhttp.Post(
 		ctx,
-		endpointV3("/game_videos"),
+		endpointV4("/game_videos"),
 		ezhttp.Header("Accept", "application/json"),
 		ezhttp.Header("user-key", c.apiKey),
 		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
@@ -108,7 +108,7 @@ func (c *Client) GameScreenshotUrls(ctx context.Context, id string) ([]string, e
 	}{}
 	if _, err := ezhttp.Post(
 		ctx,
-		endpointV3("/screenshots"),
+		endpointV4("/screenshots"),
 		ezhttp.Header("Accept", "application/json"),
 		ezhttp.Header("user-key", c.apiKey),
 		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
@@ -135,7 +135,7 @@ func (c *Client) GameCoverURLs(ctx context.Context, id string) ([]string, error)
 	}{}
 	if _, err := ezhttp.Post(
 		ctx,
-		endpointV3("/covers"),
+		endpointV4("/covers"),
 		ezhttp.Header("Accept", "application/json"),
 		ezhttp.Header("user-key", c.apiKey),
 		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
@@ -159,7 +159,7 @@ func (c *Client) WebsitesByGameID(ctx context.Context, id string) ([]Website, er
 
 	if _, err := ezhttp.Post(
 		ctx,
-		endpointV3("/websites"),
+		endpointV4("/websites"),
 		ezhttp.Header("Accept", "application/json"),
 		ezhttp.Header("user-key", c.apiKey),
 		ezhttp.SendBody(strings.NewReader(query), "application/x-www-form-urlencoded"),
@@ -198,6 +198,6 @@ func originalImageURL(imageID string) string {
 	return fmt.Sprintf("https://images.igdb.com/igdb/image/upload/t_original/%s.jpg", imageID)
 }
 
-func endpointV3(path string) string {
-	return "https://api-v3.igdb.com" + path
+func endpointV4(path string) string {
+	return "https://api.igdb.com/v4" + path
 }
