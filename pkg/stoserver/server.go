@@ -71,18 +71,18 @@ func runServer(
 
 	logl := logex.Levels(logger)
 
-	scf, err := readServerConfigFile()
+	serverConfigFile, err := readServerConfigFile()
 	if err != nil {
 		return err // has enough context
 	}
 
-	db, err := stodb.Open(scf.DBLocation)
+	db, err := stodb.Open(serverConfigFile.DBLocation)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	serverConfig, err := readConfigFromDatabase(db, scf, logger, logTail)
+	serverConfig, err := readConfigFromDatabase(ctx, db, serverConfigFile, logger, logTail)
 	if err != nil { // maybe need bootstrap?
 		// totally unexpected error?
 		if err != blorm.ErrBucketNotFound {
@@ -94,7 +94,7 @@ func runServer(
 			return err
 		}
 
-		serverConfig, err = readConfigFromDatabase(db, scf, logger, logTail)
+		serverConfig, err = readConfigFromDatabase(ctx, db, serverConfigFile, logger, logTail)
 		if err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func runServer(
 	serverConfig.MediaScanner = &subsystem{
 		id:        stoservertypes.SubsystemIdMediascanner,
 		httpMount: "/api/mediascanner",
-		enabled:   !scf.DisableMediaScanner,
+		enabled:   !serverConfigFile.DisableMediaScanner,
 		controller: childprocesscontroller.New(
 			[]string{os.Args[0], "server", stomediascanner.Verb, "--addr", "domainsocket://" + mediascannerSockAddr},
 			"Media scanner",
@@ -239,7 +239,15 @@ func runServer(
 	for _, mount := range serverConfig.ClusterWideMounts {
 		// one might disable this during times of massive data ingestion to lessen the read
 		// pressure from the initial disk the blobs land on
-		if scf.DisableReplicationController {
+		if serverConfigFile.DisableReplicationController {
+			logl.Info.Printf("skipping replication for mount %d (replication explicitly disabled)", mount.Volume)
+			continue
+		}
+
+		// do not start replication controllers for volumes whose mounts are not online
+		// (the mounts from DB express desired state while disk access controller expresses actual state)
+		if !serverConfig.DiskAccess.IsMounted(mount.Volume) {
+			logl.Info.Printf("skipping replication for non-online mount %d", mount.Volume)
 			continue
 		}
 
@@ -326,6 +334,7 @@ type ServerConfig struct {
 
 // returns blorm.ErrBucketNotFound if bootstrap needed
 func readConfigFromDatabase(
+	ctx context.Context,
 	db *bbolt.DB,
 	scf *ServerConfigFile,
 	logger *log.Logger,
@@ -392,6 +401,7 @@ func readConfigFromDatabase(
 			return nil, err
 		}
 
+		// this always succeeds (does not check connectivity to underlying storage yet)
 		originalDriver, err := getDriver(*volume, mount, logger)
 		if err != nil {
 			return nil, err
@@ -400,9 +410,11 @@ func readConfigFromDatabase(
 		// wrap original driver with metrics-collecting proxy
 		driver := metrics.WrapDriver(originalDriver, volume.ID, volume.UUID, volume.Label)
 
-		// for safety. if on Windows we're using external USB disks, their drive letters
+		// for safety ensure:
+		// 1) the file access works ("mount is successful")
+		// 2) we are accessing the right files. if on Windows we're using external USB disks, their drive letters
 		// could get mixed up and we could mount the wrong volume and that would not be great.
-		if err := dam.Mount(context.TODO(), volume.ID, volume.UUID, driver); err != nil {
+		if err := dam.Mount(ctx, volume.ID, volume.UUID, driver); err != nil {
 			logex.Levels(logger).Error.Printf("volume %s mount: %v", volume.UUID, err)
 
 			failedMountNames = append(failedMountNames, volume.Label)
