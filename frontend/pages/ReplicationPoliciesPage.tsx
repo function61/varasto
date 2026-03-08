@@ -13,6 +13,7 @@ import { CommandButton, CommandLink } from 'f61ui/component/CommandButton';
 import { Dropdown } from 'f61ui/component/dropdown';
 import { Info } from 'f61ui/component/info';
 import { Result } from 'f61ui/component/result';
+import { Timestamp } from 'f61ui/component/timestamp';
 import { shouldAlwaysSucceed } from 'f61ui/utils';
 import {
 	DatabaseDiscoverReconcilableReplicationPolicies,
@@ -310,10 +311,15 @@ export default class ReplicationPoliciesPage extends React.Component<
 
 		return (
 			<div>
-				<p>
-					{thousandSeparate(report.TotalItems)} collections in non-compliance with its
-					replication policy.
-				</p>
+				{report.Created ? (
+					<p>
+						{thousandSeparate(report.TotalItems)} collection(s) in non-compliance with
+						its replication policy. Report assembled on{' '}
+						<Timestamp ts={report.Created} />.
+					</p>
+				) : (
+					<p>Scan not ran yet.</p>
+				)}
 
 				<table className={tableClassStripedHover}>
 					<thead>

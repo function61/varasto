@@ -545,6 +545,7 @@
 		{
 			"name": "ReconciliationReport",
 			"type": {"_": "object", "fields": {
+				"Created": {"_": "datetime", "nullable": true},
 				"TotalItems": {"_": "integer"},
 				"Items": {"_": "list", "of": {"_": "ReconcilableItem"}}
 			}}

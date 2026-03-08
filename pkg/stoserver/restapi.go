@@ -1416,57 +1416,64 @@ func (h *handlers) GetReconcilableItems(rctx *httpauth.RequestContext, w http.Re
 	totalItems := 0
 
 	report := latestReconciliationReport
-	if report != nil {
-		totalItems = len(report.CollectionsWithNonCompliantPolicy)
+	if report == nil {
+		return &stoservertypes.ReconciliationReport{
+			Created:    nil,
+			Items:      nonCompliantItems,
+			TotalItems: totalItems,
+		}
+	}
 
-		for idx, ctr := range report.CollectionsWithNonCompliantPolicy {
-			if idx+1 >= maxItems {
-				break
-			}
+	totalItems = len(report.CollectionsWithNonCompliantPolicy)
 
-			coll, err := stodb.Read(tx).Collection(ctr.collectionID)
+	for idx, ctr := range report.CollectionsWithNonCompliantPolicy {
+		if idx+1 >= maxItems {
+			break
+		}
+
+		coll, err := stodb.Read(tx).Collection(ctr.collectionID)
+		if err != nil {
+			return httpErr(err, http.StatusNotFound)
+		}
+
+		path := []string{coll.Name}
+
+		dirID := coll.Directory
+		for dirID != "" {
+			dir, err := stodb.Read(tx).Directory(dirID)
 			if err != nil {
 				return httpErr(err, http.StatusNotFound)
 			}
 
-			path := []string{coll.Name}
+			path = append([]string{dir.Name}, path...)
 
-			dirID := coll.Directory
-			for dirID != "" {
-				dir, err := stodb.Read(tx).Directory(dirID)
-				if err != nil {
-					return httpErr(err, http.StatusNotFound)
-				}
+			dirID = dir.Parent
+		}
 
-				path = append([]string{dir.Name}, path...)
+		replicaStatuses := []stoservertypes.ReconcilableItemReplicaStatus{}
 
-				dirID = dir.Parent
-			}
-
-			replicaStatuses := []stoservertypes.ReconcilableItemReplicaStatus{}
-
-			for volID, blobCount := range ctr.presence {
-				replicaStatuses = append(replicaStatuses, stoservertypes.ReconcilableItemReplicaStatus{
-					Volume:    volID,
-					BlobCount: blobCount,
-				})
-			}
-
-			sort.Slice(replicaStatuses, func(i, j int) bool { return replicaStatuses[i].Volume < replicaStatuses[j].Volume })
-
-			nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
-				CollectionId:        ctr.collectionID,
-				Description:         strings.Join(path, " » "),
-				TotalBlobs:          ctr.blobCount,
-				DesiredReplicaCount: ctr.desiredReplicas,
-				ReplicaStatuses:     replicaStatuses,
-				ProblemRedundancy:   ctr.problemRedundancy,
-				ProblemZoning:       ctr.problemZoning,
+		for volID, blobCount := range ctr.presence {
+			replicaStatuses = append(replicaStatuses, stoservertypes.ReconcilableItemReplicaStatus{
+				Volume:    volID,
+				BlobCount: blobCount,
 			})
 		}
+
+		sort.Slice(replicaStatuses, func(i, j int) bool { return replicaStatuses[i].Volume < replicaStatuses[j].Volume })
+
+		nonCompliantItems = append(nonCompliantItems, stoservertypes.ReconcilableItem{
+			CollectionId:        ctr.collectionID,
+			Description:         strings.Join(path, " » "),
+			TotalBlobs:          ctr.blobCount,
+			DesiredReplicaCount: ctr.desiredReplicas,
+			ReplicaStatuses:     replicaStatuses,
+			ProblemRedundancy:   ctr.problemRedundancy,
+			ProblemZoning:       ctr.problemZoning,
+		})
 	}
 
 	return &stoservertypes.ReconciliationReport{
+		Created:    &report.Timestamp,
 		Items:      nonCompliantItems,
 		TotalItems: totalItems,
 	}
