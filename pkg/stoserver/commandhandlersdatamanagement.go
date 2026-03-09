@@ -512,6 +512,7 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 	logl := logex.Levels(logex.Prefix("abandonedscanner", c.logger))
 
 	blobCount := 0
+	abandoned := 0
 	totalSize := uint64(0)
 
 	knownEncryptionKeys := map[string]bool{}
@@ -549,13 +550,19 @@ func (c *cHandlers) DatabaseScanAbandoned(cmd *stoservertypes.DatabaseScanAbando
 				blob.EncryptionKeyID)
 		}
 
+		if !blob.Referenced {
+			abandoned++
+			logl.Error.Printf("Abandoned Blob[%s]", blob.Ref.AsHex())
+		}
+
 		return nil
 	}, tx); err != nil {
 		return err
 	}
 
 	logl.Info.Printf(
-		"Completed with %d blob(s) with total size (not counting redundancy) %s scanned",
+		"%d/%d abandoned blob(s) with total size (not counting redundancy) %s scanned",
+		abandoned,
 		blobCount,
 		byteshuman.Humanize(totalSize))
 
