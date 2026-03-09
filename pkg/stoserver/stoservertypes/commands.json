@@ -23,7 +23,8 @@
 		"title": "Verify data integrity",
 		"fields": [
 			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
-			{ "key": "Start", "title": "Start immediately", "type": "checkbox" }
+			{ "key": "Start", "title": "Start immediately", "type": "checkbox" },
+			{ "key": "Sampling", "title": "Instead of verifying all content, verify a subset by sampling", "placeholder": "00", "optional": true }
 		]
 	},
 	{

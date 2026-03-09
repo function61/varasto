@@ -145,9 +145,11 @@ type IntegrityVerificationJob struct {
 	ID                   string
 	Started              time.Time
 	Completed            time.Time
-	VolumeID             int `msgpack:"VolumeId"`
+	SampleSpecification  *string // sample only a subset of items. half: `0`. if you later want to process the second half: `1`. if you want to process quarter: `00`. then the remaining quarters would be (`01`, `10` and `11`). 1 % (can be approximated as 1/128) would be `0000000`.
+	VolumeID             int     `msgpack:"VolumeId"`
 	LastCompletedBlobRef BlobRef
 	BytesScanned         uint64
+	BytesSkipped         uint64 // if sampling is in place, we'll be skipping some blobs
 	ErrorsFound          int
 	Report               string
 }

@@ -197,6 +197,12 @@ func (c *Controller) resumeJobWorker(
 		return nil
 	}
 
+	// depending on the sampling function we may during this run visit 100 % of blobs, 25 % of blobs or so on
+	sample, err := CreateSampler(job.SampleSpecification)
+	if err != nil {
+		return err
+	}
+
 	batchLimit := 1000
 
 	for {
@@ -232,8 +238,15 @@ func (c *Controller) resumeJobWorker(
 				}
 			}
 
+			sizeOnDisk := uint64(blob.SizeOnDisk)
+
 			blobExistsOnVolumeToVerify := slices.Contains(blob.Volumes, job.VolumeID)
 			if !blobExistsOnVolumeToVerify {
+				continue
+			}
+
+			if !sample(blob.Ref) {
+				job.BytesSkipped += sizeOnDisk
 				continue
 			}
 
@@ -251,7 +264,7 @@ func (c *Controller) resumeJobWorker(
 				}
 			}
 
-			job.BytesScanned += uint64(blob.SizeOnDisk)
+			job.BytesScanned += sizeOnDisk
 		}
 
 		if len(blobBatch) < batchLimit { // fewer blobs than requested, so there will be no more

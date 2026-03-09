@@ -412,11 +412,26 @@ func (c *cHandlers) VolumeMigrateData(cmd *stoservertypes.VolumeMigrateData, ctx
 func (c *cHandlers) VolumeVerifyIntegrity(cmd *stoservertypes.VolumeVerifyIntegrity, ctx *command.Ctx) error {
 	jobID := stoutils.NewIntegrityVerificationJobID()
 
+	sampleSpecification, err := func() (*string, error) {
+		if samplingSpec := cmd.Sampling; samplingSpec != "" {
+			// validate the sampling spec
+			_, err := stointegrityverifier.CreateSampler(&samplingSpec)
+
+			return &samplingSpec, err
+		} else {
+			return nil, nil
+		}
+	}()
+	if err != nil {
+		return err
+	}
+
 	if err := c.db.Update(func(tx *bbolt.Tx) error {
 		job := &stotypes.IntegrityVerificationJob{
-			ID:       jobID,
-			Started:  ctx.Meta.Timestamp,
-			VolumeID: cmd.Id,
+			ID:                  jobID,
+			Started:             ctx.Meta.Timestamp,
+			VolumeID:            cmd.Id,
+			SampleSpecification: sampleSpecification,
 		}
 
 		return stodb.IntegrityVerificationJobRepository.Update(job, tx)
