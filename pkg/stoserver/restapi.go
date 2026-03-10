@@ -1308,7 +1308,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 
 	bestVolumeID, err := h.conf.DiskAccess.BestVolumeID(blobMetadata.Volumes)
 	if err != nil {
-		http.Error(w, stotypes.ErrBlobNotAccessibleOnThisNode.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 

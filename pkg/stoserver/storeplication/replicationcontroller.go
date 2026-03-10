@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -187,19 +188,25 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 	}
 	defer func() { ignoreError(tx.Rollback()) }()
 
+	// discover blobs to replicate in batches (instead of buffering unbounded # of jobs in RAM)
 	batchLimit := 500
+	// if all volumes are offline for this replication target's queue we'd end up hammering 100 % CPU with
+	// this discovery process unless we have some throttling in place.
+	notAccessibleLimit := 25_000
 
 	jobs := []*replicationJob{}
+
+	notAccessiblesEncountered := 0
 
 	nextContinueToken := stodb.StartFromFirst
 
 	err = stodb.BlobsPendingReplicationByVolumeIndex.Query(volIDToBytesForIndex(c.toVolumeID), continueToken, func(id []byte) error {
-		if len(jobs) == batchLimit {
+		batchLimitHit := len(jobs) == batchLimit
+		notAccessibleLimitHit := notAccessiblesEncountered == notAccessibleLimit
+		if batchLimitHit || notAccessibleLimitHit {
 			nextContinueToken = id
 
-			c.logl.Info.Printf(
-				"operating @ batchLimit (%d)",
-				batchLimit)
+			c.logl.Info.Printf("batchLimitHit=%v (%d) notAccessibleLimitHit=%v (%d)", batchLimitHit, batchLimit, notAccessibleLimitHit, notAccessibleLimit)
 			return stodb.StopIteration
 		}
 
@@ -221,8 +228,9 @@ func (c *Controller) discoverReplicationJobs(continueToken []byte) ([]*replicati
 		if err != nil {
 			if err == stotypes.ErrBlobNotAccessibleOnThisNode {
 				c.stats.blobVolumeNotAccessible++
+				notAccessiblesEncountered++
 				return nil
-			} else {
+			} else { // not expected (above func shouldn't return any other error)
 				c.stats.otherErrors++
 				return err
 			}
@@ -257,7 +265,7 @@ func HasQueuedWriteIOsForVolume(volID int, tx *bbolt.Tx) (bool, error) {
 }
 
 func volIDToBytesForIndex(volID int) []byte {
-	return []byte(fmt.Sprintf("%d", volID))
+	return []byte(strconv.Itoa(volID))
 }
 
 type atomicInt32 struct {
