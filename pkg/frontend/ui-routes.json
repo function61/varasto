@@ -90,6 +90,10 @@
 		"path": "/admin/volumes/replication"
 	},
 	{
+		"id": "volumesRelativeCapacities",
+		"path": "/admin/volumes/relative_capacities"
+	},
+	{
 		"id": "replicationPolicies",
 		"path": "/admin/replicationpolicies"
 	},

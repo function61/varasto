@@ -18,6 +18,7 @@ import { unrecognizedValue } from 'f61ui/utils';
 import {
 	mountsUrl,
 	volumesIntegrityUrl,
+	volumesRelativeCapacitiesUrl,
 	volumesReplicationUrl,
 	volumesServiceUrl,
 	volumesSmartUrl,
@@ -76,6 +77,7 @@ interface VolumesAndMountsPageProps {
 		| 'service'
 		| 'smart'
 		| 'integrity'
+		| 'capacities'
 		| 'replicationStatuses';
 }
 
@@ -216,6 +218,12 @@ export default class VolumesAndMountsPage extends React.Component<
 							{this.renderMounts()}
 						</Panel>
 					);
+				case 'capacities':
+					return (
+						<Panel heading={<div>Capacities</div>}>
+							{this.renderVolumesRelativeCapacity()}
+						</Panel>
+					);
 				default:
 					throw unrecognizedValue(this.props.view);
 			}
@@ -252,6 +260,10 @@ export default class VolumesAndMountsPage extends React.Component<
 						{
 							url: volumesReplicationUrl(),
 							title: 'Replication status',
+						},
+						{
+							url: volumesRelativeCapacitiesUrl(),
+							title: 'Capacities',
 						},
 					]}>
 					{content}
@@ -738,6 +750,55 @@ export default class VolumesAndMountsPage extends React.Component<
 									) : (
 										<ProgressBar progress={status.Progress} colour="warning" />
 									)}
+								</td>
+							</tr>
+						);
+					})}
+				</tbody>
+			</table>
+		);
+	}
+
+	private renderVolumesRelativeCapacity() {
+		const [volumes, loadingOrError] = this.state.volumes.unwrap();
+
+		if (loadingOrError) {
+			return loadingOrError;
+		}
+
+		const volumesWithoutCloud = (volumes || []).filter(
+			(v) => v.Technology !== VolumeTechnology.Cloud,
+		);
+
+		const volumeSortedByQuota = volumesWithoutCloud.sort((a, b) =>
+			a.Quota > b.Quota ? -1 : 1,
+		);
+
+		const highestQuotaVolume = volumeSortedByQuota[0];
+
+		if (!highestQuotaVolume) {
+			return null;
+		}
+
+		return (
+			<table className={tableClassStripedHover}>
+				<thead>
+					<tr>
+						<th>Label</th>
+						<th>Quota</th>
+						<th>Relative capacity</th>
+					</tr>
+				</thead>
+				<tbody>
+					{volumeSortedByQuota.map((vol) => {
+						return (
+							<tr key={vol.Id}>
+								<td>{vol.Label}</td>
+								<td>{bytesToHumanReadable(vol.Quota)}</td>
+								<td>
+									<ProgressBar
+										progress={(vol.Quota / highestQuotaVolume.Quota) * 100}
+									/>
 								</td>
 							</tr>
 						);

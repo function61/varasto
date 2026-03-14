@@ -105,6 +105,10 @@ class Handlers implements r.RouteHandlers {
 		return <VolumesAndMountsPage view="replicationStatuses" />;
 	}
 
+	volumesRelativeCapacities() {
+		return <VolumesAndMountsPage view="capacities" />;
+	}
+
 	replicationPolicies() {
 		return <ReplicationPoliciesPage />;
 	}
