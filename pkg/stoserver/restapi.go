@@ -36,6 +36,7 @@ import (
 	"github.com/function61/varasto/pkg/stoserver/stodbimportexport"
 	"github.com/function61/varasto/pkg/stoserver/stohealth"
 	"github.com/function61/varasto/pkg/stoserver/stointegrityverifier"
+	"github.com/function61/varasto/pkg/stoserver/storeplication"
 	"github.com/function61/varasto/pkg/stoserver/stoservertypes"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/function61/varasto/pkg/stoutils"
@@ -850,19 +851,49 @@ func (h *handlers) GetSchedulerJobs(rctx *httpauth.RequestContext, w http.Respon
 }
 
 func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.ReplicationStatus {
+	tx, err := h.db.Begin(false)
+	panicIfError(err)
+	defer func() { ignoreError(tx.Rollback()) }()
+
+	dbObjects := []stotypes.Volume{}
+	panicIfError(stodb.VolumeRepository.Each(stodb.Appender(&dbObjects), tx))
+
 	statuses := []stoservertypes.ReplicationStatus{}
-	for volID, controller := range h.conf.ReplicationControllers {
-		statuses = append(statuses, stoservertypes.ReplicationStatus{
-			VolumeId: volID,
-			Progress: controller.Progress(),
-			Error: func() *string {
-				if err := controller.Error(); err != nil {
-					return gokitbp.Pointer(err.Error())
+	for _, vol := range dbObjects {
+		controller, hasController := h.conf.ReplicationControllers[vol.ID]
+
+		makeStat := func(progress int, err *string) stoservertypes.ReplicationStatus {
+			return stoservertypes.ReplicationStatus{
+				Error:    err,
+				Progress: progress,
+				VolumeId: vol.ID,
+			}
+		}
+
+		status := func() stoservertypes.ReplicationStatus {
+			if hasController {
+				errorStr := func() *string {
+					if err := controller.Error(); err != nil {
+						return gokitbp.Pointer(err.Error())
+					} else {
+						return nil
+					}
+				}()
+
+				return makeStat(controller.Progress(), errorStr)
+			} else {
+				anyQueued, err := storeplication.HasQueuedWriteIOsForVolume(vol.ID, tx)
+				panicIfError(err)
+
+				if anyQueued {
+					return makeStat(0, gokitbp.Pointer("Queued I/Os but replication paused"))
 				} else {
-					return nil
+					return makeStat(100, nil)
 				}
-			}(),
-		})
+			}
+		}()
+
+		statuses = append(statuses, status)
 	}
 
 	return &statuses
