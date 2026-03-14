@@ -716,6 +716,7 @@ export default class VolumesAndMountsPage extends React.Component<
 				<thead>
 					<tr>
 						<th>Volume</th>
+						<th></th>
 						<th>Progress</th>
 					</tr>
 				</thead>
@@ -726,6 +727,11 @@ export default class VolumesAndMountsPage extends React.Component<
 						return (
 							<tr key={status.VolumeId}>
 								<td>{volume.Label}</td>
+								<td>
+									{status.Error ? (
+										<Glyphicon icon="exclamation-sign" title={status.Error} />
+									) : null}
+								</td>
 								<td>
 									{status.Progress === 100 ? (
 										'Realtime'

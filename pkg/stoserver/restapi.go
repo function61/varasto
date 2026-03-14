@@ -29,6 +29,7 @@ import (
 	"github.com/function61/gokit/logex"
 	"github.com/function61/varasto/pkg/blorm"
 	"github.com/function61/varasto/pkg/duration"
+	"github.com/function61/varasto/pkg/gokitbp"
 	"github.com/function61/varasto/pkg/scheduler"
 	"github.com/function61/varasto/pkg/stateresolver"
 	"github.com/function61/varasto/pkg/stoserver/stodb"
@@ -854,6 +855,13 @@ func (h *handlers) GetReplicationStatuses(rctx *httpauth.RequestContext, w http.
 		statuses = append(statuses, stoservertypes.ReplicationStatus{
 			VolumeId: volID,
 			Progress: controller.Progress(),
+			Error: func() *string {
+				if err := controller.Error(); err != nil {
+					return gokitbp.Pointer(err.Error())
+				} else {
+					return nil
+				}
+			}(),
 		})
 	}
 

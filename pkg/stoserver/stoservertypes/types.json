@@ -260,6 +260,7 @@
 			"name": "ReplicationStatus",
 			"type": {"_": "object", "fields": {
 				"VolumeId": {"_": "integer"},
+				"Error": {"_": "string", "nullable": true},
 				"Progress": {"_": "integer"}
 			}}
 		},
