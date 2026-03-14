@@ -372,12 +372,21 @@ export default class VolumesAndMountsPage extends React.Component<
 		const volumes = volumesMaybe || [];
 
 		const blobCount = (vol: Volume) => thousandSeparate(vol.BlobCount);
-		const free = (vol: Volume) => bytesToHumanReadable(vol.Quota - vol.BlobSizeTotal);
+		const free = (vol: Volume) => {
+			const freeBytes = vol.Quota - vol.BlobSizeTotal;
+			return (freeBytes < 0 ? '- ' : '') + bytesToHumanReadable(Math.abs(freeBytes));
+		};
 		const used = (vol: Volume) =>
 			bytesToHumanReadable(vol.BlobSizeTotal) + ' / ' + bytesToHumanReadable(vol.Quota);
-		const progressBar = (vol: Volume) => (
-			<ProgressBar progress={(vol.BlobSizeTotal / vol.Quota) * 100} />
-		);
+		const quotaUsed = (vol: Volume) => {
+			const usedRatio = vol.BlobSizeTotal / vol.Quota;
+			return (
+				<ProgressBar
+					progress={usedRatio * 100}
+					colour={usedRatio < 1.0 ? 'info' : 'danger'}
+				/>
+			);
+		};
 
 		const toRow = (obj: Volume) => {
 			return (
@@ -393,7 +402,7 @@ export default class VolumesAndMountsPage extends React.Component<
 					<td>{blobCount(obj)}</td>
 					<td>{free(obj)}</td>
 					<td>{used(obj)}</td>
-					<td>{progressBar(obj)}</td>
+					<td>{quotaUsed(obj)}</td>
 					<td>
 						<Dropdown>
 							<CommandLink
@@ -508,7 +517,7 @@ export default class VolumesAndMountsPage extends React.Component<
 						<td>{blobCount(totals)}</td>
 						<td>{free(totals)}</td>
 						<td>{used(totals)}</td>
-						<td>{progressBar(totals)}</td>
+						<td>{quotaUsed(totals)}</td>
 						<td />
 					</tr>
 				</tfoot>
