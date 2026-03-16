@@ -137,6 +137,18 @@ export default class IntegrityVerificationJobsView extends React.Component<
 		const runtimeSeconds = (nowOrCompleted.getTime() - new Date(job.Created).getTime()) / 1000;
 		const bytesPerSecond = runtimeSeconds > 0 ? job.BytesScanned / runtimeSeconds : 0;
 
+		// we used to have start job only when there are no incomplete jobs, but that was not wise.
+		// suppose we have old incomplete job from year ago with progress at 75 %.
+		// new blobs have come within the year. if we didn't create new job but resumed the last 25 % we'd miss 75 % of
+		// blobs created within this year.
+		const startJob = (
+			<CommandLink
+				command={VolumeVerifyIntegrity(vol.Id, {
+					disambiguation: vol.Label,
+				})}
+			/>
+		);
+
 		return (
 			<tr key={rowKey}>
 				<td title={job.Id}>{showingHistorical && volumeTechnologyBadge(vol.Technology)}</td>
@@ -168,19 +180,12 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					)}
 				</td>
 				<td>
-					{completed && (
-						<Dropdown>
-							<CommandLink
-								command={VolumeVerifyIntegrity(vol.Id, {
-									disambiguation: vol.Label,
-								})}
-							/>
-						</Dropdown>
-					)}
+					{completed && <Dropdown>{startJob}</Dropdown>}
 					{!completed && (
 						<Dropdown>
 							<CommandLink command={IntegrityverificationjobResume(job.Id)} />
 							<CommandLink command={IntegrityverificationjobStop(job.Id)} />
+							{startJob}
 						</Dropdown>
 					)}
 				</td>
