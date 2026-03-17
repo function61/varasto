@@ -22,6 +22,7 @@ import {
 import {
 	IntegrityVerificationJob,
 	Volume,
+	VolumeMount,
 	VolumeTechnology,
 } from 'generated/stoserver/stoservertypes_types';
 import * as React from 'react';
@@ -29,6 +30,7 @@ import * as React from 'react';
 interface IntegrityVerificationJobsViewProps {
 	volumes: Volume[];
 	jobs: IntegrityVerificationJob[];
+	mounts: VolumeMount[];
 	refresh: () => void;
 }
 
@@ -116,7 +118,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 						<span className="text-muted">(Never scanned)</span>
 					</td>
 					<td></td>
-					<td>Volume size {bytesToHumanReadable(vol.BlobSizeTotal)}</td>
+					<td>{bytesToHumanReadable(vol.BlobSizeTotal)}</td>
 					<td></td>
 					<td>
 						{' '}
@@ -149,22 +151,35 @@ export default class IntegrityVerificationJobsView extends React.Component<
 			/>
 		);
 
+		const volumeMounted = this.props.mounts.some((m) => m.Volume === vol.Id && m.Online);
+
 		return (
 			<tr key={rowKey}>
 				<td title={job.Id}>{showingHistorical && volumeTechnologyBadge(vol.Technology)}</td>
-				<td>{showingHistorical && vol.Label}</td>
+				<td>
+					{showingHistorical &&
+						(volumeMounted ? (
+							vol.Label
+						) : (
+							<s className="text-muted" title="Volume not online">
+								{vol.Label}
+							</s>
+						))}
+				</td>
 				<td style={{ width: '25%' }}>{jobStatus(job)}</td>
-				<td title={bytesToHumanReadable(bytesPerSecond) + '/s'}>
-					{completed ? (
+				<td title={bytesToHumanReadable(bytesPerSecond) + '/s'} className="text-muted">
+					{completed && showingHistorical ? (
 						formatDistance2(job.Created, completed)
-					) : (
+					) : !completed ? (
 						<span>
 							started <Timestamp ts={job.Created} />
 						</span>
-					)}
+					) : null}
 				</td>
-				<td title={'Volume current size ' + bytesToHumanReadable(vol.BlobSizeTotal)}>
-					Scanned {bytesToHumanReadable(job.BytesScanned)}
+				<td className="text-muted">
+					{showingHistorical
+						? `Scanned ${bytesToHumanReadable(job.BytesScanned)}`
+						: bytesToHumanReadable(vol.BlobSizeTotal)}
 				</td>
 				<td title={'Error count: ' + thousandSeparate(job.ErrorsFound)}>
 					<Glyphicon icon="list-alt" title={job.Report} />
@@ -235,12 +250,16 @@ function jobStatus(job: IntegrityVerificationJob): React.ReactNode {
 	}
 
 	if (anyErrors) {
-		return <DangerLabel>Failed</DangerLabel>;
+		return (
+			<DangerLabel>
+				FAIL <Timestamp ts={completed} />
+			</DangerLabel>
+		);
 	}
 
 	return (
 		<SuccessLabel>
-			Pass <Timestamp ts={completed} />
+			PASS <Timestamp ts={completed} />
 		</SuccessLabel>
 	);
 }

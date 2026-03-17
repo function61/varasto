@@ -683,12 +683,13 @@ export default class VolumesAndMountsPage extends React.Component<
 	}
 
 	private renderIvJobs() {
-		const [ivJobs, volumes, loadingOrError] = Result.unwrap2(
+		const [ivJobs, volumes, mounts, loadingOrError] = Result.unwrap3(
 			this.state.ivJobs,
 			this.state.volumes,
+			this.state.mounts,
 		);
 
-		if (!ivJobs || !volumes || loadingOrError) {
+		if (!ivJobs || !volumes || !mounts || loadingOrError) {
 			return loadingOrError;
 		}
 
@@ -696,6 +697,7 @@ export default class VolumesAndMountsPage extends React.Component<
 			<IntegrityVerificationJobsView
 				jobs={ivJobs}
 				volumes={volumes}
+				mounts={mounts}
 				refresh={() => {
 					this.loadIvJobs();
 				}}
