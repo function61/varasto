@@ -11,8 +11,10 @@ import (
 	"go.etcd.io/bbolt"
 )
 
+// most of the commands restart Varasto to get changes applied
+
 func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		job, err := openScheduledJobNotUpdateChecker(cmd.Id, tx)
 		if err != nil {
 			return err
@@ -25,11 +27,11 @@ func (c *cHandlers) ScheduledjobEnable(cmd *stoservertypes.ScheduledjobEnable, c
 		}
 
 		return stodb.ScheduledJobRepository.Update(job, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		job, err := openScheduledJobNotUpdateChecker(cmd.Id, tx)
 		if err != nil {
 			return err
@@ -42,11 +44,11 @@ func (c *cHandlers) ScheduledjobDisable(cmd *stoservertypes.ScheduledjobDisable,
 		}
 
 		return stodb.ScheduledJobRepository.Update(job, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) ScheduledjobChangeSchedule(cmd *stoservertypes.ScheduledjobChangeSchedule, ctx *command.Ctx) error {
-	return c.db.Update(func(tx *bbolt.Tx) error {
+	return c.confreload(c.db.Update(func(tx *bbolt.Tx) error {
 		job, err := openScheduledJobNotUpdateChecker(cmd.Id, tx)
 		if err != nil {
 			return err
@@ -59,7 +61,7 @@ func (c *cHandlers) ScheduledjobChangeSchedule(cmd *stoservertypes.ScheduledjobC
 		}
 
 		return stodb.ScheduledJobRepository.Update(job, tx)
-	})
+	}))
 }
 
 func (c *cHandlers) ScheduledjobStart(cmd *stoservertypes.ScheduledjobStart, ctx *command.Ctx) error {
