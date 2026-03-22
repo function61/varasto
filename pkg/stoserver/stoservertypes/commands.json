@@ -731,6 +731,16 @@
 		]
 	},
 	{
+		"command": "integrityverificationjob.ClearProblems",
+		"chain": "public",
+		"ctor": ["JobId"],
+		"crudNature": "update",
+		"title": "Clear problems",
+		"fields": [
+			{ "key": "JobId", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "config.SetTheMovieDBApiKey",
 		"chain": "public",
 		"ctor": ["Apikey"],

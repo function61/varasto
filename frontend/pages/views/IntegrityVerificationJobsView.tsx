@@ -15,6 +15,7 @@ import { ProgressBar } from 'f61ui/component/progressbar';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { formatDistance2, unrecognizedValue } from 'f61ui/utils';
 import {
+	IntegrityverificationjobClearProblems,
 	IntegrityverificationjobResume,
 	IntegrityverificationjobStop,
 	VolumeVerifyIntegrity,
@@ -195,7 +196,16 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					)}
 				</td>
 				<td>
-					{completed && <Dropdown>{startJob}</Dropdown>}
+					{completed && (
+						<Dropdown>
+							{startJob}
+							{job.ErrorsFound > 0 && (
+								<CommandLink
+									command={IntegrityverificationjobClearProblems(job.Id)}
+								/>
+							)}
+						</Dropdown>
+					)}
 					{!completed && (
 						<Dropdown>
 							<CommandLink command={IntegrityverificationjobResume(job.Id)} />

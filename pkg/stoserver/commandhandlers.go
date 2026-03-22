@@ -896,6 +896,24 @@ func (c *cHandlers) IntegrityverificationjobStop(cmd *stoservertypes.Integrityve
 	return nil
 }
 
+func (c *cHandlers) IntegrityverificationjobClearProblems(cmd *stoservertypes.IntegrityverificationjobClearProblems, ctx *command.Ctx) error {
+	if slices.Contains(c.ivController.ListRunningJobs(), cmd.JobId) {
+		return fmt.Errorf("cannot clear problems of job '%s' when it is running right now", cmd.JobId)
+	}
+
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		job := &stotypes.IntegrityVerificationJob{}
+		if err := stodb.IntegrityVerificationJobRepository.OpenByPrimaryKey([]byte(cmd.JobId), job, tx); err != nil {
+			return err
+		}
+
+		job.ErrorsFound = 0
+		job.Report = ""
+
+		return stodb.IntegrityVerificationJobRepository.Update(job, tx)
+	})
+}
+
 func (c *cHandlers) ReplicationpolicyChangeDesiredVolumes(cmd *stoservertypes.ReplicationpolicyChangeDesiredVolumes, ctx *command.Ctx) error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		desiredVolumes := []int{}
