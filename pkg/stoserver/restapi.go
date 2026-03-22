@@ -329,7 +329,7 @@ func (h *handlers) DownloadFile(rctx *httpauth.RequestContext, w http.ResponseWr
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`inline; filename="%s"`, path.Base(fileKey)))
 
 	sendBlob := func(refAndVolumeID refAndVolumeID) error {
-		chunkStream, err := h.conf.DiskAccess.Fetch(refAndVolumeID.Ref, coll.EncryptionKeys, refAndVolumeID.VolumeID)
+		chunkStream, err := h.conf.DiskAccess.Fetch(r.Context(), refAndVolumeID.Ref, coll.EncryptionKeys, refAndVolumeID.VolumeID)
 		if err != nil {
 			return err
 		}
@@ -1104,6 +1104,7 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 		if !blobExists {
 			// do not verify sha256, as we just calculated it (turns out it's really expensive)
 			if err := h.conf.DiskAccess.WriteBlobNoVerify(
+				r.Context(),
 				volumeID,
 				collectionID,
 				*blobRef,
@@ -1351,7 +1352,7 @@ func (h *handlers) DownloadBlob(rctx *httpauth.RequestContext, w http.ResponseWr
 		return
 	}
 
-	file, err := h.conf.DiskAccess.Fetch(*blobRef, coll.EncryptionKeys, bestVolumeID)
+	file, err := h.conf.DiskAccess.Fetch(r.Context(), *blobRef, coll.EncryptionKeys, bestVolumeID)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// should not happen, because metadata said that we should have this blob
@@ -1400,6 +1401,7 @@ func (h *handlers) UploadBlob(rctx *httpauth.RequestContext, w http.ResponseWrit
 	}
 
 	if err := h.conf.DiskAccess.WriteBlob(
+		r.Context(),
 		volumeID,
 		collectionID,
 		*blobRef,

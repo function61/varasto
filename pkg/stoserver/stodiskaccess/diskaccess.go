@@ -111,6 +111,7 @@ func (d *Controller) Replicate(ctx context.Context, fromVolumeID int, toVolumeID
 }
 
 func (d *Controller) WriteBlob(
+	ctx context.Context,
 	volumeID int,
 	collID string,
 	ref stotypes.BlobRef,
@@ -118,6 +119,7 @@ func (d *Controller) WriteBlob(
 	maybeCompressible bool,
 ) error {
 	return d.WriteBlobNoVerify(
+		ctx,
 		volumeID,
 		collID,
 		ref,
@@ -126,6 +128,7 @@ func (d *Controller) WriteBlob(
 }
 
 func (d *Controller) WriteBlobNoVerify(
+	ctx context.Context,
 	volumeID int,
 	collID string,
 	ref stotypes.BlobRef,
@@ -172,7 +175,7 @@ func (d *Controller) WriteBlobNoVerify(
 		return err
 	}
 
-	if err := driver.RawStore(context.TODO(), ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
+	if err := driver.RawStore(ctx, ref, bytes.NewReader(blobEncrypted.CiphertextMaybeCompressed)); err != nil {
 		return fmt.Errorf("storing blob into volume %d failed: %v", volumeID, err)
 	}
 
@@ -194,7 +197,7 @@ func (d *Controller) WriteBlobNoVerify(
 
 // does decrypt(optional_decompress(blobOnDisk))
 // verifies blob integrity for you!
-func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEnvelope, volumeID int) (io.ReadCloser, error) {
+func (d *Controller) Fetch(ctx context.Context, ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEnvelope, volumeID int) (io.ReadCloser, error) {
 	driver, err := d.driverFor(volumeID)
 	if err != nil {
 		return nil, err
@@ -205,7 +208,7 @@ func (d *Controller) Fetch(ref stotypes.BlobRef, encryptionKeys []stotypes.KeyEn
 		return nil, err
 	}
 
-	body, err := driver.RawFetch(context.TODO(), ref)
+	body, err := driver.RawFetch(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +272,7 @@ func (d *Controller) BestVolumeID(volumeIDs []int) (int, error) {
 // https://en.wikipedia.org/wiki/Data_scrubbing
 // we could actually just do a Fetch() but that would require access to the encryption keys.
 // this way we can verify on-disk integrity without encryption keys.
-func (d *Controller) Scrub(ref stotypes.BlobRef, volumeID int) (int64, error) {
+func (d *Controller) Scrub(ctx context.Context, ref stotypes.BlobRef, volumeID int) (int64, error) {
 	driver, err := d.driverFor(volumeID)
 	if err != nil {
 		return 0, err
@@ -280,7 +283,7 @@ func (d *Controller) Scrub(ref stotypes.BlobRef, volumeID int) (int64, error) {
 		return 0, err
 	}
 
-	body, err := driver.RawFetch(context.TODO(), ref)
+	body, err := driver.RawFetch(ctx, ref)
 	if err != nil {
 		return 0, err
 	}

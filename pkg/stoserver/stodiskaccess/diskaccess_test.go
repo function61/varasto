@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/function61/gokit/assert"
+	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 	"github.com/minio/sha256-simd"
 )
@@ -25,6 +26,8 @@ type testDBAccess struct {
 	rootEncryptionKey []byte
 	metaStore         map[string]*BlobMeta
 }
+
+var _ MetadataStore = (*testDBAccess)(nil)
 
 func (t *testDBAccess) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
 	_, exists := t.metaStore[ref.AsHex()]
@@ -102,7 +105,7 @@ func TestWriteToUnknownVolume(t *testing.T) {
 	s := setupDefault()
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	err := s.diskAccess.WriteBlob(2, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true)
+	err := s.diskAccess.WriteBlob(context.Background(), 2, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true)
 
 	assert.EqualString(t, err.Error(), "volume 2 not found")
 }
@@ -111,7 +114,7 @@ func TestWriteDigestMismatch(t *testing.T) {
 	s := setupDefault()
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	err := s.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("xxx The quick brown fox jumps over the lazy dog"), true)
+	err := s.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader("xxx The quick brown fox jumps over the lazy dog"), true)
 
 	assert.EqualString(t, err.Error(), "hashVerifyReader: digest mismatch")
 }
@@ -123,18 +126,18 @@ func TestWriteAndRead(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	// then let's try to read it
 
-	_, err := test.diskAccess.Fetch(*ref, []stotypes.KeyEnvelope{}, 2)
+	_, err := test.diskAccess.Fetch(context.Background(), *ref, []stotypes.KeyEnvelope{}, 2)
 
 	assert.EqualString(
 		t,
 		err.Error(),
 		"volume 2 not found")
 
-	contentReader, err := test.diskAccess.Fetch(*ref, []stotypes.KeyEnvelope{}, 1)
+	contentReader, err := test.diskAccess.Fetch(context.Background(), *ref, []stotypes.KeyEnvelope{}, 1)
 	assert.Assert(t, err == nil)
 	defer contentReader.Close()
 
@@ -152,8 +155,8 @@ func TestWriteSameFileWithTwoDifferentEncryptionKeys(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, encryptedWithA.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
-	assert.Assert(t, encryptedWithB.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, encryptedWithA.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, encryptedWithB.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	assert.EqualString(t, md5Hex(encryptedWithA.blobStorage.files[sha256OfQuickBrownFox]), "9ed295ab8a5c1a4f8e759db4408dc767")
 	assert.EqualString(t, md5Hex(encryptedWithB.blobStorage.files[sha256OfQuickBrownFox]), "b004754ff58ef8dfcb541c97cbea54c8")
@@ -166,14 +169,14 @@ func TestCannotWriteSameBlobTwice(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	assert.EqualString(t, md5Hex(test.blobStorage.files[sha256OfQuickBrownFox]), "9ed295ab8a5c1a4f8e759db4408dc767")
 
 	// cannot write same blob metadata twice
 	assert.EqualString(
 		t,
-		test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true).Error(),
+		test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true).Error(),
 		"WriteBlob() already exists: d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
 }
 
@@ -192,7 +195,7 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(text), maybeCompressible) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(text), maybeCompressible) == nil)
 
 	meta, err := test.testDBAccess.QueryBlobMetadata(*ref, nil)
 	assert.Assert(t, err == nil)
@@ -204,7 +207,7 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 
 	ref2, _ := stotypes.BlobRefFromHex(sha256Hex([]byte(text4x)))
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref2, strings.NewReader(text4x), maybeCompressible) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref2, strings.NewReader(text4x), maybeCompressible) == nil)
 
 	meta, err = test.testDBAccess.QueryBlobMetadata(*ref2, nil)
 	assert.Assert(t, err == nil)
@@ -219,7 +222,7 @@ func testCompressionInternal(t *testing.T, maybeCompressible bool) {
 		assert.Assert(t, meta.SizeOnDisk == 4*43)
 	}
 
-	reader, err := test.diskAccess.Fetch(*ref2, []stotypes.KeyEnvelope{}, 1)
+	reader, err := test.diskAccess.Fetch(context.Background(), *ref2, []stotypes.KeyEnvelope{}, 1)
 	assert.Assert(t, err == nil)
 	defer reader.Close()
 
@@ -265,13 +268,13 @@ func TestReplication(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	_, secondHasIt := secondBlobStore.files[sha256OfQuickBrownFox]
 
 	assert.Assert(t, !secondHasIt)
 
-	assert.Assert(t, test.diskAccess.Replicate(context.TODO(), 1, 2, *ref) == nil)
+	assert.Assert(t, test.diskAccess.Replicate(context.Background(), 1, 2, *ref) == nil)
 
 	_, secondHasIt = secondBlobStore.files[sha256OfQuickBrownFox]
 
@@ -293,7 +296,7 @@ func TestTryReplicateRottenData(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader(contentToStore), true) == nil)
 
 	_, secondHasIt := secondBlobStore.files[sha256OfQuickBrownFox]
 
@@ -304,7 +307,7 @@ func TestTryReplicateRottenData(t *testing.T) {
 
 	assert.EqualString(
 		t,
-		test.diskAccess.Replicate(context.TODO(), 1, 2, *ref).Error(),
+		test.diskAccess.Replicate(context.Background(), 1, 2, *ref).Error(),
 		"hashVerifyReader: digest mismatch")
 }
 
@@ -313,20 +316,20 @@ func TestScrubbing(t *testing.T) {
 
 	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
 
-	assert.Assert(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true) == nil)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true) == nil)
 
-	_, err := test.diskAccess.Scrub(*ref, 1)
+	_, err := test.diskAccess.Scrub(context.Background(), *ref, 1)
 	assert.Assert(t, err == nil)
 
 	// now corrupt one byte on the "disk"
 	test.blobStorage.files[sha256OfQuickBrownFox][10] = 0xFF
 
-	_, err = test.diskAccess.Scrub(*ref, 1)
+	_, err = test.diskAccess.Scrub(context.Background(), *ref, 1)
 	assert.EqualString(t, err.Error(), "hashVerifyReader: digest mismatch")
 }
 
 func TestTryMountIncorrectVolume(t *testing.T) {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	test := setupDefault()
 
@@ -377,12 +380,14 @@ type testingBlobStorage struct {
 	routingCost int
 }
 
+var _ blobstore.Driver = (*testingBlobStorage)(nil)
+
 func mount(
 	volID int,
 	tbs *testingBlobStorage,
 	dam *Controller,
 ) error {
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	if err := dam.Initialize(ctx, tbs.uuid, tbs); err != nil {
 		return err

@@ -250,7 +250,7 @@ func (c *Controller) resumeJobWorker(
 				continue
 			}
 
-			bytesScanned, err := c.diskAccess.Scrub(blob.Ref, job.VolumeID)
+			bytesScanned, err := c.diskAccess.Scrub(ctx, blob.Ref, job.VolumeID)
 			if err != nil {
 				descr := fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
 				if err := pushErr(descr); err != nil {

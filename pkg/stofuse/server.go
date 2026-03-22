@@ -90,7 +90,7 @@ func fuseServe(
 			return fuse.Unmount(conf.FuseMountPath)
 		}
 
-		ctx, cancel := context.WithTimeout(context.TODO(), 45*time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 		defer cancel()
 
 		// retrying because unmount will fail if any process is accessing the mount
