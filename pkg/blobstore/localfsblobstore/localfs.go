@@ -12,6 +12,7 @@ import (
 	"github.com/function61/gokit/atomicfilewrite"
 	"github.com/function61/gokit/fileexists"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
@@ -20,7 +21,7 @@ var (
 	base32CustomWithoutPadding = base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding)
 )
 
-func New(uuid string, path string, logger *log.Logger) *localFs {
+func New(uuid string, path string, logger *log.Logger) blobstore.Driver {
 	return &localFs{
 		uuid: uuid,
 		path: path,
@@ -33,6 +34,8 @@ type localFs struct {
 	path string
 	log  *logex.Leveled
 }
+
+var _ blobstore.Driver = (*localFs)(nil)
 
 func (l *localFs) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	filename := l.getPath(ref)
@@ -65,6 +68,10 @@ func (l *localFs) RawStore(ctx context.Context, ref stotypes.BlobRef, content io
 
 func (l *localFs) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	return os.Open(l.getPath(ref))
+}
+
+func (l *localFs) RawDelete(ctx context.Context, ref stotypes.BlobRef) error {
+	return os.Remove(l.getPath(ref))
 }
 
 func (l *localFs) RoutingCost() int {

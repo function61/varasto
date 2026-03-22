@@ -18,6 +18,9 @@ type Driver interface {
 	// if blob is not found, error must report os.IsNotExist(err) == true
 	RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error)
 
+	// if blob is not found, error must report os.IsNotExist(err) == true
+	RawDelete(ctx context.Context, ref stotypes.BlobRef) error
+
 	// if blob is stored in multiple volumes, disk access controller fetches from the volume
 	// (that is mounted) with the lowest routing cost.
 	// currently 10 for local disks, 20 for cloud services.

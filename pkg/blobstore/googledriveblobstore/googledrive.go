@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -33,7 +34,9 @@ type googledrive struct {
 	reqThrottle        chan any
 }
 
-func New(optsSerialized string, logger *log.Logger) (*googledrive, error) {
+var _ blobstore.Driver = (*googledrive)(nil)
+
+func New(optsSerialized string, logger *log.Logger) (blobstore.Driver, error) {
 	ctx := context.TODO()
 
 	opts, err := deserializeConfig(optsSerialized)
@@ -100,6 +103,14 @@ func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 	}
 
 	return nil
+}
+
+func (g *googledrive) RawDelete(ctx context.Context, ref stotypes.BlobRef) error {
+	id, err := g.resolveFileIDByRef(ctx, ref)
+	if err != nil {
+		return err
+	}
+	return g.srv.Files.Delete(id).Context(ctx).Do()
 }
 
 func (g *googledrive) RoutingCost() int {

@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/function61/gokit/logex"
+	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
@@ -32,7 +33,9 @@ type s3blobstore struct {
 	logl      *logex.Leveled
 }
 
-func New(opts string, logger *log.Logger) (*s3blobstore, error) {
+var _ blobstore.Driver = (*s3blobstore)(nil)
+
+func New(opts string, logger *log.Logger) (blobstore.Driver, error) {
 	conf, err := deserializeConfig(opts)
 	if err != nil {
 		return nil, err
@@ -76,7 +79,7 @@ func (s *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 			return nil, os.ErrNotExist
 		}
 
-		return nil, fmt.Errorf("s3 GetObject: %v", err)
+		return nil, fmt.Errorf("s3 GetObject: %w", err)
 	}
 
 	return res.Body, nil
@@ -95,7 +98,23 @@ func (s *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 		Key:    s.blobNamer.Ref(ref),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
-		return fmt.Errorf("s3 PutObject: %v", err)
+		return fmt.Errorf("s3 PutObject: %w", err)
+	}
+
+	return nil
+}
+
+func (s *s3blobstore) RawDelete(ctx context.Context, ref stotypes.BlobRef) error {
+	_, err := s.bucket.S3.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
+		Bucket: s.bucket.Name,
+		Key:    s.blobNamer.Ref(ref),
+	})
+	if err != nil {
+		if err, ok := err.(awserr.Error); ok && err.Code() == s3.ErrCodeNoSuchKey {
+			return os.ErrNotExist
+		}
+
+		return fmt.Errorf("s3 DeleteObject: %w", err)
 	}
 
 	return nil
