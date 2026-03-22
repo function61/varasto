@@ -256,8 +256,7 @@ func (c *Controller) resumeJobWorker(
 				if err := pushErr(descr); err != nil {
 					return err
 				}
-			}
-			if int32(bytesScanned) != blob.SizeOnDisk {
+			} else if int32(bytesScanned) != blob.SizeOnDisk { // only check if no earlier error (noisy to report 2 errors per blob & if prev err, size probably also won't match)
 				descr := fmt.Sprintf("blob %s size mismatch; expected=%d got=%d\n", blob.Ref.AsHex(), blob.SizeOnDisk, bytesScanned)
 				if err := pushErr(descr); err != nil {
 					return err
