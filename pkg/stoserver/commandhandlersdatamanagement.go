@@ -3,6 +3,7 @@ package stoserver
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"time"
 
@@ -210,6 +211,53 @@ func (c *cHandlers) VolumeMarkDataLost(cmd *stoservertypes.VolumeMarkDataLost, c
 	})
 }
 
+func (c *cHandlers) VolumeDeleteBlob(cmd *stoservertypes.VolumeDeleteBlob, ctx *command.Ctx) error {
+	ref, err := stotypes.BlobRefFromHex(cmd.Ref)
+	if err != nil {
+		return err
+	}
+
+	return c.db.Update(func(tx *bbolt.Tx) error {
+		volToRemoveFrom, err := stodb.Read(tx).Volume(cmd.Id)
+		if err != nil {
+			return err
+		}
+
+		blob, err := stodb.Read(tx).Blob(*ref)
+		if err != nil {
+			return err
+		}
+
+		volumeRemoved := lo.Filter(blob.Volumes, func(volID int, _ int) bool { return volID != volToRemoveFrom.ID })
+
+		if removalHasNoChange := len(volumeRemoved) == len(blob.Volumes); removalHasNoChange {
+			return fmt.Errorf("requested blob %s not found in volume %s", cmd.Ref, volToRemoveFrom.Label)
+		}
+
+		if err := c.conf.DiskAccess.Delete(ctx.Ctx, *ref, volToRemoveFrom.ID); err != nil {
+			// don't abort because blob may be missing in storage and we must still be able to do book-keeping changes
+			// i.e. mark in metadata DB that volume no longer has blob.
+			slog.Warn("failed to remove from underlying storage", "blob", ref.AsHex())
+		}
+
+		volToRemoveFrom.BlobSizeTotal -= int64(blob.SizeOnDisk)
+		volToRemoveFrom.BlobCount--
+
+		blob.Volumes = volumeRemoved
+
+		if err := stodb.VolumeRepository.Update(volToRemoveFrom, tx); err != nil {
+			return err
+		}
+
+		if err := stodb.BlobRepository.Update(blob, tx); err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+// even though collections are given as argument, only the blobs with problems are replicated to the target volume
 func (c *cHandlers) DatabaseReconcileReplicationPolicy(cmd *stoservertypes.DatabaseReconcileReplicationPolicy, ctx *command.Ctx) error {
 	collIDs := *cmd.Collections
 

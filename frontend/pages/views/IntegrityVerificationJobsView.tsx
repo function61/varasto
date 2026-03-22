@@ -18,6 +18,7 @@ import {
 	IntegrityverificationjobClearProblems,
 	IntegrityverificationjobResume,
 	IntegrityverificationjobStop,
+	VolumeDeleteBlob,
 	VolumeVerifyIntegrity,
 } from 'generated/stoserver/stoservertypes_commands';
 import {
@@ -152,6 +153,14 @@ export default class IntegrityVerificationJobsView extends React.Component<
 			/>
 		);
 
+		const deleteBlob = (
+			<CommandLink
+				command={VolumeDeleteBlob(vol.Id, {
+					disambiguation: vol.Label,
+				})}
+			/>
+		);
+
 		const volumeMounted = this.props.mounts.some((m) => m.Volume === vol.Id && m.Online);
 
 		return (
@@ -199,6 +208,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					{completed && (
 						<Dropdown>
 							{startJob}
+							{deleteBlob}
 							{job.ErrorsFound > 0 && (
 								<CommandLink
 									command={IntegrityverificationjobClearProblems(job.Id)}
@@ -211,6 +221,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 							<CommandLink command={IntegrityverificationjobResume(job.Id)} />
 							<CommandLink command={IntegrityverificationjobStop(job.Id)} />
 							{startJob}
+							{deleteBlob}
 						</Dropdown>
 					)}
 				</td>

@@ -268,6 +268,23 @@ func (d *Controller) BestVolumeID(volumeIDs []int) (int, error) {
 	return lowestCostVolumeID, nil
 }
 
+// deletes a blob from one volume
+func (d *Controller) Delete(ctx context.Context, ref stotypes.BlobRef, volumeID int) error {
+	driver, err := d.driverFor(volumeID)
+	if err != nil {
+		return err
+	}
+
+	if err := driver.RawDelete(ctx, ref); err != nil {
+		return err
+	}
+
+	// NOTE: not calling calling metadata store to record blob having been removed. right now we leave it to caller
+	// in order for the caller (to let it itself decide on what to do with errors removing the blob from underlying storage)
+
+	return nil
+}
+
 // runs a scrub for a blob in a given volume to detect errors
 // https://en.wikipedia.org/wiki/Data_scrubbing
 // we could actually just do a Fetch() but that would require access to the encryption keys.

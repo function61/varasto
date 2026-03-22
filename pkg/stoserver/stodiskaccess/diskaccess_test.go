@@ -432,6 +432,14 @@ func (t *testingBlobStorage) RawStore(_ context.Context, ref stotypes.BlobRef, c
 	return nil
 }
 
+func (t *testingBlobStorage) RawDelete(ctx context.Context, ref stotypes.BlobRef) error {
+	if _, has := t.files[ref.AsHex()]; !has {
+		return os.ErrNotExist
+	}
+	delete(t.files, ref.AsHex())
+	return nil
+}
+
 func xorSlices(a []byte, b []byte) []byte {
 	if len(a) != len(b) {
 		panic("nope")

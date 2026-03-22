@@ -262,6 +262,17 @@
 		]
 	},
 	{
+		"command": "volume.DeleteBlob",
+		"chain": "public",
+		"ctor": ["Id"],
+		"crudNature": "delete",
+		"title": "Delete blob (or mark corrupted one lost)",
+		"fields": [
+			{ "key": "Id", "type": "integer", "hideIfDefaultValue": true },
+			{ "key": "Ref", "title": "Blob reference" }
+		]
+	},
+	{
 		"command": "volume.Decommission",
 		"chain": "public",
 		"ctor": ["Id"],
