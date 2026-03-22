@@ -140,7 +140,8 @@ func importDBInternal(content io.Reader, withTx func(fn func(tx *bbolt.Tx) error
 	scanner := bufio.NewScanner(content)
 
 	// by default craps out on lines > 64k. set max line to many megabytes
-	buf := make([]byte, 0, 8*1024*1024)
+	// this used to be capped at 8MB but I had a collection that serialized was 9.5 MB
+	buf := make([]byte, 0, 16*1024*1024)
 	scanner.Buffer(buf, cap(buf))
 
 	var repo blorm.Repository
