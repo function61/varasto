@@ -131,13 +131,13 @@ func (f *File) CopyEverythingExceptPath(other File) {
 
 type Blob struct {
 	Ref                       BlobRef
-	EncryptionKeyID           string `msgpack:"EncryptionKeyId"`
+	EncryptionKeyID           string `msgpack:"EncryptionKeyId"` // DEK that encrypts content of this blob. may be used as hint of collection for which this blob was first uploaded to.
 	Volumes                   []int
-	VolumesPendingReplication []int
-	Referenced                bool // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
-	IsCompressed              bool
+	VolumesPendingReplication []int  `msgpack:",omitempty"`
+	Referenced                bool   `msgpack:",omitempty"` // aborted uploads (ones that do not get referenced by a commit) could leave orphaned blobs
+	IsCompressed              bool   `msgpack:",omitempty"` // if you have lots of image/video files, most blobs tend to not be compressible
 	Size                      int32  // 32 bits is enough, usually blobs are 4 MB
-	SizeOnDisk                int32  // after optional compression
+	SizeOnDisk                int32  // after optional compression. TODO: merge with `IsCompressed`?
 	Crc32                     []byte // so we can check file integrity without needing to decrypt (= have access to encryption keys)
 }
 
@@ -150,7 +150,7 @@ type IntegrityVerificationJob struct {
 	LastCompletedBlobRef BlobRef
 	BytesScanned         uint64
 	BytesSkipped         uint64 // if sampling is in place, we'll be skipping some blobs
-	ErrorsFound          int
+	ErrorsFound          int    // in theory this could be derived from report items, but we cannot as the report may be truncated if there's lots of problems
 	Report               string
 }
 
