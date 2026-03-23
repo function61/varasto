@@ -8,6 +8,7 @@ import (
 	"github.com/function61/varasto/pkg/easteregg"
 	"github.com/function61/varasto/pkg/stodupremover"
 	"github.com/function61/varasto/pkg/stotypes"
+	"github.com/function61/varasto/pkg/stoutils"
 	"github.com/spf13/cobra"
 )
 
@@ -26,6 +27,21 @@ func Entrypoint() *cobra.Command {
 			osutil.ExitIfError(err)
 
 			fmt.Println(localfsblobstore.RefToPath(*ref, "/"))
+		},
+	})
+
+	debug.AddCommand(&cobra.Command{
+		Use:   "id-gen",
+		Short: "Generate ID numbers",
+		Args:  cobra.NoArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			for _, id := range []string{ // for each size class
+				stoutils.NewCollectionChangesetID(), // short
+				stoutils.NewCollectionID(),          // long
+				stoutils.NewAPIKeySecret(),          // crypto long
+			} {
+				fmt.Println(id)
+			}
 		},
 	})
 
