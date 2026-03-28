@@ -1032,7 +1032,12 @@ func (h *handlers) DatabaseExport(rctx *httpauth.RequestContext, w http.Response
 	panicIfError(err)
 	defer func() { ignoreError(tx.Rollback()) }()
 
-	panicIfError(stodbimportexport.Export(tx, w))
+	if r.URL.Query().Get("raw") == "true" {
+		_, err := tx.WriteTo(w)
+		panicIfError(err)
+	} else {
+		panicIfError(stodbimportexport.Export(tx, w))
+	}
 }
 
 func (h *handlers) GetLogs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]string {
