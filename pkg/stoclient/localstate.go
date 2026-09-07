@@ -40,10 +40,7 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 		return nil, err
 	}
 
-	loc := &workdirLocation{
-		path:         path,
-		clientConfig: *clientConfig,
-	}
+	loc := newWorkdirLocation(path, *clientConfig, &BupManifest{})
 
 	statefile, err := os.Open(loc.Join(LocalStatefile))
 	if err != nil {
@@ -55,8 +52,15 @@ func NewWorkdirLocation(path string) (*workdirLocation, error) {
 	}
 	defer statefile.Close()
 
-	loc.manifest = &BupManifest{}
 	return loc, jsonfile.Unmarshal(statefile, loc.manifest, true)
+}
+
+func newWorkdirLocation(path string, clientConfig ClientConfig, manifest *BupManifest) *workdirLocation {
+	return &workdirLocation{
+		path:         path,
+		clientConfig: clientConfig,
+		manifest:     manifest,
+	}
 }
 
 func statefileExists(path string) (bool, error) {

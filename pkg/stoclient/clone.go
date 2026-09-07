@@ -55,22 +55,18 @@ func cloneCollectionExistingDir(
 		revisionID = collection.Head
 	}
 
-	if err := (&workdirLocation{
-		path: path,
-		manifest: &BupManifest{
-			ChangesetID: revisionID,
-			Collection:  *collection,
-		},
-	}).SaveToDisk(); err != nil {
-		return err
-	}
-
-	// now that properly initialized manifest was saved to disk (= bootstrapped),
-	// reload it back from disk in a normal fashion
-	wd, err := NewWorkdirLocation(path)
+	clientConfig, err := ReadConfig()
 	if err != nil {
 		return err
 	}
+
+	wd := newWorkdirLocation(
+		path,
+		*clientConfig,
+		&BupManifest{
+			ChangesetID: revisionID,
+			Collection:  *collection,
+		})
 
 	state, err := stateresolver.ComputeStateAt(*collection, wd.manifest.ChangesetID)
 	if err != nil {
@@ -83,7 +79,8 @@ func cloneCollectionExistingDir(
 		}
 	}
 
-	return nil
+	// write the manifest last so an interrupted clone cannot be mistaken for a complete workdir.
+	return wd.SaveToDisk()
 }
 
 // used both by collection create and collection download
