@@ -84,7 +84,7 @@ func (s *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 
 func (s *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	// since S3 internally requires retry support, it requires a io.ReadSeeker and thus
-	// we're forced to buffer
+	// we're forced to buffer. This also ensures caller-side integrity verification reaches EOF.
 	buf, err := io.ReadAll(content)
 	if err != nil {
 		return err

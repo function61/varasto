@@ -2,6 +2,7 @@
 package googledriveblobstore
 
 import (
+	"bytes"
 	"context"
 	"encoding/base64"
 	"encoding/json"
@@ -80,11 +81,35 @@ func (g *googledrive) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error {
 	// we've to do this, because Google Drive wouldn't give us an error because it
 	// allows >1 files with same filename in same directory
-	_, err := g.resolveFileIDByRef(ctx, ref)
+	existingFileID, err := g.resolveFileIDByRef(ctx, ref)
 	if err == nil {
 		// would actually deserve WARN level error, but we don't have that log level
 		g.logl.Error.Printf("tried to store a blob that is already present: %s", ref.AsHex())
-		return nil // file exists already, so it is technically a success
+
+		// Consume content even on the idempotent path so caller-side integrity verification reaches EOF.
+		contentToStore, err := io.ReadAll(content)
+		if err != nil {
+			return err
+		}
+
+		<-g.reqThrottle
+		res, err := g.srv.Files.Get(existingFileID).Context(ctx).Download()
+		if err != nil {
+			return fmt.Errorf("gdrive download existing blob: %v", err)
+		}
+		defer res.Body.Close()
+
+		existingContent, err := io.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("gdrive read existing blob: %v", err)
+		}
+
+		// Equality also asserts that the existing ciphertext was not produced with a different DEK.
+		if !bytes.Equal(existingContent, contentToStore) {
+			return fmt.Errorf("existing blob content mismatch: %s", ref.AsHex())
+		}
+
+		return nil
 	}
 	if err != os.ErrNotExist {
 		return err

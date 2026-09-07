@@ -11,6 +11,8 @@ import (
 type Driver interface {
 	// backing store must be idempotent, i.e. writing same blob again must not change outcome.
 	// write also must be atomic. Fetch() must not return anything before store is completed succesfully.
+	// content must be fully consumed before returning nil, even if the blob already exists,
+	// because the caller may verify source integrity only when the reader reaches EOF.
 	RawStore(ctx context.Context, ref stotypes.BlobRef, content io.Reader) error
 
 	// raw = driver doesn't do any encryption/compression/integrity verifications,

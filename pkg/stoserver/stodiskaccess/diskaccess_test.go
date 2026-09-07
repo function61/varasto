@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/md5" //nolint:gosec // not used in cryptographic context
 	"encoding/hex"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -24,6 +25,7 @@ var (
 type testDBAccess struct {
 	rootEncryptionKey []byte
 	metaStore         map[string]*BlobMeta
+	replicationWrites int
 }
 
 func (t *testDBAccess) QueryBlobExists(ref stotypes.BlobRef) (bool, error) {
@@ -55,6 +57,7 @@ func (t *testDBAccess) QueryBlobMetadata(ref stotypes.BlobRef, kenvs []stotypes.
 }
 
 func (t *testDBAccess) WriteBlobReplicated(ref stotypes.BlobRef, volumeID int) error {
+	t.replicationWrites++
 	return nil
 }
 
@@ -88,8 +91,9 @@ func setup(encKey []byte) *testData {
 	blobStorage := createVolume("2v2IQMfhcpc", 10)
 
 	tda := &testDBAccess{
-		encKey,
-		map[string]*BlobMeta{}}
+		rootEncryptionKey: encKey,
+		metaStore:         map[string]*BlobMeta{},
+	}
 
 	diskAccess := New(tda)
 
@@ -280,6 +284,22 @@ func TestReplication(t *testing.T) {
 	assert.Assert(
 		t,
 		bytes.Equal(firstStore.files[sha256OfQuickBrownFox], secondBlobStore.files[sha256OfQuickBrownFox]))
+	assert.Assert(t, test.testDBAccess.replicationWrites == 1)
+}
+
+func TestReplicationRefusesMismatchingExistingBlob(t *testing.T) {
+	test := setupDefault()
+	secondBlobStore := createVolume("6P5rgMCeGsA", 10)
+	panicIfError(mount(2, secondBlobStore, test.diskAccess))
+
+	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
+	assert.Ok(t, test.diskAccess.WriteBlob(1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true))
+
+	secondBlobStore.files[sha256OfQuickBrownFox] = []byte("stale content")
+
+	err := test.diskAccess.Replicate(context.TODO(), 1, 2, *ref)
+	assert.EqualString(t, err.Error(), "existing blob content mismatch: "+ref.AsHex())
+	assert.Assert(t, test.testDBAccess.replicationWrites == 0)
 }
 
 func TestTryReplicateRottenData(t *testing.T) {
@@ -420,6 +440,9 @@ func (t *testingBlobStorage) RawStore(_ context.Context, ref stotypes.BlobRef, c
 	buf, err := io.ReadAll(content)
 	if err != nil {
 		return err
+	}
+	if existing, found := t.files[ref.AsHex()]; found && !bytes.Equal(existing, buf) {
+		return fmt.Errorf("existing blob content mismatch: %s", ref.AsHex())
 	}
 
 	t.files[ref.AsHex()] = buf

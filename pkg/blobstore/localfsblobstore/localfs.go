@@ -2,8 +2,10 @@
 package localfsblobstore
 
 import (
+	"bytes"
 	"context"
 	"encoding/base32"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -51,9 +53,23 @@ func (l *localFs) RawStore(ctx context.Context, ref stotypes.BlobRef, content io
 
 	if chunkExists {
 		l.log.Error.Printf("tried to store a blob that is already present: %s", ref.AsHex())
-		// can't consider this an error (one that should stop a successfull blob write),
-		// since this can happen because we can't atomically finish storing blob in FS and
-		// commit knowledge of that to the metadata DB. (these anomalies are bound to happen.)
+
+		// Consume content even on the idempotent path so caller-side integrity verification reaches EOF.
+		contentToStore, err := io.ReadAll(content)
+		if err != nil {
+			return err
+		}
+
+		existingContent, err := os.ReadFile(filename)
+		if err != nil {
+			return err
+		}
+
+		// Equality also asserts that the existing ciphertext was not produced with a different DEK.
+		if !bytes.Equal(existingContent, contentToStore) {
+			return fmt.Errorf("existing blob content mismatch: %s", ref.AsHex())
+		}
+
 		return nil
 	}
 
