@@ -17,15 +17,15 @@ import (
 type Store struct {
 	keksPrivate         map[string]*rsa.PrivateKey
 	keksPublic          map[string]*rsa.PublicKey
-	decryptedDekCache   *lru.Cache
-	decryptedDekCacheMu sync.Mutex
+	decryptedDEKCache   *lru.Cache
+	decryptedDEKCacheMu sync.Mutex
 }
 
 func New() *Store {
 	return &Store{
 		keksPrivate:       map[string]*rsa.PrivateKey{},
 		keksPublic:        map[string]*rsa.PublicKey{},
-		decryptedDekCache: lru.New(256), // DEK ID => raw encryption key
+		decryptedDEKCache: lru.New(256), // DEK ID => raw encryption key
 	}
 }
 
@@ -47,11 +47,11 @@ func (k *Store) RegisterPrivateKey(rsaPrivKeyPemPkcs1 string) error {
 	return nil
 }
 
-func (k *Store) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
-	k.decryptedDekCacheMu.Lock()
-	defer k.decryptedDekCacheMu.Unlock() // lifetime pretty aggressive..
+func (k *Store) DecryptDEK(kenv stotypes.KeyEnvelope) ([]byte, error) {
+	k.decryptedDEKCacheMu.Lock()
+	defer k.decryptedDEKCacheMu.Unlock() // lifetime pretty aggressive..
 
-	if cached, found := k.decryptedDekCache.Get(kenv.KeyID); found {
+	if cached, found := k.decryptedDEKCache.Get(kenv.KeyID); found {
 		return cached.([]byte), nil
 	}
 
@@ -64,7 +64,7 @@ func (k *Store) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
 				return nil, err
 			}
 
-			k.decryptedDekCache.Add(kenv.KeyID, key)
+			k.decryptedDEKCache.Add(kenv.KeyID, key)
 
 			return key, nil
 		}
@@ -73,7 +73,7 @@ func (k *Store) DecryptDek(kenv stotypes.KeyEnvelope) ([]byte, error) {
 	return nil, fmt.Errorf("don't have any private key to slots of DEK %s", kenv.KeyID)
 }
 
-func (k *Store) EncryptDek(dekID string, dek []byte, kekPubKeyFingerprints []string) (*stotypes.KeyEnvelope, error) {
+func (k *Store) EncryptDEK(dekID string, dek []byte, kekPubKeyFingerprints []string) (*stotypes.KeyEnvelope, error) {
 	if dekID == "" {
 		return nil, errors.New("empty dekID")
 	}

@@ -47,14 +47,14 @@ func copyAndReEncryptDekFromAnotherCollection(
 			return fmt.Errorf("(should not happen) encryption key envelope not found coll: %s", collId)
 		}
 
-		dek, err := ks.DecryptDek(*dekEnvelope)
+		dek, err := ks.DecryptDEK(*dekEnvelope)
 		if err != nil {
 			// TODO: we should be able to tolerate this, and try if our private key allows
 			//       decryption of same DEK from another collection
 			return err
 		}
 
-		newEnvelope, err = ks.EncryptDek(dekID, dek, kekPubKeyFingerprints)
+		newEnvelope, err = ks.EncryptDEK(dekID, dek, kekPubKeyFingerprints)
 		if err != nil {
 			return err
 		}

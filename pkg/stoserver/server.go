@@ -532,7 +532,7 @@ func (d *dbbma) QueryCollectionEncryptionKeyForNewBlobs(coll string) (string, []
 		return "", nil, err
 	}
 
-	dek, err := d.keyStore.DecryptDek(*kenv)
+	dek, err := d.keyStore.DecryptDEK(*kenv)
 	if err != nil {
 		return "", nil, err
 	}
@@ -583,7 +583,7 @@ func (d *dbbma) QueryBlobMetadata(ref stotypes.BlobRef, encryptionKeys []stotype
 		return nil, fmt.Errorf("(should not happen) encryption key envelope not found for: %s", ref.AsHex())
 	}
 
-	dek, err := d.keyStore.DecryptDek(*kenv)
+	dek, err := d.keyStore.DecryptDEK(*kenv)
 	if err != nil {
 		return nil, err
 	}

@@ -12,7 +12,7 @@ func TestEncryptAndDecryptKek(t *testing.T) {
 	ks2 := keyStoreWith(testPrivateKey2)
 	ks3 := keyStoreWith(testPrivateKey3)
 
-	kenv, err := ks123.EncryptDek("dummyKeyId", []byte("my secret message"), []string{
+	kenv, err := ks123.EncryptDEK("dummyKeyId", []byte("my secret message"), []string{
 		"SHA256:NAgdE9bxrBpJu0S2ehoWW+IE/t+w0pIJ6HvRrgkwuOI", // pubKey1
 		"SHA256:LU4ylKik0FBhdx1CUYDJcBpwRGwm85cF+Xz/VesODkA", // pubKey2
 	})
@@ -27,7 +27,7 @@ func TestEncryptAndDecryptKek(t *testing.T) {
 	assert.Assert(t, len(kenv.Slots[1].KeyEncrypted) == 128)
 
 	tryDecryption := func(store *Store) string {
-		decrypted, err := store.DecryptDek(*kenv)
+		decrypted, err := store.DecryptDEK(*kenv)
 		if err != nil {
 			return err.Error()
 		} else {
@@ -46,10 +46,10 @@ func TestEncryptAndDecryptKek(t *testing.T) {
 func TestEncryptEmptyKeyIdOrNoPublicKeys(t *testing.T) {
 	ks := keyStoreWith(testPrivateKey1)
 
-	_, err := ks.EncryptDek("", []byte("my secret message"), nil)
+	_, err := ks.EncryptDEK("", []byte("my secret message"), nil)
 	assert.EqualString(t, err.Error(), "empty dekID")
 
-	_, err = ks.EncryptDek("foo", []byte("my secret message"), []string{})
+	_, err = ks.EncryptDEK("foo", []byte("my secret message"), []string{})
 	assert.EqualString(t, err.Error(), "no kekPubKeyFingerprints given")
 }
 

@@ -668,7 +668,7 @@ func createCollection(
 
 	// pack encryption key in an envelope protected with public key crypto,
 	// so Varasto can store data without being able to access it itself
-	dekEnvelopes, err := keyStore.EncryptDek(stoutils.NewEncryptionKeyID(), dek[:], kekPubKeyFingerprints)
+	dekEnvelopes, err := keyStore.EncryptDEK(stoutils.NewEncryptionKeyID(), dek[:], kekPubKeyFingerprints)
 	if err != nil {
 		return nil, err
 	}
