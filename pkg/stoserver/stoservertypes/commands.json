@@ -682,7 +682,9 @@
 		"crudNature": "update",
 		"title": "Discover reconcilable replication policies",
 		"info": ["This can take a few minutes if you have lots of data."],
-		"fields": []
+		"fields": [
+				{ "key": "ValidateDataEncryptionKeys", "type": "checkbox", "help": "Test unwrapping(decrypting) DEKs to ensure the key envelopes are not corrupted" }
+		]
 	},
 	{
 		"command": "database.ReconcileReplicationPolicy",

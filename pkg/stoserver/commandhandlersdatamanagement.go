@@ -435,6 +435,7 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 	}
 
 	fixedReplPolicies := 0
+	validatedDEKEnvelopes := 0
 
 	report := NewReconciliationCompletionReport()
 
@@ -459,6 +460,23 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 			}
 
 			fixedReplPolicies++
+		}
+
+		if cmd.ValidateDataEncryptionKeys {
+			for _, envelope := range coll.EncryptionKeys {
+				// NOTE: this does not test all key slots but only the first slot that is decryptable. but I guess that's
+				//       enough to guarantee not totally losing access to data via the DEK envelope bitrotting..
+				//
+				// NOTE: this adds about 5 minutes to runtime with 33 k collections. would benefit from parallelization (needs gokit bump)
+				//
+				//       proof that RSA-OAEP does detect (non-malicious) bitrot: https://go.dev/play/p/QkHEWB7DCQn
+				if _, err := c.conf.KeyStore.DecryptDEK(envelope); err != nil {
+					// not really expected to happen (except in bitrot situations)
+					return fmt.Errorf("failed to decrypt DEK (KeyID=%s) from envelope: %w", envelope.KeyID, err)
+				}
+
+				validatedDEKEnvelopes++
+			}
 		}
 
 		collReport, err := reconciliationReportForCollection(coll, policy, volumeByID, tx)
@@ -495,8 +513,12 @@ func (c *cHandlers) DatabaseDiscoverReconcilableReplicationPolicies(cmd *stoserv
 		return err
 	}
 
-	if fixedReplPolicies > 0 {
-		logl.Info.Printf("fixed %d replication policies", fixedReplPolicies)
+	if num := fixedReplPolicies; num > 0 {
+		logl.Info.Printf("fixed %d replication policies", num)
+	}
+
+	if num := validatedDEKEnvelopes; num > 0 {
+		logl.Info.Printf("validated %d DEK envelopes", num)
 	}
 
 	latestReconciliationReport = report
