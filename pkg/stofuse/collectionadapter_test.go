@@ -122,3 +122,26 @@ func TestOverlayFileHandleUsesRequestOffsets(t *testing.T) {
 		t.Fatalf("read = %q, want %q", got, want)
 	}
 }
+
+func TestOverlayFileSetattrTruncates(t *testing.T) {
+	path := t.TempDir() + "/overlay"
+	if err := os.WriteFile(path, []byte("abcdef"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	node := &changedFileInWorkdir{backingFilePath: path}
+	if err := node.Setattr(context.Background(), &fuse.SetattrRequest{
+		Valid: fuse.SetattrSize,
+		Size:  3,
+	}, &fuse.SetattrResponse{}); err != nil {
+		t.Fatal(err)
+	}
+
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(contents), "abc"; got != want {
+		t.Fatalf("contents = %q, want %q", got, want)
+	}
+}

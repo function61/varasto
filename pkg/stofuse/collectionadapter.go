@@ -588,6 +588,17 @@ func (a *changedFileInWorkdir) Setattr(ctx context.Context, req *fuse.SetattrReq
 		}
 	}
 
+	if valid(fuse.SetattrSize) {
+		if req.Size > 1<<63-1 {
+			return fuse.Errno(syscall.EINVAL)
+		}
+
+		if err := os.Truncate(a.path(), int64(req.Size)); err != nil {
+			log.Printf("Setattr: truncate: %v", err)
+			return fuse.EIO
+		}
+	}
+
 	if valid(fuse.SetattrAtime) || valid(fuse.SetattrMtime) {
 		existing, err := os.Stat(a.path())
 		if err != nil {
