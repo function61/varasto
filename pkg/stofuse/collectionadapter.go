@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
+	"sync"
 	"time"
 
 	"bazil.org/fuse"
@@ -28,7 +29,7 @@ func adaptCollectionToDirectory(coll *stotypes.Collection, srv *FsServer) (*Coll
 		return nil, err
 	}
 
-	collectionRoot := adaptCollectionToDirectoryInternal(coll, state.FileList(), ".", srv)
+	collectionRoot := adaptCollectionToDirectoryInternal(coll, state.FileList(), ".", srv, newOverlayFiles())
 
 	collectionRoot.varastoClientStateHEAD = createHeadState(coll)
 
@@ -41,6 +42,7 @@ func adaptCollectionToDirectoryInternal(
 	dirFiles []stotypes.File,
 	fullPathFromRoot string,
 	srv *FsServer,
+	overlay            *overlayFiles,
 ) *CollectionDirNode {
 	dpr := stateresolver.DirPeek(dirFiles, fullPathFromRoot)
 
@@ -60,12 +62,12 @@ func adaptCollectionToDirectoryInternal(
 	subDirs := []*CollectionDirNode{}
 
 	for _, subDirPath := range dpr.SubDirs { // *subDirPath* is full path from root, e.g. "Movies/Titanic"
-		subDir := adaptCollectionToDirectoryInternal(collection, dirFiles, subDirPath, srv)
+		subDir := adaptCollectionToDirectoryInternal(collection, dirFiles, subDirPath, srv, overlay)
 
 		subDirs = append(subDirs, subDir)
 	}
 
-	return NewCollectionDirNode(collection, fullPathFromRoot, nextInode(), rootFiles, subDirs)
+	return newCollectionDirNode(collection, fullPathFromRoot, nextInode(), rootFiles, subDirs, overlay)
 }
 
 func NewCollectionDirNode(
@@ -75,6 +77,17 @@ func NewCollectionDirNode(
 	filesCommitted []*CollectionDirNodeFile,
 	subdirsCommitted []*CollectionDirNode,
 ) *CollectionDirNode {
+	return newCollectionDirNode(collection, fullPathFromRoot, inode, filesCommitted, subdirsCommitted, newOverlayFiles())
+}
+
+func newCollectionDirNode(
+	collection *stotypes.Collection,
+	fullPathFromRoot string,
+	inode uint64,
+	filesCommitted []*CollectionDirNodeFile,
+	subdirsCommitted []*CollectionDirNode,
+	overlay *overlayFiles,
+) *CollectionDirNode {
 	return &CollectionDirNode{
 		collection:       collection,
 		dirBaseName:      filepath.Base(fullPathFromRoot),
@@ -82,10 +95,12 @@ func NewCollectionDirNode(
 		inode:            inode,
 		filesCommitted:   filesCommitted,
 		subdirsCommitted: subdirsCommitted,
+		overlay:          overlay,
 	}
 }
 
 type CollectionDirNode struct {
+	mu                     sync.RWMutex
 	dirBaseName            string      // "/" => ".", "/Movies/Titanic" => "Titanic"
 	fullPathFromRoot       string      // "/" => ".", "/Movies/Titanic" => "Movies/Titanic"
 	varastoClientStateHEAD *staticFile // only set if root
@@ -93,6 +108,7 @@ type CollectionDirNode struct {
 	inode                  uint64
 	filesCommitted         []*CollectionDirNodeFile
 	subdirsCommitted       []*CollectionDirNode
+	overlay                *overlayFiles
 }
 
 var _ interface {
@@ -134,18 +150,18 @@ func (d *CollectionDirNode) Lookup(ctx context.Context, name string) (fs.Node, e
 
 	if stat, err := os.Stat(d.workdirPath(name)); err == nil { // look from uncommitted files
 		if stat.IsDir() {
-			return NewCollectionDirNode(
-				d.collection,
-				filepath.Join(d.fullPathFromRoot, name),
-				stat.Sys().(*syscall.Stat_t).Ino,
-				[]*CollectionDirNodeFile{},
-				[]*CollectionDirNode{},
-			), nil
+			return d.overlay.getOrCreateDir(d.workdirPath(name), func() *CollectionDirNode {
+				return newCollectionDirNode(
+					d.collection,
+					filepath.Join(d.pathFromRoot(), name),
+					stat.Sys().(*syscall.Stat_t).Ino,
+					[]*CollectionDirNodeFile{},
+					[]*CollectionDirNode{},
+					d.overlay,
+				)
+			}), nil
 		} else {
-			return &changedFileInWorkdir{
-				name:            name,
-				backingFilePath: d.workdirPath(name),
-			}, nil
+			return d.overlay.getOrCreate(d.workdirPath(name)), nil
 		}
 	}
 
@@ -250,10 +266,7 @@ func (d *CollectionDirNode) Create(ctx context.Context, req *fuse.CreateRequest,
 		return withErrorAndLog(err)
 	}
 
-	newFile := &changedFileInWorkdir{
-		name:            filepath.Base(workdirPath),
-		backingFilePath: workdirPath,
-	}
+	newFile := d.overlay.getOrCreate(workdirPath)
 
 	openResp := fuse.OpenResponse{}
 	handle, err := newFile.Open(ctx, &fuse.OpenRequest{Flags: req.Flags}, &openResp)
@@ -286,13 +299,16 @@ func (d *CollectionDirNode) Mkdir(ctx context.Context, req *fuse.MkdirRequest) (
 		return nil, err
 	}
 
-	return NewCollectionDirNode(
-		d.collection,
-		filepath.Join(d.fullPathFromRoot, req.Name),
-		stat.Sys().(*syscall.Stat_t).Ino,
-		[]*CollectionDirNodeFile{},
-		[]*CollectionDirNode{},
-	), nil
+	return d.overlay.getOrCreateDir(newDirPath, func() *CollectionDirNode {
+		return newCollectionDirNode(
+			d.collection,
+			filepath.Join(d.pathFromRoot(), req.Name),
+			stat.Sys().(*syscall.Stat_t).Ino,
+			[]*CollectionDirNodeFile{},
+			[]*CollectionDirNode{},
+			d.overlay,
+		)
+	}), nil
 }
 
 func (d *CollectionDirNode) Remove(ctx context.Context, req *fuse.RemoveRequest) error {
@@ -334,10 +350,22 @@ func (d *CollectionDirNode) Rename(ctx context.Context, req *fuse.RenameRequest,
 		}
 	}
 
-	// FIXME: assuming newname can't be under different directory
-	err := os.Rename(d.workdirPath(req.OldName), d.workdirPath(req.NewName))
+	targetDir, ok := newDir.(*CollectionDirNode)
+	if !ok {
+		return fuse.EIO
+	}
+
+	oldPath := d.workdirPath(req.OldName)
+	newPath := targetDir.workdirPath(req.NewName)
+	err := os.Rename(oldPath, newPath)
 	switch {
 	case err == nil:
+		d.overlay.move(
+			oldPath,
+			newPath,
+			filepath.Join(d.pathFromRoot(), req.OldName),
+			filepath.Join(targetDir.pathFromRoot(), req.NewName),
+		)
 		return nil
 	case os.IsNotExist(err):
 		return fuse.ENOENT
@@ -349,11 +377,25 @@ func (d *CollectionDirNode) Rename(ctx context.Context, req *fuse.RenameRequest,
 
 func (d *CollectionDirNode) workdirPath(name string) string {
 	// for collection root *fullPathFromRoot* is "." => has no effect thus ignored (= good in that case)
-	return filepath.Join(home, ".local/varasto-work", d.collection.ID, d.fullPathFromRoot, name)
+	return filepath.Join(home, ".local/varasto-work", d.collection.ID, d.pathFromRoot(), name)
 }
 
 func (d *CollectionDirNode) isRoot() bool {
-	return d.dirBaseName == "." // FIXME: ugly
+	return d.pathFromRoot() == "."
+}
+
+func (d *CollectionDirNode) pathFromRoot() string {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+	return d.fullPathFromRoot
+}
+
+func (d *CollectionDirNode) moveTo(fullPathFromRoot string) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.fullPathFromRoot = fullPathFromRoot
+	d.dirBaseName = filepath.Base(fullPathFromRoot)
 }
 
 func NewCollectionDirNodeFile(
@@ -413,8 +455,98 @@ func (f CollectionDirNodeFile) Read(ctx context.Context, req *fuse.ReadRequest, 
 
 // represents a changed file (from perspective of HEAD commit) present in "overlay" workdir
 type changedFileInWorkdir struct {
-	name            string // basename?
-	backingFilePath string // full path to the file
+	mu              sync.RWMutex
+	backingFilePath string
+}
+
+type overlayFiles struct {
+	mu    sync.Mutex
+	files map[string]*changedFileInWorkdir
+	dirs  map[string]*CollectionDirNode
+}
+
+func newOverlayFiles() *overlayFiles {
+	return &overlayFiles{
+		files: map[string]*changedFileInWorkdir{},
+		dirs:  map[string]*CollectionDirNode{},
+	}
+}
+
+func (o *overlayFiles) getOrCreateDir(path string, create func() *CollectionDirNode) *CollectionDirNode {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if dir, found := o.dirs[path]; found {
+		return dir
+	}
+
+	dir := create()
+	o.dirs[path] = dir
+	return dir
+}
+
+func (o *overlayFiles) getOrCreate(path string) *changedFileInWorkdir {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	if file, found := o.files[path]; found {
+		return file
+	}
+
+	file := &changedFileInWorkdir{backingFilePath: path}
+	o.files[path] = file
+	return file
+}
+
+func (o *overlayFiles) move(oldPath string, newPath string, oldFullPath string, newFullPath string) {
+	o.mu.Lock()
+	defer o.mu.Unlock()
+
+	oldPathWithSeparator := oldPath + string(filepath.Separator)
+	oldFullPathWithSeparator := oldFullPath + string(filepath.Separator)
+	for path, file := range o.files {
+		var movedPath string
+		switch {
+		case path == oldPath:
+			movedPath = newPath
+		case strings.HasPrefix(path, oldPathWithSeparator):
+			movedPath = filepath.Join(newPath, strings.TrimPrefix(path, oldPathWithSeparator))
+		default:
+			continue
+		}
+
+		file.mu.Lock()
+		file.backingFilePath = movedPath
+		file.mu.Unlock()
+
+		delete(o.files, path)
+		o.files[movedPath] = file
+	}
+
+	for path, dir := range o.dirs {
+		var movedPath string
+		var movedFullPath string
+		switch {
+		case path == oldPath:
+			movedPath = newPath
+			movedFullPath = newFullPath
+		case strings.HasPrefix(path, oldPathWithSeparator):
+			movedPath = filepath.Join(newPath, strings.TrimPrefix(path, oldPathWithSeparator))
+			movedFullPath = filepath.Join(newFullPath, strings.TrimPrefix(dir.pathFromRoot(), oldFullPathWithSeparator))
+		default:
+			continue
+		}
+
+		dir.moveTo(movedFullPath)
+		delete(o.dirs, path)
+		o.dirs[movedPath] = dir
+	}
+}
+
+func (a *changedFileInWorkdir) path() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.backingFilePath
 }
 
 var _ interface {
@@ -431,7 +563,7 @@ var _ interface {
 } = (*changedFileInWorkdir)(nil)
 
 func (a *changedFileInWorkdir) Attr(ctx context.Context, attrs *fuse.Attr) error {
-	stat, err := os.Stat(a.backingFilePath)
+	stat, err := os.Stat(a.path())
 	if err != nil {
 		return err
 	}
@@ -450,14 +582,14 @@ func (a *changedFileInWorkdir) Setattr(ctx context.Context, req *fuse.SetattrReq
 	}
 
 	if valid(fuse.SetattrMode) {
-		if err := os.Chmod(a.backingFilePath, req.Mode); err != nil {
+		if err := os.Chmod(a.path(), req.Mode); err != nil {
 			log.Printf("Setattr: chmod: %v", err)
 			return fuse.EIO
 		}
 	}
 
 	if valid(fuse.SetattrAtime) || valid(fuse.SetattrMtime) {
-		existing, err := os.Stat(a.backingFilePath)
+		existing, err := os.Stat(a.path())
 		if err != nil {
 			log.Printf("Setattr: stat: %v", err)
 			return fuse.EIO
@@ -477,7 +609,7 @@ func (a *changedFileInWorkdir) Setattr(ctx context.Context, req *fuse.SetattrReq
 		// TODO: use herbis times
 
 		if err := os.Chtimes(
-			a.backingFilePath,
+			a.path(),
 			existingOrNew(existingATime, req.Atime, valid(fuse.SetattrAtime)),
 			existingOrNew(existing.ModTime(), req.Mtime, valid(fuse.SetattrMtime)),
 		); err != nil {
@@ -490,8 +622,9 @@ func (a *changedFileInWorkdir) Setattr(ctx context.Context, req *fuse.SetattrReq
 }
 
 func (a *changedFileInWorkdir) Open(ctx context.Context, req *fuse.OpenRequest, resp *fuse.OpenResponse) (fs.Handle, error) {
-	log.Printf("open %s", a.backingFilePath)
-	hdl, err := os.OpenFile(a.backingFilePath, int(req.Flags), 0700)
+	path := a.path()
+	log.Printf("open %s", path)
+	hdl, err := os.OpenFile(path, int(req.Flags), 0700)
 	if err != nil {
 		return nil, err
 	}
@@ -507,9 +640,10 @@ $ apt install -y attr
 $ setfattr -n user.foo -v hihi foobar.txt
 */
 func (a *changedFileInWorkdir) Listxattr(ctx context.Context, req *fuse.ListxattrRequest, resp *fuse.ListxattrResponse) error {
-	log.Printf("Listxattr %s", a.backingFilePath)
+	path := a.path()
+	log.Printf("Listxattr %s", path)
 
-	attrs, err := xattr.List(a.backingFilePath)
+	attrs, err := xattr.List(path)
 	if err != nil {
 		log.Printf("Listxattr unexpected err: %v", err)
 		return fuse.EIO
@@ -523,9 +657,10 @@ func (a *changedFileInWorkdir) Listxattr(ctx context.Context, req *fuse.Listxatt
 }
 
 func (a *changedFileInWorkdir) Setxattr(ctx context.Context, req *fuse.SetxattrRequest) error {
-	log.Printf("Setxattr %s %s", a.backingFilePath, req.Name)
+	path := a.path()
+	log.Printf("Setxattr %s %s", path, req.Name)
 
-	if err := xattr.Set(a.backingFilePath, req.Name, req.Xattr); err != nil {
+	if err := xattr.Set(path, req.Name, req.Xattr); err != nil {
 		log.Printf("Setxattr unexpected err: %v", err)
 		return fuse.EIO
 	}
@@ -534,9 +669,10 @@ func (a *changedFileInWorkdir) Setxattr(ctx context.Context, req *fuse.SetxattrR
 }
 
 func (a *changedFileInWorkdir) Removexattr(ctx context.Context, req *fuse.RemovexattrRequest) error {
-	log.Printf("Removexattr %s %s", a.backingFilePath, req.Name)
+	path := a.path()
+	log.Printf("Removexattr %s %s", path, req.Name)
 
-	err := xattr.Remove(a.backingFilePath, req.Name)
+	err := xattr.Remove(path, req.Name)
 	switch {
 	case err == nil:
 		return nil
@@ -551,7 +687,7 @@ func (a *changedFileInWorkdir) Removexattr(ctx context.Context, req *fuse.Remove
 func (a *changedFileInWorkdir) Getxattr(ctx context.Context, req *fuse.GetxattrRequest, resp *fuse.GetxattrResponse) error {
 	// log.Printf("Getxattr %s %s", a.backingFilePath, req.Name)
 
-	val, err := xattr.Get(a.backingFilePath, req.Name)
+	val, err := xattr.Get(a.path(), req.Name)
 	switch {
 	case err == nil:
 		resp.Xattr = val
