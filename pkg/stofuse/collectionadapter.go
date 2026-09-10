@@ -709,15 +709,12 @@ var _ interface {
 	fs.HandleReader
 	fs.HandleWriter
 	fs.HandleFlusher
+	fs.HandleReleaser
 } = (*changedFileInWorkdirHandle)(nil)
 
 func (a *changedFileInWorkdirHandle) Read(ctx context.Context, req *fuse.ReadRequest, resp *fuse.ReadResponse) error {
-	if _, err := a.file.Seek(req.Offset, io.SeekStart); err != nil {
-		return err
-	}
-
 	resp.Data = make([]byte, req.Size)
-	n, err := a.file.Read(resp.Data)
+	n, err := a.file.ReadAt(resp.Data, req.Offset)
 	resp.Data = resp.Data[:n]
 	if err == io.EOF { // happens at least with empty files (given read buffer larger than file has content)
 		return nil
@@ -727,11 +724,7 @@ func (a *changedFileInWorkdirHandle) Read(ctx context.Context, req *fuse.ReadReq
 }
 
 func (a *changedFileInWorkdirHandle) Write(ctx context.Context, req *fuse.WriteRequest, resp *fuse.WriteResponse) error {
-	if _, err := a.file.Seek(req.Offset, io.SeekStart); err != nil {
-		return err
-	}
-
-	n, err := a.file.Write(req.Data)
+	n, err := a.file.WriteAt(req.Data, req.Offset)
 	resp.Size = n
 	if err != nil {
 		log.Printf("write error: %v", err)
@@ -744,6 +737,10 @@ func (a *changedFileInWorkdirHandle) Write(ctx context.Context, req *fuse.WriteR
 func (a *changedFileInWorkdirHandle) Flush(ctx context.Context, req *fuse.FlushRequest) error {
 	// log.Printf("got flush for %d (%s)", req.Handle, a.file.Name())
 	return nil
+}
+
+func (a *changedFileInWorkdirHandle) Release(ctx context.Context, req *fuse.ReleaseRequest) error {
+	return a.file.Close()
 }
 
 func isXattrNotExist(err error) bool {

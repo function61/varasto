@@ -82,3 +82,43 @@ func TestOverlayFileNodeFollowsDirectoryRename(t *testing.T) {
 		t.Fatalf("old directory file stat error = %v, want not exist", err)
 	}
 }
+
+func TestOverlayFileHandleReleaseClosesFile(t *testing.T) {
+	file, err := os.CreateTemp(t.TempDir(), "overlay")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	handle := &changedFileInWorkdirHandle{file: file}
+	if err := handle.Release(context.Background(), &fuse.ReleaseRequest{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err == nil {
+		t.Fatal("file remained open after Release")
+	}
+}
+
+func TestOverlayFileHandleUsesRequestOffsets(t *testing.T) {
+	file, err := os.CreateTemp(t.TempDir(), "overlay")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer file.Close()
+
+	handle := &changedFileInWorkdirHandle{file: file}
+	ctx := context.Background()
+	if err := handle.Write(ctx, &fuse.WriteRequest{Offset: 3, Data: []byte("def")}, &fuse.WriteResponse{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := handle.Write(ctx, &fuse.WriteRequest{Offset: 0, Data: []byte("abc")}, &fuse.WriteResponse{}); err != nil {
+		t.Fatal(err)
+	}
+
+	response := &fuse.ReadResponse{}
+	if err := handle.Read(ctx, &fuse.ReadRequest{Offset: 0, Size: 6}, response); err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(response.Data), "abcdef"; got != want {
+		t.Fatalf("read = %q, want %q", got, want)
+	}
+}
