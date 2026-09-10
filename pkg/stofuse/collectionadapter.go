@@ -245,22 +245,6 @@ func (d *CollectionDirNode) Create(ctx context.Context, req *fuse.CreateRequest,
 		return nil, nil, fuse.EIO
 	}
 
-	// Varasto client only starts writing this on successful commit.
-	// so we can assume that all changed files were successfully commited.
-	// therefore we should clear the workdir and refresh our state.
-	if req.Name == stoclient.LocalStatefile+".part" && d.isRoot() {
-		workdir := d.workdirPath("")
-
-		if err := os.RemoveAll(workdir); err != nil {
-			return withErrorAndLog(err)
-		}
-
-		// so we'll load newest state from server
-		collectionByIDQuerySingleton.forgetCollection(ctx, d.collection.ID)
-
-		return nil, nil, fuse.EIO
-	}
-
 	log.Printf("Create %s", req.Name)
 
 	workdirPath := d.workdirPath(req.Name)
@@ -379,6 +363,26 @@ func (d *CollectionDirNode) Rename(ctx context.Context, req *fuse.RenameRequest,
 			filepath.Join(d.pathFromRoot(), req.OldName),
 			filepath.Join(targetDir.pathFromRoot(), req.NewName),
 		)
+
+		if req.OldName == stoclient.LocalStatefile+".part" && req.NewName == stoclient.LocalStatefile && d.isRoot() {
+			content, err := os.ReadFile(newPath)
+			if err != nil {
+				log.Printf("Rename: read saved state: %v", err)
+				return fuse.EIO
+			}
+
+			if err := os.RemoveAll(d.workdirPath("")); err != nil {
+				log.Printf("Rename: clear workdir: %v", err)
+				return fuse.EIO
+			}
+
+			if d.varastoClientStateHEAD != nil {
+				d.varastoClientStateHEAD.replaceContent(content)
+			}
+			if collectionByIDQuerySingleton != nil {
+				collectionByIDQuerySingleton.forgetCollection(ctx, d.collection.ID)
+			}
+		}
 		return nil
 	case os.IsNotExist(err):
 		return fuse.ENOENT

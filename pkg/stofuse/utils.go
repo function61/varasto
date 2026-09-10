@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sync"
 	"syscall"
 	"time"
 
@@ -105,6 +106,7 @@ func createHeadState(coll *stotypes.Collection) *staticFile {
 
 // a static (readonly) file whose content we know in-memory
 type staticFile struct {
+	mu      sync.RWMutex
 	inode   uint64
 	name    string
 	content []byte
@@ -116,6 +118,9 @@ var _ interface {
 } = (*staticFile)(nil)
 
 func (d *staticFile) Attr(_ context.Context, a *fuse.Attr) error {
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
 	a.Inode = d.inode
 	a.Mode = 0555
 	a.Size = uint64(len(d.content))
@@ -123,7 +128,17 @@ func (d *staticFile) Attr(_ context.Context, a *fuse.Attr) error {
 }
 
 func (d *staticFile) ReadAll(_ context.Context) ([]byte, error) {
-	return d.content, nil
+	d.mu.RLock()
+	defer d.mu.RUnlock()
+
+	return append([]byte(nil), d.content...), nil
+}
+
+func (d *staticFile) replaceContent(content []byte) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+
+	d.content = content
 }
 
 func (d *staticFile) dirent() fuse.Dirent {

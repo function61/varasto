@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"bazil.org/fuse"
+	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
@@ -180,5 +181,43 @@ func TestOverlayFileOverridesCommittedFile(t *testing.T) {
 	}
 	if len(entries) != 1 || entries[0].Name != "download" {
 		t.Fatalf("directory entries = %#v, want only download", entries)
+	}
+}
+
+func TestSavingStateClearsOverlayAfterAtomicRename(t *testing.T) {
+	workdir := t.TempDir()
+	oldHome := home
+	home = workdir
+	defer func() { home = oldHome }()
+
+	dir := NewCollectionDirNode(&stotypes.Collection{ID: "collection"}, ".", 1, nil, nil)
+	dir.varastoClientStateHEAD = &staticFile{name: stoclient.LocalStatefile, content: []byte("old")}
+	ctx := context.Background()
+	node, handle, err := dir.Create(ctx, &fuse.CreateRequest{Name: stoclient.LocalStatefile + ".part", Flags: fuse.OpenReadWrite}, &fuse.CreateResponse{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := handle.(*changedFileInWorkdirHandle).Write(ctx, &fuse.WriteRequest{Data: []byte("new")}, &fuse.WriteResponse{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := handle.(*changedFileInWorkdirHandle).Release(ctx, &fuse.ReleaseRequest{}); err != nil {
+		t.Fatal(err)
+	}
+	if err := dir.Rename(ctx, &fuse.RenameRequest{OldName: stoclient.LocalStatefile + ".part", NewName: stoclient.LocalStatefile}, dir); err != nil {
+		t.Fatal(err)
+	}
+
+	contents, err := dir.varastoClientStateHEAD.ReadAll(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, want := string(contents), "new"; got != want {
+		t.Fatalf("state = %q, want %q", got, want)
+	}
+	if _, err := os.Stat(dir.workdirPath("")); !os.IsNotExist(err) {
+		t.Fatalf("workdir stat error = %v, want not exist", err)
+	}
+	if _, ok := node.(*changedFileInWorkdir); !ok {
+		t.Fatalf("created node = %T, want overlay file", node)
 	}
 }
