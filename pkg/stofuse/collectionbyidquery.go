@@ -93,11 +93,10 @@ func (b *byIDDir) Lookup(ctx context.Context, name string) (fs.Node, error) {
 }
 
 func (b *byIDDir) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
-	// FIXME: does this lock work properly?
 	b.cacheMu.Lock()
 	defer b.cacheMu.Unlock()
 
-	return b.cacheDents, nil
+	return append([]fuse.Dirent(nil), b.cacheDents...), nil
 }
 
 func (b *byIDDir) getCached(collID string) fs.Node {

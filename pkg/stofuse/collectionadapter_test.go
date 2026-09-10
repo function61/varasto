@@ -225,14 +225,22 @@ func TestSavingStateClearsOverlayAfterAtomicRename(t *testing.T) {
 
 func TestForgetCollectionRemovesCachedCollection(t *testing.T) {
 	dir := NewCollectionDirNode(&stotypes.Collection{ID: "collection"}, ".", 1, nil, nil)
+	otherDir := NewCollectionDirNode(&stotypes.Collection{ID: "other"}, ".", 2, nil, nil)
 	cache := &byIDDir{
-		cache:           map[string]fs.Node{"collection": dir},
-		cacheDents:      []fuse.Dirent{{Inode: dir.inode}},
-		cacheDentInodes: []uint64{dir.inode},
+		cache:           map[string]fs.Node{"collection": dir, "other": otherDir},
+		cacheDents:      []fuse.Dirent{{Inode: dir.inode}, {Inode: otherDir.inode}},
+		cacheDentInodes: []uint64{dir.inode, otherDir.inode},
 	}
 
+	entries, err := cache.ReadDirAll(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
 	cache.forgetCollection(context.Background(), "collection")
-	if len(cache.cache) != 0 || len(cache.cacheDents) != 0 || len(cache.cacheDentInodes) != 0 {
+	if len(cache.cache) != 1 || len(cache.cacheDents) != 1 || len(cache.cacheDentInodes) != 1 {
 		t.Fatalf("cache was not cleared: %#v", cache)
+	}
+	if len(entries) != 2 || entries[0].Inode != dir.inode {
+		t.Fatalf("returned directory entries were modified: %#v", entries)
 	}
 }
