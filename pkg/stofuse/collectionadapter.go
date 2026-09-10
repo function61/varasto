@@ -11,8 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"sync"
+	"syscall"
 	"time"
 
 	"bazil.org/fuse"
@@ -42,7 +42,7 @@ func adaptCollectionToDirectoryInternal(
 	dirFiles []stotypes.File,
 	fullPathFromRoot string,
 	srv *FsServer,
-	overlay            *overlayFiles,
+	overlay *overlayFiles,
 ) *CollectionDirNode {
 	dpr := stateresolver.DirPeek(dirFiles, fullPathFromRoot)
 
@@ -136,18 +136,6 @@ func (d *CollectionDirNode) Lookup(ctx context.Context, name string) (fs.Node, e
 		return d.varastoClientStateHEAD, nil
 	}
 
-	for _, dir := range d.subdirsCommitted {
-		if dir.dirBaseName == name {
-			return dir, nil
-		}
-	}
-
-	for _, file := range d.filesCommitted {
-		if file.name == name {
-			return file, nil
-		}
-	}
-
 	if stat, err := os.Stat(d.workdirPath(name)); err == nil { // look from uncommitted files
 		if stat.IsDir() {
 			return d.overlay.getOrCreateDir(d.workdirPath(name), func() *CollectionDirNode {
@@ -165,31 +153,25 @@ func (d *CollectionDirNode) Lookup(ctx context.Context, name string) (fs.Node, e
 		}
 	}
 
+	for _, dir := range d.subdirsCommitted {
+		if dir.dirBaseName == name {
+			return dir, nil
+		}
+	}
+
+	for _, file := range d.filesCommitted {
+		if file.name == name {
+			return file, nil
+		}
+	}
+
 	return nil, fuse.ENOENT
 }
 
 func (d *CollectionDirNode) ReadDirAll(ctx context.Context) ([]fuse.Dirent, error) {
 	entries := []fuse.Dirent{}
-
-	for _, subdir := range d.subdirsCommitted {
-		entries = append(entries, fuse.Dirent{
-			Inode: subdir.inode,
-			Name:  subdir.dirBaseName,
-			Type:  fuse.DT_Dir,
-		})
-	}
-
-	for _, file := range d.filesCommitted {
-		entries = append(entries, fuse.Dirent{
-			Inode: file.inode,
-			Name:  file.name,
-			Type:  fuse.DT_File,
-		})
-	}
-
-	if d.varastoClientStateHEAD != nil {
-		entries = append(entries, d.varastoClientStateHEAD.dirent())
-	}
+	overlayEntries := []fuse.Dirent{}
+	overlayNames := map[string]struct{}{}
 
 	uncommitted, err := os.ReadDir(d.workdirPath(""))
 	if err != nil {
@@ -215,12 +197,43 @@ func (d *CollectionDirNode) ReadDirAll(ctx context.Context) ([]fuse.Dirent, erro
 			return nil, fuse.EIO
 		}
 
-		entries = append(entries, fuse.Dirent{
+		overlayNames[entry.Name()] = struct{}{}
+		overlayEntries = append(overlayEntries, fuse.Dirent{
 			Inode: info.Sys().(*syscall.Stat_t).Ino, // TODO(perf): is this required?
 			Name:  entry.Name(),
 			Type:  entryType,
 		})
 	}
+
+	for _, subdir := range d.subdirsCommitted {
+		if _, overridden := overlayNames[subdir.dirBaseName]; overridden {
+			continue
+		}
+
+		entries = append(entries, fuse.Dirent{
+			Inode: subdir.inode,
+			Name:  subdir.dirBaseName,
+			Type:  fuse.DT_Dir,
+		})
+	}
+
+	for _, file := range d.filesCommitted {
+		if _, overridden := overlayNames[file.name]; overridden {
+			continue
+		}
+
+		entries = append(entries, fuse.Dirent{
+			Inode: file.inode,
+			Name:  file.name,
+			Type:  fuse.DT_File,
+		})
+	}
+
+	if d.varastoClientStateHEAD != nil {
+		entries = append(entries, d.varastoClientStateHEAD.dirent())
+	}
+
+	entries = append(entries, overlayEntries...)
 
 	return entries, nil
 }

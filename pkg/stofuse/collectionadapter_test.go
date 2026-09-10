@@ -145,3 +145,40 @@ func TestOverlayFileSetattrTruncates(t *testing.T) {
 		t.Fatalf("contents = %q, want %q", got, want)
 	}
 }
+
+func TestOverlayFileOverridesCommittedFile(t *testing.T) {
+	workdir := t.TempDir()
+	oldHome := home
+	home = workdir
+	defer func() { home = oldHome }()
+
+	dir := NewCollectionDirNode(
+		&stotypes.Collection{ID: "collection"},
+		".",
+		1,
+		[]*CollectionDirNodeFile{{name: "download"}},
+		nil,
+	)
+	if err := os.MkdirAll(dir.workdirPath(""), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(dir.workdirPath("download"), []byte("replacement"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	node, err := dir.Lookup(context.Background(), "download")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := node.(*changedFileInWorkdir); !ok {
+		t.Fatalf("lookup returned %T, want overlay file", node)
+	}
+
+	entries, err := dir.ReadDirAll(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name != "download" {
+		t.Fatalf("directory entries = %#v, want only download", entries)
+	}
+}
