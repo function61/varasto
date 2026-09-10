@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"bazil.org/fuse"
+	"bazil.org/fuse/fs"
 	"github.com/function61/varasto/pkg/stoclient"
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -219,5 +220,19 @@ func TestSavingStateClearsOverlayAfterAtomicRename(t *testing.T) {
 	}
 	if _, ok := node.(*changedFileInWorkdir); !ok {
 		t.Fatalf("created node = %T, want overlay file", node)
+	}
+}
+
+func TestForgetCollectionRemovesCachedCollection(t *testing.T) {
+	dir := NewCollectionDirNode(&stotypes.Collection{ID: "collection"}, ".", 1, nil, nil)
+	cache := &byIDDir{
+		cache:           map[string]fs.Node{"collection": dir},
+		cacheDents:      []fuse.Dirent{{Inode: dir.inode}},
+		cacheDentInodes: []uint64{dir.inode},
+	}
+
+	cache.forgetCollection(context.Background(), "collection")
+	if len(cache.cache) != 0 || len(cache.cacheDents) != 0 || len(cache.cacheDentInodes) != 0 {
+		t.Fatalf("cache was not cleared: %#v", cache)
 	}
 }

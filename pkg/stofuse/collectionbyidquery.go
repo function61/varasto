@@ -121,7 +121,10 @@ func (b *byIDDir) setCached(collID string, cad *CollectionDirNode) {
 }
 
 func (b *byIDDir) forgetCollection(ctx context.Context, collID string) {
-	node := b.getCached(collID)
+	b.cacheMu.Lock()
+	defer b.cacheMu.Unlock()
+
+	node := b.cache[collID]
 	if node == nil {
 		return
 	}
