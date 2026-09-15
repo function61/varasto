@@ -4,7 +4,6 @@ package s3blobstore
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"io"
@@ -28,14 +27,15 @@ type BucketContext struct {
 }
 
 type s3blobstore struct {
-	blobNamer *s3BlobNamer
-	bucket    *BucketContext
-	logl      *logex.Leveled
+	namer  blobstore.BlobNamer
+	prefix string
+	bucket *BucketContext
+	logl   *logex.Leveled
 }
 
 var _ blobstore.Driver = (*s3blobstore)(nil)
 
-func New(opts string, logger *log.Logger) (blobstore.Driver, error) {
+func New(opts string, namer blobstore.BlobNamer, logger *log.Logger) (blobstore.Driver, error) {
 	conf, err := deserializeConfig(opts)
 	if err != nil {
 		return nil, err
@@ -63,16 +63,17 @@ func New(opts string, logger *log.Logger) (blobstore.Driver, error) {
 	}
 
 	return &s3blobstore{
-		blobNamer: &s3BlobNamer{conf.Prefix},
-		bucket:    bucket,
-		logl:      logex.Levels(logger),
+		namer:  namer,
+		prefix: conf.Prefix,
+		bucket: bucket,
+		logl:   logex.Levels(logger),
 	}, nil
 }
 
 func (s *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
 	res, err := s.bucket.S3.GetObjectWithContext(ctx, &s3.GetObjectInput{
 		Bucket: s.bucket.Name,
-		Key:    s.blobNamer.Ref(ref),
+		Key:    s.key(ref),
 	})
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok && err.Code() == s3.ErrCodeNoSuchKey {
@@ -95,7 +96,7 @@ func (s *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 
 	if _, err := s.bucket.S3.PutObjectWithContext(ctx, &s3.PutObjectInput{
 		Bucket: s.bucket.Name,
-		Key:    s.blobNamer.Ref(ref),
+		Key:    s.key(ref),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
 		return fmt.Errorf("s3 PutObject: %w", err)
@@ -107,7 +108,7 @@ func (s *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 func (s *s3blobstore) RawDelete(ctx context.Context, ref stotypes.BlobRef) error {
 	_, err := s.bucket.S3.DeleteObjectWithContext(ctx, &s3.DeleteObjectInput{
 		Bucket: s.bucket.Name,
-		Key:    s.blobNamer.Ref(ref),
+		Key:    s.key(ref),
 	})
 	if err != nil {
 		if err, ok := err.(awserr.Error); ok && err.Code() == s3.ErrCodeNoSuchKey {
@@ -124,12 +125,8 @@ func (s *s3blobstore) RoutingCost() int {
 	return 20
 }
 
-type s3BlobNamer struct {
-	prefix string
-}
-
-func (s *s3BlobNamer) Ref(ref stotypes.BlobRef) *string {
-	return aws.String(s.prefix + base64.RawURLEncoding.EncodeToString([]byte(ref)))
+func (s *s3blobstore) key(ref stotypes.BlobRef) *string {
+	return aws.String(s.prefix + s.namer.Filename(ref))
 }
 
 type Config struct {

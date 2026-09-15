@@ -3,7 +3,6 @@ package googledriveblobstore
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +28,7 @@ const (
 
 type googledrive struct {
 	varastoDirectoryID string // ID of directory for storing Varasto blobs
+	namer              blobstore.BlobNamer
 	logl               *logex.Leveled
 	srv                *drive.Service
 	reqThrottle        chan any
@@ -36,7 +36,7 @@ type googledrive struct {
 
 var _ blobstore.Driver = (*googledrive)(nil)
 
-func New(optsSerialized string, logger *log.Logger) (blobstore.Driver, error) {
+func New(optsSerialized string, namer blobstore.BlobNamer, logger *log.Logger) (blobstore.Driver, error) {
 	ctx := context.TODO()
 
 	opts, err := deserializeConfig(optsSerialized)
@@ -53,6 +53,7 @@ func New(optsSerialized string, logger *log.Logger) (blobstore.Driver, error) {
 
 	return &googledrive{
 		varastoDirectoryID: opts.VarastoDirectoryID,
+		namer:              namer,
 		logl:               logex.Levels(logger),
 		srv:                gdrive,
 		// default quota seems to be "1 000 queries per 100 seconds per user", so that makes
@@ -95,7 +96,7 @@ func (g *googledrive) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 
 	<-g.reqThrottle
 	if _, err := g.srv.Files.Create(&drive.File{
-		Name:     toGoogleDriveName(ref),
+		Name:     g.namer.Filename(ref),
 		Parents:  []string{g.varastoDirectoryID},
 		MimeType: "application/vnd.varasto.blob",
 	}).Media(content).Context(ctx).Do(); err != nil {
@@ -121,7 +122,7 @@ func (g *googledrive) resolveFileIDByRef(ctx context.Context, ref stotypes.BlobR
 	// https://twitter.com/joonas_fi/status/1108008997238595590
 	exactFilenameInExactFolderQuery := fmt.Sprintf(
 		"name = '%s' and '%s' in parents and trashed = false",
-		toGoogleDriveName(ref),
+		g.namer.Filename(ref),
 		g.varastoDirectoryID)
 
 	<-g.reqThrottle
@@ -141,10 +142,6 @@ func (g *googledrive) resolveFileIDByRef(ctx context.Context, ref stotypes.BlobR
 	}
 
 	return listFilesResponse.Files[0].Id, nil
-}
-
-func toGoogleDriveName(ref stotypes.BlobRef) string {
-	return base64.RawURLEncoding.EncodeToString([]byte(ref))
 }
 
 func Oauth2Config(clientID string, clientSecret string) *oauth2.Config {

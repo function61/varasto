@@ -457,14 +457,17 @@ func getDriver(
 		return localfsblobstore.New(
 			volume.UUID,
 			mount.DriverOpts,
+			blobstore.ShardNamer(blobstore.Base32Namer()),
 			logex.Prefix("blobdriver/localfs", logger)), nil
 	case stoservertypes.VolumeDriverKindAwsS3:
 		return s3blobstore.New(
 			mount.DriverOpts,
+			blobstore.Base64URLNamer(),
 			logex.Prefix("blobdriver/s3", logger))
 	case stoservertypes.VolumeDriverKindGoogledrive:
 		return googledriveblobstore.New(
 			mount.DriverOpts,
+			blobstore.Base64URLNamer(),
 			logex.Prefix("blobdriver/googledrive", logger))
 	default:
 		return nil, fmt.Errorf("unsupported volume driver: %s", mount.Driver)

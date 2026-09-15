@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/function61/gokit/assert"
+	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
@@ -51,12 +52,14 @@ func TestDeserializeConfigInvalid(t *testing.T) {
 	assert.EqualString(t, err.Error(), "s3 options not in format bucket:prefix:accessKeyId:secret:region[:endpoint]")
 }
 
-func TestBlobNamer(t *testing.T) {
-	namer := s3BlobNamer{"/mypath/"}
-
+func TestKeyPrefix(t *testing.T) {
 	ref, _ := stotypes.BlobRefFromHex("d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592")
+	driver := s3blobstore{
+		prefix: "/mypath/",
+		namer:  blobstore.Base64URLNamer(),
+	}
 
-	name := namer.Ref(*ref)
-
-	assert.EqualString(t, *name, "/mypath/16j7swfXgJRpypq8sAguT41WUeRtPNt2LQLQvzfJ5ZI")
+	assert.EqualString(t,
+		*driver.key(*ref),
+		"/mypath/16j7swfXgJRpypq8sAguT41WUeRtPNt2LQLQvzfJ5ZI")
 }

@@ -3,7 +3,6 @@ package localfsblobstore
 
 import (
 	"context"
-	"encoding/base32"
 	"io"
 	"log"
 	"os"
@@ -16,23 +15,20 @@ import (
 	"github.com/function61/varasto/pkg/stotypes"
 )
 
-var (
-	// same as base32 Extended Hex Alphabet but with lowercase chars
-	base32CustomWithoutPadding = base32.NewEncoding("0123456789abcdefghijklmnopqrstuv").WithPadding(base32.NoPadding)
-)
-
-func New(uuid string, path string, logger *log.Logger) blobstore.Driver {
+func New(uuid string, path string, namer blobstore.BlobNamer, logger *log.Logger) blobstore.Driver {
 	return &localFs{
-		uuid: uuid,
-		path: path,
-		log:  logex.Levels(logex.NonNil(logger)),
+		uuid:  uuid,
+		path:  path,
+		namer: namer,
+		log:   logex.Levels(logex.NonNil(logger)),
 	}
 }
 
 type localFs struct {
-	uuid string
-	path string
-	log  *logex.Leveled
+	uuid  string
+	path  string
+	namer blobstore.BlobNamer
+	log   *logex.Leveled
 }
 
 var _ blobstore.Driver = (*localFs)(nil)
@@ -79,18 +75,5 @@ func (l *localFs) RoutingCost() int {
 }
 
 func (l *localFs) getPath(ref stotypes.BlobRef) string {
-	return RefToPath(ref, l.path)
-}
-
-func RefToPath(ref stotypes.BlobRef, basePath string) string {
-	// windows has case insensitive filesystem (sensitivity is a recent opt-in), so lowest
-	// common denominator that's better than hex encoding is base32
-	hexits := base32CustomWithoutPadding.EncodeToString([]byte(ref))
-
-	// this should yield 32 768 directories as maximum (see test file for clarification)
-	return filepath.Join(
-		basePath,
-		hexits[0:1], // 5 bits
-		hexits[1:3], // 10 bits
-		hexits[3:])
+	return filepath.Join(l.path, l.namer.Filename(ref))
 }

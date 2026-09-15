@@ -31,7 +31,10 @@ nav:
 - index.md
 - Installation: install/index.md
 - Screenshots: screenshots/index.md
-- Concepts, ideas & architecture: concepts-ideas-architecture/index.md
+- Concepts, ideas & architecture:
+  - Overview: concepts-ideas-architecture/index.md
+  - Architecture decision records:
+    - BlobRef-to-filename namers: concepts-ideas-architecture/architecture-decision-records/blobref-to-filename-namers.md
 - Comparison to similar software: comparison-to-similar-software/index.md
 - Performance: performance/index.md
 - Ways to access your data: 

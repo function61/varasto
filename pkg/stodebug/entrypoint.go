@@ -2,9 +2,10 @@ package stodebug
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/function61/gokit/osutil"
-	"github.com/function61/varasto/pkg/blobstore/localfsblobstore"
+	"github.com/function61/varasto/pkg/blobstore"
 	"github.com/function61/varasto/pkg/easteregg"
 	"github.com/function61/varasto/pkg/stodupremover"
 	"github.com/function61/varasto/pkg/stotypes"
@@ -26,7 +27,7 @@ func Entrypoint() *cobra.Command {
 			ref, err := stotypes.BlobRefFromHex(args[0])
 			osutil.ExitIfError(err)
 
-			fmt.Println(localfsblobstore.RefToPath(*ref, "/"))
+			fmt.Println(filepath.Join("/", blobstore.ShardNamer(blobstore.Base32Namer()).Filename(*ref)))
 		},
 	})
 
