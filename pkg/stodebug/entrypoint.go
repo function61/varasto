@@ -45,6 +45,8 @@ func Entrypoint() *cobra.Command {
 		},
 	})
 
+	debug.AddCommand(recoverBlobCommand())
+
 	debug.AddCommand(easteregg.Entrypoint())
 	debug.AddCommand(stodupremover.Entrypoint())
 

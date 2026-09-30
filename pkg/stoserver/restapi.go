@@ -526,6 +526,7 @@ func (h *handlers) GetBlobMetadata(rctx *httpauth.RequestContext, w http.Respons
 
 	return &stoservertypes.BlobMetadata{
 		Ref:                       blob.Ref.AsHex(),
+		Crc32:                     hex.EncodeToString(blob.Crc32),
 		Size:                      int(blob.Size),
 		SizeOnDisk:                int(blob.SizeOnDisk),
 		Referenced:                blob.Referenced,

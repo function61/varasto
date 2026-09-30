@@ -516,6 +516,7 @@
 			"name": "BlobMetadata",
 			"type": {"_": "object", "fields": {
 				"Ref": {"_": "string"},
+				"Crc32": {"_": "string"},
 				"Coll": {"_": "string"},
 				"Referenced": {"_": "boolean"},
 				"IsCompressed": {"_": "boolean"},
