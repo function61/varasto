@@ -745,6 +745,20 @@
 		]
 	},
 	{
+		"command": "integrityverificationjob.Reverify",
+		"chain": "public",
+		"ctor": ["JobId", "BlobRefs"],
+		"crudNature": "update",
+		"title": "Re-verify",
+		"info": [
+			"If re-checking a blob succeeds, its issue is removed. If reading still fails, its issue is left as-is."
+		],
+		"fields": [
+			{ "key": "JobId", "hideIfDefaultValue": true },
+			{ "key": "BlobRefs", "type": "StringList", "hideIfDefaultValue": true }
+		]
+	},
+	{
 		"command": "integrityverificationjob.ClearProblems",
 		"chain": "public",
 		"ctor": ["JobId"],

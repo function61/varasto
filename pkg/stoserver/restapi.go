@@ -1152,6 +1152,20 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 			completedPtr = nil
 		}
 
+		issues := make([]stoservertypes.IntegrityVerificationIssue, 0, len(dbObject.Issues))
+		for _, issue := range dbObject.Issues {
+			var blob *string
+			if issue.Blob != nil {
+				blobText := issue.Blob.AsHex()
+				blob = &blobText
+			}
+
+			issues = append(issues, stoservertypes.IntegrityVerificationIssue{
+				Blob:    blob,
+				Problem: issue.Problem,
+			})
+		}
+
 		ret = append(ret, stoservertypes.IntegrityVerificationJob{
 			Id:                   dbObject.ID,
 			Running:              slices.Contains(runningIds, dbObject.ID),
@@ -1161,8 +1175,8 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 			SampleSpecification:  dbObject.SampleSpecification,
 			LastCompletedBlobRef: dbObject.LastCompletedBlobRef.AsHex(),
 			BytesScanned:         int(dbObject.BytesScanned),
-			ErrorsFound:          dbObject.ErrorsFound,
-			Report:               dbObject.Report,
+			ErrorsFound:          len(dbObject.Issues),
+			Issues:               issues,
 		})
 	}
 

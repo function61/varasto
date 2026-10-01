@@ -482,6 +482,13 @@
 			}}
 		},
 		{
+			"name": "IntegrityVerificationIssue",
+			"type": {"_": "object", "fields": {
+				"Blob": {"_": "string", "nullable": true},
+				"Problem": {"_": "string"}
+			}}
+		},
+		{
 			"name": "IntegrityVerificationJob",
 			"type": {"_": "object", "fields": {
 				"Id": {"_": "string"},
@@ -493,7 +500,7 @@
 				"LastCompletedBlobRef": {"_": "string"},
 				"BytesScanned": {"_": "integer"},
 				"ErrorsFound": {"_": "integer"},
-				"Report": {"_": "string"}
+				"Issues": {"_": "list", "of": {"_": "IntegrityVerificationIssue"}}
 			}}
 		},
 		{

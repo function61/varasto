@@ -14,6 +14,7 @@ import { Dropdown } from 'f61ui/component/dropdown';
 import { ProgressBar } from 'f61ui/component/progressbar';
 import { Timestamp } from 'f61ui/component/timestamp';
 import { formatDistance2, unrecognizedValue } from 'f61ui/utils';
+import { volumesIntegrityJobUrl } from 'generated/frontend_uiroutes';
 import {
 	IntegrityverificationjobClearProblems,
 	IntegrityverificationjobResume,
@@ -73,13 +74,15 @@ export default class IntegrityVerificationJobsView extends React.Component<
 				.sort((a, b) => (a.Created < b.Created ? -1 : 1))
 				.reverse();
 
-			rows.push(this.row(vol, jobs[0], true));
+			rows.push(this.row(vol, jobs[0], true, false));
 
 			if (this.state.ivHistoricalJobsForVolumeUuid === vol.Uuid) {
 				const historicalJobs = jobs.slice(1); // can be empty
 
-				for (const historicalJob of historicalJobs) {
-					rows.push(this.row(vol, historicalJob, false));
+				for (const [index, historicalJob] of historicalJobs.entries()) {
+					rows.push(
+						this.row(vol, historicalJob, false, index === historicalJobs.length - 1),
+					);
 				}
 			}
 		}
@@ -107,15 +110,16 @@ export default class IntegrityVerificationJobsView extends React.Component<
 	private row(
 		vol: Volume,
 		job: IntegrityVerificationJob | undefined,
-		showingHistorical: boolean,
+		isLatestJob: boolean,
+		isLastHistoricalJob: boolean,
 	) {
 		const rowKey = vol.Uuid + (job ? '-' + job.Id : '');
 
 		if (!job) {
 			return (
 				<tr key={rowKey}>
-					<td>{showingHistorical && volumeTechnologyBadge(vol.Technology)}</td>
-					<td>{showingHistorical && vol.Label}</td>
+					<td>{isLatestJob && volumeTechnologyBadge(vol.Technology)}</td>
+					<td>{isLatestJob && vol.Label}</td>
 					<td>
 						<span className="text-muted">(Never scanned)</span>
 					</td>
@@ -173,20 +177,35 @@ export default class IntegrityVerificationJobsView extends React.Component<
 
 		return (
 			<tr key={rowKey}>
-				<td title={job.Id}>{showingHistorical && volumeTechnologyBadge(vol.Technology)}</td>
+				<td title={job.Id}>{isLatestJob && volumeTechnologyBadge(vol.Technology)}</td>
 				<td>
-					{showingHistorical &&
-						(volumeMounted ? (
+					{isLatestJob ? (
+						volumeMounted ? (
 							vol.Label
 						) : (
 							<s className="text-muted" title="Volume not online">
 								{vol.Label}
 							</s>
-						))}
+						)
+					) : (
+						<span className="text-muted">{isLastHistoricalJob ? '└──' : '├──'}</span>
+					)}
 				</td>
-				<td style={{ width: '25%' }}>{jobStatus(job)}</td>
+				<td style={{ width: '25%' }}>
+					<a href={volumesIntegrityJobUrl({ id: job.Id })}>{jobStatus(job)}</a>{' '}
+					{job.SampleSpecification !== null && (
+						<span
+							role="img"
+							aria-label={`Sampling mask ${job.SampleSpecification}`}
+							title={`Sampling mask: ${
+								job.SampleSpecification
+							}; volume size: ${bytesToHumanReadable(vol.BlobSizeTotal)}`}>
+							🎯
+						</span>
+					)}
+				</td>
 				<td title={bytesToHumanReadable(bytesPerSecond) + '/s'} className="text-muted">
-					{completed && showingHistorical ? (
+					{completed && isLatestJob ? (
 						formatDistance2(job.Created, completed)
 					) : !completed ? (
 						<span>
@@ -195,14 +214,12 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					) : null}
 				</td>
 				<td className="text-muted">
-					{showingHistorical
-						? `Scanned ${bytesToHumanReadable(job.BytesScanned)}`
-						: bytesToHumanReadable(vol.BlobSizeTotal)}
+					{`Scanned ${bytesToHumanReadable(job.BytesScanned)}`}
 				</td>
 				<td title={'Error count: ' + thousandSeparate(job.ErrorsFound)}>
-					<Glyphicon icon="list-alt" title={job.Report} />
+					<Glyphicon icon="list-alt" title={JSON.stringify(job.Issues)} />
 					&nbsp;
-					{showingHistorical && (
+					{isLatestJob && (
 						<Glyphicon
 							icon="search"
 							title="View historical jobs"

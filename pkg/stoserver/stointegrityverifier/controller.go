@@ -17,7 +17,7 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-const errorReportMaxLength = 20 * 1024
+const errorReportMaxIssues = 128
 
 type Controller struct {
 	db                  *bbolt.DB
@@ -185,12 +185,13 @@ func (c *Controller) resumeJobWorker(
 	defer func() { ignoreError(updateJobStatusInDB()) }() // to cover all following returns. ignores error
 
 	// returns error if maximum errors detected and the job should stop
-	pushErr := func(reportLine string) error {
-		job.ErrorsFound++
-		job.Report += reportLine
+	pushIssue := func(issue stotypes.IntegrityVerificationIssue) error {
+		job.Issues = append(job.Issues, issue)
 
-		if len(job.Report) > errorReportMaxLength {
-			job.Report += "maximum errors detected; aborting job"
+		if len(job.Issues) > errorReportMaxIssues {
+			job.Issues = append(job.Issues, stotypes.IntegrityVerificationIssue{
+				Problem: "maximum errors detected; aborting job",
+			})
 			return errors.New("maximum errors detected")
 		}
 
@@ -258,13 +259,19 @@ func (c *Controller) resumeJobWorker(
 					return nil
 				}
 
-				descr := fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
-				if err := pushErr(descr); err != nil {
+				blobRef := blob.Ref
+				if err := pushIssue(stotypes.IntegrityVerificationIssue{
+					Blob:    &blobRef,
+					Problem: err.Error(),
+				}); err != nil {
 					return err
 				}
 			} else if int32(bytesScanned) != blob.SizeOnDisk { // only check if no earlier error (noisy to report 2 errors per blob & if prev err, size probably also won't match)
-				descr := fmt.Sprintf("blob %s size mismatch; expected=%d got=%d\n", blob.Ref.AsHex(), blob.SizeOnDisk, bytesScanned)
-				if err := pushErr(descr); err != nil {
+				blobRef := blob.Ref
+				if err := pushIssue(stotypes.IntegrityVerificationIssue{
+					Blob:    &blobRef,
+					Problem: fmt.Sprintf("size mismatch; expected=%d got=%d", blob.SizeOnDisk, bytesScanned),
+				}); err != nil {
 					return err
 				}
 			}
@@ -278,7 +285,6 @@ func (c *Controller) resumeJobWorker(
 	}
 
 	job.Completed = time.Now()
-	job.Report += fmt.Sprintf("Completed with %d error(s)\n", job.ErrorsFound)
 
 	c.logl.Debug.Println("finished")
 

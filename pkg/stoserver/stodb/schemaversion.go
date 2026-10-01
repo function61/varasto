@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	CurrentSchemaVersion = 6
+	CurrentSchemaVersion = 7
 )
 
 var (

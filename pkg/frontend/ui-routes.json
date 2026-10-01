@@ -86,6 +86,10 @@
 		"path": "/admin/volumes/integrity"
 	},
 	{
+		"id": "volumesIntegrityJob",
+		"path": "/admin/volumes/integrity/job/{id}"
+	},
+	{
 		"id": "volumesReplication",
 		"path": "/admin/volumes/replication"
 	},

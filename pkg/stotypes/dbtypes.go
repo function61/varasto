@@ -141,6 +141,11 @@ type Blob struct {
 	Crc32                     []byte // so we can check file integrity without needing to decrypt (= have access to encryption keys)
 }
 
+type IntegrityVerificationIssue struct {
+	Blob    *BlobRef
+	Problem string
+}
+
 type IntegrityVerificationJob struct {
 	ID                   string
 	Started              time.Time
@@ -150,8 +155,8 @@ type IntegrityVerificationJob struct {
 	LastCompletedBlobRef BlobRef
 	BytesScanned         uint64
 	BytesSkipped         uint64 // if sampling is in place, we'll be skipping some blobs
-	ErrorsFound          int    // in theory this could be derived from report items, but we cannot as the report may be truncated if there's lots of problems
-	Report               string
+	Issues               []IntegrityVerificationIssue
+	Deprecated1          string `msgpack:"Report"`
 }
 
 type Config struct {

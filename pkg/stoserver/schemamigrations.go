@@ -3,6 +3,7 @@ package stoserver
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/function61/gokit/logex"
@@ -94,6 +95,7 @@ func migrate(schemaVersionInDB uint32, tx *bbolt.Tx) error {
 		3: from3to4,
 		4: from4to5,
 		5: from5to6,
+		6: from6to7,
 	}[schemaVersionInDB]
 	if !found {
 		return fmt.Errorf(
@@ -250,4 +252,42 @@ func from5to6(tx *bbolt.Tx) error {
 		dir.Created = now
 		return stodb.DirectoryRepository.Update(dir, tx)
 	}, tx)
+}
+
+func from6to7(tx *bbolt.Tx) error {
+	return stodb.IntegrityVerificationJobRepository.Each(func(record any) error {
+		job := record.(*stotypes.IntegrityVerificationJob)
+		job.Issues = integrityVerificationIssuesFromLegacyReport(job.Deprecated1)
+		job.Deprecated1 = ""
+
+		return stodb.IntegrityVerificationJobRepository.Update(job, tx)
+	}, tx)
+}
+
+func integrityVerificationIssuesFromLegacyReport(report string) []stotypes.IntegrityVerificationIssue {
+	issues := []stotypes.IntegrityVerificationIssue{}
+
+	for _, line := range strings.Split(report, "\n") {
+		if line == "" || isIntegrityVerificationCompletionSummary(line) {
+			continue
+		}
+
+		issue := stotypes.IntegrityVerificationIssue{Problem: line}
+		parts := strings.SplitN(line, " ", 3)
+		if len(parts) == 3 && parts[0] == "blob" {
+			blobRefText := strings.TrimSuffix(parts[1], ":")
+			if blobRef, err := stotypes.BlobRefFromHex(blobRefText); err == nil {
+				issue.Blob = blobRef
+				issue.Problem = strings.TrimPrefix(parts[2], ": ")
+			}
+		}
+
+		issues = append(issues, issue)
+	}
+
+	return issues
+}
+
+func isIntegrityVerificationCompletionSummary(line string) bool {
+	return strings.HasPrefix(line, "Completed with ") && strings.HasSuffix(line, " error(s)")
 }

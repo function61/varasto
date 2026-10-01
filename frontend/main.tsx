@@ -9,6 +9,7 @@ import ContentMetadataPage from 'pages/ContentMetadataPage';
 import DownloadClientAppPage from 'pages/DownloadClientAppPage';
 import FuseServerPage from 'pages/FuseServerPage';
 import GettingStartedPage from 'pages/GettingStartedPage';
+import IntegrityVerificationJobPage from 'pages/IntegrityVerificationJobPage';
 import LogsPage from 'pages/LogsPage';
 import MetadataBackupPage from 'pages/MetadataBackupPage';
 import MetricsPage from 'pages/MetricsPage';
@@ -99,6 +100,10 @@ class Handlers implements r.RouteHandlers {
 
 	volumesIntegrity() {
 		return <VolumesAndMountsPage view="integrity" />;
+	}
+
+	volumesIntegrityJob(opts: r.VolumesIntegrityJobOpts) {
+		return <IntegrityVerificationJobPage id={opts.id} />;
 	}
 
 	volumesReplication() {

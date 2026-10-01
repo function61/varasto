@@ -43,10 +43,13 @@ export class AdminLayout extends React.Component<AdminLayoutProps, {}> {
 		return (
 			<AppDefaultLayout
 				title={this.props.title}
-				breadcrumbs={this.props.breadcrumbs.concat({
-					url: r.serverInfoUrl(),
-					title: 'Admin',
-				})}
+				breadcrumbs={[
+					{
+						url: r.serverInfoUrl(),
+						title: 'Admin',
+					},
+					...this.props.breadcrumbs,
+				]}
 				children={
 					<div className="row">
 						<div className="col-md-3">
