@@ -32,3 +32,27 @@ func TestInvalidSpec(t *testing.T) {
 	_, err := CreateSampler(&sampleSpec)
 	assert.EqualString(t, err.Error(), "invalid sampling spec. expected binary string like 01; got 'wrong'")
 }
+
+func TestNextSampleSpecification(t *testing.T) {
+	tests := []struct {
+		sampleSpecification string
+		next                string
+		wrapped             bool
+	}{
+		{sampleSpecification: "00", next: "01"},
+		{sampleSpecification: "01", next: "10"},
+		{sampleSpecification: "10", next: "11"},
+		{sampleSpecification: "11", next: "00", wrapped: true},
+		{sampleSpecification: "1111111111111110", next: "1111111111111111"},
+		{sampleSpecification: "1111111111111111", next: "0000000000000000", wrapped: true},
+	}
+
+	for _, test := range tests {
+		t.Run(test.sampleSpecification, func(t *testing.T) {
+			next, wrapped, err := NextSampleSpecification(test.sampleSpecification)
+			assert.Ok(t, err)
+			assert.EqualString(t, next, test.next)
+			assert.Assert(t, wrapped == test.wrapped)
+		})
+	}
+}

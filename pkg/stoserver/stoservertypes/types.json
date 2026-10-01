@@ -489,6 +489,7 @@
 				"Created": {"_": "datetime"},
 				"Completed": {"_": "datetime", "nullable": true},
 				"VolumeId": {"_": "integer"},
+				"SampleSpecification": {"_": "string", "nullable": true},
 				"LastCompletedBlobRef": {"_": "string"},
 				"BytesScanned": {"_": "integer"},
 				"ErrorsFound": {"_": "integer"},

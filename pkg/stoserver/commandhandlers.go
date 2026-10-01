@@ -885,6 +885,41 @@ func (c *cHandlers) ApikeyRemove(cmd *stoservertypes.ApikeyRemove, ctx *command.
 }
 
 func (c *cHandlers) IntegrityverificationjobResume(cmd *stoservertypes.IntegrityverificationjobResume, ctx *command.Ctx) error {
+	if cmd.NextSampleBatch {
+		var nextJobID string
+		if err := c.db.Update(func(tx *bbolt.Tx) error {
+			previousJob := &stotypes.IntegrityVerificationJob{}
+			if err := stodb.IntegrityVerificationJobRepository.OpenByPrimaryKey([]byte(cmd.JobId), previousJob, tx); err != nil {
+				return err
+			}
+			if previousJob.SampleSpecification == nil {
+				return errors.New("cannot create next sample batch for a job without sampling")
+			}
+
+			nextSampleSpecification, wrapped, err := stointegrityverifier.NextSampleSpecification(*previousJob.SampleSpecification)
+			if err != nil {
+				return err
+			}
+			if wrapped {
+				return fmt.Errorf("sampling specification %q is already the final batch", *previousJob.SampleSpecification)
+			}
+
+			nextJobID = stoutils.NewIntegrityVerificationJobID()
+			return stodb.IntegrityVerificationJobRepository.Update(&stotypes.IntegrityVerificationJob{
+				ID:                  nextJobID,
+				Started:             ctx.Meta.Timestamp,
+				VolumeID:            previousJob.VolumeID,
+				SampleSpecification: &nextSampleSpecification,
+			}, tx)
+		}); err != nil {
+			return err
+		}
+
+		ctx.CreatedRecordId(nextJobID)
+		c.ivController.Resume(nextJobID)
+		return nil
+	}
+
 	c.ivController.Resume(cmd.JobId)
 
 	return nil

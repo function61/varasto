@@ -153,6 +153,14 @@ export default class IntegrityVerificationJobsView extends React.Component<
 			/>
 		);
 
+		const nextSampleBatch = job.SampleSpecification !== null && (
+			<CommandLink
+				command={IntegrityverificationjobResume(job.Id, true, {
+					disambiguation: `${vol.Label}, next sample batch`,
+				})}
+			/>
+		);
+
 		const deleteBlob = (
 			<CommandLink
 				command={VolumeDeleteBlob(vol.Id, {
@@ -207,6 +215,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 				<td>
 					{completed && (
 						<Dropdown>
+							{nextSampleBatch}
 							{startJob}
 							{deleteBlob}
 							{job.ErrorsFound > 0 && (
@@ -218,7 +227,8 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					)}
 					{!completed && (
 						<Dropdown>
-							<CommandLink command={IntegrityverificationjobResume(job.Id)} />
+							<CommandLink command={IntegrityverificationjobResume(job.Id, false)} />
+							{nextSampleBatch}
 							<CommandLink command={IntegrityverificationjobStop(job.Id)} />
 							{startJob}
 							{deleteBlob}

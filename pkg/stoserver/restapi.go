@@ -1158,6 +1158,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 			Created:              dbObject.Started,
 			Completed:            completedPtr,
 			VolumeId:             dbObject.VolumeID,
+			SampleSpecification:  dbObject.SampleSpecification,
 			LastCompletedBlobRef: dbObject.LastCompletedBlobRef.AsHex(),
 			BytesScanned:         int(dbObject.BytesScanned),
 			ErrorsFound:          dbObject.ErrorsFound,

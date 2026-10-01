@@ -726,11 +726,12 @@
 	{
 		"command": "integrityverificationjob.Resume",
 		"chain": "public",
-		"ctor": ["JobId"],
+		"ctor": ["JobId", "NextSampleBatch"],
 		"crudNature": "create",
 		"title": "Resume",
 		"fields": [
-			{ "key": "JobId", "hideIfDefaultValue": true }
+			{ "key": "JobId", "hideIfDefaultValue": true },
+			{ "key": "NextSampleBatch", "type": "checkbox", "hideIfDefaultValue": true }
 		]
 	},
 	{

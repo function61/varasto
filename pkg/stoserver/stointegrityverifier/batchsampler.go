@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -16,17 +17,43 @@ type batchSampler func(stotypes.BlobRef) bool
 
 func CreateSampler(sampleSpecificationMaybe *string) (batchSampler, error) {
 	if sampleSpecification := sampleSpecificationMaybe; sampleSpecification != nil {
-		// bit string like `1111` to number (`15`)
-		num, err := strconv.ParseUint(*sampleSpecification, 2, 32)
+		num, bitCount, err := parseSampleSpecification(*sampleSpecification)
 		if err != nil {
-			return nil, fmt.Errorf("invalid sampling spec. expected binary string like 01; got '%s'", *sampleSpecification)
+			return nil, err
 		}
-		bitCount := len(*sampleSpecification)
 
-		return prefixSampler(uint32(num), uint8(bitCount)), nil
+		return prefixSampler(num, bitCount), nil
 	} else {
 		return func(_ stotypes.BlobRef) bool { return true }, nil
 	}
+}
+
+func parseSampleSpecification(sampleSpecification string) (uint32, uint8, error) {
+	// bit string like `1111` to number (`15`)
+	num, err := strconv.ParseUint(sampleSpecification, 2, 32)
+	if err != nil {
+		return 0, 0, fmt.Errorf("invalid sampling spec. expected binary string like 01; got '%s'", sampleSpecification)
+	}
+
+	return uint32(num), uint8(len(sampleSpecification)), nil
+}
+
+// NextSampleSpecification returns the next fixed-width sampling partition.
+func NextSampleSpecification(sampleSpecification string) (string, bool, error) {
+	num, bitCount, err := parseSampleSpecification(sampleSpecification)
+	if err != nil {
+		return "", false, err
+	}
+
+	wrapped := num == bitmask(bitCount)
+	if wrapped {
+		num = 0
+	} else {
+		num++
+	}
+
+	next := strconv.FormatUint(uint64(num), 2)
+	return strings.Repeat("0", int(bitCount)-len(next)) + next, wrapped, nil
 }
 
 // only accepts blob refs that start with a specific bit pattern. that means that we can accept blob refs starting with:
