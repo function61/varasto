@@ -1,8 +1,12 @@
 package s3blobstore
 
 import (
+	"context"
+	"errors"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/function61/gokit/assert"
 	"github.com/function61/varasto/pkg/stotypes"
 )
@@ -59,4 +63,12 @@ func TestBlobNamer(t *testing.T) {
 	name := namer.Ref(*ref)
 
 	assert.EqualString(t, *name, "/mypath/16j7swfXgJRpypq8sAguT41WUeRtPNt2LQLQvzfJ5ZI")
+}
+
+func TestS3OperationErrorContextCancellation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := s3OperationError(ctx, "GetObject", awserr.New(request.CanceledErrorCode, "request context canceled", context.Canceled))
+	assert.Assert(t, errors.Is(err, context.Canceled))
 }

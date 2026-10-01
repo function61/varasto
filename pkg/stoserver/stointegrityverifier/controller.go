@@ -219,6 +219,12 @@ func (c *Controller) resumeJobWorker(
 
 		// verify them
 		for _, blob := range blobBatch {
+			select {
+			case <-ctx.Done():
+				return nil
+			default:
+			}
+
 			// not strictly completed (as we just begun work on it), but if we have lots of
 			// blobs overall, and this exact volume has very few, and we'd skip updating this
 			// after "blobExistsOnVolumeToVerify" check, we'd receive very little status updates
@@ -230,12 +236,6 @@ func (c *Controller) resumeJobWorker(
 				}
 
 				lastStatusUpdate = time.Now()
-
-				select {
-				case <-ctx.Done():
-					return nil
-				default:
-				}
 			}
 
 			sizeOnDisk := uint64(blob.SizeOnDisk)
@@ -252,6 +252,12 @@ func (c *Controller) resumeJobWorker(
 
 			bytesScanned, err := c.diskAccess.Scrub(ctx, blob.Ref, job.VolumeID)
 			if err != nil {
+				// don't mark blob as failed if context canceled (not due to timeout) because
+				// that's most likely intentional job stop
+				if errors.Is(err, context.Canceled) {
+					return nil
+				}
+
 				descr := fmt.Sprintf("blob %s: %v\n", blob.Ref.AsHex(), err)
 				if err := pushErr(descr); err != nil {
 					return err

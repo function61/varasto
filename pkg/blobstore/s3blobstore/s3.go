@@ -79,7 +79,7 @@ func (s *s3blobstore) RawFetch(ctx context.Context, ref stotypes.BlobRef) (io.Re
 			return nil, os.ErrNotExist
 		}
 
-		return nil, fmt.Errorf("s3 GetObject: %w", err)
+		return nil, s3OperationError(ctx, "GetObject", err)
 	}
 
 	return res.Body, nil
@@ -98,7 +98,7 @@ func (s *s3blobstore) RawStore(ctx context.Context, ref stotypes.BlobRef, conten
 		Key:    s.blobNamer.Ref(ref),
 		Body:   bytes.NewReader(buf),
 	}); err != nil {
-		return fmt.Errorf("s3 PutObject: %w", err)
+		return s3OperationError(ctx, "PutObject", err)
 	}
 
 	return nil
@@ -114,10 +114,19 @@ func (s *s3blobstore) RawDelete(ctx context.Context, ref stotypes.BlobRef) error
 			return os.ErrNotExist
 		}
 
-		return fmt.Errorf("s3 DeleteObject: %w", err)
+		return s3OperationError(ctx, "DeleteObject", err)
 	}
 
 	return nil
+}
+
+// s3OperationError preserves context cancellation for errors.Is because the AWS SDK v1 awserr.Error does not expose its cause through Unwrap.
+func s3OperationError(ctx context.Context, operation string, err error) error {
+	if ctx.Err() == context.Canceled {
+		err = ctx.Err()
+	}
+
+	return fmt.Errorf("s3 %s: %w", operation, err)
 }
 
 func (s *s3blobstore) RoutingCost() int {
