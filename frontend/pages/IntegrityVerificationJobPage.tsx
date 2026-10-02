@@ -33,11 +33,8 @@ export default class IntegrityVerificationJobPage extends React.Component<
 		this.loadJob();
 	}
 
-	componentWillReceiveProps(nextProps: IntegrityVerificationJobPageProps) {
-		if (nextProps.id !== this.props.id) {
-			this.setState({ selectedIssueIndexes: [] });
-		}
-
+	componentWillReceiveProps() {
+		this.setState({ selectedIssueIndexes: [] });
 		this.loadJob();
 	}
 
