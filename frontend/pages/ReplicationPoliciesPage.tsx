@@ -110,14 +110,26 @@ export default class ReplicationPoliciesPage extends React.Component<
 			return loadingOrError;
 		}
 
+		const renderVolume = (id: number) => {
+			const matchingVolumes = volumes.filter((v) => v.Id === id);
+			const volLabel = matchingVolumes[0] ? matchingVolumes[0].Label : '(error)';
+
+			return (
+				<span className="margin-right" key={id}>
+					<DefaultLabel>{volLabel}</DefaultLabel>
+				</span>
+			);
+		};
+
 		return (
 			<table className={tableClassStripedHover}>
 				<thead>
 					<tr>
 						<th>Name</th>
+						<th>Data first gets written to</th>
 						<th>
-							New data goes to{' '}
-							<Info text="Old data stays where it was written, except if you increase the replica count (derived from these volumes), old data will also be replicated to satisfy policy." />
+							.. and then replicated to{' '}
+							<Info text="Old data stays where it was written, except if you increase the replica count (derived from these volumes), old data will also be replicated to satisfy policy (replica/zone count)." />
 						</th>
 						<th>
 							Replica count{' '}
@@ -137,19 +149,8 @@ export default class ReplicationPoliciesPage extends React.Component<
 					{replicationpolicies.map((rp) => (
 						<tr key={rp.Id}>
 							<td title={`Id= ${rp.Id}`}>{rp.Name}</td>
-							<td>
-								{rp.DesiredVolumes.map((id) => {
-									const vols = volumes.filter((v) => v.Id === id);
-
-									const volLabel = vols[0] ? vols[0].Label : '(error)';
-
-									return (
-										<span className="margin-right">
-											<DefaultLabel>{volLabel}</DefaultLabel>
-										</span>
-									);
-								})}
-							</td>
+							<td>{rp.DesiredVolumes.slice(0, 1).map(renderVolume)}</td>
+							<td>{rp.DesiredVolumes.slice(1).map(renderVolume)}</td>
 							<td>{replicaCount(rp)}</td>
 							<td>{rp.MinZones}</td>
 							<td>{this.dataSafety(replicaCount(rp), rp.MinZones)}</td>

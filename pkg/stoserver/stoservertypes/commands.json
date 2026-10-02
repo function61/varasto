@@ -606,12 +606,15 @@
 		"title": "Change desired volumes",
 		"fields": [
 			{ "key": "Id", "hideIfDefaultValue": true },
-			{ "key": "Volume1", "type": "custom/integer", "optional": true, "title": "First volume", "placeholder": "Fry" },
-			{ "key": "Volume2", "type": "custom/integer", "optional": true, "title": "Second volume", "placeholder": "Leela" },
-			{ "key": "Volume3", "type": "custom/integer", "optional": true, "title": "Third volume" },
-			{ "key": "Volume4", "type": "custom/integer", "optional": true, "title": "Fourth volume" }
+			{ "key": "Volume1", "type": "custom/integer", "optional": true, "title": "Data gets first written to", "placeholder": "Fry" },
+			{ "key": "Volume2", "type": "custom/integer", "optional": true, "title": "First replica", "placeholder": "Leela" },
+			{ "key": "Volume3", "type": "custom/integer", "optional": true, "title": "Second replica" },
+			{ "key": "Volume4", "type": "custom/integer", "optional": true, "title": "Third replica" }
 		],
-		"info": ["You'll usually pick just 1-3 even though we have more boxes (UI limitation..)"]
+		"info": [
+			"The volume the data gets first written to is somewhat important that it is a ~reliable one, because there is a short window before replication if the volume corrupts data then replication fails too. (You'll get an alert though so it's not silent corruption.)",
+			"You'll usually pick just 1-3 even though we have more boxes (UI limitation..)"
+		]
 	},
 	{
 		"command": "node.SmartScan",
