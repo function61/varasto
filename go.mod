@@ -1,6 +1,6 @@
 module github.com/function61/varasto
 
-go 1.22
+go 1.23
 
 require (
 	bazil.org/fuse v0.0.0-20180421153158-65cc252bf669
@@ -24,8 +24,8 @@ require (
 	github.com/prometheus/procfs v0.0.8
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/samber/lo v1.38.1
-	github.com/spf13/cobra v1.3.0
-	go.etcd.io/bbolt v1.3.2
+	github.com/spf13/cobra v1.8.1
+	go.etcd.io/bbolt v1.4.3
 	golang.org/x/image v0.0.0-20190802002840-cff245a6509b
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	google.golang.org/api v0.62.0
@@ -39,7 +39,7 @@ require (
 	github.com/disintegration/gift v1.2.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.1.1 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jmespath/go-jmespath v0.0.0-20180206201540-c2b33e8439af // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.8 // indirect
@@ -47,13 +47,13 @@ require (
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.9.1 // indirect
-	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/vmihailenco/msgpack v4.0.1+incompatible // indirect
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
 	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
-	golang.org/x/sys v0.0.0-20220408201424-a24fb2fb8a0f // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect
