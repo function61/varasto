@@ -410,11 +410,13 @@ func readConfigFromDatabase(
 		// wrap original driver with metrics-collecting proxy
 		driver := metrics.WrapDriver(originalDriver, volume.ID, volume.UUID, volume.Label)
 
+		isCloudVolume := stoservertypes.VolumeTechnology(volume.Technology) == stoservertypes.VolumeTechnologyCloud
+
 		// for safety ensure:
 		// 1) the file access works ("mount is successful")
 		// 2) we are accessing the right files. if on Windows we're using external USB disks, their drive letters
 		// could get mixed up and we could mount the wrong volume and that would not be great.
-		if err := dam.Mount(ctx, volume.ID, volume.UUID, driver); err != nil {
+		if err := dam.Mount(ctx, volume.ID, volume.UUID, driver, isCloudVolume); err != nil {
 			logex.Levels(logger).Error.Printf("volume %s mount: %v", volume.UUID, err)
 
 			failedMountNames = append(failedMountNames, volume.Label)

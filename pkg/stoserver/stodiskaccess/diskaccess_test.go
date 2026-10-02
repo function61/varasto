@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/md5" //nolint:gosec // not used in cryptographic context
 	"encoding/hex"
+	"errors"
 	"io"
 	"os"
 	"strings"
@@ -88,6 +89,14 @@ func setupDefault() *testData {
 }
 
 func setup(encKey []byte) *testData {
+	return setupWithCloud(encKey, false)
+}
+
+func setupCloud() *testData {
+	return setupWithCloud(rootEncryptionKeyA, true)
+}
+
+func setupWithCloud(encKey []byte, isCloud bool) *testData {
 	blobStorage := createVolume("2v2IQMfhcpc", 10)
 
 	tda := &testDBAccess{
@@ -96,7 +105,7 @@ func setup(encKey []byte) *testData {
 
 	diskAccess := New(tda)
 
-	panicIfError(mount(1, blobStorage, diskAccess))
+	panicIfError(mountWithTechnology(1, blobStorage, diskAccess, isCloud))
 
 	return &testData{blobStorage, tda, diskAccess}
 }
@@ -328,6 +337,42 @@ func TestScrubbing(t *testing.T) {
 	assert.EqualString(t, err.Error(), "hashVerifyReader: digest mismatch")
 }
 
+func TestScrubbingRetriesCloudRawFetchFailure(t *testing.T) {
+	test := setupCloud()
+	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true) == nil)
+
+	test.blobStorage.rawFetchAttempts = 0
+	test.blobStorage.rawFetchResults = []rawFetchResult{{err: errors.New("temporary read failure")}}
+	_, err := test.diskAccess.Scrub(context.Background(), *ref, 1)
+	assert.Assert(t, err == nil)
+	assert.Assert(t, test.blobStorage.rawFetchAttempts == 2)
+}
+
+func TestScrubbingRetriesCloudDigestFailure(t *testing.T) {
+	test := setupCloud()
+	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true) == nil)
+
+	test.blobStorage.rawFetchAttempts = 0
+	test.blobStorage.rawFetchResults = []rawFetchResult{{content: []byte("corrupted content")}}
+	_, err := test.diskAccess.Scrub(context.Background(), *ref, 1)
+	assert.Assert(t, err == nil)
+	assert.Assert(t, test.blobStorage.rawFetchAttempts == 2)
+}
+
+func TestScrubbingDoesNotRetryLocalRawFetchFailure(t *testing.T) {
+	test := setupDefault()
+	ref, _ := stotypes.BlobRefFromHex(sha256OfQuickBrownFox)
+	assert.Assert(t, test.diskAccess.WriteBlob(context.Background(), 1, "dummyCollId", *ref, strings.NewReader("The quick brown fox jumps over the lazy dog"), true) == nil)
+
+	test.blobStorage.rawFetchAttempts = 0
+	test.blobStorage.rawFetchResults = []rawFetchResult{{err: errors.New("temporary read failure")}}
+	_, err := test.diskAccess.Scrub(context.Background(), *ref, 1)
+	assert.Assert(t, err != nil)
+	assert.Assert(t, test.blobStorage.rawFetchAttempts == 1)
+}
+
 func TestTryMountIncorrectVolume(t *testing.T) {
 	ctx := context.Background()
 
@@ -338,7 +383,7 @@ func TestTryMountIncorrectVolume(t *testing.T) {
 	// volume is not yet initialized
 	assert.EqualString(
 		t,
-		test.diskAccess.Mount(ctx, 2, secondBlobStore.uuid, secondBlobStore).Error(),
+		test.diskAccess.Mount(ctx, 2, secondBlobStore.uuid, secondBlobStore, false).Error(),
 		"volume descriptor not found")
 
 	assert.Assert(t, test.diskAccess.Initialize(ctx, secondBlobStore.uuid, secondBlobStore) == nil)
@@ -352,11 +397,11 @@ func TestTryMountIncorrectVolume(t *testing.T) {
 	// now try mounting with wrong UUID
 	assert.EqualString(
 		t,
-		test.diskAccess.Mount(ctx, 2, "wrongUuid", secondBlobStore).Error(),
+		test.diskAccess.Mount(ctx, 2, "wrongUuid", secondBlobStore, false).Error(),
 		"unexpected volume UUID: 6P5rgMCeGsA")
 
 	// correct UUID works
-	assert.Assert(t, test.diskAccess.Mount(ctx, 2, secondBlobStore.uuid, secondBlobStore) == nil)
+	assert.Assert(t, test.diskAccess.Mount(ctx, 2, secondBlobStore.uuid, secondBlobStore, false) == nil)
 }
 
 func TestVolumeDescriptorRef(t *testing.T) {
@@ -375,9 +420,16 @@ func sha256Hex(input []byte) string {
 }
 
 type testingBlobStorage struct {
-	uuid        string
-	files       map[string][]byte
-	routingCost int
+	uuid             string
+	files            map[string][]byte
+	routingCost      int
+	rawFetchResults  []rawFetchResult
+	rawFetchAttempts int
+}
+
+type rawFetchResult struct {
+	content []byte
+	err     error
 }
 
 var _ blobstore.Driver = (*testingBlobStorage)(nil)
@@ -387,13 +439,22 @@ func mount(
 	tbs *testingBlobStorage,
 	dam *Controller,
 ) error {
+	return mountWithTechnology(volID, tbs, dam, false)
+}
+
+func mountWithTechnology(
+	volID int,
+	tbs *testingBlobStorage,
+	dam *Controller,
+	isCloud bool,
+) error {
 	ctx := context.Background()
 
 	if err := dam.Initialize(ctx, tbs.uuid, tbs); err != nil {
 		return err
 	}
 
-	if err := dam.Mount(ctx, volID, tbs.uuid, tbs); err != nil {
+	if err := dam.Mount(ctx, volID, tbs.uuid, tbs, isCloud); err != nil {
 		return err
 	}
 
@@ -413,6 +474,16 @@ func (t *testingBlobStorage) RoutingCost() int {
 }
 
 func (t *testingBlobStorage) RawFetch(_ context.Context, ref stotypes.BlobRef) (io.ReadCloser, error) {
+	t.rawFetchAttempts++
+	if len(t.rawFetchResults) > 0 {
+		result := t.rawFetchResults[0]
+		t.rawFetchResults = t.rawFetchResults[1:]
+		if result.err != nil {
+			return nil, result.err
+		}
+		return io.NopCloser(bytes.NewReader(result.content)), nil
+	}
+
 	buf, exists := t.files[ref.AsHex()]
 	if !exists {
 		return nil, os.ErrNotExist

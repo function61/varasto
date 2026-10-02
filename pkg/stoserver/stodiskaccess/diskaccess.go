@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"log/slog"
 	"os"
 
 	"github.com/function61/gokit/hashverifyreader"
@@ -30,7 +31,8 @@ var (
 type Controller struct {
 	metadataStore  MetadataStore
 	mountedDrivers map[int]blobstore.Driver // only mounted drivers
-	routingCosts   map[int]int              // volume id => cost. lower (local disks) is better than higher (remote disks)
+	cloudVolumes   map[int]bool
+	routingCosts   map[int]int // volume id => cost. lower (local disks) is better than higher (remote disks)
 	writingBlobs   *mutexmap.M
 }
 
@@ -42,18 +44,20 @@ func New(metadataStore MetadataStore) *Controller {
 	return &Controller{
 		metadataStore,
 		map[int]blobstore.Driver{},
+		map[int]bool{},
 		map[int]int{},
 		mutexmap.New(),
 	}
 }
 
 // call only during server boot (this is not threadsafe)
-func (d *Controller) Mount(ctx context.Context, volumeID int, expectedVolumeUUID string, driver blobstore.Driver) error {
+func (d *Controller) Mount(ctx context.Context, volumeID int, expectedVolumeUUID string, driver blobstore.Driver, isCloud bool) error {
 	if err := d.Mountable(ctx, volumeID, expectedVolumeUUID, driver); err != nil {
 		return err
 	}
 
 	d.mountedDrivers[volumeID] = driver
+	d.cloudVolumes[volumeID] = isCloud
 	d.routingCosts[volumeID] = driver.RoutingCost()
 
 	return nil
@@ -290,12 +294,30 @@ func (d *Controller) Delete(ctx context.Context, ref stotypes.BlobRef, volumeID 
 // we could actually just do a Fetch() but that would require access to the encryption keys.
 // this way we can verify on-disk integrity without encryption keys.
 func (d *Controller) Scrub(ctx context.Context, ref stotypes.BlobRef, volumeID int) (int64, error) {
-	driver, err := d.driverFor(volumeID)
+	expectedCrc32, err := d.metadataStore.QueryBlobCrc32(ref)
 	if err != nil {
 		return 0, err
 	}
 
-	expectedCrc32, err := d.metadataStore.QueryBlobCrc32(ref)
+	bytesRead, err := d.scrubOnce(ctx, ref, volumeID, expectedCrc32)
+	if err != nil {
+		isCloudVolume := d.cloudVolumes[volumeID]
+		isRetryableError := !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded)
+		// Network-connected volumes deserve one retry because sporadic read failures can happen, e.g. with Backblaze.
+		if isCloudVolume && isRetryableError {
+			slog.Error("cloud volume scrub failed; retrying once", "volume_id", volumeID, "blob_ref", ref.AsHex(), "error", err)
+
+			return d.scrubOnce(ctx, ref, volumeID, expectedCrc32)
+		}
+
+		return bytesRead, err
+	}
+
+	return bytesRead, nil
+}
+
+func (d *Controller) scrubOnce(ctx context.Context, ref stotypes.BlobRef, volumeID int, expectedCrc32 []byte) (int64, error) {
+	driver, err := d.driverFor(volumeID)
 	if err != nil {
 		return 0, err
 	}
