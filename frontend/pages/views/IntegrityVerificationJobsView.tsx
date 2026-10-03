@@ -96,6 +96,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 						<th>
 							{this.state.ivHistoricalJobsForVolumeUuid ? 'Scanned' : 'Last scan'}
 						</th>
+						<th>Age</th>
 						<th>Runtime</th>
 						<th>Size</th>
 						<th></th>
@@ -123,6 +124,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					<td>
 						<span className="text-muted">(Never scanned)</span>
 					</td>
+					<td></td>
 					<td></td>
 					<td>{bytesToHumanReadable(vol.BlobSizeTotal)}</td>
 					<td></td>
@@ -208,6 +210,7 @@ export default class IntegrityVerificationJobsView extends React.Component<
 						</span>
 					)}
 				</td>
+				<td>{completed && <Timestamp ts={completed} />}</td>
 				<td title={bytesToHumanReadable(bytesPerSecond) + '/s'} className="text-muted">
 					{completed && isLatestJob ? (
 						formatDistance2(job.Created, completed)
@@ -302,18 +305,10 @@ function jobStatus(job: IntegrityVerificationJob): React.ReactNode {
 	}
 
 	if (anyErrors) {
-		return (
-			<DangerLabel>
-				FAIL <Timestamp ts={completed} />
-			</DangerLabel>
-		);
+		return <DangerLabel>FAIL</DangerLabel>;
 	}
 
-	return (
-		<SuccessLabel>
-			PASS <Timestamp ts={completed} />
-		</SuccessLabel>
-	);
+	return <SuccessLabel>PASS</SuccessLabel>;
 }
 
 export function volumeTechnologyBadge(tech: VolumeTechnology) {
