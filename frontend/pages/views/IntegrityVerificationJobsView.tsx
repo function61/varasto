@@ -192,7 +192,11 @@ export default class IntegrityVerificationJobsView extends React.Component<
 					)}
 				</td>
 				<td style={{ width: '25%' }}>
-					<a href={volumesIntegrityJobUrl({ id: job.Id })}>{jobStatus(job)}</a>{' '}
+					<a
+						href={volumesIntegrityJobUrl({ id: job.Id })}
+						style={isLatestJob && job.Overdue ? { opacity: 0.4 } : undefined}>
+						{jobStatus(job)}
+					</a>{' '}
 					{job.SampleSpecification !== null && (
 						<span
 							role="img"

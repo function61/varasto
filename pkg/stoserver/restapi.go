@@ -1131,6 +1131,8 @@ func (h *handlers) UploadFile(rctx *httpauth.RequestContext, w http.ResponseWrit
 }
 
 func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w http.ResponseWriter, r *http.Request) *[]stoservertypes.IntegrityVerificationJob {
+	const integrityVerificationJobOverdueAfter = 6 * 30 * 24 * time.Hour
+
 	ret := []stoservertypes.IntegrityVerificationJob{}
 
 	tx, rollback, err := readTx(h.db)
@@ -1151,6 +1153,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 		if completed.IsZero() {
 			completedPtr = nil
 		}
+		overdue := !completed.IsZero() && time.Since(completed) > integrityVerificationJobOverdueAfter
 
 		issues := make([]stoservertypes.IntegrityVerificationIssue, 0, len(dbObject.Issues))
 		for _, issue := range dbObject.Issues {
@@ -1171,6 +1174,7 @@ func (h *handlers) GetIntegrityVerificationJobs(rctx *httpauth.RequestContext, w
 			Running:              slices.Contains(runningIds, dbObject.ID),
 			Created:              dbObject.Started,
 			Completed:            completedPtr,
+			Overdue:              overdue,
 			VolumeId:             dbObject.VolumeID,
 			SampleSpecification:  dbObject.SampleSpecification,
 			LastCompletedBlobRef: dbObject.LastCompletedBlobRef.AsHex(),
